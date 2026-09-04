@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "drinksaver-backend.fullname" . }}
+  labels:
+    {{- include "drinksaver-backend.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "drinksaver-backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "drinksaver-backend.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "drinksaver-backend.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.repository }}/{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.AppVersion }}-multi-architechture"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            - name: "ALCOHOL_REPOSITORY"
+              value: {{ .Values.repository.alcohol | quote }}
+            - name: "BEER_REPOSITORY"
+              value: {{ .Values.repository.beer | quote }}
+            - name: "DRINK_REPOSITORY"
+              value: {{ .Values.repository.drink | quote }}
+            - name: "RECOMMENDATION_REPOSITORY"
+              value: {{ .Values.repository.recommendation | quote }}
+            - name: "ADMIN_USER_LIST"
+              value: {{ .Values.repository.adminUserList | quote }}
+            - name: "POSTGRES_DATASOURCE_URL"
+              value: {{ .Values.datasource.url | quote }}
+            - name: "POSTGRES_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.datasource.passwordSecretName | quote }}
+                  key: password
+            - name: "POSTGRES_USERNAME"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.datasource.passwordSecretName | quote }}
+                  key: username
+            - name: "CORS_ALLOWED_ORIGINS"
+              value: {{ .Values.cors.allowedOrigins | quote }}
+            - name: "CORS_ALLOWED_METHODS"
+              value: {{ .Values.cors.allowedMethods | quote }}
+            - name: "CORS_ALLOWED_HEADERS"
+              value: {{ .Values.cors.allowedHeaders | quote }}
+            - name: "CORS_ALLOW_CREDENTIALS"
+              value: {{ .Values.cors.allowCredentials | quote }}
+            - name: "CORS_MAX_AGE"
+              value: {{ .Values.cors.maxAge | quote }}
+            - name: "JWT_ISSUER_URI"
+              value: {{ .Values.jwt.issuerUri | quote }}
+            - name: "JWT_JWK_SET_URI"
+              value: {{ .Values.jwt.jwkSetUri | quote }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
