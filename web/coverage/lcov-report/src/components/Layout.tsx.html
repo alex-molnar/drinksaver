@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">42.85% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/21</span>
+                <span class='fraction'>9/21</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">47.61% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/21</span>
+                <span class='fraction'>10/21</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>2/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">53.33% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/15</span>
+                <span class='fraction'>8/15</span>
             </div>
         
             
@@ -247,31 +247,31 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">256x</span>
+<span class="cline-any cline-yes">256x</span>
+<span class="cline-any cline-yes">256x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">256x</span>
+<span class="cline-any cline-yes">250x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">256x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">256x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -403,31 +403,31 @@ interface LayoutProps {
   hideBottomNav?: boolean;
 }
 &nbsp;
-const <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >Layout: React.FC&lt;LayoutProps&gt; = ({</span></span>
+const Layout: React.FC&lt;LayoutProps&gt; = ({
   children,
-  title = <span class="branch-0 cbranch-no" title="branch not covered" >'DrinkSaver',</span>
-  showBackButton = <span class="branch-0 cbranch-no" title="branch not covered" >false,</span>
-  hideBottomNav = <span class="branch-0 cbranch-no" title="branch not covered" >false,</span>
+  title = 'DrinkSaver',
+  showBackButton = false,
+  hideBottomNav = false,
 }) =&gt; {
-  const <span class="cstat-no" title="statement not covered" >location = useLocation();</span>
-  const <span class="cstat-no" title="statement not covered" >navigate = useNavigate();</span>
-  const { <span class="cstat-no" title="statement not covered" >logout } = useAuth();</span>
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 &nbsp;
   // Determine active tab based on current route
-  const <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >getNavValue = () =&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >    if (location.pathname === '/') <span class="cstat-no" title="statement not covered" >return 0;</span></span>
+  const getNavValue = () =&gt; {
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (location.pathname === '/') return 0;
 <span class="cstat-no" title="statement not covered" >    if (location.pathname === '/detailed') <span class="cstat-no" title="statement not covered" >return 1;</span></span>
 <span class="cstat-no" title="statement not covered" >    if (location.pathname === '/history') <span class="cstat-no" title="statement not covered" >return 2;</span></span>
 <span class="cstat-no" title="statement not covered" >    return -1;</span>
   };
 &nbsp;
-  const <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >handleNavChange = (_</span>: React.SyntheticEvent, newValue: number) =&gt; {</span>
+  const <span class="fstat-no" title="function not covered" >handleNavChange = (_</span>: React.SyntheticEvent, newValue: number) =&gt; {
 <span class="cstat-no" title="statement not covered" >    if (newValue === 0) <span class="cstat-no" title="statement not covered" >navigate('/');</span></span>
     else if (<span class="cstat-no" title="statement not covered" >newValue === 1) <span class="cstat-no" title="statement not covered" >navigate('/detailed');</span></span>
     else if (<span class="cstat-no" title="statement not covered" >newValue === 2) <span class="cstat-no" title="statement not covered" >navigate('/history');</span></span>
   };
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
+  return (
     &lt;Box
       sx={{
         display: 'flex',
@@ -538,7 +538,7 @@ export default Layout;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-09-07T21:43:27.312Z
+                at 2026-09-07T22:41:45.306Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -22,10 +22,29 @@ const NewBeerFlavourPage: React.FC = () => {
   const location = useLocation();
   const { navigateToSuccess, navigateToError, navigateToHome } = useAppNavigation();
   const state = location.state as NewBeerFlavourPageState | null;
+  const brandId = state?.brandId;
+  const brandName = state?.brandName;
 
   // Form state
   const [flavourName, setFlavourName] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const isFormValid = flavourName.trim().length > 0;
+
+  const handleSubmit = useCallback(async () => {
+    if (!isFormValid || brandId === undefined) return;
+
+    setSaving(true);
+
+    try {
+      await createBeerFlavour(brandId, flavourName.trim());
+      navigateToSuccess(`Flavour "${flavourName}" has been created for ${brandName}!`);
+    } catch (error) {
+      console.error('Failed to create beer flavour:', error);
+      setSaving(false);
+      navigateToError('Failed to create beer flavour. Please try again.');
+    }
+  }, [brandId, brandName, flavourName, isFormValid, navigateToSuccess, navigateToError]);
 
   // Redirect if no state provided
   if (!state) {
@@ -42,26 +61,6 @@ const NewBeerFlavourPage: React.FC = () => {
       </Layout>
     );
   }
-
-  const { brandId, brandName } = state;
-
-  const isFormValid = () => {
-    return flavourName.trim().length > 0;
-  };
-
-  const handleSubmit = useCallback(async () => {
-    if (!isFormValid()) return;
-
-    setSaving(true);
-
-    try {
-      await createBeerFlavour(brandId, flavourName.trim());
-      navigateToSuccess(`Flavour "${flavourName}" has been created for ${brandName}!`);
-    } catch (error) {
-      console.error('Failed to create beer flavour:', error);
-      navigateToError('Failed to create beer flavour. Please try again.');
-    }
-  }, [brandId, brandName, flavourName, navigateToSuccess, navigateToError]);
 
   return (
     <Layout title="New Beer Flavour" showBackButton>
@@ -92,11 +91,11 @@ const NewBeerFlavourPage: React.FC = () => {
       </Box>
 
       {/* Floating Action Button */}
-      <Zoom in={isFormValid()}>
+      <Zoom in={isFormValid}>
         <Fab
           color="primary"
           onClick={handleSubmit}
-          disabled={saving || !isFormValid()}
+          disabled={saving || !isFormValid}
           sx={{
             position: 'fixed',
             bottom: 80,

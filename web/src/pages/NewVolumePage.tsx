@@ -23,30 +23,14 @@ const NewVolumePage: React.FC = () => {
   const location = useLocation();
   const { navigateToSuccess, navigateToError, navigateToHome } = useAppNavigation();
   const state = location.state as NewVolumePageState | null;
+  const alcoholTypeId = state?.alcoholTypeId;
+  const alcoholTypeName = state?.alcoholTypeName;
 
   // Form state
   const [volumeName, setVolumeName] = useState('');
   const [volumeValue, setVolumeValue] = useState('');
   const [volumeError, setVolumeError] = useState('');
   const [saving, setSaving] = useState(false);
-
-  // Redirect if no state provided
-  if (!state) {
-    return (
-      <Layout title="New Volume" showBackButton hideBottomNav>
-        <Box sx={{ py: 2 }}>
-          <Alert severity="error" sx={{ mb: 2, borderRadius: 3 }}>
-            Missing alcohol type information. Please go back and try again.
-          </Alert>
-          <Button variant="contained" onClick={navigateToHome} fullWidth>
-            Back to Home
-          </Button>
-        </Box>
-      </Layout>
-    );
-  }
-
-  const { alcoholTypeId, alcoholTypeName } = state;
 
   // Check if volume value is valid (pure function, no side effects)
   const isVolumeValid = (value: string): boolean => {
@@ -83,17 +67,14 @@ const NewVolumePage: React.FC = () => {
     }
   };
 
-  const isFormValid = () => {
-    return (
-      volumeName.trim().length > 0 &&
-      volumeValue.trim().length > 0 &&
-      !volumeError &&
-      isVolumeValid(volumeValue)
-    );
-  };
+  const isFormValid =
+    volumeName.trim().length > 0 &&
+    volumeValue.trim().length > 0 &&
+    !volumeError &&
+    isVolumeValid(volumeValue);
 
   const handleSubmit = useCallback(async () => {
-    if (!isFormValid()) return;
+    if (!isFormValid || alcoholTypeId === undefined) return;
 
     setSaving(true);
 
@@ -109,9 +90,26 @@ const NewVolumePage: React.FC = () => {
       navigateToSuccess(`Volume "${volumeName}" has been added to ${alcoholTypeName}!`);
     } catch (error) {
       console.error('Failed to create volume:', error);
+      setSaving(false);
       navigateToError('Failed to create volume. Please try again.');
     }
-  }, [volumeName, volumeValue, alcoholTypeId, alcoholTypeName, navigateToSuccess, navigateToError]);
+  }, [volumeName, volumeValue, alcoholTypeId, alcoholTypeName, isFormValid, navigateToSuccess, navigateToError]);
+
+  // Redirect if no state provided
+  if (!state) {
+    return (
+      <Layout title="New Volume" showBackButton hideBottomNav>
+        <Box sx={{ py: 2 }}>
+          <Alert severity="error" sx={{ mb: 2, borderRadius: 3 }}>
+            Missing alcohol type information. Please go back and try again.
+          </Alert>
+          <Button variant="contained" onClick={navigateToHome} fullWidth>
+            Back to Home
+          </Button>
+        </Box>
+      </Layout>
+    );
+  }
 
   return (
     <Layout title="New Volume" showBackButton>
@@ -169,11 +167,11 @@ const NewVolumePage: React.FC = () => {
       </Box>
 
       {/* Floating Action Button */}
-      <Zoom in={isFormValid()}>
+      <Zoom in={isFormValid}>
         <Fab
           color="primary"
           onClick={handleSubmit}
-          disabled={saving || !isFormValid()}
+          disabled={saving || !isFormValid}
           sx={{
             position: 'fixed',
             bottom: 80,

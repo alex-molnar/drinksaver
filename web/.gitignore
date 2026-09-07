@@ -29,3 +29,5 @@ runcommand
 dockbuild
 helm/drinksaver-web/install-cmd
 .version/*
+# Coverage output. Committed by mistake in 2c66bd2 and untracked again there.
+coverage/

@@ -37,12 +37,10 @@ const NewBeerBrandPage: React.FC = () => {
 
   const canAddFlavour = flavourName.trim().length > 0;
 
-  const isFormValid = () => {
-    return brandName.trim().length > 0;
-  };
+  const isFormValid = brandName.trim().length > 0;
 
   const handleSubmit = useCallback(async () => {
-    if (!isFormValid()) return;
+    if (!isFormValid) return;
 
     setSaving(true);
 
@@ -58,9 +56,10 @@ const NewBeerBrandPage: React.FC = () => {
       navigateToSuccess(`Beer brand "${brandName}" has been created!`);
     } catch (error) {
       console.error('Failed to create brand:', error);
+      setSaving(false);
       navigateToError('Failed to create beer brand. Please try again.');
     }
-  }, [brandName, flavours, navigateToSuccess, navigateToError]);
+  }, [brandName, flavours, isFormValid, navigateToSuccess, navigateToError]);
 
   return (
     <Layout title="New Beer Brand" showBackButton>
@@ -137,11 +136,11 @@ const NewBeerBrandPage: React.FC = () => {
       </Box>
 
       {/* Floating Action Button */}
-      <Zoom in={isFormValid()}>
+      <Zoom in={isFormValid}>
         <Fab
           color="primary"
           onClick={handleSubmit}
-          disabled={saving || !isFormValid()}
+          disabled={saving || !isFormValid}
           sx={{
             position: 'fixed',
             bottom: 80,

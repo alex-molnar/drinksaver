@@ -92,12 +92,10 @@ const NewAlcoholPage: React.FC = () => {
 
   const canAddSubtype = subtypeName.trim().length > 0;
 
-  const isFormValid = () => {
-    return alcoholName.trim().length > 0;
-  };
+  const isFormValid = alcoholName.trim().length > 0;
 
   const handleSubmit = useCallback(async () => {
-    if (!isFormValid()) return;
+    if (!isFormValid) return;
 
     setSaving(true);
 
@@ -114,9 +112,10 @@ const NewAlcoholPage: React.FC = () => {
       navigateToSuccess(`Alcohol type "${alcoholName}" has been created!`);
     } catch (error) {
       console.error('Failed to create alcohol type:', error);
+      setSaving(false);
       navigateToError('Failed to create alcohol type. Please try again.');
     }
-  }, [alcoholName, volumes, subtypes, navigateToSuccess, navigateToError]);
+  }, [alcoholName, volumes, subtypes, isFormValid, navigateToSuccess, navigateToError]);
 
   const canAddVolume = volumeName.trim() && volumeValue.trim() && !volumeError;
 
@@ -263,11 +262,11 @@ const NewAlcoholPage: React.FC = () => {
       </Box>
 
       {/* Floating Action Button */}
-      <Zoom in={isFormValid()}>
+      <Zoom in={isFormValid}>
         <Fab
           color="primary"
           onClick={handleSubmit}
-          disabled={saving || !isFormValid()}
+          disabled={saving || !isFormValid}
           sx={{
             position: 'fixed',
             bottom: 80,
