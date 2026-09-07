@@ -116,6 +116,22 @@ jobs:
           jq --arg v "$VERSION" '.version = $v' web/package.json > web/package.json.tmp
           mv web/package.json.tmp web/package.json
 
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      # The image build compiles the app but never runs the suite, so without
+      # this a red test would reach the environment unnoticed.
+      - name: Run web tests
+        working-directory: web
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run test
+
       - name: Set up Buildx
         # The runner's default builder uses the docker driver, which cannot
         # export a GitHub Actions cache. A docker-container builder can.
