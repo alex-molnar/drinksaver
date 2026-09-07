@@ -4,8 +4,10 @@ import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.repository.postgres.schema.SavedDrinksTable;
 import com.drinksaver.service.model.DrinkKey;
 import com.drinksaver.service.recommendations.api.RecommendationSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -20,18 +22,34 @@ public class DynamicPersonalRecommendationSource implements RecommendationSource
 
     private final RepositoryConfiguration repositoryConfiguration;
     private final SavedDrinksTable savedDrinksTable;
+    private final Clock clock;
 
+    @Autowired
     public DynamicPersonalRecommendationSource(
         RepositoryConfiguration repositoryConfiguration,
         SavedDrinksTable savedDrinksTable
     ) {
+        this(repositoryConfiguration, savedDrinksTable, Clock.systemDefaultZone());
+    }
+
+    /**
+     * Lets a test pin "today". Without it the test and this class each call
+     * LocalDate.now() independently, so a run that straddles midnight sees a
+     * one-day difference and the decay assertions fail.
+     */
+    DynamicPersonalRecommendationSource(
+        RepositoryConfiguration repositoryConfiguration,
+        SavedDrinksTable savedDrinksTable,
+        Clock clock
+    ) {
         this.repositoryConfiguration = repositoryConfiguration;
         this.savedDrinksTable = savedDrinksTable;
+        this.clock = clock;
     }
 
     @Override
     public Map<DrinkKey, Double> buildRecommendation(UUID userId) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
 
         return savedDrinksTable
             .findByUserId(userId)

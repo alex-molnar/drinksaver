@@ -26,6 +26,8 @@ jobs:
       owner: ${{ steps.v.outputs.owner }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - id: v
         env:
           OWNER_RAW: ${{ github.repository_owner }}
@@ -43,6 +45,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # This job runs third-party Maven plugins, which execute code pulled
+          # from Maven Central. Nothing here uses git after checkout, so the
+          # token does not need to stay in .git/config.
+          persist-credentials: false
 
       - uses: actions/setup-java@v5
         with:

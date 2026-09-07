@@ -59,20 +59,8 @@ describe('QuantitySelector', () => {
     expect(increase()).toBeDisabled();
   });
 
-  /**
-   * The disabled attribute is the real guard, and the tests above cover it.
-   * This one forces the click past that to prove the handler clamps on its own,
-   * so the component stays correct if a future change styles the button as
-   * enabled. pointerEventsCheck is off because user-event otherwise refuses to
-   * click an element with pointer-events: none.
-   */
-  it('clamps in the handler even if the click gets through', async () => {
-    const onChange = vi.fn();
-    const user = userEvent.setup({ pointerEventsCheck: 0 });
-    render(<QuantitySelector value={1} onChange={onChange} />);
-
-    await user.click(decrease());
-
-    expect(onChange).not.toHaveBeenCalled();
-  });
+  // The handler's own `if (value > min)` clamp is deliberately not tested.
+  // It is unreachable through the rendered DOM while the button carries the
+  // disabled attribute, and jsdom does not dispatch click on a disabled
+  // element, so any such test passes no matter what the handler does.
 });

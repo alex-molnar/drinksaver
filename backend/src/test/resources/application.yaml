@@ -3,6 +3,16 @@
 # Tests must never reach the live Keycloak. Without these overrides any
 # context-loading test tries to fetch JWKS from auth.drinksaver.kak.im, which
 # makes the suite depend on production being reachable.
+#
+# IMPORTANT: this file SHADOWS src/main/resources/application.yaml, it does not
+# merge with it. Spring resolves classpath:/application.yaml to the first match
+# only, and test resources come first. So anything the main application.yaml
+# defines and this file omits is simply absent in tests: `cors.*` and
+# `springdoc.*` both resolve to null here, and the code falls back to its @Value
+# defaults, which differ from production (allow-credentials becomes false).
+# That is why the repository block below is repeated rather than inherited.
+# application.properties has a different filename and still loads normally,
+# which is where spring.datasource and ddl-auto=update come from.
 spring:
   security:
     oauth2:
