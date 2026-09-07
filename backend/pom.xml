@@ -84,6 +84,16 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!--
+			Spring Boot 4 moved the test slice annotations out of
+			spring-boot-test-autoconfigure and into per-technology modules.
+			@DataJpaTest lives here.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-data-jpa-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<!-- Not a starter. This is the module that provides @ServiceConnection. -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
