@@ -163,6 +163,25 @@ Verified denied: secrets in `kube-system` and `postgres`, anything in
 The `KUBE_CONFIG` repository secret holds a base64-encoded kubeconfig for that
 ServiceAccount.
 
+### Accepted risk
+
+The Role grants `list` on secrets in those two namespaces. Helm's default
+storage driver keeps release state as Secrets, and Kubernetes RBAC cannot
+restrict `list` by resource name, so Helm cannot find its own releases without
+being able to read every Secret in the namespace.
+
+The consequence is that repository write access plus this token can read
+`secret-postgres-basic-auth`, which is the production database password, and the
+cert-manager TLS private keys for the production hostnames. It is confined to
+`drinksaver` and `drinksaver-test` and reaches nothing else on the cluster.
+
+Running Helm with `HELM_DRIVER=configmap` would remove the need for any secret
+permission. It was not adopted because the existing releases are stored as
+Secrets: Helm would not find them, and `upgrade --install` would fall through to
+`install` and collide with the live resources. Worth revisiting if more people
+gain write access to the repository. See
+[the security review](security-review-2026-09-07.md) finding F2.
+
 To rotate it:
 
 ```bash

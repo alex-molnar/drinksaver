@@ -90,6 +90,8 @@ jobs:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
           set -euo pipefail
+          # umask first: the redirect below creates the file before chmod runs.
+          umask 077
           mkdir -p "$HOME/.kube"
           printf '%s' "$KUBE_CONFIG" | base64 -d > "$HOME/.kube/config"
           chmod 600 "$HOME/.kube/config"

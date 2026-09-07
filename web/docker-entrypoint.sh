@@ -14,10 +14,13 @@ KEYCLOAK_URL="${KEYCLOAK_URL:-http://localhost:8081/auth}"
 KEYCLOAK_REALM="${KEYCLOAK_REALM:-drinksaver}"
 KEYCLOAK_CLIENT_ID="${KEYCLOAK_CLIENT_ID:-drinksaver-frontend}"
 
-# JSON-escape backslashes and double quotes so a stray character cannot break
-# the generated file.
+# Escape backslashes and double quotes so a stray character cannot break out of
+# the generated string literal. Newlines are stripped rather than escaped: they
+# cannot legitimately appear in a URL, realm, or client ID, and an unescaped one
+# would make the whole file a SyntaxError, silently reverting the app to its
+# localhost defaults.
 escape() {
-  printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
+  printf '%s' "$1" | tr -d '\r\n' | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
 }
 
 cat > "$CONFIG_FILE" <<CONFIG
