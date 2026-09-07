@@ -1,0 +1,22 @@
+# Test configuration.
+#
+# Tests must never reach the live Keycloak. Without these overrides any
+# context-loading test tries to fetch JWKS from auth.drinksaver.kak.im, which
+# makes the suite depend on production being reachable.
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: "http://localhost:0/realms/test"
+          jwk-set-uri: "http://localhost:0/realms/test/protocol/openid-connect/certs"
+
+repository:
+  alcohol: "postgres"
+  beer: "postgres"
+  drink: "postgres"
+  recommendation: "postgres"
+  admin-user-list: "00000000-0000-0000-0000-000000000000"
+  beer-id: "4"
+  max-personal-recommendations: "10"
+  decay-factor: "0.97"
