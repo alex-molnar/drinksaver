@@ -72,7 +72,7 @@ jobs:
         run: |
           set -euo pipefail
           npm ci
-          npm run test
+          npm run test:coverage
 
       - name: Set up Buildx
         # The runner's default builder uses the docker driver, which cannot

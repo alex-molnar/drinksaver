@@ -109,6 +109,51 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>check</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<!--
+									A ratchet, not a target. Set just below the value measured
+									when the suite was introduced, so coverage cannot regress.
+									Raise it as tests are added; never lower it.
+								-->
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>INSTRUCTION</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.25</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<!--
 				Defines the ${org.mockito:mockito-core:jar} property that surefire
 				uses below. Without this goal the placeholder is passed to the JVM
@@ -134,7 +179,11 @@
 						warns that this will stop working in a future JDK. Passing the
 						agent explicitly keeps the build quiet and future-proof.
 					-->
-					<argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+					<!--
+						@{argLine} is what JaCoCo's prepare-agent sets. Writing a plain
+						argLine here would replace it and silently produce empty coverage.
+					-->
+					<argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
 				</configuration>
 			</plugin>
 			<plugin>

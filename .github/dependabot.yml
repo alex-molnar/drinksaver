@@ -1,0 +1,39 @@
+# Dependency updates.
+#
+# Added because the web test setup pulled in a large number of transitive dev
+# dependencies whose install scripts run in CI, so staying current matters more
+# than it used to. See docs/security-review-2026-09-07-test-frameworks.md.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # One PR for the test toolchain rather than six. These move together and
+      # are gated by the suite itself.
+      web-testing:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+          - "jsdom"
+          - "@testing-library/*"
+      web-lint:
+        patterns:
+          - "eslint"
+          - "@eslint/*"
+          - "eslint-plugin-*"
+          - "typescript-eslint"
+
+  - package-ecosystem: maven
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  # The workflows pin action majors, so this is what surfaces a moved tag.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
