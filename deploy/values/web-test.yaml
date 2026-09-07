@@ -9,7 +9,7 @@ config:
   keycloakUrl: "https://auth.drinksaver.kak.im/auth"
   keycloakRealm: "test-drinksaver"
   # The client ID registered in Keycloak, not a local name.
-  keycloakClientId: "drinksaver-frontend"
+  keycloakClientId: "test-drinksaver-web"
 
 ingress:
   enabled: true
