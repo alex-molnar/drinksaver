@@ -90,7 +90,7 @@ jobs:
       # so a type error fails this step. There is no separate build step, because
       # running the same compile twice would only add wall-clock time.
       - name: Build and push image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: web
           push: true
