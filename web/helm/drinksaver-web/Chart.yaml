@@ -1,5 +1,5 @@
 apiVersion: v2
-name: drinksaver-frontend
+name: drinksaver-web
 description: A Helm chart for DrinkSaver Frontend - Mobile-first drink tracking application
 type: application
 version: 1.0.0

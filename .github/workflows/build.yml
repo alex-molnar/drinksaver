@@ -1,0 +1,151 @@
+name: Build and publish
+
+# Any push to main, which includes a merged pull request. Nothing is deployed.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: build-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  version:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      owner: ${{ steps.v.outputs.owner }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: v
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          OWNER="$(printf '%s' "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "owner=${OWNER}"     >> "$GITHUB_OUTPUT"
+          echo "Publishing version ${VERSION}"
+
+  backend:
+    name: Backend image and chart
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Set Maven project version
+        working-directory: backend
+        run: |
+          mvn -B --no-transfer-progress \
+            org.codehaus.mojo:versions-maven-plugin:2.17.1:set \
+            -DnewVersion="${{ needs.version.outputs.version }}" \
+            -DgenerateBackupPoms=false
+
+      - name: Build application
+        working-directory: backend
+        run: mvn -B --no-transfer-progress package
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          build-args: |
+            VERSION=${{ needs.version.outputs.version }}
+          tags: ghcr.io/${{ needs.version.outputs.owner }}/drinksaver-backend:${{ needs.version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Package and push Helm chart
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.version.outputs.version }}"
+          OWNER="${{ needs.version.outputs.owner }}"
+          helm registry login ghcr.io \
+            --username "${{ github.actor }}" \
+            --password "${{ secrets.GITHUB_TOKEN }}"
+          helm package backend/drinksaver-backend \
+            --version "${VERSION}" --app-version "${VERSION}" \
+            --destination dist
+          helm push "dist/drinksaver-backend-${VERSION}.tgz" "oci://ghcr.io/${OWNER}/charts"
+
+  web:
+    name: Web image and chart
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Stamp version into package.json
+        run: |
+          set -euo pipefail
+          jq --arg v "${{ needs.version.outputs.version }}" '.version = $v' web/package.json > web/package.json.tmp
+          mv web/package.json.tmp web/package.json
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: web
+          push: true
+          tags: ghcr.io/${{ needs.version.outputs.owner }}/drinksaver-web:${{ needs.version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Package and push Helm chart
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.version.outputs.version }}"
+          OWNER="${{ needs.version.outputs.owner }}"
+          helm registry login ghcr.io \
+            --username "${{ github.actor }}" \
+            --password "${{ secrets.GITHUB_TOKEN }}"
+          helm package web/helm/drinksaver-web \
+            --version "${VERSION}" --app-version "${VERSION}" \
+            --destination dist
+          helm push "dist/drinksaver-web-${VERSION}.tgz" "oci://ghcr.io/${OWNER}/charts"
+
+  summary:
+    name: Summary
+    needs: [version, backend, web]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          V="${{ needs.version.outputs.version }}"
+          O="${{ needs.version.outputs.owner }}"
+          {
+            echo "## Published \`${V}\`"
+            echo
+            echo '```'
+            echo "ghcr.io/${O}/drinksaver-backend:${V}"
+            echo "ghcr.io/${O}/drinksaver-web:${V}"
+            echo "ghcr.io/${O}/charts/drinksaver-backend:${V}"
+            echo "ghcr.io/${O}/charts/drinksaver-web:${V}"
+            echo '```'
+            echo
+            echo "Nothing was deployed. Run **Deploy to production** with version \`${V}\` when ready."
+          } >> "$GITHUB_STEP_SUMMARY"

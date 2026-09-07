@@ -1,14 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "drinksaver-frontend.name" -}}
+{{- define "drinksaver-web.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 */}}
-{{- define "drinksaver-frontend.fullname" -}}
+{{- define "drinksaver-web.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,16 +24,16 @@ Create a default fully qualified app name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "drinksaver-frontend.chart" -}}
+{{- define "drinksaver-web.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "drinksaver-frontend.labels" -}}
-helm.sh/chart: {{ include "drinksaver-frontend.chart" . }}
-{{ include "drinksaver-frontend.selectorLabels" . }}
+{{- define "drinksaver-web.labels" -}}
+helm.sh/chart: {{ include "drinksaver-web.chart" . }}
+{{ include "drinksaver-web.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -43,17 +43,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "drinksaver-frontend.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "drinksaver-frontend.name" . }}
+{{- define "drinksaver-web.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "drinksaver-web.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "drinksaver-frontend.serviceAccountName" -}}
+{{- define "drinksaver-web.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "drinksaver-frontend.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "drinksaver-web.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}

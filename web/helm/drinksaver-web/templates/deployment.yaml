@@ -1,16 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "drinksaver-frontend.fullname" . }}
+  name: {{ include "drinksaver-web.fullname" . }}
   labels:
-    {{- include "drinksaver-frontend.labels" . | nindent 4 }}
+    {{- include "drinksaver-web.labels" . | nindent 4 }}
 spec:
+  revisionHistoryLimit: 1
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "drinksaver-frontend.selectorLabels" . | nindent 6 }}
+      {{- include "drinksaver-web.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,20 +19,20 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "drinksaver-frontend.selectorLabels" . | nindent 8 }}
+        {{- include "drinksaver-web.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "drinksaver-frontend.serviceAccountName" . }}
+      serviceAccountName: {{ include "drinksaver-web.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}/{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.AppVersion }}-multi-architechture"
+          image: "{{ .Values.image.repository }}/{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
@@ -43,6 +44,15 @@ spec:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: "API_URL"
+              value: {{ .Values.config.apiUrl | quote }}
+            - name: "KEYCLOAK_URL"
+              value: {{ .Values.config.keycloakUrl | quote }}
+            - name: "KEYCLOAK_REALM"
+              value: {{ .Values.config.keycloakRealm | quote }}
+            - name: "KEYCLOAK_CLIENT_ID"
+              value: {{ .Values.config.keycloakClientId | quote }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

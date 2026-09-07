@@ -1,0 +1,35 @@
+# drinksaver-backend, production environment (namespace drinksaver).
+# Applied by .github/workflows/deploy.yml.
+# Ported from the drinksaver-backend release in the drinksaver-backend namespace.
+#
+# Values are stated explicitly rather than inherited from the chart defaults, so
+# a change to a default cannot silently alter production.
+
+datasource:
+  url: "jdbc:postgresql://postgres.postgres.svc.cluster.local:5432/drinksaver"
+  passwordSecretName: "secret-postgres-basic-auth"
+
+repository:
+  adminUserList: "392d2b7b-9eda-423f-8fe5-e395da35f708"
+
+cors:
+  allowedOrigins: "https://app.drinksaver.kak.im"
+
+jwt:
+  issuerUri: "https://auth.drinksaver.kak.im/auth/realms/drinksaver"
+  jwkSetUri: "https://auth.drinksaver.kak.im/auth/realms/drinksaver/protocol/openid-connect/certs"
+
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: api.drinksaver.kak.im
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: drinksaver-backend-tls
+      hosts:
+        - api.drinksaver.kak.im

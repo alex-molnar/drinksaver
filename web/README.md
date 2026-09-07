@@ -68,13 +68,13 @@ npm run preview
 ### Build Image
 
 ```bash
-docker build -t drinksaver-frontend .
+docker build -t drinksaver-web .
 ```
 
 ### Run Container
 
 ```bash
-docker run -p 3000:80 -e VITE_API_URL=http://your-backend:8080 drinksaver-frontend
+docker run -p 3000:80 -e VITE_API_URL=http://your-backend:8080 drinksaver-web
 ```
 
 The app will be available at `http://localhost:3000`
@@ -105,14 +105,14 @@ Services:
 
 ```bash
 # Install with default values
-helm install drinksaver ./helm/drinksaver-frontend
+helm install drinksaver ./helm/drinksaver-web
 
 # Install with custom backend URL
-helm install drinksaver ./helm/drinksaver-frontend \
+helm install drinksaver ./helm/drinksaver-web \
   --set backend.apiUrl=http://backend-service:8080
 
 # Install with ingress enabled
-helm install drinksaver ./helm/drinksaver-frontend \
+helm install drinksaver ./helm/drinksaver-web \
   --set ingress.enabled=true \
   --set ingress.hosts[0].host=drinksaver.example.com \
   --set ingress.hosts[0].paths[0].path=/ \
@@ -126,7 +126,7 @@ Key values in `values.yaml`:
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `backend.apiUrl` | Backend API URL (browser-accessible) | `http://localhost:8080` |
-| `image.repository` | Docker image repository | `drinksaver-frontend` |
+| `image.repository` | Docker image repository | `drinksaver-web` |
 | `image.tag` | Docker image tag | `latest` |
 | `service.type` | Kubernetes service type | `ClusterIP` |
 | `ingress.enabled` | Enable ingress | `false` |

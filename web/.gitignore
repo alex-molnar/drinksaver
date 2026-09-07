@@ -27,5 +27,5 @@ dist-ssr
 prompt
 runcommand
 dockbuild
-helm/drinksaver-frontend/install-cmd
+helm/drinksaver-web/install-cmd
 .version/*

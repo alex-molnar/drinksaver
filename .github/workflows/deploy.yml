@@ -1,0 +1,121 @@
+name: Deploy to production
+
+# Manual only. This is the production cutover, so it never fires on a push.
+on:
+  workflow_dispatch:
+    inputs:
+      deploy-backend:
+        description: 'Deploy the drinksaver-backend chart'
+        type: boolean
+        default: true
+      deploy-web:
+        description: 'Deploy the drinksaver-web chart'
+        type: boolean
+        default: true
+      version:
+        description: 'Version to pull from the registry. Leave empty to use the VERSION file.'
+        type: string
+        required: false
+        default: ''
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  version:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      owner: ${{ steps.v.outputs.owner }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: v
+        run: |
+          set -euo pipefail
+          INPUT="${{ inputs.version }}"
+          if [ -n "${INPUT}" ]; then
+            VERSION="${INPUT}"
+            echo "Using supplied version ${VERSION}"
+          else
+            VERSION="$(tr -d '[:space:]' < VERSION)"
+            echo "No version supplied, using VERSION file: ${VERSION}"
+          fi
+          OWNER="$(printf '%s' "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "owner=${OWNER}"     >> "$GITHUB_OUTPUT"
+
+  backend:
+    name: Deploy backend
+    needs: version
+    if: ${{ inputs.deploy-backend }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure kubectl
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.kube"
+          printf '%s' "${{ secrets.KUBE_CONFIG }}" | base64 -d > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      # Nothing is built here. The chart and image already exist, published by
+      # the build workflow, and are pulled by version.
+      - name: Deploy chart from registry
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.version.outputs.version }}"
+          OWNER="${{ needs.version.outputs.owner }}"
+          helm registry login ghcr.io \
+            --username "${{ github.actor }}" \
+            --password "${{ secrets.GITHUB_TOKEN }}"
+          helm upgrade --install drinksaver-backend \
+            "oci://ghcr.io/${OWNER}/charts/drinksaver-backend" \
+            --version "${VERSION}" \
+            --namespace drinksaver \
+            --values deploy/values/backend-prod.yaml \
+            --set image.tag="${VERSION}" \
+            --wait --timeout 5m
+
+      - name: Report
+        run: kubectl get deploy,pod,ingress -n drinksaver -l app.kubernetes.io/name=drinksaver-backend
+
+  web:
+    name: Deploy web
+    needs: version
+    if: ${{ inputs.deploy-web }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure kubectl
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.kube"
+          printf '%s' "${{ secrets.KUBE_CONFIG }}" | base64 -d > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Deploy chart from registry
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.version.outputs.version }}"
+          OWNER="${{ needs.version.outputs.owner }}"
+          helm registry login ghcr.io \
+            --username "${{ github.actor }}" \
+            --password "${{ secrets.GITHUB_TOKEN }}"
+          helm upgrade --install drinksaver-web \
+            "oci://ghcr.io/${OWNER}/charts/drinksaver-web" \
+            --version "${VERSION}" \
+            --namespace drinksaver \
+            --values deploy/values/web-prod.yaml \
+            --set image.tag="${VERSION}" \
+            --wait --timeout 5m
+
+      - name: Report
+        run: kubectl get deploy,pod,ingress -n drinksaver -l app.kubernetes.io/name=drinksaver-web

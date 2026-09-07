@@ -12,16 +12,10 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build the application with API URL (baked in at build time)
-ARG VITE_API_URL=http://localhost:8080
-ARG VITE_KEYCLOAK_URL=http://localhost:8081
-ARG VITE_KEYCLOAK_REALM=drinksaver
-ARG VITE_KEYCLOAK_CLIENT_ID=drinksaver-frontend
-RUN VITE_API_URL=${VITE_API_URL} \
-    VITE_KEYCLOAK_URL=${VITE_KEYCLOAK_URL} \
-    VITE_KEYCLOAK_REALM=${VITE_KEYCLOAK_REALM} \
-    VITE_KEYCLOAK_CLIENT_ID=${VITE_KEYCLOAK_CLIENT_ID} \
-    npm run build
+# Build the application. No environment configuration is baked in: the bundle
+# reads window.__DRINKSAVER_CONFIG__, which docker-entrypoint.sh writes to
+# /config.js at container start. One image therefore serves any environment.
+RUN npm run build
 
 # Production stage
 FROM nginx:alpine

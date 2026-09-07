@@ -1,10 +1,11 @@
 import Keycloak from 'keycloak-js';
+import config from '../config';
 
-// Keycloak configuration - configurable via environment variables
+// Keycloak configuration, supplied at container start by /config.js
 const keycloakConfig = {
-  url: import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8081/auth',
-  realm: import.meta.env.VITE_KEYCLOAK_REALM || 'drinksaver',
-  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'drinksaver-frontend',
+  url: config.keycloakUrl,
+  realm: config.keycloakRealm,
+  clientId: config.keycloakClientId,
 };
 
 // Create Keycloak instance
