@@ -140,6 +140,46 @@ Pulls the already published charts by version and deploys them into
 Each workflow has a `concurrency` group, so two runs can never perform
 overlapping `helm upgrade` calls on the same release.
 
+## Testing
+
+Both applications have a suite, and both gate CI.
+
+| Application | Stack | Command |
+|---|---|---|
+| Backend | JUnit 5, Mockito, AssertJ, Testcontainers | `cd backend && mvn test` |
+| Web | Vitest 5, jsdom, React Testing Library | `cd web && npm run test` |
+
+Backend tests run automatically wherever `mvn package` runs, which covers both
+"Build and publish" and "Deploy backend to test". The web workflows run
+`npm run test` in an explicit step ahead of the image build, because the image
+build only compiles the app and would not otherwise notice a red test.
+
+### Backend test tiers
+
+Unit tests use mocked Spring Data interfaces and need nothing running.
+Integration tests are marked `@Testcontainers(disabledWithoutDocker = true)` and
+start a real Postgres container, so they skip rather than fail on a machine with
+no Docker.
+
+Two version details are easy to trip over. Spring Boot 4 moved the test slice
+annotations out of `spring-boot-test-autoconfigure` into per-technology modules,
+so `@DataJpaTest` comes from `spring-boot-data-jpa-test`. Testcontainers 2.x
+renamed its modules to `testcontainers-junit-jupiter` and
+`testcontainers-postgresql`, and `PostgreSQLContainer` moved to
+`org.testcontainers.postgresql` and is no longer generic.
+
+### Running the integration tests on Colima
+
+Testcontainers looks for `/var/run/docker.sock`, which Colima does not create.
+Export these first, or the container tests will silently skip:
+
+```bash
+export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"
+export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+```
+
+GitHub runners need neither.
+
 ## Per-environment configuration
 
 Values live in `deploy/values/`, outside the chart directories so they are not
@@ -315,10 +355,10 @@ chart's `config.*` values are wrong for that environment.
 
 ## Follow-ups not done here
 
-- `web` has no test framework. Adding `vitest` was deferred because `vite` is on
-  a very new major and dependency compatibility could not be verified offline.
-  `src/config.ts` is the piece most worth covering.
-- The backend has no tests at all, so CI has nothing to run.
+- Both applications now have tests, so this is no longer outstanding. The web app
+  uses Vitest 5, whose peer range covers Vite 8, which settles the compatibility
+  question that deferred it. The backend uses JUnit 5, with Testcontainers for the
+  repository layer.
 - The web bundle is a single 660 kB chunk. Code splitting would help first load.
 - Four old resources remain from before the consolidation and can be removed
   once production is cut over: namespaces `drinksaver-backend`,
