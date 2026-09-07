@@ -79,6 +79,11 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<!--
 			Spring Boot 4 moved the test slice annotations out of
 			spring-boot-test-autoconfigure and into per-technology modules.
@@ -212,5 +217,28 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<!--
+				Used by CI only. AbstractPostgresIntegrationTest skips the container
+				tests when Docker is missing, which is right on a laptop and wrong on a
+				runner: a green build that silently tested nothing is worse than a red
+				one. This flag makes those tests run and fail instead of skipping.
+			-->
+			<id>ci</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Ddrinksaver.requireDocker=true</argLine>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>
