@@ -1,52 +1,34 @@
 package com.drinksaver.repository.postgres.schema;
 
-import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.DockerClientFactory;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * One Postgres for the whole test run.
  *
- * Deliberately does NOT use @Testcontainers/@Container. Those manage the
- * container per test class: a static @Container field is started before the
- * class and STOPPED after it, so the first integration class to finish would
- * shut the database down and every later class would sit waiting on a dead
- * connection until Hikari timed out after 30 seconds.
+ * Two details here are load-bearing and easy to get wrong.
  *
- * Instead the container starts once from a static initialiser and is never
- * stopped explicitly. Testcontainers' Ryuk sidecar removes it when the JVM
- * exits, so nothing is left running.
+ * There is deliberately no @Container on the field. @Container makes JUnit own
+ * the lifecycle per test class: a static one is started before the class and
+ * STOPPED after it, so the first integration class to finish would shut the
+ * database down and every later class would block until Hikari gave up after
+ * 30 seconds. That failure mode cost 13 errored tests before it was spotted.
+ * Without @Container, Spring Boot's @ServiceConnection support starts the
+ * container when it first needs connection details and leaves it running, so
+ * all the integration classes share one. Ryuk removes it when the JVM exits.
  *
- * The Docker check appears twice on purpose. The static initialiser guard stops
- * class loading from throwing on a machine with no Docker, and @EnabledIf then
- * skips the tests rather than failing them. The `ci` Maven profile sets
- * drinksaver.requireDocker so CI fails loudly instead of quietly testing
- * nothing.
+ * @Testcontainers is still present, without @Container, purely for
+ * disabledWithoutDocker: it contributes the condition that skips these tests on
+ * a machine with no Docker, which is right for a laptop. CI must not rely on
+ * that leniency, so the workflow asserts afterwards that the integration tests
+ * actually ran.
  */
 @DataJpaTest
-@EnabledIf("dockerAvailableOrRequired")
+@Testcontainers(disabledWithoutDocker = true)
 abstract class AbstractPostgresIntegrationTest {
 
     @ServiceConnection
     static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine");
-
-    static {
-        if (dockerAvailable()) {
-            POSTGRES.start();
-        }
-    }
-
-    static boolean dockerAvailable() {
-        return DockerClientFactory.instance().isDockerAvailable();
-    }
-
-    /**
-     * True when Docker is present, or when CI has demanded it: in that case the
-     * tests run and fail on the missing database rather than silently skipping.
-     */
-    static boolean dockerAvailableOrRequired() {
-        return dockerAvailable() || Boolean.getBoolean("drinksaver.requireDocker");
-    }
 }

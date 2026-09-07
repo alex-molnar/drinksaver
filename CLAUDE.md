@@ -124,10 +124,9 @@ Both suites gate CI, as does `npm run lint` for the web app. A red test or a lin
 stops the test deploy and stops the publish. Lint warnings are not blocking.
 
 Coverage is gated too, as a ratchet rather than a target: JaCoCo on the backend
-(`mvn verify`, currently 25% instructions) and v8 on the web app
-(`npm run test:coverage`, currently 91% statements). Those numbers are low
-because the suites are new. Raise them as tests are added, never lower them to
-make a build pass.
+(`mvn verify`, currently 67% instructions) and v8 on the web app
+(`npm run test:coverage`, currently 91% statements). Raise them as tests are
+added, never lower them to make a build pass.
 
 ## Environment and infrastructure
 
