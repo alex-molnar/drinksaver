@@ -107,6 +107,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Nothing in this job uses git after checkout, and the job now runs
+          # third-party npm install scripts. Not leaving the token in
+          # .git/config keeps a compromised dev dependency away from it.
+          persist-credentials: false
 
       - name: Stamp version into package.json
         env:
