@@ -1,7 +1,8 @@
-# Keeps a local `mvn package` out of the build context. Nothing here is copied
-# by deploy/local/backend.Dockerfile, but without this every `--build` tars the
-# whole target directory and sends it to the daemon.
-target/
+# Keeps build output out of the Docker context without hiding the artifact the
+# shipped backend/Dockerfile needs: it does COPY target/drinksaver-backend-*.jar,
+# so target/ must NOT be excluded wholesale.
+target/*
+!target/*.jar
 .mvn/
 *.iml
 .idea/
