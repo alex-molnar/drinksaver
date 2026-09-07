@@ -180,6 +180,62 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
 
 GitHub runners need neither.
 
+## Local development
+
+`compose.yaml` at the repo root runs the whole application locally. It exists so end to end
+behaviour can be exercised without the cluster, and nothing in CI or any environment uses
+it.
+
+```bash
+docker-compose up --build     # start everything
+docker-compose down -v        # stop and discard all data
+```
+
+| Service | URL | Notes |
+|---|---|---|
+| Web | http://localhost:3000 | Log in as `dev` / `dev` |
+| Backend | http://localhost:8080 | Swagger UI at `/swagger-ui.html` |
+| Keycloak | http://localhost:8081/auth | Admin console `admin` / `admin` |
+| Postgres | localhost:5432 | `drinksaver` / `drinksaver` |
+
+Every credential there is a local throwaway.
+
+### What it starts
+
+`deploy/local/backend.Dockerfile` builds the backend from source, because the shipped
+`backend/Dockerfile` copies a jar that Maven has already produced in CI. So the only thing
+needed on the host is Docker.
+
+`deploy/local/keycloak-realm.json` is imported on first start. It creates the `drinksaver`
+realm, the public `drinksaver-frontend` client, and one user with the fixed id
+`423c91e4-491f-4f82-aba6-3c982857e0e4`.
+
+`deploy/local/seed.sql` loads demo data. It runs as its own one-shot service that waits for
+the backend to report healthy, because Hibernate creates the schema on startup
+(`ddl-auto=update`) and there is nothing to insert into before that. It is idempotent and
+resets the identity sequences afterwards, so the application cannot collide with the seeded
+ids.
+
+The seeded user is also the `ADMIN_USER_LIST` entry, which is what makes its rows serve as
+the shared default recommendations rather than one user's private entries.
+
+### Two settings that are easy to get wrong
+
+**The Keycloak path has to be set twice.** `KC_HTTP_RELATIVE_PATH: /auth` puts the server
+under `/auth`, but `KC_HOSTNAME` given as a full URL overrides the base used to build the
+token issuer. With `KC_HOSTNAME: http://localhost:8081` the tokens claim
+`http://localhost:8081/realms/drinksaver`, the backend expects
+`http://localhost:8081/auth/realms/drinksaver`, and every request fails with
+`The iss claim is not valid`. The hostname must carry the path too.
+
+**The backend needs two different Keycloak URLs.** The browser gets tokens whose issuer is
+the host-facing `http://localhost:8081/auth/...`, but the backend fetches signing keys over
+the compose network at `http://keycloak:8080/auth/...`. `JWT_ISSUER_URI` is what gets
+validated and `JWT_JWK_SET_URI` is what gets fetched, so they are deliberately different.
+
+`KC_HTTP_RELATIVE_PATH` also moves the management interface, so the readiness endpoint is
+`/auth/health/ready` on port 9000, not `/health/ready`.
+
 ## Per-environment configuration
 
 Values live in `deploy/values/`, outside the chart directories so they are not

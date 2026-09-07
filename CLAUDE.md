@@ -89,16 +89,17 @@ How to apply it:
 
 Never claim a feature is done from unit tests alone.
 
-**Target state:** a `compose.yaml` at the repo root brings up Postgres seeded with dummy
-data and Keycloak with a realm import, so the full stack can be exercised locally. Run the
-end to end check against that, then confirm the test environment rollout with `gh` and
-`kubectl`.
+`compose.yaml` at the repo root brings up the whole application: Postgres seeded with demo
+data, Keycloak with an imported realm, the backend built from source, and the web app.
 
-**This does not exist yet.** The stale `web/docker-compose.yaml` is from before the
-monorepo merge: it pins a Docker Hub image (`kingbrady/drinksaver-backend:1.3.0`), Postgres
-15 and Keycloak 24, and has no realm import. Do not use it and do not extend it. The first
-task that needs a local stack builds the root `compose.yaml` from source and deletes the
-old file.
+```bash
+docker-compose up --build     # http://localhost:3000, log in as dev / dev
+docker-compose down -v        # stop and discard all data
+```
+
+Run the end to end check against that, then confirm the test environment rollout with `gh`
+and `kubectl`. See `docs/DEPLOYMENT.md` for what each service does and the two settings
+that are easy to get wrong.
 
 ## Testing
 
@@ -167,7 +168,6 @@ toward something with real character, and present options rather than picking fo
 
 Listed so it does not get rediscovered every session.
 
-- No local development stack. See Verification above.
 - `npm run lint` reports 12 errors and 6 warnings in `web/src/auth/KeycloakProvider.tsx`
   and five `web/src/pages/New*Page.tsx` and `DetailedPage.tsx` files. All predate the test
   setup and none are in files it touched. Lint is not currently a CI gate.
