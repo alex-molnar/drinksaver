@@ -2,8 +2,11 @@ name: Deploy web to test
 
 on:
   push:
-    branches:
-      - '**'
+    branches-ignore:
+      # main is handled by "Build and publish", which publishes artifacts, and
+      # by "Deploy to production", which is manual. Nothing here should react to
+      # a merge.
+      - main
     paths:
       - 'web/**'
   workflow_dispatch:

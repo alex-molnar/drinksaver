@@ -1,12 +1,16 @@
 name: Apply backend test values
 
-# Values-only redeploy. Nothing is compiled and nothing is published: this
+# Values-only redeploy, on non-main branches only. Nothing is compiled and
+# nothing is published: this
 # reapplies deploy/values/backend-test.yaml to whatever chart version is already
 # released in drinksaver-test.
 on:
   push:
-    branches:
-      - '**'
+    branches-ignore:
+      # main is handled by "Build and publish", which publishes artifacts, and
+      # by "Deploy to production", which is manual. Nothing here should react to
+      # a merge.
+      - main
     paths:
       - 'deploy/values/backend-test.yaml'
   workflow_dispatch:

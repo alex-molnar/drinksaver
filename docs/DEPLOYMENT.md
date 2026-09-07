@@ -62,10 +62,24 @@ helm pull oci://ghcr.io/alex-molnar/charts/drinksaver-backend --version 3.0.0
 
 ## Workflows
 
+Only two workflows react to `main`, and neither of them touches the test
+environment.
+
+| Workflow | Fires on push to `main`? | Otherwise triggered by |
+|---|---|---|
+| Build and publish | **yes** | manual |
+| Deploy to production | no | manual only |
+| Deploy backend to test | no | push to any other branch, `backend/**` |
+| Deploy web to test | no | push to any other branch, `web/**` |
+| Apply backend test values | no | push to any other branch, `deploy/values/backend-test.yaml` |
+| Apply web test values | no | push to any other branch, `deploy/values/web-test.yaml` |
+
+Every workflow can also be dispatched manually, including against `main`.
+
 ### Deploy backend to test / Deploy web to test
 
-Trigger: any push on any branch that touches `backend/**` or `web/**`
-respectively. Also runnable manually.
+Trigger: a push to any branch **except `main`** that touches `backend/**` or
+`web/**` respectively. Also runnable manually.
 
 Builds the application, builds and pushes the image, packages and pushes the
 chart, then deploys the chart it just published into `drinksaver-test`. It
@@ -75,10 +89,18 @@ push fails the run instead of hiding behind a local file.
 A change confined to `.github/workflows/**` does not trigger these, by design.
 Use the manual run for that.
 
+`main` is excluded deliberately. A merge is handled by the build workflow, which
+publishes artifacts, and then by the manual production deploy. The consequence
+worth knowing: merging to `main` does not refresh `drinksaver-test`. Test holds
+a build from a feature branch, which is what makes it useful for pre-merge
+validation. To put a `main` build into test, run the workflow manually against
+`main`.
+
 ### Apply backend test values / Apply web test values
 
-Trigger: a push touching `deploy/values/backend-test.yaml` or
-`deploy/values/web-test.yaml` respectively. Also runnable manually.
+Trigger: a push to any branch **except `main`** touching
+`deploy/values/backend-test.yaml` or `deploy/values/web-test.yaml`
+respectively. Also runnable manually.
 
 Reapplies the values file to the chart version already released in
 `drinksaver-test`. Nothing is compiled and nothing is published, so this is the

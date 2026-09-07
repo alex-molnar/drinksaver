@@ -1,12 +1,15 @@
 name: Deploy backend to test
 
-# Any push on any branch that touches the backend. workflow_dispatch is included
+# Any push to a non-main branch that touches the backend. workflow_dispatch is included
 # so a run can be repeated without an empty commit, and so a change confined to
 # .github/workflows can be exercised.
 on:
   push:
-    branches:
-      - '**'
+    branches-ignore:
+      # main is handled by "Build and publish", which publishes artifacts, and
+      # by "Deploy to production", which is manual. Nothing here should react to
+      # a merge.
+      - main
     paths:
       - 'backend/**'
   workflow_dispatch:
