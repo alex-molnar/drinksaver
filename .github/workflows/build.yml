@@ -124,7 +124,10 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          # jsdom 30 requires ^22.22.2 || ^24.15.0 || >=26, and vitest 5
+          # requires ^22.12 or newer. Node 20 fails at import with
+          # "webidl.util.markAsUncloneable is not a function".
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: web/package-lock.json
 
