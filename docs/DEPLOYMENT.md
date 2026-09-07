@@ -165,9 +165,12 @@ This is why one image can be promoted from test to production unchanged. Before
 this change these were Docker build arguments, which is why test needed its own
 separately built image tag.
 
-**`config.keycloakClientId` is `drinksaver-frontend` and must stay that way.**
-It is the client ID registered in Keycloak, not a local name. Renaming it
-without renaming the Keycloak client in both realms breaks login.
+**`config.keycloakClientId` must match the client registered in that realm.**
+It is a Keycloak client ID, not a local name, and it differs per environment:
+test uses `test-drinksaver-web`, production currently uses
+`drinksaver-frontend`. Changing it here without the matching client existing in
+Keycloak breaks login for that environment. Because it is a runtime value,
+correcting it is a values change plus an apply run, not an image rebuild.
 
 ## CI access to the cluster
 

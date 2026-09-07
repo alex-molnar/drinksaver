@@ -41,8 +41,8 @@ export const config: RuntimeConfig = {
   apiUrl: pick(injected?.apiUrl, import.meta.env.VITE_API_URL, 'http://localhost:8080'),
   keycloakUrl: pick(injected?.keycloakUrl, import.meta.env.VITE_KEYCLOAK_URL, 'http://localhost:8081/auth'),
   keycloakRealm: pick(injected?.keycloakRealm, import.meta.env.VITE_KEYCLOAK_REALM, 'drinksaver'),
-  // NOTE: this is the client ID registered in Keycloak, not a local name.
-  // It stays `drinksaver-frontend` even though the app is now called web.
+  // A Keycloak client ID, not a local name. It differs per environment and is
+  // supplied at runtime; this default only applies to local development.
   keycloakClientId: pick(
     injected?.keycloakClientId,
     import.meta.env.VITE_KEYCLOAK_CLIENT_ID,

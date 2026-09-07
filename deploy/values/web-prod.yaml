@@ -5,7 +5,8 @@ config:
   apiUrl: "https://api.drinksaver.kak.im"
   keycloakUrl: "https://auth.drinksaver.kak.im/auth"
   keycloakRealm: "drinksaver"
-  # The client ID registered in Keycloak, not a local name.
+  # The client ID registered in the production Keycloak realm. Test uses
+  # test-drinksaver-web; confirm this still matches production before cutover.
   keycloakClientId: "drinksaver-frontend"
 
 ingress:

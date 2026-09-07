@@ -13,8 +13,9 @@ config:
   apiUrl: "https://api.drinksaver.kak.im"
   keycloakUrl: "https://auth.drinksaver.kak.im/auth"
   keycloakRealm: "drinksaver"
-  # NOTE: the client ID registered in Keycloak, not a local name. It stays
-  # drinksaver-frontend even though this app is now called web.
+  # A Keycloak client ID, not a local name. It must match a client that exists
+  # in the realm above, and it differs per environment, so both values files
+  # override it. See deploy/values/web-{test,prod}.yaml.
   keycloakClientId: "drinksaver-frontend"
 
 imagePullSecrets: []

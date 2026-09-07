@@ -148,3 +148,14 @@ overlapping `helm upgrade` calls against one release.
   database.
 - Whether the API server firewall accepts GitHub runner source IPs is unproven
   until the first workflow run.
+
+## Correction, 2026-09-07
+
+The section above states that the Keycloak client ID stays `drinksaver-frontend`
+everywhere. That was wrong about test: the client registered in the
+`test-drinksaver` realm is `test-drinksaver-web`, corrected in `c5a0f5a`.
+
+The durable point stands, and in fact came out better than described: the client
+ID is a per-environment runtime value, so fixing it took a one-line values
+change and an apply run rather than a rebuild and a redeploy. Production
+still carries `drinksaver-frontend` and needs confirming before cutover.

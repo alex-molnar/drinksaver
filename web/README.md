@@ -157,9 +157,9 @@ Key values in `values.yaml`:
 | `ingress.enabled` | Enable ingress | `true` |
 | `replicaCount` | Number of replicas | `1` |
 
-`config.keycloakClientId` is the client ID registered in Keycloak, not a local
-name. It stays `drinksaver-frontend` even though this app is called web.
-Changing it without renaming the Keycloak client breaks login.
+`config.keycloakClientId` is a Keycloak client ID, not a local name, and it
+differs per environment. It must match a client that actually exists in the
+realm named by `config.keycloakRealm`, or login fails for that environment.
 
 ## Project Structure
 
