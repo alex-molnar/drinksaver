@@ -219,6 +219,28 @@ ids.
 The seeded user is also the `ADMIN_USER_LIST` entry, which is what makes its rows serve as
 the shared default recommendations rather than one user's private entries.
 
+### The local realm is deliberately not production shaped
+
+`deploy/local/keycloak-realm.json` carries `"displayName": "DrinkSaver LOCAL
+DEVELOPMENT ONLY"` because a realm export is the kind of file that gets copied.
+It sets `sslRequired: none`, which is fine over loopback and unacceptable
+anywhere else.
+
+It keeps `directAccessGrantsEnabled: true` on purpose. That enables the password
+grant, which is what lets a script obtain a token without driving a browser:
+
+```bash
+curl -s -X POST http://localhost:8081/auth/realms/drinksaver/protocol/openid-connect/token \
+  -d grant_type=password -d client_id=drinksaver-frontend \
+  -d username=dev -d password=dev
+```
+
+That is the fastest way to check the backend end to end. The realm also sets
+`bruteForceProtected: true` and requires PKCE via
+`pkce.code.challenge.method: S256`, so the password endpoint is throttled and
+the browser flow is enforced server side rather than only client side. Do not
+carry the password grant into a real realm.
+
 ### Two settings that are easy to get wrong
 
 **The Keycloak path has to be set twice.** `KC_HTTP_RELATIVE_PATH: /auth` puts the server

@@ -99,23 +99,29 @@ The app will be available at `http://localhost:3000`
 
 ## Docker Compose (Full Stack)
 
-Run the complete stack including frontend, backend, and PostgreSQL:
+The compose file lives at the repository root, not here. Run it from there:
 
 ```bash
-# Start all services
-docker-compose up -d
+cd ..
+
+# Start all services, building the backend and web images from source
+docker-compose up --build
 
 # View logs
 docker-compose logs -f
 
-# Stop all services
-docker-compose down
+# Stop all services and discard the database
+docker-compose down -v
 ```
 
 Services:
-- **Frontend**: http://localhost:3000
+- **Frontend**: http://localhost:3000, log in as `dev` / `dev`
 - **Backend API**: http://localhost:8080
+- **Keycloak**: http://localhost:8081/auth, admin console `admin` / `admin`
 - **PostgreSQL**: localhost:5432
+
+See `docs/DEPLOYMENT.md` for what each service does and the settings that are
+easy to get wrong.
 
 ## Helm Chart (Kubernetes)
 

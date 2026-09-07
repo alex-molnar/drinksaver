@@ -13,7 +13,9 @@ name: drinksaver
 # Backend    http://localhost:8080
 # Keycloak   http://localhost:8081/auth   admin console: admin / admin
 #
-# Every credential in this file is a local throwaway.
+# Every credential in this file is a local throwaway, and every published
+# port is bound to 127.0.0.1 so those credentials stay unreachable from the
+# rest of the network.
 
 services:
   postgres:
@@ -23,12 +25,16 @@ services:
       POSTGRES_USER: drinksaver
       POSTGRES_PASSWORD: drinksaver
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./deploy/local/postgres-init.sql:/docker-entrypoint-initdb.d/postgres-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U drinksaver -d drinksaver"]
+      # -h forces TCP. Without it this probes the temporary socket-only
+      # server that the entrypoint runs init scripts against, so it can
+      # report healthy before postgres-init.sql has created the keycloak
+      # database, and Keycloak then dies on startup.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U drinksaver -d drinksaver"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -56,7 +62,7 @@ services:
       KC_HOSTNAME_STRICT: "false"
       KC_HEALTH_ENABLED: "true"
     ports:
-      - "8081:8080"
+      - "127.0.0.1:8081:8080"
     volumes:
       - ./deploy/local/keycloak-realm.json:/opt/keycloak/data/import/keycloak-realm.json:ro
     depends_on:
@@ -97,7 +103,7 @@ services:
       JWT_ISSUER_URI: http://localhost:8081/auth/realms/drinksaver
       JWT_JWK_SET_URI: http://keycloak:8080/auth/realms/drinksaver/protocol/openid-connect/certs
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -140,7 +146,7 @@ services:
       KEYCLOAK_REALM: drinksaver
       KEYCLOAK_CLIENT_ID: drinksaver-frontend
     ports:
-      - "3000:80"
+      - "127.0.0.1:3000:80"
     depends_on:
       backend:
         condition: service_healthy

@@ -1,0 +1,7 @@
+# Keeps a local `mvn package` out of the build context. Nothing here is copied
+# by deploy/local/backend.Dockerfile, but without this every `--build` tars the
+# whole target directory and sends it to the daemon.
+target/
+.mvn/
+*.iml
+.idea/

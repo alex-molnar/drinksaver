@@ -14,7 +14,8 @@ FROM eclipse-temurin:21-jre
 WORKDIR /app
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl \
- && apt-get clean
+ && apt-get clean \
+ && find /var/lib/apt/lists -mindepth 1 -delete
 COPY --from=build /src/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
