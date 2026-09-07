@@ -113,3 +113,16 @@ subtypes. Worth a Testcontainers test once the intended behaviour is settled.
 `String.format("(%s - %.2fl)", ...)` with no `Locale`. Under a comma-decimal default locale
 this renders `0,50l`. The container currently runs with a dot locale so it is invisible
 today, and it silently changes with the JVM's locale. `Locale.ROOT` would pin it.
+
+## F10. The save button on the detailed form has no accessible name
+
+`DetailedPage`'s save control is a MUI `Fab` containing only a `SaveIcon`, with no
+`aria-label`. A screen reader announces it as "button" with no indication of what it does,
+and it is the primary action of that screen.
+
+Found while writing the end-to-end tests, which cannot select it by role and name and fall
+back to the `MuiFab-root` class. MUI's icon `data-testid` is stripped from production
+bundles, so that is not an alternative either.
+
+Same class of defect as the `QuantitySelector` icon buttons fixed earlier, and the same
+one-line fix. Left alone here because it is a source change and this branch is tests only.

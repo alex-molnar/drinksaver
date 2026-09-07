@@ -120,6 +120,11 @@ module naming that is easy to get wrong.
 `web/src/config.ts` builds its export at import time, so any test of it must call
 `vi.resetModules()` and re-import per case. `web/src/config.test.ts` shows the pattern.
 
+End-to-end journeys live in `web/e2e/` and run with `npm run e2e` against the local
+compose stack, which must already be up. They drive a real browser through the real
+Keycloak login, so they need no mocks. In CI they run on `main` only, after a merge, which
+keeps feature pushes fast while still gating a release.
+
 Both suites gate CI, as does `npm run lint` for the web app. A red test or a lint error
 stops the test deploy and stops the publish. Lint warnings are not blocking.
 
