@@ -1,5 +1,7 @@
 # drinksaver-backend, test environment (namespace drinksaver-test).
 # Applied by .github/workflows/deploy-test-backend.yml.
+# Editing this file triggers "Apply backend test values", which reapplies it
+# to the chart version already released in drinksaver-test without rebuilding.
 # Ported from the retired test-drinksaver-backend release.
 
 datasource:

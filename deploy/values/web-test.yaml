@@ -1,5 +1,7 @@
 # drinksaver-web, test environment (namespace drinksaver-test).
 # Applied by .github/workflows/deploy-test-web.yml.
+# Editing this file triggers "Apply web test values", which reapplies it to the
+# chart version already released in drinksaver-test without rebuilding.
 #
 # These used to be Docker build arguments, which is why test needed its own
 # image tag. They are runtime values now, so test and production share an image.

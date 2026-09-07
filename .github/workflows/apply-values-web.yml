@@ -1,0 +1,80 @@
+name: Apply web test values
+
+# Values-only redeploy. Nothing is compiled and nothing is published: this
+# reapplies deploy/values/web-test.yaml to whatever chart version is already
+# released in drinksaver-test.
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'deploy/values/web-test.yaml'
+  workflow_dispatch:
+
+# Shares the group with "Deploy web to test" on purpose. Both mutate the
+# same release, so they must never run concurrently.
+concurrency:
+  group: deploy-test-web
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  apply:
+    name: Reapply values to drinksaver-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+
+      - name: Configure kubectl
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          set -euo pipefail
+          # umask first: the redirect below creates the file before chmod runs.
+          umask 077
+          mkdir -p "$HOME/.kube"
+          printf '%s' "$KUBE_CONFIG" | base64 -d > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      # The released chart version is the source of truth. It is whatever the
+      # test pipeline last published, so there is no "latest" tag to maintain
+      # and no risk of pulling a version that was never deployed here.
+      - name: Read released chart version
+        id: rel
+        run: |
+          set -euo pipefail
+          CHART="$(helm list -n drinksaver-test --filter '^drinksaver-web$' -o json \
+            | jq -r '.[0].chart // empty')"
+          if [ -z "$CHART" ]; then
+            echo "::error::No drinksaver-web release found in drinksaver-test." \
+                 "Run \"Deploy web to test\" first: there is nothing to reapply values to."
+            exit 1
+          fi
+          VERSION="${CHART#drinksaver-web-}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Reapplying values to chart version ${VERSION}"
+
+      - name: Apply values
+        env:
+          VERSION: ${{ steps.rel.outputs.version }}
+          OWNER_RAW: ${{ github.repository_owner }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          OWNER="$(printf '%s' "$OWNER_RAW" | tr '[:upper:]' '[:lower:]')"
+          helm registry login ghcr.io --username "$GH_ACTOR" --password "$GH_TOKEN"
+          helm upgrade drinksaver-web \
+            "oci://ghcr.io/${OWNER}/charts/drinksaver-web" \
+            --version "$VERSION" \
+            --namespace drinksaver-test \
+            --values deploy/values/web-test.yaml \
+            --set image.tag="$VERSION" \
+            --wait --timeout 5m
+
+      - name: Report
+        run: kubectl get deploy,pod,ingress -n drinksaver-test -l app.kubernetes.io/name=drinksaver-web

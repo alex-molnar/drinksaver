@@ -75,6 +75,25 @@ push fails the run instead of hiding behind a local file.
 A change confined to `.github/workflows/**` does not trigger these, by design.
 Use the manual run for that.
 
+### Apply backend test values / Apply web test values
+
+Trigger: a push touching `deploy/values/backend-test.yaml` or
+`deploy/values/web-test.yaml` respectively. Also runnable manually.
+
+Reapplies the values file to the chart version already released in
+`drinksaver-test`. Nothing is compiled and nothing is published, so this is the
+fast path for a configuration-only change: a new hostname, a CORS origin, a
+different Keycloak realm.
+
+The chart version comes from `helm list`, so it is whatever the test pipeline
+last published. There is no `latest` tag to maintain, and no way to accidentally
+pull a version that was never deployed here. If no release exists yet the run
+fails with a message telling you to run the full deploy workflow first, because
+there is nothing to reapply values to.
+
+These share a `concurrency` group with the corresponding deploy workflow, since
+both mutate the same release and must never overlap.
+
 ### Build and publish
 
 Trigger: any push to `main`, which includes a merged pull request. Also runnable
