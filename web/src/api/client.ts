@@ -1,8 +1,9 @@
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
 import keycloak from '../auth/keycloak';
+import config from '../config';
 
-// API base URL - configurable via environment variable
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+// API base URL, supplied at container start by /config.js
+const API_BASE_URL = config.apiUrl;
 
 // Create axios instance with default config
 const apiClient: AxiosInstance = axios.create({

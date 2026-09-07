@@ -1,10 +1,37 @@
 #!/bin/sh
-set -e
+set -eu
 
-# This script is used to start nginx
-# API_URL is now baked in at build time via VITE_API_URL build argument
+# Write runtime configuration into the static bundle before nginx starts.
+#
+# The React bundle reads window.__DRINKSAVER_CONFIG__ (see src/config.ts), so
+# nothing environment-specific is baked in at build time and one image can be
+# promoted from test to production unchanged.
 
-echo "Starting frontend..."
+CONFIG_FILE=/usr/share/nginx/html/config.js
 
-# Execute the CMD
+API_URL="${API_URL:-http://localhost:8080}"
+KEYCLOAK_URL="${KEYCLOAK_URL:-http://localhost:8081/auth}"
+KEYCLOAK_REALM="${KEYCLOAK_REALM:-drinksaver}"
+KEYCLOAK_CLIENT_ID="${KEYCLOAK_CLIENT_ID:-drinksaver-frontend}"
+
+# Escape backslashes and double quotes so a stray character cannot break out of
+# the generated string literal. Newlines are stripped rather than escaped: they
+# cannot legitimately appear in a URL, realm, or client ID, and an unescaped one
+# would make the whole file a SyntaxError, silently reverting the app to its
+# localhost defaults.
+escape() {
+  printf '%s' "$1" | tr -d '\r\n' | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
+}
+
+cat > "$CONFIG_FILE" <<CONFIG
+window.__DRINKSAVER_CONFIG__ = {
+  apiUrl: "$(escape "$API_URL")",
+  keycloakUrl: "$(escape "$KEYCLOAK_URL")",
+  keycloakRealm: "$(escape "$KEYCLOAK_REALM")",
+  keycloakClientId: "$(escape "$KEYCLOAK_CLIENT_ID")"
+};
+CONFIG
+
+echo "Starting frontend with apiUrl=${API_URL} keycloakUrl=${KEYCLOAK_URL} realm=${KEYCLOAK_REALM}"
+
 exec "$@"

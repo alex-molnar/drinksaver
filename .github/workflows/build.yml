@@ -1,0 +1,174 @@
+name: Build and publish
+
+# Any push to main, which includes a merged pull request. Nothing is deployed.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: build-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+# Context values are passed through env rather than interpolated into shell
+# bodies, so nothing from the event payload can be parsed as shell.
+jobs:
+  version:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      owner: ${{ steps.v.outputs.owner }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: v
+        env:
+          OWNER_RAW: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          OWNER="$(printf '%s' "$OWNER_RAW" | tr '[:upper:]' '[:lower:]')"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "owner=${OWNER}"     >> "$GITHUB_OUTPUT"
+          echo "Publishing version ${VERSION}"
+
+  backend:
+    name: Backend image and chart
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Set Maven project version
+        working-directory: backend
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          mvn -B --no-transfer-progress \
+            org.codehaus.mojo:versions-maven-plugin:2.17.1:set \
+            -DnewVersion="$VERSION" \
+            -DgenerateBackupPoms=false
+
+      - name: Build application
+        working-directory: backend
+        run: mvn -B --no-transfer-progress package
+
+      - name: Set up Buildx
+        # The runner's default builder uses the docker driver, which cannot
+        # export a GitHub Actions cache. A docker-container builder can.
+        uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          build-args: |
+            VERSION=${{ needs.version.outputs.version }}
+          tags: ghcr.io/${{ needs.version.outputs.owner }}/drinksaver-backend:${{ needs.version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Package and push Helm chart
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          OWNER: ${{ needs.version.outputs.owner }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          helm registry login ghcr.io --username "$GH_ACTOR" --password "$GH_TOKEN"
+          helm package backend/drinksaver-backend \
+            --version "$VERSION" --app-version "$VERSION" \
+            --destination dist
+          helm push "dist/drinksaver-backend-${VERSION}.tgz" "oci://ghcr.io/${OWNER}/charts"
+
+  web:
+    name: Web image and chart
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Stamp version into package.json
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          jq --arg v "$VERSION" '.version = $v' web/package.json > web/package.json.tmp
+          mv web/package.json.tmp web/package.json
+
+      - name: Set up Buildx
+        # The runner's default builder uses the docker driver, which cannot
+        # export a GitHub Actions cache. A docker-container builder can.
+        uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: web
+          push: true
+          tags: ghcr.io/${{ needs.version.outputs.owner }}/drinksaver-web:${{ needs.version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Package and push Helm chart
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          OWNER: ${{ needs.version.outputs.owner }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          helm registry login ghcr.io --username "$GH_ACTOR" --password "$GH_TOKEN"
+          helm package web/helm/drinksaver-web \
+            --version "$VERSION" --app-version "$VERSION" \
+            --destination dist
+          helm push "dist/drinksaver-web-${VERSION}.tgz" "oci://ghcr.io/${OWNER}/charts"
+
+  summary:
+    name: Summary
+    needs: [version, backend, web]
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          VERSION: ${{ needs.version.outputs.version }}
+          OWNER: ${{ needs.version.outputs.owner }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## Published \`${VERSION}\`"
+            echo
+            echo '```'
+            echo "ghcr.io/${OWNER}/drinksaver-backend:${VERSION}"
+            echo "ghcr.io/${OWNER}/drinksaver-web:${VERSION}"
+            echo "ghcr.io/${OWNER}/charts/drinksaver-backend:${VERSION}"
+            echo "ghcr.io/${OWNER}/charts/drinksaver-web:${VERSION}"
+            echo '```'
+            echo
+            echo "Nothing was deployed. Run **Deploy to production** with version \`${VERSION}\` when ready."
+          } >> "$GITHUB_STEP_SUMMARY"

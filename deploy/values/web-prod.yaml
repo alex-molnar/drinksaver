@@ -1,0 +1,25 @@
+# drinksaver-web, production environment (namespace drinksaver).
+# Applied by .github/workflows/deploy.yml.
+
+config:
+  apiUrl: "https://api.drinksaver.kak.im"
+  keycloakUrl: "https://auth.drinksaver.kak.im/auth"
+  keycloakRealm: "drinksaver"
+  # The client ID registered in the production Keycloak realm. Test uses
+  # test-drinksaver-web; confirm this still matches production before cutover.
+  keycloakClientId: "drinksaver-frontend"
+
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: app.drinksaver.kak.im
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: drinksaver-web-tls
+      hosts:
+        - app.drinksaver.kak.im

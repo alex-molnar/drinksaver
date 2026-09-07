@@ -1,0 +1,34 @@
+# drinksaver-backend, test environment (namespace drinksaver-test).
+# Applied by .github/workflows/deploy-test-backend.yml.
+# Editing this file triggers "Apply backend test values", which reapplies it
+# to the chart version already released in drinksaver-test without rebuilding.
+# Ported from the retired test-drinksaver-backend release.
+
+datasource:
+  url: "jdbc:postgresql://postgres.postgres.svc.cluster.local:5432/test-drinksaver"
+  passwordSecretName: "secret-postgres-basic-auth"
+
+repository:
+  adminUserList: "c28618df-031e-483b-b33a-dd33c7c4bc92"
+
+cors:
+  allowedOrigins: "https://test.app.drinksaver.kak.im"
+
+jwt:
+  issuerUri: "https://auth.drinksaver.kak.im/auth/realms/test-drinksaver"
+  jwkSetUri: "https://auth.drinksaver.kak.im/auth/realms/test-drinksaver/protocol/openid-connect/certs"
+
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: test.api.drinksaver.kak.im
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: drinksaver-backend-tls
+      hosts:
+        - test.api.drinksaver.kak.im

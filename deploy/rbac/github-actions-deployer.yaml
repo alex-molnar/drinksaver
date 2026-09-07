@@ -1,0 +1,126 @@
+# CI deploy identity for GitHub Actions.
+#
+# The Kubernetes API server is publicly reachable, so CI deliberately does not
+# get an admin kubeconfig. This ServiceAccount can manage only the resources the
+# two charts create, and only inside the drinksaver and drinksaver-test
+# namespaces. A leak of the KUBE_CONFIG secret cannot reach Rancher, Postgres,
+# Redis, Keycloak, or anything else on the cluster.
+#
+# Apply with:
+#   kubectl apply -f deploy/rbac/github-actions-deployer.yaml
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: github-actions-deployer
+  namespace: drinksaver
+---
+# Long-lived token. Kubernetes 1.24 and later stopped auto-creating these, so it
+# is requested explicitly. The token controller populates token and ca.crt.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-actions-deployer-token
+  namespace: drinksaver
+  annotations:
+    kubernetes.io/service-account.name: github-actions-deployer
+type: kubernetes.io/service-account-token
+---
+# Helm needs get on the target namespace. Namespaces are cluster scoped, so this
+# has to be a ClusterRole, but resourceNames pins it to just these two.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: drinksaver-namespace-reader
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    resourceNames: ["drinksaver", "drinksaver-test"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: drinksaver-namespace-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: drinksaver-namespace-reader
+subjects:
+  - kind: ServiceAccount
+    name: github-actions-deployer
+    namespace: drinksaver
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: drinksaver-deployer
+  namespace: drinksaver
+rules:
+  # Helm stores release state as Secrets in the release namespace.
+  - apiGroups: [""]
+    resources: ["secrets", "configmaps", "services", "serviceaccounts"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Read-only, so helm --wait can observe rollout progress and report failures.
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "events"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: drinksaver-deployer
+  namespace: drinksaver
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: drinksaver-deployer
+subjects:
+  - kind: ServiceAccount
+    name: github-actions-deployer
+    namespace: drinksaver
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: drinksaver-deployer
+  namespace: drinksaver-test
+rules:
+  - apiGroups: [""]
+    resources: ["secrets", "configmaps", "services", "serviceaccounts"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "events"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: drinksaver-deployer
+  namespace: drinksaver-test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: drinksaver-deployer
+subjects:
+  - kind: ServiceAccount
+    name: github-actions-deployer
+    namespace: drinksaver

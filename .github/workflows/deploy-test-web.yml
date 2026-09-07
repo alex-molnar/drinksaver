@@ -1,0 +1,118 @@
+name: Deploy web to test
+
+on:
+  push:
+    branches-ignore:
+      # main is handled by "Build and publish", which publishes artifacts, and
+      # by "Deploy to production", which is manual. Nothing here should react to
+      # a merge.
+      - main
+    paths:
+      - 'web/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-test-web
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    name: Build, publish and deploy to drinksaver-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+
+      - name: Compute version
+        id: v
+        env:
+          OWNER_RAW: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          BASE="$(tr -d '[:space:]' < VERSION)"
+          STAMP="$(date -u '+%Y-%m-%d-%H-%M-%S')"
+          VERSION="${BASE}-${STAMP}"
+          OWNER="$(printf '%s' "$OWNER_RAW" | tr '[:upper:]' '[:lower:]')"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "owner=${OWNER}"     >> "$GITHUB_OUTPUT"
+          echo "Version: ${VERSION}"
+
+      - name: Stamp version into package.json
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          set -euo pipefail
+          jq --arg v "$VERSION" '.version = $v' web/package.json > web/package.json.tmp
+          mv web/package.json.tmp web/package.json
+          jq -r '.version' web/package.json
+
+      - name: Set up Buildx
+        # The runner's default builder uses the docker driver, which cannot
+        # export a GitHub Actions cache. A docker-container builder can.
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The React app is compiled inside the Docker build (tsc -b && vite build),
+      # so a type error fails this step. There is no separate build step, because
+      # running the same compile twice would only add wall-clock time.
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: web
+          push: true
+          tags: ghcr.io/${{ steps.v.outputs.owner }}/drinksaver-web:${{ steps.v.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Package and push Helm chart
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+          OWNER: ${{ steps.v.outputs.owner }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          helm registry login ghcr.io --username "$GH_ACTOR" --password "$GH_TOKEN"
+          helm package web/helm/drinksaver-web \
+            --version "$VERSION" --app-version "$VERSION" \
+            --destination dist
+          helm push "dist/drinksaver-web-${VERSION}.tgz" "oci://ghcr.io/${OWNER}/charts"
+
+      - name: Configure kubectl
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          set -euo pipefail
+          # umask first: the redirect below creates the file before chmod runs.
+          umask 077
+          mkdir -p "$HOME/.kube"
+          printf '%s' "$KUBE_CONFIG" | base64 -d > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+          kubectl config current-context
+
+      - name: Deploy to drinksaver-test
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+          OWNER: ${{ steps.v.outputs.owner }}
+        run: |
+          set -euo pipefail
+          helm upgrade --install drinksaver-web \
+            "oci://ghcr.io/${OWNER}/charts/drinksaver-web" \
+            --version "$VERSION" \
+            --namespace drinksaver-test \
+            --values deploy/values/web-test.yaml \
+            --set image.tag="$VERSION" \
+            --wait --timeout 5m
+
+      - name: Report
+        run: kubectl get deploy,pod,ingress -n drinksaver-test -l app.kubernetes.io/name=drinksaver-web

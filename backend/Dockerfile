@@ -1,5 +1,5 @@
-# Use official OpenJDK 25 base image
-FROM openjdk:25-ea-jdk-slim
+# Java 21 JRE, matching <java.version>21</java.version> in pom.xml
+FROM eclipse-temurin:21-jre
 
 ARG VERSION
 

@@ -1,10 +1,22 @@
-# Default values for drinksaver-frontend
+# Default values for drinksaver-web
 replicaCount: 1
 
 image:
-  repository: kingbrady
-  name: drinksaver-frontend
+  repository: ghcr.io/alex-molnar
+  name: drinksaver-web
   pullPolicy: IfNotPresent
+
+# Runtime configuration. docker-entrypoint.sh writes these into /config.js when
+# the container starts, so nothing is baked into the bundle and one image can be
+# promoted between environments unchanged.
+config:
+  apiUrl: "https://api.drinksaver.kak.im"
+  keycloakUrl: "https://auth.drinksaver.kak.im/auth"
+  keycloakRealm: "drinksaver"
+  # A Keycloak client ID, not a local name. It must match a client that exists
+  # in the realm above, and it differs per environment, so both values files
+  # override it. See deploy/values/web-{test,prod}.yaml.
+  keycloakClientId: "drinksaver-frontend"
 
 imagePullSecrets: []
 nameOverride: ""

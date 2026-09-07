@@ -41,17 +41,30 @@ npm run dev
 
 The app will be available at `http://localhost:5173`
 
-### Environment Variables
+### Configuration
 
-Copy `.env.example` to `.env` and configure:
+Configuration is read at runtime, not baked in at build time, so one image
+serves every environment. See `src/config.ts`.
 
-```bash
-cp .env.example .env
-```
+In a container, `docker-entrypoint.sh` writes `/config.js` from these
+environment variables before nginx starts:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `VITE_API_URL` | Backend API URL | `http://localhost:8080` |
+| `API_URL` | Backend API base URL the browser calls | `http://localhost:8080` |
+| `KEYCLOAK_URL` | Keycloak base URL, including `/auth` | `http://localhost:8081/auth` |
+| `KEYCLOAK_REALM` | Keycloak realm | `drinksaver` |
+| `KEYCLOAK_CLIENT_ID` | Client ID registered in Keycloak | `drinksaver-frontend` |
+
+For `npm run dev` there is no `/config.js`, so the same settings can be given as
+Vite variables in a `.env` file, falling back to the localhost defaults above:
+
+```
+VITE_API_URL=http://localhost:8080
+VITE_KEYCLOAK_URL=http://localhost:8081/auth
+VITE_KEYCLOAK_REALM=drinksaver
+VITE_KEYCLOAK_CLIENT_ID=drinksaver-frontend
+```
 
 ## Build
 
@@ -68,13 +81,18 @@ npm run preview
 ### Build Image
 
 ```bash
-docker build -t drinksaver-frontend .
+docker build -t drinksaver-web .
 ```
 
 ### Run Container
 
 ```bash
-docker run -p 3000:80 -e VITE_API_URL=http://your-backend:8080 drinksaver-frontend
+docker run -p 3000:80 \
+  -e API_URL=http://your-backend:8080 \
+  -e KEYCLOAK_URL=http://your-keycloak:8081/auth \
+  -e KEYCLOAK_REALM=drinksaver \
+  -e KEYCLOAK_CLIENT_ID=drinksaver-frontend \
+  drinksaver-web
 ```
 
 The app will be available at `http://localhost:3000`
@@ -103,20 +121,23 @@ Services:
 
 ### Installation
 
+Deployments are normally handled by GitHub Actions. See
+[docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md).
+
+The published chart is an OCI artifact:
+
 ```bash
-# Install with default values
-helm install drinksaver ./helm/drinksaver-frontend
+helm install drinksaver-web \
+  oci://ghcr.io/alex-molnar/charts/drinksaver-web --version 3.0.0 \
+  --namespace drinksaver-test \
+  --values ../deploy/values/web-test.yaml
+```
 
-# Install with custom backend URL
-helm install drinksaver ./helm/drinksaver-frontend \
-  --set backend.apiUrl=http://backend-service:8080
+Or from this working copy:
 
-# Install with ingress enabled
-helm install drinksaver ./helm/drinksaver-frontend \
-  --set ingress.enabled=true \
-  --set ingress.hosts[0].host=drinksaver.example.com \
-  --set ingress.hosts[0].paths[0].path=/ \
-  --set ingress.hosts[0].paths[0].pathType=Prefix
+```bash
+helm install drinksaver-web ./helm/drinksaver-web \
+  --set config.apiUrl=http://backend-service:8080
 ```
 
 ### Configuration
@@ -125,12 +146,20 @@ Key values in `values.yaml`:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `backend.apiUrl` | Backend API URL (browser-accessible) | `http://localhost:8080` |
-| `image.repository` | Docker image repository | `drinksaver-frontend` |
-| `image.tag` | Docker image tag | `latest` |
+| `config.apiUrl` | Backend API URL the browser calls | `https://api.drinksaver.kak.im` |
+| `config.keycloakUrl` | Keycloak base URL, including `/auth` | `https://auth.drinksaver.kak.im/auth` |
+| `config.keycloakRealm` | Keycloak realm | `drinksaver` |
+| `config.keycloakClientId` | Client ID registered in Keycloak | `drinksaver-frontend` |
+| `image.repository` | Registry and owner | `ghcr.io/alex-molnar` |
+| `image.name` | Image name | `drinksaver-web` |
+| `image.tag` | Image tag. Empty means the chart `appVersion` | `""` |
 | `service.type` | Kubernetes service type | `ClusterIP` |
-| `ingress.enabled` | Enable ingress | `false` |
+| `ingress.enabled` | Enable ingress | `true` |
 | `replicaCount` | Number of replicas | `1` |
+
+`config.keycloakClientId` is a Keycloak client ID, not a local name, and it
+differs per environment. It must match a client that actually exists in the
+realm named by `config.keycloakRealm`, or login fails for that environment.
 
 ## Project Structure
 
