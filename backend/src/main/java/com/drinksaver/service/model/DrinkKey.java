@@ -16,6 +16,12 @@ public record DrinkKey(
         Integer consumptionTypeId,
         Optional<String> name
 ) {
+    /**
+     * Identity is the drink itself, never its name. The same drink reaches us
+     * from several sources: the saved-drinks history has no name, a stored
+     * recommendation has one, and the name collectors add one later. All of
+     * those must compare as one key so their scores merge.
+     */
     @Override
     public boolean equals(Object other) {
         if (this == other) return true;
@@ -27,6 +33,25 @@ public record DrinkKey(
                 Objects.equals(brandId, drinkKey.brandId) &&
                 Objects.equals(beerFlavourId, drinkKey.beerFlavourId) &&
                 Objects.equals(consumptionTypeId, drinkKey.consumptionTypeId);
+    }
+
+    /**
+     * Must exclude `name` for exactly the same reason equals does. The record's
+     * generated hashCode included it, so two keys that were equal could hash
+     * differently, land in different HashMap buckets and never be compared.
+     * Since this type is used as the key in the Collectors.toMap calls that
+     * merge recommendation sources, that silently defeated the merge.
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                alcoholTypeId,
+                alcoholSubtypeId,
+                alcoholVolumeId,
+                brandId,
+                beerFlavourId,
+                consumptionTypeId
+        );
     }
 
     public Recommendation toRecommendation(UUID userId) {

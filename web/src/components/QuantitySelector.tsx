@@ -42,6 +42,7 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
       {/* Minus button */}
       <IconButton
         onClick={handleDecrement}
+        aria-label="Decrease quantity"
         disabled={disabled || value <= min}
         sx={{
           minWidth: 48,
@@ -87,6 +88,7 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
       {/* Plus button */}
       <IconButton
         onClick={handleIncrement}
+        aria-label="Increase quantity"
         disabled={disabled || value >= max}
         sx={{
           minWidth: 48,

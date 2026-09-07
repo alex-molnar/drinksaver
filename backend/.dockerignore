@@ -1,0 +1,8 @@
+# Keeps build output out of the Docker context without hiding the artifact the
+# shipped backend/Dockerfile needs: it does COPY target/drinksaver-backend-*.jar,
+# so target/ must NOT be excluded wholesale.
+target/*
+!target/*.jar
+.mvn/
+*.iml
+.idea/

@@ -1,0 +1,155 @@
+name: drinksaver
+
+# Local development stack.
+#
+# Brings up the whole application against a throwaway Postgres and a Keycloak
+# with a pre-imported realm, so end-to-end behaviour can be exercised without
+# touching the cluster. Nothing here is used by CI or by any environment.
+#
+#   docker-compose up --build      start everything
+#   docker-compose down -v         stop and discard all data
+#
+# Web        http://localhost:3000        log in as dev / dev
+# Backend    http://localhost:8080
+# Keycloak   http://localhost:8081/auth   admin console: admin / admin
+#
+# Every credential in this file is a local throwaway, and every published
+# port is bound to 127.0.0.1 so those credentials stay unreachable from the
+# rest of the network.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: drinksaver
+      POSTGRES_USER: drinksaver
+      POSTGRES_PASSWORD: drinksaver
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./deploy/local/postgres-init.sql:/docker-entrypoint-initdb.d/postgres-init.sql:ro
+    healthcheck:
+      # -h forces TCP. Without it this probes the temporary socket-only
+      # server that the entrypoint runs init scripts against, so it can
+      # report healthy before postgres-init.sql has created the keycloak
+      # database, and Keycloak then dies on startup.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U drinksaver -d drinksaver"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: drinksaver
+      KC_DB_PASSWORD: drinksaver
+      KC_HTTP_ENABLED: "true"
+      # The deployed Keycloak lives under /auth, and web/src/config.ts defaults
+      # to http://localhost:8081/auth. Matching that here keeps the local URLs
+      # shaped like the real ones.
+      KC_HTTP_RELATIVE_PATH: /auth
+      # The path has to be repeated here. KC_HOSTNAME as a full URL overrides
+      # the base used to build the issuer, so without /auth the tokens come out
+      # claiming http://localhost:8081/realms/drinksaver and the backend rejects
+      # them with "The iss claim is not valid".
+      KC_HOSTNAME: http://localhost:8081/auth
+      KC_HOSTNAME_STRICT: "false"
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "127.0.0.1:8081:8080"
+    volumes:
+      - ./deploy/local/keycloak-realm.json:/opt/keycloak/data/import/keycloak-realm.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # The image ships no curl or wget, so this speaks just enough HTTP over
+      # bash's /dev/tcp to read the management port's readiness endpoint.
+      # KC_HTTP_RELATIVE_PATH relocates the management interface too, so the
+      # endpoint is /auth/health/ready rather than /health/ready.
+      test:
+        - "CMD-SHELL"
+        - "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /auth/health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '\"status\": \"UP\"'"
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../deploy/local/backend.Dockerfile
+    environment:
+      ALCOHOL_REPOSITORY: postgres
+      BEER_REPOSITORY: postgres
+      DRINK_REPOSITORY: postgres
+      RECOMMENDATION_REPOSITORY: postgres
+      POSTGRES_DATASOURCE_URL: jdbc:postgresql://postgres:5432/drinksaver
+      POSTGRES_USERNAME: drinksaver
+      POSTGRES_PASSWORD: drinksaver
+      # Matches the seeded user in deploy/local/keycloak-realm.json, so the rows
+      # seeded for that id show up as the default recommendations.
+      ADMIN_USER_LIST: 423c91e4-491f-4f82-aba6-3c982857e0e4
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+      # The browser receives tokens whose issuer is the host-facing URL, but the
+      # backend has to fetch the signing keys over the compose network. Spring
+      # validates against the first and fetches from the second, so both are set.
+      JWT_ISSUER_URI: http://localhost:8081/auth/realms/drinksaver
+      JWT_JWK_SET_URI: http://keycloak:8080/auth/realms/drinksaver/protocol/openid-connect/certs
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  # Reference and demo data. Runs once, after the backend reports healthy,
+  # because Hibernate creates the schema on startup (ddl-auto=update) and there
+  # is nothing to insert into before that has happened.
+  seed:
+    image: postgres:16-alpine
+    environment:
+      PGPASSWORD: drinksaver
+    volumes:
+      - ./deploy/local/seed.sql:/seed.sql:ro
+    command:
+      - psql
+      - --host=postgres
+      - --username=drinksaver
+      - --dbname=drinksaver
+      - --set=ON_ERROR_STOP=1
+      - --file=/seed.sql
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: "no"
+
+  web:
+    build:
+      context: ./web
+    environment:
+      API_URL: http://localhost:8080
+      KEYCLOAK_URL: http://localhost:8081/auth
+      KEYCLOAK_REALM: drinksaver
+      KEYCLOAK_CLIENT_ID: drinksaver-frontend
+    ports:
+      - "127.0.0.1:3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres-data:

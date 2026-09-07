@@ -69,7 +69,9 @@ jobs:
 
       - name: Build application
         working-directory: backend
-        run: mvn -B --no-transfer-progress package
+        # verify, not package: the JaCoCo coverage check binds to the
+        # verify phase, and package stops short of it.
+        run: mvn -B --no-transfer-progress verify
 
       - name: Set up Buildx
         # The runner's default builder uses the docker driver, which cannot

@@ -140,6 +140,124 @@ Pulls the already published charts by version and deploys them into
 Each workflow has a `concurrency` group, so two runs can never perform
 overlapping `helm upgrade` calls on the same release.
 
+## Testing
+
+Both applications have a suite, and both gate CI.
+
+| Application | Stack | Command |
+|---|---|---|
+| Backend | JUnit 5, Mockito, AssertJ, Testcontainers | `cd backend && mvn test` |
+| Web | Vitest 5, jsdom, React Testing Library | `cd web && npm run test` |
+
+Backend tests run automatically wherever `mvn package` runs, which covers both
+"Build and publish" and "Deploy backend to test". The web workflows run
+`npm run test` in an explicit step ahead of the image build, because the image
+build only compiles the app and would not otherwise notice a red test.
+
+### Backend test tiers
+
+Unit tests use mocked Spring Data interfaces and need nothing running.
+Integration tests are marked `@Testcontainers(disabledWithoutDocker = true)` and
+start a real Postgres container, so they skip rather than fail on a machine with
+no Docker.
+
+Two version details are easy to trip over. Spring Boot 4 moved the test slice
+annotations out of `spring-boot-test-autoconfigure` into per-technology modules,
+so `@DataJpaTest` comes from `spring-boot-data-jpa-test`. Testcontainers 2.x
+renamed its modules to `testcontainers-junit-jupiter` and
+`testcontainers-postgresql`, and `PostgreSQLContainer` moved to
+`org.testcontainers.postgresql` and is no longer generic.
+
+### Running the integration tests on Colima
+
+Testcontainers looks for `/var/run/docker.sock`, which Colima does not create.
+Export these first, or the container tests will silently skip:
+
+```bash
+export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"
+export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+```
+
+GitHub runners need neither.
+
+## Local development
+
+`compose.yaml` at the repo root runs the whole application locally. It exists so end to end
+behaviour can be exercised without the cluster, and nothing in CI or any environment uses
+it.
+
+```bash
+docker-compose up --build     # start everything
+docker-compose down -v        # stop and discard all data
+```
+
+| Service | URL | Notes |
+|---|---|---|
+| Web | http://localhost:3000 | Log in as `dev` / `dev` |
+| Backend | http://localhost:8080 | Swagger UI at `/swagger-ui.html` |
+| Keycloak | http://localhost:8081/auth | Admin console `admin` / `admin` |
+| Postgres | localhost:5432 | `drinksaver` / `drinksaver` |
+
+Every credential there is a local throwaway.
+
+### What it starts
+
+`deploy/local/backend.Dockerfile` builds the backend from source, because the shipped
+`backend/Dockerfile` copies a jar that Maven has already produced in CI. So the only thing
+needed on the host is Docker.
+
+`deploy/local/keycloak-realm.json` is imported on first start. It creates the `drinksaver`
+realm, the public `drinksaver-frontend` client, and one user with the fixed id
+`423c91e4-491f-4f82-aba6-3c982857e0e4`.
+
+`deploy/local/seed.sql` loads demo data. It runs as its own one-shot service that waits for
+the backend to report healthy, because Hibernate creates the schema on startup
+(`ddl-auto=update`) and there is nothing to insert into before that. It is idempotent and
+resets the identity sequences afterwards, so the application cannot collide with the seeded
+ids.
+
+The seeded user is also the `ADMIN_USER_LIST` entry, which is what makes its rows serve as
+the shared default recommendations rather than one user's private entries.
+
+### The local realm is deliberately not production shaped
+
+`deploy/local/keycloak-realm.json` carries `"displayName": "DrinkSaver LOCAL
+DEVELOPMENT ONLY"` because a realm export is the kind of file that gets copied.
+It sets `sslRequired: none`, which is fine over loopback and unacceptable
+anywhere else.
+
+It keeps `directAccessGrantsEnabled: true` on purpose. That enables the password
+grant, which is what lets a script obtain a token without driving a browser:
+
+```bash
+curl -s -X POST http://localhost:8081/auth/realms/drinksaver/protocol/openid-connect/token \
+  -d grant_type=password -d client_id=drinksaver-frontend \
+  -d username=dev -d password=dev
+```
+
+That is the fastest way to check the backend end to end. The realm also sets
+`bruteForceProtected: true` and requires PKCE via
+`pkce.code.challenge.method: S256`, so the password endpoint is throttled and
+the browser flow is enforced server side rather than only client side. Do not
+carry the password grant into a real realm.
+
+### Two settings that are easy to get wrong
+
+**The Keycloak path has to be set twice.** `KC_HTTP_RELATIVE_PATH: /auth` puts the server
+under `/auth`, but `KC_HOSTNAME` given as a full URL overrides the base used to build the
+token issuer. With `KC_HOSTNAME: http://localhost:8081` the tokens claim
+`http://localhost:8081/realms/drinksaver`, the backend expects
+`http://localhost:8081/auth/realms/drinksaver`, and every request fails with
+`The iss claim is not valid`. The hostname must carry the path too.
+
+**The backend needs two different Keycloak URLs.** The browser gets tokens whose issuer is
+the host-facing `http://localhost:8081/auth/...`, but the backend fetches signing keys over
+the compose network at `http://keycloak:8080/auth/...`. `JWT_ISSUER_URI` is what gets
+validated and `JWT_JWK_SET_URI` is what gets fetched, so they are deliberately different.
+
+`KC_HTTP_RELATIVE_PATH` also moves the management interface, so the readiness endpoint is
+`/auth/health/ready` on port 9000, not `/health/ready`.
+
 ## Per-environment configuration
 
 Values live in `deploy/values/`, outside the chart directories so they are not
@@ -315,10 +433,10 @@ chart's `config.*` values are wrong for that environment.
 
 ## Follow-ups not done here
 
-- `web` has no test framework. Adding `vitest` was deferred because `vite` is on
-  a very new major and dependency compatibility could not be verified offline.
-  `src/config.ts` is the piece most worth covering.
-- The backend has no tests at all, so CI has nothing to run.
+- Both applications now have tests, so this is no longer outstanding. The web app
+  uses Vitest 5, whose peer range covers Vite 8, which settles the compatibility
+  question that deferred it. The backend uses JUnit 5, with Testcontainers for the
+  repository layer.
 - The web bundle is a single 660 kB chunk. Code splitting would help first load.
 - Four old resources remain from before the consolidation and can be removed
   once production is cut over: namespaces `drinksaver-backend`,

@@ -26,6 +26,8 @@ jobs:
       owner: ${{ steps.v.outputs.owner }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - id: v
         env:
           OWNER_RAW: ${{ github.repository_owner }}
@@ -43,6 +45,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # This job runs third-party Maven plugins, which execute code pulled
+          # from Maven Central. Nothing here uses git after checkout, so the
+          # token does not need to stay in .git/config.
+          persist-credentials: false
 
       - uses: actions/setup-java@v5
         with:
@@ -63,7 +70,9 @@ jobs:
 
       - name: Build application
         working-directory: backend
-        run: mvn -B --no-transfer-progress package
+        # verify, not package: the JaCoCo coverage check binds to the
+        # verify phase, and package stops short of it.
+        run: mvn -B --no-transfer-progress verify
 
       - name: Set up Buildx
         # The runner's default builder uses the docker driver, which cannot
@@ -107,6 +116,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Nothing in this job uses git after checkout, and the job now runs
+          # third-party npm install scripts. Not leaving the token in
+          # .git/config keeps a compromised dev dependency away from it.
+          persist-credentials: false
 
       - name: Stamp version into package.json
         env:
@@ -115,6 +129,25 @@ jobs:
           set -euo pipefail
           jq --arg v "$VERSION" '.version = $v' web/package.json > web/package.json.tmp
           mv web/package.json.tmp web/package.json
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          # jsdom 30 requires ^22.22.2 || ^24.15.0 || >=26, and vitest 5
+          # requires ^22.12 or newer. Node 20 fails at import with
+          # "webidl.util.markAsUncloneable is not a function".
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      # The image build compiles the app but never runs the suite, so without
+      # this a red test would reach the environment unnoticed.
+      - name: Run web tests
+        working-directory: web
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run test:coverage
 
       - name: Set up Buildx
         # The runner's default builder uses the docker driver, which cannot
