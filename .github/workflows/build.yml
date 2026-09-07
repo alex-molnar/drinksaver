@@ -15,6 +15,8 @@ permissions:
   contents: read
   packages: write
 
+# Context values are passed through env rather than interpolated into shell
+# bodies, so nothing from the event payload can be parsed as shell.
 jobs:
   version:
     name: Resolve version
@@ -25,10 +27,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - id: v
+        env:
+          OWNER_RAW: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
           VERSION="$(tr -d '[:space:]' < VERSION)"
-          OWNER="$(printf '%s' "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          OWNER="$(printf '%s' "$OWNER_RAW" | tr '[:upper:]' '[:lower:]')"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "owner=${OWNER}"     >> "$GITHUB_OUTPUT"
           echo "Publishing version ${VERSION}"
@@ -48,10 +52,13 @@ jobs:
 
       - name: Set Maven project version
         working-directory: backend
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
         run: |
+          set -euo pipefail
           mvn -B --no-transfer-progress \
             org.codehaus.mojo:versions-maven-plugin:2.17.1:set \
-            -DnewVersion="${{ needs.version.outputs.version }}" \
+            -DnewVersion="$VERSION" \
             -DgenerateBackupPoms=false
 
       - name: Build application
@@ -81,15 +88,16 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Package and push Helm chart
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          OWNER: ${{ needs.version.outputs.owner }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          VERSION="${{ needs.version.outputs.version }}"
-          OWNER="${{ needs.version.outputs.owner }}"
-          helm registry login ghcr.io \
-            --username "${{ github.actor }}" \
-            --password "${{ secrets.GITHUB_TOKEN }}"
+          helm registry login ghcr.io --username "$GH_ACTOR" --password "$GH_TOKEN"
           helm package backend/drinksaver-backend \
-            --version "${VERSION}" --app-version "${VERSION}" \
+            --version "$VERSION" --app-version "$VERSION" \
             --destination dist
           helm push "dist/drinksaver-backend-${VERSION}.tgz" "oci://ghcr.io/${OWNER}/charts"
 
@@ -101,9 +109,11 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Stamp version into package.json
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
         run: |
           set -euo pipefail
-          jq --arg v "${{ needs.version.outputs.version }}" '.version = $v' web/package.json > web/package.json.tmp
+          jq --arg v "$VERSION" '.version = $v' web/package.json > web/package.json.tmp
           mv web/package.json.tmp web/package.json
 
       - name: Set up Buildx
@@ -127,15 +137,16 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Package and push Helm chart
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          OWNER: ${{ needs.version.outputs.owner }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          VERSION="${{ needs.version.outputs.version }}"
-          OWNER="${{ needs.version.outputs.owner }}"
-          helm registry login ghcr.io \
-            --username "${{ github.actor }}" \
-            --password "${{ secrets.GITHUB_TOKEN }}"
+          helm registry login ghcr.io --username "$GH_ACTOR" --password "$GH_TOKEN"
           helm package web/helm/drinksaver-web \
-            --version "${VERSION}" --app-version "${VERSION}" \
+            --version "$VERSION" --app-version "$VERSION" \
             --destination dist
           helm push "dist/drinksaver-web-${VERSION}.tgz" "oci://ghcr.io/${OWNER}/charts"
 
@@ -144,18 +155,20 @@ jobs:
     needs: [version, backend, web]
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          V="${{ needs.version.outputs.version }}"
-          O="${{ needs.version.outputs.owner }}"
+      - env:
+          VERSION: ${{ needs.version.outputs.version }}
+          OWNER: ${{ needs.version.outputs.owner }}
+        run: |
+          set -euo pipefail
           {
-            echo "## Published \`${V}\`"
+            echo "## Published \`${VERSION}\`"
             echo
             echo '```'
-            echo "ghcr.io/${O}/drinksaver-backend:${V}"
-            echo "ghcr.io/${O}/drinksaver-web:${V}"
-            echo "ghcr.io/${O}/charts/drinksaver-backend:${V}"
-            echo "ghcr.io/${O}/charts/drinksaver-web:${V}"
+            echo "ghcr.io/${OWNER}/drinksaver-backend:${VERSION}"
+            echo "ghcr.io/${OWNER}/drinksaver-web:${VERSION}"
+            echo "ghcr.io/${OWNER}/charts/drinksaver-backend:${VERSION}"
+            echo "ghcr.io/${OWNER}/charts/drinksaver-web:${VERSION}"
             echo '```'
             echo
-            echo "Nothing was deployed. Run **Deploy to production** with version \`${V}\` when ready."
+            echo "Nothing was deployed. Run **Deploy to production** with version \`${VERSION}\` when ready."
           } >> "$GITHUB_STEP_SUMMARY"

@@ -26,6 +26,9 @@ permissions:
   contents: read
   packages: read
 
+# Context values are passed through env rather than interpolated into shell
+# bodies. inputs.version is caller-supplied, and expanding it inline would let
+# a dispatcher inject shell commands.
 jobs:
   version:
     name: Resolve version
@@ -36,17 +39,19 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - id: v
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          OWNER_RAW: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
-          INPUT="${{ inputs.version }}"
-          if [ -n "${INPUT}" ]; then
-            VERSION="${INPUT}"
+          if [ -n "$INPUT_VERSION" ]; then
+            VERSION="$INPUT_VERSION"
             echo "Using supplied version ${VERSION}"
           else
             VERSION="$(tr -d '[:space:]' < VERSION)"
             echo "No version supplied, using VERSION file: ${VERSION}"
           fi
-          OWNER="$(printf '%s' "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          OWNER="$(printf '%s' "$OWNER_RAW" | tr '[:upper:]' '[:lower:]')"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "owner=${OWNER}"     >> "$GITHUB_OUTPUT"
 
@@ -59,22 +64,25 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Configure kubectl
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
           set -euo pipefail
           mkdir -p "$HOME/.kube"
-          printf '%s' "${{ secrets.KUBE_CONFIG }}" | base64 -d > "$HOME/.kube/config"
+          printf '%s' "$KUBE_CONFIG" | base64 -d > "$HOME/.kube/config"
           chmod 600 "$HOME/.kube/config"
 
       # Nothing is built here. The chart and image already exist, published by
       # the build workflow, and are pulled by version.
       - name: Deploy chart from registry
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          OWNER: ${{ needs.version.outputs.owner }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          VERSION="${{ needs.version.outputs.version }}"
-          OWNER="${{ needs.version.outputs.owner }}"
-          helm registry login ghcr.io \
-            --username "${{ github.actor }}" \
-            --password "${{ secrets.GITHUB_TOKEN }}"
+          helm registry login ghcr.io --username "$GH_ACTOR" --password "$GH_TOKEN"
           helm upgrade --install drinksaver-backend \
             "oci://ghcr.io/${OWNER}/charts/drinksaver-backend" \
             --version "${VERSION}" \
@@ -95,20 +103,23 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Configure kubectl
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
           set -euo pipefail
           mkdir -p "$HOME/.kube"
-          printf '%s' "${{ secrets.KUBE_CONFIG }}" | base64 -d > "$HOME/.kube/config"
+          printf '%s' "$KUBE_CONFIG" | base64 -d > "$HOME/.kube/config"
           chmod 600 "$HOME/.kube/config"
 
       - name: Deploy chart from registry
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          OWNER: ${{ needs.version.outputs.owner }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          VERSION="${{ needs.version.outputs.version }}"
-          OWNER="${{ needs.version.outputs.owner }}"
-          helm registry login ghcr.io \
-            --username "${{ github.actor }}" \
-            --password "${{ secrets.GITHUB_TOKEN }}"
+          helm registry login ghcr.io --username "$GH_ACTOR" --password "$GH_TOKEN"
           helm upgrade --install drinksaver-web \
             "oci://ghcr.io/${OWNER}/charts/drinksaver-web" \
             --version "${VERSION}" \
