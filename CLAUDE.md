@@ -149,11 +149,10 @@ Never print, log or commit `KUBE_CONFIG`, database credentials, or Keycloak clie
 
 ## Documentation duties
 
-- **API changes.** The canonical OpenAPI spec is `docs/api-docs.yaml`. Update it with any
-  controller change. *Target state:* today the file exists twice, byte identical, at
-  `backend/doc/api-docs.yaml` and `web/api-docs.yaml`. The next change to the API contract
-  consolidates them into `docs/api-docs.yaml` and deletes both copies. The backend also
-  serves a live spec from springdoc at `/api-docs`, useful for cross checking.
+- **API changes.** The canonical OpenAPI spec is `docs/api-docs.yaml`. There is exactly one
+  copy and it is hand maintained, so update it with any controller change. The backend also
+  serves a live spec from springdoc at `/api-docs`, which is the quickest way to cross check
+  what the code actually exposes.
 - **Frontend changes.** Document the component, its states and its props.
 - **Infrastructure and architecture decisions.** Write an ADR into
   `docs/superpowers/specs/`, alongside the existing design document.
@@ -169,7 +168,6 @@ toward something with real character, and present options rather than picking fo
 Listed so it does not get rediscovered every session.
 
 - No local development stack. See Verification above.
-- `api-docs.yaml` is duplicated. See Documentation duties above.
 - `npm run lint` reports 12 errors and 6 warnings in `web/src/auth/KeycloakProvider.tsx`
   and five `web/src/pages/New*Page.tsx` and `DetailedPage.tsx` files. All predate the test
   setup and none are in files it touched. Lint is not currently a CI gate.
