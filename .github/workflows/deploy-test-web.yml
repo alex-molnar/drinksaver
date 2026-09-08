@@ -56,7 +56,7 @@ jobs:
           jq -r '.version' web/package.json
 
       - name: Set up Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           # jsdom 30 requires ^22.22.2 || ^24.15.0 || >=26, and vitest 5
           # requires ^22.12 or newer. Node 20 fails at import with
