@@ -79,6 +79,11 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<!--
 			Spring Boot 4 moved the test slice annotations out of
 			spring-boot-test-autoconfigure and into per-technology modules.
@@ -145,7 +150,7 @@
 										<limit>
 											<counter>INSTRUCTION</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.25</minimum>
+											<minimum>0.67</minimum>
 										</limit>
 									</limits>
 								</rule>
@@ -212,5 +217,6 @@
 			</plugin>
 		</plugins>
 	</build>
+
 
 </project>
