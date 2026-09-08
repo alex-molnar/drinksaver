@@ -44,8 +44,12 @@ jobs:
           OWNER_RAW: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
+          # tr, matching build.yml and deploy-test-backend.yml. A dispatch input is
+          # written straight into $GITHUB_OUTPUT below, so a newline in it appends
+          # attacker-chosen lines to the step's outputs, in the one job that holds
+          # production KUBE_CONFIG. Stripping whitespace removes that shape entirely.
           if [ -n "$INPUT_VERSION" ]; then
-            VERSION="$INPUT_VERSION"
+            VERSION="$(printf '%s' "$INPUT_VERSION" | tr -d '[:space:]')"
             echo "Using supplied version ${VERSION}"
           else
             VERSION="$(tr -d '[:space:]' < VERSION)"

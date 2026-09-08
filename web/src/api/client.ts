@@ -1,4 +1,4 @@
-import axios, { type AxiosInstance, type AxiosError } from 'axios';
+import axios, { type AxiosInstance, type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import keycloak from '../auth/keycloak';
 import config from '../config';
 
@@ -25,24 +25,43 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+/**
+ * Marks a request that has already been retried after a 401. The retry goes back
+ * through this same interceptor, so without it a 401 the refresh cannot fix
+ * retries forever.
+ *
+ * That is not hypothetical. keycloak-js resolves updateToken(5) with `false`,
+ * without contacting Keycloak at all, whenever the local token still has five
+ * seconds of validity left. So for any 401 whose cause is not local expiry (a
+ * rotated realm signing key, a revoked session, an audience or issuer mismatch,
+ * clock skew) the refresh "succeeds", the same token is replayed, and the same
+ * 401 comes back, with no backoff, from every open tab.
+ */
+type RetriableConfig = InternalAxiosRequestConfig & { _retried?: boolean };
+
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    // Handle 401 Unauthorized - try to refresh token
-    if (error.response?.status === 401) {
+    const config = error.config as RetriableConfig | undefined;
+
+    // Handle 401 Unauthorized - try to refresh the token, but only once per request.
+    if (error.response?.status === 401 && config && !config._retried) {
+      config._retried = true;
       try {
         await keycloak.updateToken(5);
-        // Retry the original request with new token
-        if (error.config) {
-          error.config.headers.Authorization = `Bearer ${keycloak.token}`;
-          return apiClient.request(error.config);
-        }
+        config.headers.Authorization = `Bearer ${keycloak.token}`;
+        return apiClient.request(config);
       } catch {
         // Refresh failed, redirect to login
         keycloak.logout();
       }
+    } else if (error.response?.status === 401 && config?._retried) {
+      // A second 401 for the same request means the token is not the problem, or
+      // is one a refresh cannot mend. Treat it the way a failed refresh is treated.
+      keycloak.logout();
     }
+
     console.error('API Error:', error.message);
     return Promise.reject(error);
   }

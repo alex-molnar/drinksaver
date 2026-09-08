@@ -72,6 +72,13 @@ public class PostgresAlcoholRepository implements AlcoholRepository {
      * Two writes, the volume and the type it is attached to, so they commit together.
      * Without a transaction a failure on the second left an orphaned volume row that
      * nothing referenced.
+     *
+     * This closes the failure case only, and the original comment here overclaimed by
+     * not saying so. AlcoholType has no @Version and the transaction runs at READ
+     * COMMITTED, so two concurrent calls for the same type both read volumeIds, both
+     * append, and the second write wins: the first volume is orphaned exactly as
+     * before. Fixing that needs optimistic locking, which is a schema change; see
+     * docs/remaining-work.md.
      */
     @Override
     @Transactional

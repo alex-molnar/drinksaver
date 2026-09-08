@@ -305,6 +305,37 @@ class DrinksControllerTest {
         verify(drinksRepository, times(1)).saveDrink(any());
     }
 
+    /**
+     * ddl-auto derives varchar(255) from SavedDrink.comments, so a longer value was a
+     * DataIntegrityViolationException and a 500. The same shape as the quantity defect,
+     * one field over, and missed when that one was fixed.
+     */
+    @Test
+    void saveDrinkRejectsCommentsLongerThanTheColumn() throws Exception {
+        UUID userId = UUID.randomUUID();
+        String tooLong = "x".repeat(256);
+
+        mockMvc.perform(post("/v1/drinks/new")
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(drinkBody(userId, "1").replace("\"comments\": null", "\"comments\": \"" + tooLong + "\"")))
+            .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(drinksRepository, recommendationCacheService);
+    }
+
+    @Test
+    void saveDrinkAcceptsCommentsAtTheColumnLimit() throws Exception {
+        UUID userId = UUID.randomUUID();
+        when(drinksRepository.saveDrink(any())).thenReturn(savedDrink(9, userId, BEER_ID));
+
+        mockMvc.perform(post("/v1/drinks/new")
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(drinkBody(userId, "1").replace("\"comments\": null", "\"comments\": \"" + "x".repeat(255) + "\"")))
+            .andExpect(status().isOk());
+    }
+
     @Test
     void saveDrinkIgnoresClientSuppliedUserIdAndUsesJwtSubject() throws Exception {
         UUID authenticatedUserId = UUID.randomUUID();

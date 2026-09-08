@@ -133,6 +133,8 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/AlcoholType"
+        "400":
+          description: name, volumes or alcoholSubtypes is over its limit
   /v1/alcohol/types/{alcoholTypeId}/volumes:
     get:
       tags:
@@ -337,6 +339,8 @@ components:
           format: int32
         comments:
           type: string
+          maxLength: 255
+          description: Longer than the column, so longer than this is rejected with a 400.
         quantity:
           type: integer
           format: int32
@@ -435,10 +439,15 @@ components:
           type: string
         volumes:
           type: array
+          maxItems: 50
+          description: >-
+            Bounded because createAlcoholType is transactional and writes these one row
+            at a time. More than 50 is rejected with a 400.
           items:
             $ref: "#/components/schemas/NewVolumeEntry"
         alcoholSubtypes:
           type: array
+          maxItems: 50
           items:
             type: string
     NewVolumeEntry:

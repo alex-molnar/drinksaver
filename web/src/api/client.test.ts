@@ -90,6 +90,37 @@ describe('api/client', () => {
       expect(response.status).toBe(200);
     });
 
+    /**
+     * The retry re-enters this same interceptor, so without a marker on the retried
+     * request a 401 that a refresh cannot fix loops forever.
+     *
+     * That is not a hypothetical: keycloak-js resolves updateToken(5) with `false`,
+     * without contacting Keycloak at all, whenever the local token still has five
+     * seconds of validity left. So for every 401 whose cause is not local expiry, a
+     * rotated realm signing key, a revoked session, an audience or issuer mismatch,
+     * clock skew, the refresh "succeeds", the same token is replayed, and the same 401
+     * comes back. Measured before the fix: 501 attempts and logout never reached.
+     */
+    it('retries a 401 exactly once when the refresh cannot fix it, then logs out', async () => {
+      vi.mocked(keycloak).token = 'valid-but-rejected';
+      // Resolves false and leaves the token alone, which is what keycloak-js does when
+      // the token is not near expiry.
+      vi.mocked(keycloak).updateToken = vi.fn().mockResolvedValue(false);
+      vi.mocked(keycloak).logout = vi.fn();
+
+      let attempts = 0;
+      apiClient.defaults.adapter = async (config) => {
+        attempts += 1;
+        if (attempts > 10) throw new Error('retry loop: the interceptor did not give up');
+        throw httpError(401, config);
+      };
+
+      await expect(apiClient.get('/anything')).rejects.toBeDefined();
+
+      expect(attempts).toBe(2);
+      expect(keycloak.logout).toHaveBeenCalledTimes(1);
+    });
+
     it('logs out when the refresh fails, and still rejects', async () => {
       vi.mocked(keycloak).token = 'stale';
       vi.mocked(keycloak).updateToken = vi.fn().mockRejectedValue(new Error('refresh failed'));
