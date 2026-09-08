@@ -73,24 +73,13 @@ jobs:
         # verify phase, and package stops short of it.
         run: mvn -B --no-transfer-progress verify
 
-      # disabledWithoutDocker means these skip rather than fail when Docker is
-      # missing, which is right on a laptop and wrong here: a green build that
-      # silently ran no integration tests is worse than a red one.
+      # disabledWithoutDocker means the integration tests skip rather than fail when
+      # Docker is missing, which is right on a laptop and wrong here: a green build
+      # that silently ran no integration tests is worse than a red one. The script
+      # discovers the classes from the source tree, so adding one extends the guard.
       - name: Assert the integration tests actually ran
         working-directory: backend
-        run: |
-          set -euo pipefail
-          for suite in SavedDrinksTableIntegrationTest RecommendationsTableIntegrationTest AlcoholTypesTableIntegrationTest; do
-            report="target/surefire-reports/com.drinksaver.repository.postgres.schema.${suite}.txt"
-            if [ ! -f "$report" ]; then
-              echo "::error::${suite} produced no report. Docker was probably unavailable and the tests skipped."
-              exit 1
-            fi
-            if grep -qE 'Tests run: 0|Skipped: [1-9]' "$report"; then
-              echo "::error::${suite} skipped tests:"; cat "$report"; exit 1
-            fi
-          done
-          echo "Integration tests ran against a real Postgres."
+        run: ./scripts/assert-integration-tests-ran.sh
 
       - name: Set up Buildx
         # The runner's default builder uses the docker driver, which cannot
