@@ -311,6 +311,10 @@ components:
         userId:
           type: string
           format: uuid
+          readOnly: true
+          description: >-
+            Set by the server from the authenticated JWT subject. A value sent
+            by the client is not bound and has no effect.
         date:
           type: string
         alcoholTypeId:
@@ -401,9 +405,6 @@ components:
     NewBeerFlavour:
       type: object
       properties:
-        userId:
-          type: string
-          format: uuid
         name:
           type: string
     BeerFlavour:
@@ -426,6 +427,10 @@ components:
         userId:
           type: string
           format: uuid
+          readOnly: true
+          description: >-
+            Set by the server from the authenticated JWT subject. A value sent
+            by the client is not bound and has no effect.
         name:
           type: string
         volumes:
@@ -480,6 +485,10 @@ components:
         userId:
           type: string
           format: uuid
+          readOnly: true
+          description: >-
+            Set by the server from the authenticated JWT subject. A value sent
+            by the client is not bound and has no effect.
         name:
           type: string
     AlcoholSubtype:
