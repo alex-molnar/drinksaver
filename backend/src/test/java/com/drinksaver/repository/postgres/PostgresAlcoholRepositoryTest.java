@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class PostgresAlcoholRepositoryTest {
@@ -169,5 +170,78 @@ class PostgresAlcoholRepositoryTest {
         List<AlcoholVolume> result = repo.getVolumesByAlcoholType(1);
 
         assertThat(result).containsExactly(volume);
+    }
+
+    /**
+     * F7. An unknown alcohol type used to yield an all-null AlcoholVolume, so the caller
+     * got a 200 and could not tell success from failure. An empty Optional lets the
+     * controller answer 404 instead.
+     */
+    @Test
+    void saveVolumeForAlcoholTypeReturnsEmptyForAnUnknownType() {
+        AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
+        when(typesTable.findById(99)).thenReturn(Optional.empty());
+
+        AlcoholVolumeTable volumeTable = mock(AlcoholVolumeTable.class);
+
+        PostgresAlcoholRepository repo = new PostgresAlcoholRepository(
+                typesTable,
+                mock(AlcoholSubtypesTable.class),
+                volumeTable,
+                configWithAdmins(List.of())
+        );
+
+        Optional<AlcoholVolume> result = repo.saveVolumeForAlcoholType(99, new NewVolumeEntry("Shot", 0.05f));
+
+        assertThat(result).isEmpty();
+        verifyNoInteractions(volumeTable);
+    }
+
+    @Test
+    void saveVolumeForAlcoholTypeAttachesTheNewVolumeToTheType() {
+        AlcoholType type = new AlcoholType(ADMIN, "Vodka", new java.util.ArrayList<>(List.of(7)));
+        AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
+        when(typesTable.findById(1)).thenReturn(Optional.of(type));
+
+        AlcoholVolume saved = new AlcoholVolume(1, "Shot", 0.05f);
+        saved.setId(8);
+        AlcoholVolumeTable volumeTable = mock(AlcoholVolumeTable.class);
+        when(volumeTable.save(any())).thenReturn(saved);
+
+        PostgresAlcoholRepository repo = new PostgresAlcoholRepository(
+                typesTable,
+                mock(AlcoholSubtypesTable.class),
+                volumeTable,
+                configWithAdmins(List.of())
+        );
+
+        Optional<AlcoholVolume> result = repo.saveVolumeForAlcoholType(1, new NewVolumeEntry("Shot", 0.05f));
+
+        assertThat(result).contains(saved);
+        ArgumentCaptor<AlcoholType> captor = ArgumentCaptor.forClass(AlcoholType.class);
+        verify(typesTable).save(captor.capture());
+        assertThat(captor.getValue().getVolumeIds()).containsExactly(7, 8);
+    }
+
+    @Test
+    void createAlcoholTypeWithNoVolumesOrSubtypesWritesJustTheType() {
+        AlcoholType saved = new AlcoholType(USER, "Gin", List.of());
+        AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
+        when(typesTable.save(any())).thenReturn(saved);
+
+        AlcoholVolumeTable volumeTable = mock(AlcoholVolumeTable.class);
+        AlcoholSubtypesTable subtypesTable = mock(AlcoholSubtypesTable.class);
+
+        PostgresAlcoholRepository repo = new PostgresAlcoholRepository(
+                typesTable,
+                subtypesTable,
+                volumeTable,
+                configWithAdmins(List.of())
+        );
+
+        AlcoholType result = repo.createAlcoholType(new NewAlcoholEntry(USER, "Gin", null, null));
+
+        assertThat(result).isEqualTo(saved);
+        verifyNoInteractions(volumeTable, subtypesTable);
     }
 }
