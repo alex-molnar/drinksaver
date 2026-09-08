@@ -9,6 +9,7 @@ import com.drinksaver.model.dto.NewVolumeEntry;
 import com.drinksaver.repository.AlcoholRepository;
 import com.drinksaver.security.AuthenticatedUser;
 import com.drinksaver.service.InjectorService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -64,7 +65,7 @@ public class AlcoholController {
     }
 
     @PostMapping("/types")
-    public AlcoholType createAlcoholType(@AuthenticationPrincipal Jwt jwt, @RequestBody NewAlcoholEntry newAlcoholEntry) {
+    public AlcoholType createAlcoholType(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody NewAlcoholEntry newAlcoholEntry) {
         return alcoholRepository.createAlcoholType(newAlcoholEntry.withUserId(AuthenticatedUser.id(jwt)));
     }
 

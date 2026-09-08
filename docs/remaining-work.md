@@ -39,6 +39,10 @@ pipeline, not the fast path.
 | 13 | Remove four leftover namespaces | small | production cutover |
 | 14 | CI ServiceAccount can read every secret | accepted risk | revisit if collaborators grow |
 | 15 | The last remaining lint warning | trivial | none |
+| 16 | Scope the alcohol volume endpoints to a user | medium | a decision: is the volume catalogue global? |
+| 17 | Optimistic locking on `AlcoholType.volumeIds` | small | none |
+| 18 | Error boundary for a failed lazy chunk | small | none |
+| 19 | `NewAlcoholSubtype.alcoholTypeId` is a dead field | trivial | none |
 
 ---
 
@@ -69,10 +73,12 @@ that is the assumption that does not have to be undone.
 ### Do
 
 1. Put the determination in writing and record it as an ADR in `docs/superpowers/specs/`.
-2. While you are there, decide separately what to do about `comments`. It is unbounded free
-   text with no minimization: a user can write anything into it, including data far more
-   sensitive than the drink itself. Options are a character limit, a warning next to the field,
-   or removing it. It has no length constraint today.
+2. While you are there, decide separately what to do about `comments`. It is free text with
+   no minimization: a user can write anything into it, including data far more sensitive than
+   the drink itself. It now carries `@Size(max = 255)`, but that was added to stop a 500 on
+   a value longer than the column, not as a data-minimization measure, and 255 characters is
+   plenty of room for something regrettable. Options are a shorter limit, a warning next to
+   the field, or removing it.
 
 ### Done when
 
@@ -519,3 +525,166 @@ Lint errors are a CI gate; warnings are not. This is the only one left, down fro
 
 `npx eslint .` is completely silent, at which point consider whether `--max-warnings=0` should
 become the gate.
+
+---
+
+## 16. Scope the alcohol volume endpoints to a user, or decide they are global
+
+**Effort:** medium.
+**Blocked by:** a decision, and it is a design decision rather than a security one.
+
+### Why this is here and not already fixed
+
+`eb07bde` made every endpoint derive its user from the JWT. **These two did not get the
+sweep**, and they are two lines below one that did:
+
+```java
+@GetMapping("/types/{alcoholTypeId}/volumes")
+public List<AlcoholVolume> getVolumesByAlcoholType(@PathVariable Integer alcoholTypeId)
+
+@PostMapping("/types/{alcoholTypeId}/volumes")
+public ResponseEntity<AlcoholVolume> saveVolumeForAlcoholType(
+        @PathVariable Integer alcoholTypeId, @RequestBody NewVolumeEntry volumeDescription)
+```
+
+Neither takes an `@AuthenticationPrincipal`, and `PostgresAlcoholRepository.saveVolumeForAlcoholType`
+filters on `alcoholTypeId` alone. So any authenticated user can attach a volume row to **any**
+user's alcohol type, including the admin-owned types that `getAlcoholTypes` returns to
+everyone via `repository.admin-user-list`. That row then appears in every user's volume list
+and is rendered into their drink names by `AlcoholNameCollector`, which does no ownership
+check either.
+
+There is no XSS: React escapes, and there is no `dangerouslySetInnerHTML` anywhere. So this
+is cross-tenant **integrity**, not disclosure.
+
+### Why it was still not fixed on 2026-09-08
+
+The 2026-09-08 differential review noted these endpoints as out of scope, calling the model
+"shared/global by design", and that reading is plausible: volumes are things like "Pint" and
+"Shot", which genuinely are shared vocabulary. Making them user-scoped changes behaviour for
+every existing user and may not be wanted.
+
+**It should have been carried into this document when the review was deleted, and was not.
+That was a miss.** Recording it now rather than quietly fixing it, because the fix depends on
+an answer only the owner has.
+
+Severity depends on that answer and on the realm: `registrationAllowed: false` in production
+means an attacker must already hold an account. In a realm with open registration this is
+worse than medium.
+
+### Where
+
+- `backend/src/main/java/com/drinksaver/controller/AlcoholController.java`, the two methods above
+- `backend/src/main/java/com/drinksaver/repository/postgres/PostgresAlcoholRepository.java`
+- `backend/src/main/java/com/drinksaver/service/namecollector/AlcoholNameCollector.java`
+- `backend/src/test/java/com/drinksaver/controller/AlcoholControllerTest.java`, whose volume
+  tests authenticate with a bare `jwt()` and assert only 404 versus 200
+
+### Do
+
+Decide first:
+
+- **A. The catalogue is global.** Then say so in a comment on both methods and on
+  `AlcoholVolume`, and restrict `POST` to the admin user list so ordinary users cannot write
+  to shared vocabulary. `getVolumesByAlcoholType` can stay open.
+- **B. Volumes belong to the type's owner.** Then add `@AuthenticationPrincipal`, check
+  ownership of the `alcoholTypeId` before writing, and return 404 rather than 403 so the
+  endpoint does not become an existence oracle for other users' types.
+
+Either way add a test that authenticates as one user and is denied against another user's
+type. There is no such test today, which is why nothing caught this.
+
+### Done when
+
+A cross-user write is denied by a test, and whichever model was chosen is stated in the code
+rather than inferred from it.
+
+---
+
+## 17. Add optimistic locking to `AlcoholType.volumeIds`
+
+**Effort:** small, but it is a schema change.
+**Blocked by:** nothing.
+
+### Why
+
+`saveVolumeForAlcoholType` is `@Transactional` as of 2026-09-08, which closes the failure
+case: a crash between the two writes no longer leaves an orphaned volume row.
+
+**It does not close the concurrent case, and the comment there now says so.** `AlcoholType`
+has no `@Version` and the transaction runs at READ COMMITTED, so two concurrent posts to the
+same type both read `volumeIds`, both append, and the second write wins. The first volume row
+is orphaned exactly as it was before.
+
+### Where
+
+`backend/src/main/java/com/drinksaver/model/db/AlcoholType.java`, and the comment on
+`PostgresAlcoholRepository.saveVolumeForAlcoholType`.
+
+### Do
+
+Add `@Version` and handle `OptimisticLockingFailureException` at the controller, either by
+retrying or by returning 409. Note that `ddl-auto=update` will add the column, so existing
+rows get a default; check that before deploying rather than after.
+
+### Done when
+
+A Testcontainers test drives two concurrent appends to one type and both volumes end up
+referenced, or the loser gets a 409. Assert the row count, not just the absence of an
+exception.
+
+---
+
+## 18. Add an error boundary around the lazy routes
+
+**Effort:** small.
+**Blocked by:** nothing.
+
+### Why
+
+Routes became `React.lazy` on 2026-09-08 with a `Suspense` boundary and no error boundary.
+The failure mode is specific and reachable: `web/nginx.conf`'s `try_files` returns
+`index.html` with a 200 and `text/html` for any path it does not recognise, including a
+hashed chunk that no longer exists after a deploy. A tab left open across a release then
+fails the dynamic import on a MIME error, and with no boundary React unmounts the tree and
+the page goes blank.
+
+It fails closed, so this is availability rather than security: the unmount cleanup added in
+the same release stops the token refresh, and no token is persisted anywhere.
+
+### Where
+
+`web/src/App.tsx`, around the existing `Suspense`.
+
+### Do
+
+Add an error boundary that offers a reload. A chunk load failure after a deploy is fixed by
+reloading, so saying that is more useful than a generic apology. Distinguishing a chunk
+error from a component error is worth the extra branch: the messages differ.
+
+### Done when
+
+A test that makes a lazy import reject shows the fallback rather than an empty tree.
+
+---
+
+## 19. Drop `NewAlcoholSubtype.alcoholTypeId`
+
+**Effort:** trivial.
+**Blocked by:** nothing.
+
+Same dead-field smell that `NewBeerFlavour.userId` was removed for on 2026-09-08. The
+controller passes the `@PathVariable`, and `PostgresAlcoholRepository.saveSubtypeForAlcoholType`
+uses that, so the body's copy is bound by Jackson and silently dropped.
+
+Not a vulnerability, because the path variable wins. It is the same inconsistency the
+`NewBeerFlavour` removal argued against, left behind by it.
+
+Remove the component, drop it from the client payload in `web/src/api/endpoints.ts`
+(`createSubtypeForAlcoholType`), update its assertion in `endpoints.test.ts`, and update
+`docs/api-docs.yaml`.
+
+### Done when
+
+`grep -rn alcoholTypeId web/src/api/endpoints.ts` finds only path-variable uses, and both
+suites are green.

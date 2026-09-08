@@ -21,9 +21,12 @@ if [ ! -d src/test/java ]; then
     exit 1
 fi
 
-# Abstract* is excluded: the shared container base class produces no report of its own.
+# Abstract classes are excluded: a base class holding the shared container produces no
+# report of its own. Matched on the declaration rather than on an Abstract* filename,
+# because a filename glob would also drop a real test that happened to be named that way.
 classes=$(
-    find src/test/java -name '*IntegrationTest.java' -not -name 'Abstract*' \
+    find src/test/java -name '*IntegrationTest.java' -print0 \
+        | xargs -0 grep -LE 'abstract[[:space:]]+class' 2>/dev/null \
         | sed -e 's|^src/test/java/||' -e 's|/|.|g' -e 's|\.java$||' \
         | sort
 )

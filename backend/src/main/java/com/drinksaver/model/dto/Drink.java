@@ -3,6 +3,7 @@ package com.drinksaver.model.dto;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -24,7 +25,12 @@ public record Drink(
         Integer brandId,
         Integer beerFlavourId,
         Integer consumptionTypeId,
-        String comments,
+        /**
+         * ddl-auto derives varchar(255) from this field, so anything longer was a
+         * DataIntegrityViolationException and a 500: the same "500 for a plainly bad
+         * request" shape the quantity bounds were added to remove, one field over.
+         */
+        @Size(max = 255) String comments,
         /**
          * The number of rows to write, so it has to be at least 1. A 0 or a negative
          * made saveDrink's IntStream range empty, and getFirst() on the empty result
@@ -36,7 +42,7 @@ public record Drink(
         @Min(1) @Max(100) Integer quantity,
         Boolean addToRecommendations,
         Boolean onlyTemporarily,
-        String name
+        @Size(max = 255) String name
 ) {
     public Boolean shouldAddToRecommendations() {
         return addToRecommendations != null && addToRecommendations;

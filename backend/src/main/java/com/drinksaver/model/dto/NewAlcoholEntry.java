@@ -2,6 +2,7 @@ package com.drinksaver.model.dto;
 
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Size;
 
 import java.util.UUID;
 
@@ -14,9 +15,15 @@ import java.util.UUID;
  */
 public record NewAlcoholEntry(
         @JsonProperty(access = JsonProperty.Access.READ_ONLY) UUID userId,
-        String name,
-        List<NewVolumeEntry> volumes,
-        List<String> alcoholSubtypes
+        @Size(max = 100) String name,
+        /**
+         * Bounded because createAlcoholType is @Transactional and saves these one row
+         * at a time. IDENTITY ids defeat Hibernate's insert batching, so N elements is
+         * N round trips holding one pooled connection for the whole loop. Unbounded,
+         * a handful of concurrent requests exhausts the pool and stops the only replica.
+         */
+        @Size(max = 50) List<NewVolumeEntry> volumes,
+        @Size(max = 50) List<String> alcoholSubtypes
 ) {
     public NewAlcoholEntry withUserId(UUID userId) {
         return new NewAlcoholEntry(userId, name, volumes, alcoholSubtypes);
