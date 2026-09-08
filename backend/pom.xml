@@ -42,6 +42,17 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
+		<!--
+			Declared explicitly even though hibernate-validator already arrives transitively
+			through springdoc-openapi-starter-webmvc-ui. Request-body constraints fail open:
+			without a validator on the classpath, @Valid is silently ignored and an invalid
+			body reaches the repository instead of being rejected. That is not something to
+			leave resting on another starter's dependency tree.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.projectlombok</groupId>

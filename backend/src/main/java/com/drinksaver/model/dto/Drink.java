@@ -1,6 +1,9 @@
 package com.drinksaver.model.dto;
 
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 import java.util.UUID;
 
 public record Drink(
@@ -13,7 +16,15 @@ public record Drink(
         Integer beerFlavourId,
         Integer consumptionTypeId,
         String comments,
-        Integer quantity,
+        /**
+         * The number of rows to write, so it has to be at least 1. A 0 or a negative
+         * made saveDrink's IntStream range empty, and getFirst() on the empty result
+         * threw NoSuchElementException: a 500 for a plainly bad request.
+         *
+         * The upper bound caps how many rows one request can multiply into. 100 is an
+         * order of magnitude above the 9 the UI's QuantitySelector allows.
+         */
+        @Min(1) @Max(100) Integer quantity,
         Boolean addToRecommendations,
         Boolean onlyTemporarily,
         String name
