@@ -7,6 +7,9 @@ export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
+    // Without this, vitest's default glob also matches e2e/*.spec.ts and tries
+    // to run Playwright specs in jsdom.
+    include: ['src/**/*.test.{ts,tsx}'],
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
