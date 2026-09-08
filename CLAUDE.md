@@ -120,11 +120,12 @@ module naming that is easy to get wrong.
 `web/src/config.ts` builds its export at import time, so any test of it must call
 `vi.resetModules()` and re-import per case. `web/src/config.test.ts` shows the pattern.
 
-Both suites gate CI. A red test stops the test deploy and stops the publish.
+Both suites gate CI, as does `npm run lint` for the web app. A red test or a lint error
+stops the test deploy and stops the publish. Lint warnings are not blocking.
 
 Coverage is gated too, as a ratchet rather than a target: JaCoCo on the backend
 (`mvn verify`, currently 25% instructions) and v8 on the web app
-(`npm run test:coverage`, currently 2.5% statements). Those numbers are low
+(`npm run test:coverage`, currently 52% statements). Those numbers are low
 because the suites are new. Raise them as tests are added, never lower them to
 make a build pass.
 

@@ -22,10 +22,29 @@ const NewSubtypePage: React.FC = () => {
   const location = useLocation();
   const { navigateToSuccess, navigateToError, navigateToHome } = useAppNavigation();
   const state = location.state as NewSubtypePageState | null;
+  const alcoholTypeId = state?.alcoholTypeId;
+  const alcoholTypeName = state?.alcoholTypeName;
 
   // Form state
   const [subtypeName, setSubtypeName] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const isFormValid = subtypeName.trim().length > 0;
+
+  const handleSubmit = useCallback(async () => {
+    if (!isFormValid || alcoholTypeId === undefined) return;
+
+    setSaving(true);
+
+    try {
+      await createSubtypeForAlcoholType(alcoholTypeId, subtypeName.trim());
+      navigateToSuccess(`Subtype "${subtypeName}" has been created for ${alcoholTypeName}!`);
+    } catch (error) {
+      console.error('Failed to create subtype:', error);
+      setSaving(false);
+      navigateToError('Failed to create subtype. Please try again.');
+    }
+  }, [alcoholTypeId, alcoholTypeName, subtypeName, isFormValid, navigateToSuccess, navigateToError]);
 
   // Redirect if no state provided
   if (!state) {
@@ -42,26 +61,6 @@ const NewSubtypePage: React.FC = () => {
       </Layout>
     );
   }
-
-  const { alcoholTypeId, alcoholTypeName } = state;
-
-  const isFormValid = () => {
-    return subtypeName.trim().length > 0;
-  };
-
-  const handleSubmit = useCallback(async () => {
-    if (!isFormValid()) return;
-
-    setSaving(true);
-
-    try {
-      await createSubtypeForAlcoholType(alcoholTypeId, subtypeName.trim());
-      navigateToSuccess(`Subtype "${subtypeName}" has been created for ${alcoholTypeName}!`);
-    } catch (error) {
-      console.error('Failed to create subtype:', error);
-      navigateToError('Failed to create subtype. Please try again.');
-    }
-  }, [alcoholTypeId, alcoholTypeName, subtypeName, navigateToSuccess, navigateToError]);
 
   return (
     <Layout title="New Subtype" showBackButton>
@@ -92,11 +91,11 @@ const NewSubtypePage: React.FC = () => {
       </Box>
 
       {/* Floating Action Button */}
-      <Zoom in={isFormValid()}>
+      <Zoom in={isFormValid}>
         <Fab
           color="primary"
           onClick={handleSubmit}
-          disabled={saving || !isFormValid()}
+          disabled={saving || !isFormValid}
           sx={{
             position: 'fixed',
             bottom: 80,

@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { AuthContext, type AuthContextType } from './KeycloakProvider';
+import { AuthContext, type AuthContextType } from './AuthContext';
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);

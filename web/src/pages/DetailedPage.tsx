@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Box,
   FormControl,
@@ -109,33 +109,26 @@ const DetailedPage: React.FC = () => {
   // Get selected brand for navigation
   const selectedBrand = brands?.find((b) => b.id === brandId);
 
-  // Reset dependent fields when alcohol type changes
-  useEffect(() => {
+  // Form validation
+  const isFormValid =
+    alcoholTypeId !== '' && volumeId !== '' && (!isBeer || consumptionTypeId !== '');
+
+  const handleAlcoholTypeChange = (event: SelectChangeEvent<number | ''>) => {
+    setAlcoholTypeId(event.target.value as number | '');
     setVolumeId('');
     setSubtypeId('');
     setConsumptionTypeId('');
     setBrandId('');
     setBeerFlavourId('');
-  }, [alcoholTypeId]);
-
-  // Reset beer flavour when brand changes
-  useEffect(() => {
-    setBeerFlavourId('');
-  }, [brandId]);
-
-  // Form validation
-  const isFormValid = () => {
-    if (alcoholTypeId === '' || volumeId === '') return false;
-    if (isBeer && consumptionTypeId === '') return false;
-    return true;
   };
 
-  const handleAlcoholTypeChange = (event: SelectChangeEvent<number | ''>) => {
-    setAlcoholTypeId(event.target.value as number | '');
+  const handleBrandChange = (event: SelectChangeEvent<number | ''>) => {
+    setBrandId(event.target.value as number | '');
+    setBeerFlavourId('');
   };
 
   const handleSave = useCallback(async () => {
-    if (!isFormValid()) return;
+    if (!isFormValid) return;
 
     setSaving(true);
 
@@ -167,6 +160,7 @@ const DetailedPage: React.FC = () => {
       navigateToSuccess(message);
     } catch (error) {
       console.error('Failed to save drink:', error);
+      setSaving(false);
       navigateToError('Failed to save your drink. Please try again.');
     }
   }, [
@@ -180,6 +174,7 @@ const DetailedPage: React.FC = () => {
     comments,
     quantity,
     isBeer,
+    isFormValid,
     navigateToSuccess,
     navigateToError,
     addToRecommendations,
@@ -335,7 +330,7 @@ const DetailedPage: React.FC = () => {
                   labelId="brand-label"
                   value={brandId}
                   label="Brand"
-                  onChange={(e) => setBrandId(e.target.value as number | '')}
+                  onChange={handleBrandChange}
                   disabled={loadingBrands}
                 >
                   {brands?.map((brand) => (
@@ -477,7 +472,7 @@ const DetailedPage: React.FC = () => {
         )}
 
         {/* Validation hint */}
-        {alcoholTypeId !== '' && !isFormValid() && (
+        {alcoholTypeId !== '' && !isFormValid && (
           <Typography
             variant="body2"
             color="text.secondary"
@@ -489,11 +484,11 @@ const DetailedPage: React.FC = () => {
       </Box>
 
       {/* Floating Action Button */}
-      <Zoom in={isFormValid()}>
+      <Zoom in={isFormValid}>
         <Fab
           color="primary"
           onClick={handleSave}
-          disabled={saving || !isFormValid()}
+          disabled={saving || !isFormValid}
           sx={{
             position: 'fixed',
             bottom: 80,

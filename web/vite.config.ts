@@ -23,10 +23,10 @@ export default defineConfig({
       // the suite was introduced so coverage cannot regress. Raise it as tests
       // are added; do not lower it.
       thresholds: {
-        statements: 2.5,
-        branches: 7,
-        functions: 3,
-        lines: 2.5,
+        statements: 52,
+        branches: 44,
+        functions: 47,
+        lines: 54,
       },
     },
   },

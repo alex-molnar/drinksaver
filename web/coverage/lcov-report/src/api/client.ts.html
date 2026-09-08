@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">21.05% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/19</span>
+                <span class='fraction'>4/19</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">21.05% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/19</span>
+                <span class='fraction'>4/19</span>
             </div>
         
             
@@ -128,7 +128,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -137,41 +137,41 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -185,7 +185,7 @@ import config from '../config';
 const API_BASE_URL = config.apiUrl;
 &nbsp;
 // Create axios instance with default config
-const apiClient: AxiosInstance = <span class="cstat-no" title="statement not covered" >axios.create({</span>
+const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
@@ -194,7 +194,7 @@ const apiClient: AxiosInstance = <span class="cstat-no" title="statement not cov
 });
 &nbsp;
 // Request interceptor to add Bearer token
-<span class="cstat-no" title="statement not covered" >apiClient.interceptors.request.<span class="fstat-no" title="function not covered" >use(</span></span>
+apiClient.interceptors.request.<span class="fstat-no" title="function not covered" >use(</span>
   (config) =&gt; {
 <span class="cstat-no" title="statement not covered" >    if (keycloak.token) {</span>
 <span class="cstat-no" title="statement not covered" >      config.headers.Authorization = `Bearer ${keycloak.token}`;</span>
@@ -205,7 +205,7 @@ const apiClient: AxiosInstance = <span class="cstat-no" title="statement not cov
 );
 &nbsp;
 // Response interceptor for error handling
-<span class="cstat-no" title="statement not covered" >apiClient.interceptors.response.<span class="fstat-no" title="function not covered" >use(</span></span>
+apiClient.interceptors.response.<span class="fstat-no" title="function not covered" >use(</span>
   (response) =&gt; <span class="cstat-no" title="statement not covered" >response,</span>
 <span class="fstat-no" title="function not covered" >  async (e</span>rror: AxiosError) =&gt; {
     // Handle 401 Unauthorized - try to refresh token
@@ -228,7 +228,7 @@ const apiClient: AxiosInstance = <span class="cstat-no" title="statement not cov
 );
 &nbsp;
 // Helper to get current user ID from token
-export const <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >getCurrentUserId = (): string | undefined =&gt; {</span></span>
+export const <span class="fstat-no" title="function not covered" >getCurrentUserId = (): string | undefined =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  return keycloak.tokenParsed?.sub;</span>
 };
 &nbsp;
@@ -241,7 +241,7 @@ export { API_BASE_URL };
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-09-07T21:43:27.312Z
+                at 2026-09-07T22:41:45.306Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
