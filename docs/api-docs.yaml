@@ -24,6 +24,8 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/SavedDrink"
+        "400":
+          description: quantity is outside 1 to 100
   /v1/beer/brands:
     get:
       tags:
@@ -332,6 +334,11 @@ components:
         quantity:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 100
+          description: >-
+            Number of identical rows to write. Absent means one. Anything outside
+            1 to 100 is rejected with a 400.
         addToRecommendations:
           type: boolean
         onlyTemporarily:
