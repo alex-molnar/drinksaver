@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import type { KeycloakTokenParsed } from 'keycloak-js';
-import apiClient, { getCurrentUserId } from './client';
+import apiClient from './client';
 import keycloak from '../auth/keycloak';
 
 vi.mock('../auth/keycloak');
@@ -115,21 +114,4 @@ describe('api/client', () => {
     });
   });
 
-  describe('getCurrentUserId', () => {
-    it('returns the token subject', () => {
-      vi.mocked(keycloak).tokenParsed = { sub: 'user-123' } as KeycloakTokenParsed;
-
-      expect(getCurrentUserId()).toBe('user-123');
-    });
-
-    it('returns undefined without a token', () => {
-      expect(getCurrentUserId()).toBeUndefined();
-    });
-
-    it('returns undefined when the token carries no subject', () => {
-      vi.mocked(keycloak).tokenParsed = { name: 'no sub' } as unknown as KeycloakTokenParsed;
-
-      expect(getCurrentUserId()).toBeUndefined();
-    });
-  });
 });

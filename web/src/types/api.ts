@@ -1,5 +1,10 @@
 // API Types based on OpenAPI schema
 
+/**
+ * The wire shape of a saved drink. `userId` is set by the backend from the JWT
+ * subject, so it is present on responses (see SavedDrink) and never sent on a
+ * request: the request payload is Omit<Drink, 'userId'>.
+ */
 export interface Drink {
   userId: string; // uuid
   date: string;
@@ -10,7 +15,7 @@ export interface Drink {
   beerFlavourId?: number;
   consumptionTypeId?: number;
   comments?: string;
-  quantity?: number; // 1-9, for batch insert
+  quantity?: number; // 1-100, rejected with a 400 outside that
   addToRecommendations?: boolean;
   onlyTemporarily?: boolean;
   name?: string;
@@ -40,7 +45,6 @@ export interface AlcoholVolume {
 }
 
 export interface NewAlcoholEntry {
-  userId?: string;
   name: string;
   volumes?: NewVolumeEntry[];
   alcoholSubtypes?: string[];
@@ -102,7 +106,6 @@ export interface AlcoholSubtype {
 
 export interface NewAlcoholSubtype {
   alcoholTypeId: number;
-  userId?: string;
   name: string;
 }
 
@@ -115,7 +118,6 @@ export interface BeerFlavour {
 }
 
 export interface NewBeerFlavour {
-  userId?: string;
   name: string;
 }
 

@@ -1,21 +1,25 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import * as endpoints from './endpoints';
-import apiClient, { getCurrentUserId } from './client';
+import apiClient from './client';
 
 vi.mock('./client');
 vi.mock('../auth/keycloak');
 
 const mockApiClient = vi.mocked(apiClient);
-const mockGetCurrentUserId = vi.mocked(getCurrentUserId);
 
+/**
+ * These assertions are the contract with the backend, so they say what is sent AND, for
+ * the eight calls that used to carry one, that no userId is sent. The negative half is
+ * the point: the backend derives the caller from the JWT and ignores any userId in the
+ * payload, and an exact-match assertion is what would catch someone reintroducing one.
+ */
 describe('api/endpoints', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe('saveDrink', () => {
-    it('posts to /v1/drinks/new with the correct payload including userId and date', async () => {
-      mockGetCurrentUserId.mockReturnValue('user-123');
+    it('posts to /v1/drinks/new with a defaulted date and no userId', async () => {
       mockApiClient.post.mockResolvedValue({
         data: { id: 1, userId: 'user-123', date: '2026-01-01', alcoholTypeId: 1 },
       });
@@ -25,19 +29,24 @@ describe('api/endpoints', () => {
         alcoholVolumeId: 10,
       });
 
-      expect(mockApiClient.post).toHaveBeenCalledWith('/v1/drinks/new', expect.objectContaining({
-        userId: 'user-123',
+      expect(mockApiClient.post).toHaveBeenCalledWith('/v1/drinks/new', {
         alcoholTypeId: 1,
         alcoholVolumeId: 10,
-      }));
+        date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      });
       expect(result.id).toBe(1);
     });
 
-    it('throws when user is not authenticated', async () => {
-      mockGetCurrentUserId.mockReturnValue(undefined);
+    it('keeps an explicit date rather than defaulting it', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { id: 2 } });
 
-      await expect(endpoints.saveDrink({ alcoholTypeId: 1, alcoholVolumeId: 10 }))
-        .rejects.toThrow('User not authenticated');
+      await endpoints.saveDrink({ alcoholTypeId: 1, alcoholVolumeId: 10, date: '2026-03-04' });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith('/v1/drinks/new', {
+        alcoholTypeId: 1,
+        alcoholVolumeId: 10,
+        date: '2026-03-04',
+      });
     });
   });
 
@@ -55,51 +64,26 @@ describe('api/endpoints', () => {
   });
 
   describe('getAlcoholTypes', () => {
-    it('gets /v1/alcohol/types with userId query parameter', async () => {
-      mockGetCurrentUserId.mockReturnValue('user-789');
+    it('gets /v1/alcohol/types with no query parameters', async () => {
       mockApiClient.get.mockResolvedValue({
         data: [{ id: 1, name: 'Beer' }],
       });
 
       await endpoints.getAlcoholTypes();
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/alcohol/types', {
-        params: { userId: 'user-789' },
-      });
-    });
-
-    it('still works when userId is undefined', async () => {
-      mockGetCurrentUserId.mockReturnValue(undefined);
-      mockApiClient.get.mockResolvedValue({ data: [] });
-
-      await endpoints.getAlcoholTypes();
-
-      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/alcohol/types', {
-        params: { userId: undefined },
-      });
+      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/alcohol/types');
     });
   });
 
   describe('createAlcoholType', () => {
-    it('posts to /v1/alcohol/types with userId included', async () => {
-      mockGetCurrentUserId.mockReturnValue('user-123');
+    it('posts to /v1/alcohol/types with the entry alone', async () => {
       mockApiClient.post.mockResolvedValue({
         data: { id: 1, name: 'Beer', userId: 'user-123' },
       });
 
       await endpoints.createAlcoholType({ name: 'Beer' });
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        '/v1/alcohol/types',
-        expect.objectContaining({ name: 'Beer', userId: 'user-123' })
-      );
-    });
-
-    it('throws when user is not authenticated', async () => {
-      mockGetCurrentUserId.mockReturnValue(undefined);
-
-      await expect(endpoints.createAlcoholType({ name: 'Beer' }))
-        .rejects.toThrow('User not authenticated');
+      expect(mockApiClient.post).toHaveBeenCalledWith('/v1/alcohol/types', { name: 'Beer' });
     });
   });
 
@@ -127,29 +111,17 @@ describe('api/endpoints', () => {
   });
 
   describe('getSubtypesByAlcoholType', () => {
-    it('gets /v1/alcohol/types/{id}/subtypes with userId query parameter', async () => {
-      mockGetCurrentUserId.mockReturnValue('user-999');
+    it('gets /v1/alcohol/types/{id}/subtypes with no query parameters', async () => {
       mockApiClient.get.mockResolvedValue({ data: [] });
 
       await endpoints.getSubtypesByAlcoholType(7);
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        '/v1/alcohol/types/7/subtypes',
-        { params: { userId: 'user-999' } }
-      );
-    });
-
-    it('throws when user is not authenticated', async () => {
-      mockGetCurrentUserId.mockReturnValue(undefined);
-
-      await expect(endpoints.getSubtypesByAlcoholType(7))
-        .rejects.toThrow('User not authenticated');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/alcohol/types/7/subtypes');
     });
   });
 
   describe('createSubtypeForAlcoholType', () => {
-    it('posts to /v1/alcohol/types/{id}/subtypes with userId and name', async () => {
-      mockGetCurrentUserId.mockReturnValue('user-555');
+    it('posts to /v1/alcohol/types/{id}/subtypes with the type id and name only', async () => {
       mockApiClient.post.mockResolvedValue({
         data: { id: 30, name: 'Single Malt', alcoholTypeId: 7 },
       });
@@ -158,15 +130,8 @@ describe('api/endpoints', () => {
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         '/v1/alcohol/types/7/subtypes',
-        { alcoholTypeId: 7, userId: 'user-555', name: 'Single Malt' }
+        { alcoholTypeId: 7, name: 'Single Malt' }
       );
-    });
-
-    it('throws when user is not authenticated', async () => {
-      mockGetCurrentUserId.mockReturnValue(undefined);
-
-      await expect(endpoints.createSubtypeForAlcoholType(7, 'Single Malt'))
-        .rejects.toThrow('User not authenticated');
     });
   });
 
@@ -193,26 +158,12 @@ describe('api/endpoints', () => {
   });
 
   describe('getBrands', () => {
-    it('gets /v1/beer/brands with userId query parameter', async () => {
-      mockGetCurrentUserId.mockReturnValue('user-111');
+    it('gets /v1/beer/brands with no query parameters', async () => {
       mockApiClient.get.mockResolvedValue({ data: [] });
 
       await endpoints.getBrands();
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/beer/brands', {
-        params: { userId: 'user-111' },
-      });
-    });
-
-    it('still works when userId is undefined', async () => {
-      mockGetCurrentUserId.mockReturnValue(undefined);
-      mockApiClient.get.mockResolvedValue({ data: [] });
-
-      await endpoints.getBrands();
-
-      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/beer/brands', {
-        params: { userId: undefined },
-      });
+      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/beer/brands');
     });
   });
 
@@ -230,29 +181,17 @@ describe('api/endpoints', () => {
   });
 
   describe('getBeerFlavours', () => {
-    it('gets /v1/beer/brands/{id}/flavours with userId query parameter', async () => {
-      mockGetCurrentUserId.mockReturnValue('user-333');
+    it('gets /v1/beer/brands/{id}/flavours with no query parameters', async () => {
       mockApiClient.get.mockResolvedValue({ data: [] });
 
       await endpoints.getBeerFlavours(50);
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        '/v1/beer/brands/50/flavours',
-        { params: { userId: 'user-333' } }
-      );
-    });
-
-    it('throws when user is not authenticated', async () => {
-      mockGetCurrentUserId.mockReturnValue(undefined);
-
-      await expect(endpoints.getBeerFlavours(50))
-        .rejects.toThrow('User not authenticated');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/beer/brands/50/flavours');
     });
   });
 
   describe('createBeerFlavour', () => {
-    it('posts to /v1/beer/brands/{id}/flavours with userId and name', async () => {
-      mockGetCurrentUserId.mockReturnValue('user-444');
+    it('posts to /v1/beer/brands/{id}/flavours with the name only', async () => {
       mockApiClient.post.mockResolvedValue({
         data: { id: 60, name: 'Lager', brandId: 50 },
       });
@@ -261,15 +200,8 @@ describe('api/endpoints', () => {
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         '/v1/beer/brands/50/flavours',
-        { userId: 'user-444', name: 'Lager' }
+        { name: 'Lager' }
       );
-    });
-
-    it('throws when user is not authenticated', async () => {
-      mockGetCurrentUserId.mockReturnValue(undefined);
-
-      await expect(endpoints.createBeerFlavour(50, 'Lager'))
-        .rejects.toThrow('User not authenticated');
     });
   });
 

@@ -48,10 +48,5 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Helper to get current user ID from token
-export const getCurrentUserId = (): string | undefined => {
-  return keycloak.tokenParsed?.sub;
-};
-
 export default apiClient;
 export { API_BASE_URL };
