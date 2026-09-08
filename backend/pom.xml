@@ -94,6 +94,12 @@
 			<artifactId>spring-boot-data-jpa-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- Same story as spring-boot-data-jpa-test, but for @WebMvcTest. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<!-- Not a starter. This is the module that provides @ServiceConnection. -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -150,7 +156,7 @@
 										<limit>
 											<counter>INSTRUCTION</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.67</minimum>
+											<minimum>0.78</minimum>
 										</limit>
 									</limits>
 								</rule>
