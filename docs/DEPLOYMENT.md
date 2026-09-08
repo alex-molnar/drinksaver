@@ -357,7 +357,8 @@ permission. It was not adopted because the existing releases are stored as
 Secrets: Helm would not find them, and `upgrade --install` would fall through to
 `install` and collide with the live resources. Worth revisiting if more people
 gain write access to the repository. See
-[the security review](security-review-2026-09-07.md) finding F2.
+[task 14 in the remaining work](remaining-work.md#14-ci-serviceaccount-can-read-every-secret-in-both-namespaces),
+which carries the reasoning forward from the 2026-09-07 security review.
 
 To rotate it:
 
