@@ -10,6 +10,7 @@ import com.drinksaver.repository.AlcoholRepository;
 import com.drinksaver.security.AuthenticatedUser;
 import com.drinksaver.service.InjectorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,13 +54,13 @@ public class AlcoholController {
     }
 
     @PostMapping("/types/{alcoholTypeId}/volumes")
-    public AlcoholVolume saveVolumeForAlcoholType(
+    public ResponseEntity<AlcoholVolume> saveVolumeForAlcoholType(
             @PathVariable Integer alcoholTypeId,
             @RequestBody NewVolumeEntry volumeDescription) {
-        return alcoholRepository.saveVolumeForAlcoholType(
-                alcoholTypeId,
-                volumeDescription
-        );
+        return alcoholRepository
+                .saveVolumeForAlcoholType(alcoholTypeId, volumeDescription)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/types")

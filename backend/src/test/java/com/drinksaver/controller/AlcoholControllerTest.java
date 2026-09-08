@@ -4,6 +4,7 @@ import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.config.SecurityConfig;
 import com.drinksaver.model.db.AlcoholSubtype;
 import com.drinksaver.model.db.AlcoholType;
+import com.drinksaver.model.db.AlcoholVolume;
 import com.drinksaver.model.dto.NewAlcoholEntry;
 import com.drinksaver.model.dto.NewAlcoholSubtype;
 import com.drinksaver.repository.AlcoholRepository;
@@ -26,10 +27,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -189,5 +192,36 @@ class AlcoholControllerTest {
         org.mockito.ArgumentCaptor<NewAlcoholEntry> captor = org.mockito.ArgumentCaptor.forClass(NewAlcoholEntry.class);
         verify(alcoholRepository).createAlcoholType(captor.capture());
         assertThat(captor.getValue().userId()).isEqualTo(authenticatedUserId);
+    }
+
+    /**
+     * F7. `saveVolumeForAlcoholType` used to answer an unknown alcohol type with a 200
+     * carrying an all-null AlcoholVolume, so a client could not tell success from
+     * failure. The author had flagged it with a `// TODO ResponseEntity 404`.
+     */
+    @Test
+    void saveVolumeForAnUnknownAlcoholTypeReturnsNotFound() throws Exception {
+        when(alcoholRepository.saveVolumeForAlcoholType(eq(99), any())).thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 99)
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Shot\",\"volume\":0.05}"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void saveVolumeForAKnownAlcoholTypeReturnsTheSavedVolume() throws Exception {
+        AlcoholVolume saved = new AlcoholVolume(1, "Shot", 0.05f);
+        saved.setId(8);
+        when(alcoholRepository.saveVolumeForAlcoholType(eq(1), any())).thenReturn(Optional.of(saved));
+
+        mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Shot\",\"volume\":0.05}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(8))
+            .andExpect(jsonPath("$.name").value("Shot"));
     }
 }

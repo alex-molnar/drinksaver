@@ -178,6 +178,8 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/AlcoholVolume"
+        "404":
+          description: no alcohol type with that id
   /v1/alcohol/types/{alcoholTypeId}/subtypes:
     get:
       tags:

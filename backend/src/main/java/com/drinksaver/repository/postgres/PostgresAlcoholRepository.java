@@ -11,11 +11,12 @@ import com.drinksaver.repository.AlcoholRepository;
 import com.drinksaver.repository.postgres.schema.AlcoholSubtypesTable;
 import com.drinksaver.repository.postgres.schema.AlcoholTypesTable;
 import com.drinksaver.repository.postgres.schema.AlcoholVolumeTable;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -67,21 +68,31 @@ public class PostgresAlcoholRepository implements AlcoholRepository {
                 .orElse(List.of());
     }
 
+    /**
+     * Two writes, the volume and the type it is attached to, so they commit together.
+     * Without a transaction a failure on the second left an orphaned volume row that
+     * nothing referenced.
+     */
     @Override
-    public AlcoholVolume saveVolumeForAlcoholType(Integer alcoholTypeId, NewVolumeEntry volumeDescription) {
+    @Transactional
+    public Optional<AlcoholVolume> saveVolumeForAlcoholType(Integer alcoholTypeId, NewVolumeEntry volumeDescription) {
         return alcoholTypesTable.findById(alcoholTypeId)
                 .map(alcoholType -> {
                     AlcoholVolume savedVolume = alcoholVolumeTable.save(AlcoholVolume.of(volumeDescription));
                     alcoholType.getVolumeIds().add(savedVolume.getId());
                     alcoholTypesTable.save(alcoholType);
                     return savedVolume;
-                })
-                .orElse(new AlcoholVolume()); // TODO ResponseEntity 404
+                });
     }
 
+    /**
+     * Volumes, then the type, then the subtypes: three separate writes that only make
+     * sense as one. A failure part way used to leave orphaned volume rows and a type
+     * with no subtypes, with nothing to say the request had half succeeded.
+     */
     @Override
+    @Transactional
     public AlcoholType createAlcoholType(NewAlcoholEntry newAlcoholEntry) {
-        // TODO in transaction
         List<Integer> volumeIds = newAlcoholEntry.volumes() != null
             ? newAlcoholEntry.volumes()
                 .stream()
