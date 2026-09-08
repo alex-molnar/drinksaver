@@ -448,12 +448,9 @@ chart's `config.*` values are wrong for that environment.
 
 ## Follow-ups not done here
 
-- Both applications now have tests, so this is no longer outstanding. The web app
-  uses Vitest 5, whose peer range covers Vite 8, which settles the compatibility
-  question that deferred it. The backend uses JUnit 5, with Testcontainers for the
-  repository layer.
-- The web bundle is a single 660 kB chunk. Code splitting would help first load.
-- Four old resources remain from before the consolidation and can be removed
-  once production is cut over: namespaces `drinksaver-backend`,
-  `drinksaver-frontend`, `test-drinksaver-backend`, `test-drinksaver-frontend`.
-  The two test ones no longer hold releases.
+Both items that used to live here are closed. Tests exist for both applications, and the
+web bundle is code split: the largest chunk is 209 kB where it was a single 660 kB one.
+See `docs/fixes-2026-09-08.md`.
+
+What is left, including the four leftover namespaces that need production cutover first,
+is in `docs/remaining-work.md` with a task description each. Add there rather than here.

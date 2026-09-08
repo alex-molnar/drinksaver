@@ -14,11 +14,14 @@ A mobile-first web application for tracking alcohol consumption. Built with Reac
 
 ## Tech Stack
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **UI Framework**: Material-UI (MUI) v5
-- **Routing**: React Router v6
-- **State Management**: TanStack Query (React Query)
+- **Frontend**: React 19 + TypeScript + Vite 8
+- **UI Framework**: Material-UI (MUI) v9
+- **Routing**: React Router v7, with routes loaded on demand
+- **State Management**: TanStack Query v5
+- **Authentication**: Keycloak via `keycloak-js`, bearer token on every request
 - **HTTP Client**: Axios
+- **Testing**: Vitest 5 with jsdom and React Testing Library; Playwright for the
+  end-to-end journeys
 - **Containerization**: Docker + Nginx
 - **Orchestration**: Helm chart for Kubernetes
 
@@ -26,8 +29,8 @@ A mobile-first web application for tracking alcohol consumption. Built with Reac
 
 ### Prerequisites
 
-- Node.js 18+ 
-- npm 9+
+- Node.js 24+
+- npm 10+
 
 ### Installation
 
@@ -178,43 +181,84 @@ src/
 │   ├── Layout.tsx       # Shared layout wrapper
 │   ├── LoadingButton.tsx # Button with loading state
 │   └── RecommendationButton.tsx # Quick-save button
+├── auth/
+│   ├── KeycloakProvider.tsx # Init, token refresh, auth context
+│   ├── ProtectedRoute.tsx   # Gate for authenticated content
+│   └── useAuth.ts           # Context accessor
 ├── hooks/
-│   └── useNavigation.ts # Navigation helper hook
+│   ├── useNavigation.ts       # Navigation helper hook
+│   └── useResponsiveTileCount.ts
 ├── pages/
 │   ├── IndexPage.tsx    # Quick save grid
 │   ├── DetailedPage.tsx # Manual entry form
+│   ├── HistoryPage.tsx  # A day's drinks, with delete
 │   ├── SuccessPage.tsx  # Success message
 │   ├── ErrorPage.tsx    # Error with retry
 │   ├── NewAlcoholPage.tsx
 │   ├── NewVolumePage.tsx
-│   └── NewBeerBrandPage.tsx
+│   ├── NewSubtypePage.tsx
+│   ├── NewBeerBrandPage.tsx
+│   └── NewBeerFlavourPage.tsx
+├── test/
+│   ├── setup.ts         # Vitest setup
+│   └── test-utils.tsx   # renderWithProviders
 ├── types/
 │   └── api.ts           # TypeScript interfaces
-├── App.tsx              # Route configuration
+├── App.tsx              # Route configuration, lazy loaded
 └── main.tsx             # Entry point with providers
 ```
 
+Each page has a sibling `*.test.tsx`. The end-to-end journeys live in `e2e/`, outside
+`src/`, so the Vitest and Playwright runners never collide.
+
 ## API Integration
 
-The app integrates with the DrinkSaver backend API. Key endpoints:
+`docs/api-docs.yaml` at the repository root is the canonical contract. The app talks to
+it through `src/api/endpoints.ts`, one function per endpoint:
 
-- `GET /v1/recommendations/{userId}/list` - Get drink recommendations
-- `POST /v1/drinks/new` - Save a non-beer drink
-- `POST /v1/drinks/beer/new` - Save a beer
-- `GET /v1/alcohol/types` - List alcohol types
-- `POST /v1/alcohol/types` - Create alcohol type
-- `GET /v1/alcohol/types/{id}/volumes` - Get volumes for type
-- `POST /v1/alcohol/types/{id}/volumes` - Create volume
-- `GET /v1/beer/consumption-types` - List consumption types
-- `GET /v1/beer/brands` - List beer brands
-- `POST /v1/beer/brands/{brand}` - Create beer brand
+- `GET /v1/recommendations/list` - drink recommendations
+- `POST /v1/drinks/new` - save a drink, beer or otherwise
+- `GET /v1/drinks/date/{date}` - a day's history
+- `DELETE /v1/drinks/byIds` - delete selected history entries
+- `GET /v1/alcohol/types` - list alcohol types
+- `POST /v1/alcohol/types` - create an alcohol type
+- `GET|POST /v1/alcohol/types/{id}/volumes` - volumes for a type
+- `GET|POST /v1/alcohol/types/{id}/subtypes` - subtypes for a type
+- `GET /v1/beer/consumption-types` - list consumption types
+- `GET|POST /v1/beer/brands` - beer brands
+- `GET|POST /v1/beer/brands/{id}/flavours` - flavours for a brand
 
-Note: `userId` is hardcoded to `1` for the initial implementation.
+**No request carries a `userId`.** The backend derives the caller from the JWT that
+`src/api/client.ts` attaches, and ignores any userId in a payload. Do not add one back:
+sending one suggests the client's claim about who it is counts for something, and it
+does not.
 
 ## Validation Rules
 
-- **Volume (liters)**: Must be positive and less than 2 (range: 0.01-1.99)
-- **Required fields**: Form validation ensures all mandatory fields are filled before save
+Client side:
+
+- **Volume (liters)**: positive and less than 2 (range 0.01 to 1.99)
+- **Required fields**: the save control stays disabled until every mandatory field is
+  filled, which differs by drink type (beer also requires a consumption type)
+
+Server side, worth knowing because the client should never send these:
+
+- **Quantity**: 1 to 100 inclusive. Outside that is a 400, not a clamp.
+
+## Testing
+
+```bash
+npm run test              # Vitest, watch mode off with -- --run
+npm run test:coverage     # with v8 coverage and the ratchet thresholds
+npm run lint              # blocking in CI for errors, warnings are not
+npm run e2e               # Playwright, needs the compose stack already up
+```
+
+The coverage thresholds in `vite.config.ts` are a ratchet: raise them as tests are
+added, never lower them to make a build pass.
+
+`src/config.ts` builds its export at import time, so any test of it must call
+`vi.resetModules()` and re-import per case. `src/config.test.ts` shows the pattern.
 
 ## License
 
