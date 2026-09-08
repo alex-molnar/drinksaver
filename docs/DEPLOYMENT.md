@@ -273,6 +273,21 @@ deploy/values/web-prod.yaml
 Values are stated explicitly rather than inherited from chart defaults, so
 changing a default cannot silently alter production.
 
+### SQL statement logging
+
+`jpa.showSql` is `false` in the chart default and in every environment. Each statement
+Hibernate logs carries the user UUIDs whose rows it touched, so turning it on copies
+consumption data into whatever retention and access control the log sink happens to
+have, rather than the database's.
+
+To debug a query in the test environment, set `jpa.showSql: true` in
+`deploy/values/backend-test.yaml`, deploy, read the logs, and set it back. It is a plain
+Helm value and an env var (`JPA_SHOW_SQL`), so no image rebuild is involved either way.
+
+The local compose stack sets `JPA_SHOW_SQL: "true"` and keeps it there: that stack only
+ever holds the seeded demo data, and seeing the generated SQL is most of the point of
+running it.
+
 ## How web configuration works
 
 The web image contains no environment configuration. `docker-entrypoint.sh`
