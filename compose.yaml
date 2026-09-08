@@ -110,7 +110,10 @@ services:
       keycloak:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      # Actuator lives entirely on management.server.port now (8081, not exposed to the host
+      # here - see the comment above on port mappings), so the check runs against that port
+      # from inside the container.
+      test: ["CMD", "curl", "-fsS", "http://localhost:8081/actuator/health/readiness"]
       interval: 10s
       timeout: 5s
       retries: 30
