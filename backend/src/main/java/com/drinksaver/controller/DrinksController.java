@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -59,7 +60,9 @@ public class DrinksController {
             .getSavedDrinks(userId, date)
                 .stream()
                 .map(savedDrink -> {
-                    final String name =  savedDrink.getAlcoholTypeId().equals(repositoryConfiguration.beerId())
+                    // alcohol_type_id is nullable, so this comparison has to tolerate a null
+                    // rather than dereference it: one typeless row used to 500 the whole day.
+                    final String name = Objects.equals(savedDrink.getAlcoholTypeId(), repositoryConfiguration.beerId())
                             ? beerNameCollector.collectBeerName(DrinkKey.of(savedDrink)).name().orElse("Unknown drink")
                             : alcoholNameCollector.collectAlcoholName(DrinkKey.of(savedDrink)).name().orElse("Unknown drink");
                     return new EditableDrink(savedDrink.getId(), name,  savedDrink.getAlcoholTypeId());

@@ -1,3 +1,4 @@
 # Scala/Metals language server state
 .metals/
 .bloop/
+.idea/
