@@ -180,8 +180,8 @@ Coverage is gated too, as a ratchet rather than a target: JaCoCo on the backend
 as tests are added, never lower them to make a build pass. Each threshold carries the date
 and the measured value in a comment, so the size of the gap is visible.
 
-The backend gate checks instructions only. Branch coverage is 78.57% and ungated; see task
-12 in `docs/remaining-work.md`.
+The backend gate checks instructions only. Branch coverage is 78.57% and ungated; see HK-2
+in `docs/remaining-work.md`.
 
 ## Environment and infrastructure
 
@@ -232,12 +232,16 @@ cold. `docs/fixes-2026-09-08.md` records what was closed and how it was verified
 "Already done" section before acting on anything from older material, because several
 findings that read as open are not.
 
-The short version of what is still open: the GDPR work beyond SQL logging (items 1 to 7,
-blocked on a special-category determination), Prometheus scraping (needs a decision on how
-a scraper authenticates), SHA-pinning the actions and digest-pinning the base images (a
-maintenance tradeoff deliberately left to Alex), untracking `web/coverage`, a BRANCH
-coverage gate on the backend, four leftover namespaces awaiting production cutover, and one
-lint warning.
+Tasks there carry stable ids grouped by kind: `SEC-*`, `PRIV-*`, `FIX-*`, `OPS-*`, `HK-*`.
+Refer to them by id, never by position. The short version:
 
-Do not re-add to this section. Add to `docs/remaining-work.md` instead, in the same shape as
-the tasks already there.
+| Group | What is open |
+| --- | --- |
+| `SEC` | The alcohol volume endpoints take no authenticated principal, so any user can write to any user's type (SEC-1, needs a decision). Actions and base images are on moving tags (SEC-2, SEC-3, a tradeoff left to Alex). The CI ServiceAccount can read every secret in both namespaces (SEC-4, accepted). |
+| `PRIV` | Everything from the GDPR review except SQL logging. All seven gate on a special-category determination that is not an engineer's to make. |
+| `FIX` | Unbounded volume payload, a lost update on `volumeIds`, no error boundary for a lazy chunk that 404s after a deploy. |
+| `OPS` | Prometheus is configured but not wired up. Four namespaces await production cutover. |
+| `HK` | `web/coverage` still tracked, no BRANCH coverage gate, one dead DTO field, one lint warning. |
+
+Do not re-add to this section. Add to `docs/remaining-work.md` instead, appending to the
+relevant group with the next free id.
