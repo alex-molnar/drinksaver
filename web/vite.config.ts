@@ -25,11 +25,14 @@ export default defineConfig({
       // A ratchet, not a target. Set just below the measured value at the time
       // the suite was introduced so coverage cannot regress. Raise it as tests
       // are added; do not lower it.
+      //
+      // Raised 2026-09-08 after the findings work in docs/fixes-2026-09-08.md,
+      // from 91/85/89/93. Measured 93.67 / 86.95 / 92.81 / 95.15.
       thresholds: {
-        statements: 91,
-        branches: 85,
-        functions: 89,
-        lines: 93,
+        statements: 93,
+        branches: 86,
+        functions: 92,
+        lines: 95,
       },
     },
   },

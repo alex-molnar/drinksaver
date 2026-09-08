@@ -160,6 +160,12 @@
 									A ratchet, not a target. Set just below the value measured
 									when the suite was introduced, so coverage cannot regress.
 									Raise it as tests are added; never lower it.
+
+									0.78 -> 0.90 measured 2026-09-08 at 90.50%, after the
+									findings work in docs/fixes-2026-09-08.md. The floor had
+									not moved since the suite was introduced and was 12 points
+									behind reality, which is a ratchet that has stopped
+									ratcheting.
 								-->
 								<rule>
 									<element>BUNDLE</element>
@@ -167,7 +173,7 @@
 										<limit>
 											<counter>INSTRUCTION</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.78</minimum>
+											<minimum>0.90</minimum>
 										</limit>
 									</limits>
 								</rule>
