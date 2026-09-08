@@ -25,7 +25,7 @@ jobs:
       version: ${{ steps.v.outputs.version }}
       owner: ${{ steps.v.outputs.owner }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - id: v
@@ -44,7 +44,7 @@ jobs:
     needs: version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # This job runs third-party Maven plugins, which execute code pulled
           # from Maven Central. Nothing here uses git after checkout, so the
@@ -123,7 +123,7 @@ jobs:
     needs: version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # Nothing in this job uses git after checkout, and the job now runs
           # third-party npm install scripts. Not leaving the token in

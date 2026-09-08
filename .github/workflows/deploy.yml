@@ -37,7 +37,7 @@ jobs:
       version: ${{ steps.v.outputs.version }}
       owner: ${{ steps.v.outputs.owner }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - id: v
         env:
           INPUT_VERSION: ${{ inputs.version }}
@@ -65,7 +65,7 @@ jobs:
     if: ${{ inputs.deploy-backend }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Configure kubectl
         env:
@@ -106,7 +106,7 @@ jobs:
     if: ${{ inputs.deploy-web }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Configure kubectl
         env:

@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           # Nothing in this job uses git after checkout, and the job now runs
           # third-party npm install scripts. Not leaving the token in
