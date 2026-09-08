@@ -97,6 +97,9 @@ services:
       # seeded for that id show up as the default recommendations.
       ADMIN_USER_LIST: 423c91e4-491f-4f82-aba6-3c982857e0e4
       CORS_ALLOWED_ORIGINS: http://localhost:3000
+      # On here and off everywhere else: this stack only ever holds the seeded demo
+      # data, and seeing the generated SQL is most of the value of running it locally.
+      JPA_SHOW_SQL: "true"
       # The browser receives tokens whose issuer is the host-facing URL, but the
       # backend has to fetch the signing keys over the compose network. Spring
       # validates against the first and fetches from the second, so both are set.

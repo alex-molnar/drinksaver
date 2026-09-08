@@ -36,6 +36,13 @@ jwt:
   issuerUri: "https://auth.drinksaver.kak.im/auth/realms/drinksaver"
   jwkSetUri: "https://auth.drinksaver.kak.im/auth/realms/drinksaver/protocol/openid-connect/certs"
 
+# Statement logging. Off in every environment by default: each logged statement carries
+# the UUIDs of the users whose drink history it touched, so turning it on copies
+# consumption data into whatever retention and access control the log sink has rather
+# than the database's. Set it per environment, temporarily, to debug a query.
+jpa:
+  showSql: false
+
 datasource:
   url: ""
   passwordSecretName: "secret-postgres-basic-auth"
