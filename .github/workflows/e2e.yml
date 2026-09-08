@@ -40,8 +40,16 @@ jobs:
           set -euo pipefail
           # Poll rather than sleep: the backend builds from source here, so the
           # time to healthy varies a lot between a warm and a cold cache.
+          #
+          # The backend probe runs inside the container, the same way compose.yaml's own
+          # healthcheck does. Actuator lives entirely on the management port now, which
+          # compose deliberately does not publish, so the host cannot reach it:
+          # http://localhost:8080/actuator/health answers 401, because the main port has
+          # no actuator route and .anyRequest().authenticated() runs ahead of any
+          # route-not-found handling. That is what this loop used to probe, so it could
+          # never succeed and the whole e2e gate has been failing on readiness.
           for i in $(seq 1 60); do
-            if curl -fsS http://localhost:8080/actuator/health >/dev/null 2>&1 \
+            if docker compose exec -T backend curl -fsS http://localhost:8081/actuator/health >/dev/null 2>&1 \
                && curl -fsS http://localhost:3000/ >/dev/null 2>&1 \
                && curl -fsS http://localhost:8081/auth/realms/drinksaver >/dev/null 2>&1; then
               echo "stack is up"; exit 0
