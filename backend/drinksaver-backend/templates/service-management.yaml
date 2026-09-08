@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "drinksaver-backend.fullname" . }}-management
+  labels:
+    {{- include "drinksaver-backend.labels" . | nindent 4 }}
+spec:
+  # ClusterIP only, deliberately: no Ingress targets this Service, so actuator (health,
+  # metrics) stays reachable only from inside the cluster network - e.g. an in-cluster
+  # Prometheus - never from the public internet.
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.management.port }}
+      targetPort: management
+      protocol: TCP
+      name: management
+  selector:
+    {{- include "drinksaver-backend.selectorLabels" . | nindent 4 }}

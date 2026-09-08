@@ -13,6 +13,15 @@ public class SecurityConfig {
         http
             .cors(Customizer.withDefaults())
             .authorizeHttpRequests(authz -> authz
+                // Spring Boot reuses this exact filter chain for the management port too
+                // (management.server.port) whenever the app defines its own SecurityFilterChain,
+                // rather than falling back to its own default management security - see
+                // ServletManagementContextSecurityConfiguration. In practice this pattern only
+                // opens up actuator paths that actually exist as endpoints in the web server
+                // handling the request: verified live that /actuator/env, /beans and /heapdump
+                // (excluded by management.endpoints.web.exposure.include) still 401 on the
+                // management port, and nothing under /actuator exists at all on the main port
+                // (8080) any more, so this permitAll is narrower in practice than it reads.
                 .requestMatchers("/actuator/**").permitAll()
                 // SpringDoc OpenAPI endpoints
                 .requestMatchers("/v3/api-docs/**").permitAll()
