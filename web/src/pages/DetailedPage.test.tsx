@@ -66,9 +66,41 @@ const selectOption = async (comboboxName: RegExp, optionName: RegExp) => {
   await user.click(within(listbox).getByRole('option', { name: optionName }));
 };
 
-const saveButton = () => screen.getByTestId('SaveIcon').closest('button') as HTMLButtonElement;
+/**
+ * By its label, not by the SaveIcon data-testid: MUI strips those from production
+ * bundles, so a test depending on one was testing something the shipped app lacks.
+ *
+ * getByLabelText rather than getByRole here on purpose. The Fab sits inside a
+ * <Zoom in={isFormValid}>, and while the form is incomplete the exit transition takes
+ * it out of the accessibility tree. That is correct behaviour, but it makes a role
+ * query depend on transition timing: with getByRole this helper failed roughly two
+ * full parallel runs in three, while passing every time in isolation.
+ * getByLabelText matches the aria-label attribute directly, so it is deterministic in
+ * both states. The role query is the one a screen reader's behaviour actually rests
+ * on, so it is asserted once, in "gives the save button an accessible name", at the
+ * point where the button is usable.
+ */
+const saveButton = () => screen.getByLabelText('Save drink');
 
 describe('DetailedPage', () => {
+  /**
+   * F10. The Fab's only content is a SaveIcon, so before the aria-label a screen reader
+   * announced the primary action of this screen as "button". Asserted directly rather
+   * than left implicit in the saveButton() helper, so removing the label fails a test
+   * that says why instead of fifteen that say "cannot find button".
+   */
+  it('gives the save button an accessible name', async () => {
+    renderWithProviders(<DetailedPage />);
+    await screen.findByRole('combobox', { name: /alcohol type/i });
+
+    await selectOption(/alcohol type/i, /wine/i);
+    await selectOption(/^volume$/i, /glass/i);
+
+    // No hidden: true here. Once the form is valid the Fab is exposed to assistive
+    // technology, and this is the assertion that would fail if the aria-label went away.
+    expect(screen.getByRole('button', { name: /save drink/i })).toBeEnabled();
+  });
+
   it('renders a loading spinner while alcohol types are loading, then the form', async () => {
     renderWithProviders(<DetailedPage />);
 
