@@ -159,6 +159,31 @@ class DrinksControllerTest {
         verifyNoInteractions(beerNameCollector);
     }
 
+    /**
+     * alcohol_type_id is nullable, so a row can reach this branch with no type. Comparing
+     * it with .equals() dereferenced it and turned the whole day's history into a 500;
+     * an unknown type belongs on the alcohol path, which already degrades to a placeholder
+     * name.
+     */
+    @Test
+    void getSavedDrinksUsesAlcoholCollectorWhenAlcoholTypeIsNull() throws Exception {
+        UUID userId = UUID.randomUUID();
+        SavedDrink typelessDrink = savedDrink(3, userId, null);
+
+        when(drinksRepository.getSavedDrinks(userId, "2026-01-01")).thenReturn(List.of(typelessDrink));
+        when(alcoholNameCollector.collectAlcoholName(any(DrinkKey.class)))
+            .thenReturn(DrinkKey.of(typelessDrink));
+
+        mockMvc.perform(get("/v1/drinks/date/{date}", "2026-01-01")
+                .with(jwt().jwt(token -> token.subject(userId.toString()))))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(3))
+            .andExpect(jsonPath("$[0].name").value("Unknown drink"));
+
+        verify(alcoholNameCollector).collectAlcoholName(any(DrinkKey.class));
+        verifyNoInteractions(beerNameCollector);
+    }
+
     @Test
     void getSavedDrinksUsesTheAuthenticatedUserIdRegardlessOfWhoElseHasDrinksThatDate() throws Exception {
         UUID authenticatedUserId = UUID.randomUUID();

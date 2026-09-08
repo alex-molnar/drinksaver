@@ -8,6 +8,8 @@ import com.drinksaver.repository.postgres.schema.AlcoholVolumeTable;
 import com.drinksaver.service.model.DrinkKey;
 import org.springframework.stereotype.Service;
 
+import java.util.Locale;
+
 @Service
 public class AlcoholNameCollector {
     private final AlcoholVolumeTable alcoholVolumeTable;
@@ -47,10 +49,21 @@ public class AlcoholNameCollector {
         }
     }
 
+    /**
+     * alcohol_volume_id is nullable, and Spring Data's findById rejects a null id
+     * with IllegalArgumentException, so the id is checked before the lookup rather
+     * than letting one volume-less drink fail the whole history request.
+     *
+     * Locale.ROOT pins the decimal separator: a bare %.2f follows the default
+     * locale and would render "0,50l" wherever that is comma-decimal.
+     */
     private String getAlcoholVolumeName(Integer alcoholVolumeId) {
+        if (alcoholVolumeId == null) {
+            return "Unknown volume";
+        }
         return alcoholVolumeTable
             .findById(alcoholVolumeId)
-            .map(volume -> String.format("(%s - %.2fl)", volume.getName(), volume.getVolume()))
+            .map(volume -> String.format(Locale.ROOT, "(%s - %.2fl)", volume.getName(), volume.getVolume()))
             .orElse("Unknown volume");
     }
 }
