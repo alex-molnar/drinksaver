@@ -7,18 +7,19 @@ import com.drinksaver.model.dto.NewAlcoholEntry;
 import com.drinksaver.model.dto.NewAlcoholSubtype;
 import com.drinksaver.model.dto.NewVolumeEntry;
 import com.drinksaver.repository.AlcoholRepository;
+import com.drinksaver.security.AuthenticatedUser;
 import com.drinksaver.service.InjectorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/alcohol")
@@ -32,18 +33,18 @@ public class AlcoholController {
     }
 
     @GetMapping("/types")
-    public List<AlcoholType> getAlcoholTypes(@RequestParam(defaultValue = "10") UUID userId) {
-        return alcoholRepository.getAlcoholTypes(userId);
+    public List<AlcoholType> getAlcoholTypes(@AuthenticationPrincipal Jwt jwt) {
+        return alcoholRepository.getAlcoholTypes(AuthenticatedUser.id(jwt));
     }
 
     @GetMapping("/types/{alcoholTypeId}/subtypes")
-    public List<AlcoholSubtype> getSubtypesByAlcoholType(@PathVariable Integer alcoholTypeId, @RequestParam UUID userId) {
-        return alcoholRepository.getSubtypesByAlcoholType(alcoholTypeId, userId);
+    public List<AlcoholSubtype> getSubtypesByAlcoholType(@AuthenticationPrincipal Jwt jwt, @PathVariable Integer alcoholTypeId) {
+        return alcoholRepository.getSubtypesByAlcoholType(alcoholTypeId, AuthenticatedUser.id(jwt));
     }
 
     @PostMapping("/types/{alcoholTypeId}/subtypes")
-    public AlcoholSubtype getSubtypesByAlcoholType(@PathVariable Integer alcoholTypeId, @RequestBody NewAlcoholSubtype newAlcoholSubtype) {
-        return alcoholRepository.saveSubtypeForAlcoholType(alcoholTypeId, newAlcoholSubtype);
+    public AlcoholSubtype getSubtypesByAlcoholType(@AuthenticationPrincipal Jwt jwt, @PathVariable Integer alcoholTypeId, @RequestBody NewAlcoholSubtype newAlcoholSubtype) {
+        return alcoholRepository.saveSubtypeForAlcoholType(alcoholTypeId, newAlcoholSubtype.withUserId(AuthenticatedUser.id(jwt)));
     }
 
     @GetMapping("/types/{alcoholTypeId}/volumes")
@@ -62,8 +63,8 @@ public class AlcoholController {
     }
 
     @PostMapping("/types")
-    public AlcoholType createAlcoholType(@RequestBody NewAlcoholEntry newAlcoholEntry) {
-        return alcoholRepository.createAlcoholType(newAlcoholEntry);
+    public AlcoholType createAlcoholType(@AuthenticationPrincipal Jwt jwt, @RequestBody NewAlcoholEntry newAlcoholEntry) {
+        return alcoholRepository.createAlcoholType(newAlcoholEntry.withUserId(AuthenticatedUser.id(jwt)));
     }
 
 }

@@ -42,23 +42,15 @@ describe('api/endpoints', () => {
   });
 
   describe('getRecommendations', () => {
-    it('gets /v1/recommendations/{userId}/list', async () => {
-      mockGetCurrentUserId.mockReturnValue('user-456');
+    it('gets /v1/recommendations/list', async () => {
       mockApiClient.get.mockResolvedValue({
         data: [{ id: 1, name: 'Beer', alcoholTypeId: 4 }],
       });
 
       const result = await endpoints.getRecommendations();
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/recommendations/user-456/list');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/recommendations/list');
       expect(result).toHaveLength(1);
-    });
-
-    it('throws when user is not authenticated', async () => {
-      mockGetCurrentUserId.mockReturnValue(undefined);
-
-      await expect(endpoints.getRecommendations())
-        .rejects.toThrow('User not authenticated');
     });
   });
 
@@ -225,23 +217,15 @@ describe('api/endpoints', () => {
   });
 
   describe('createBrand', () => {
-    it('posts to /v1/beer/{userId}/brands with brand data', async () => {
-      mockGetCurrentUserId.mockReturnValue('user-222');
+    it('posts to /v1/beer/brands with brand data', async () => {
       mockApiClient.post.mockResolvedValue({ data: { id: 50, name: 'Heineken' } });
 
       await endpoints.createBrand({ name: 'Heineken' });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        '/v1/beer/user-222/brands',
+        '/v1/beer/brands',
         { name: 'Heineken' }
       );
-    });
-
-    it('throws when user is not authenticated', async () => {
-      mockGetCurrentUserId.mockReturnValue(undefined);
-
-      await expect(endpoints.createBrand({ name: 'Heineken' }))
-        .rejects.toThrow('User not authenticated');
     });
   });
 
@@ -290,20 +274,12 @@ describe('api/endpoints', () => {
   });
 
   describe('getSavedDrinksByDate', () => {
-    it('gets /v1/drinks/{userId}/date/{date}', async () => {
-      mockGetCurrentUserId.mockReturnValue('user-555');
+    it('gets /v1/drinks/date/{date}', async () => {
       mockApiClient.get.mockResolvedValue({ data: [] });
 
       await endpoints.getSavedDrinksByDate('2026-01-01');
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/drinks/user-555/date/2026-01-01');
-    });
-
-    it('throws when user is not authenticated', async () => {
-      mockGetCurrentUserId.mockReturnValue(undefined);
-
-      await expect(endpoints.getSavedDrinksByDate('2026-01-01'))
-        .rejects.toThrow('User not authenticated');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/drinks/date/2026-01-01');
     });
   });
 

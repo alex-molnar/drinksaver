@@ -48,6 +48,14 @@ public class PostgresDrinksRepository implements DrinksRepository {
     }
 
     @Override
+    public List<Integer> ownedDrinkIds(List<Integer> drinkIds, UUID userId) {
+        return savedDrinksTable.findAllById(drinkIds).stream()
+            .filter(drink -> drink.getUserId().equals(userId))
+            .map(SavedDrink::getId)
+            .toList();
+    }
+
+    @Override
     public int deleteSavedDrink(List<Integer> drinkIds) {
         return savedDrinksTable.deleteAndCountByIds(drinkIds);
     }
