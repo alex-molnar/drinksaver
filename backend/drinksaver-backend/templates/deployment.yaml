@@ -103,6 +103,8 @@ spec:
               value: {{ .Values.jwt.issuerUri | quote }}
             - name: "JWT_JWK_SET_URI"
               value: {{ .Values.jwt.jwkSetUri | quote }}
+            - name: "JPA_SHOW_SQL"
+              value: {{ .Values.jpa.showSql | quote }}
       {{- with .Values.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}

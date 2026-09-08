@@ -13,6 +13,8 @@ import com.drinksaver.service.model.DrinkKey;
 import com.drinksaver.service.namecollector.AlcoholNameCollector;
 import com.drinksaver.service.namecollector.BeerNameCollector;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
@@ -116,6 +118,26 @@ class DrinksControllerTest {
         );
         drink.setId(id);
         return drink;
+    }
+
+    private String drinkBody(UUID userId, String quantityJson) {
+        return """
+            {
+              "userId": "%s",
+              "date": "2026-01-01",
+              "alcoholTypeId": 4,
+              "alcoholSubtypeId": null,
+              "alcoholVolumeId": 2,
+              "brandId": 3,
+              "beerFlavourId": null,
+              "consumptionTypeId": 1,
+              "comments": null,
+              "quantity": %s,
+              "addToRecommendations": false,
+              "onlyTemporarily": false,
+              "name": null
+            }
+            """.formatted(userId, quantityJson);
     }
 
     @Test
@@ -242,6 +264,76 @@ class DrinksControllerTest {
         org.mockito.InOrder inOrder = org.mockito.Mockito.inOrder(drinksRepository, recommendationCacheService);
         inOrder.verify(drinksRepository, times(1)).saveDrink(any());
         inOrder.verify(recommendationCacheService, times(1)).onDrinkSaved(any());
+    }
+
+    /**
+     * `quantity` is the number of rows to write, so anything below 1 is meaningless.
+     * It used to reach `PostgresDrinksRepository.saveDrink`, where an empty
+     * IntStream range made `saveAll(...).getFirst()` throw NoSuchElementException
+     * and the caller saw a 500 for what is plainly a bad request.
+     *
+     * The upper bound is not in the original finding. It is here because `quantity`
+     * multiplies rows written per request with nothing capping it, and 100 is an order
+     * of magnitude above the 9 the UI's QuantitySelector allows.
+     */
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1, -5, 101})
+    void saveDrinkRejectsAQuantityOutsideOneToOneHundred(int quantity) throws Exception {
+        UUID userId = UUID.randomUUID();
+
+        mockMvc.perform(post("/v1/drinks/new")
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(drinkBody(userId, String.valueOf(quantity))))
+            .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(drinksRepository, recommendationCacheService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "1", "100"})
+    void saveDrinkAcceptsAnAbsentQuantityAndBothEndsOfTheRange(String quantity) throws Exception {
+        UUID userId = UUID.randomUUID();
+        when(drinksRepository.saveDrink(any())).thenReturn(savedDrink(9, userId, BEER_ID));
+
+        mockMvc.perform(post("/v1/drinks/new")
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(drinkBody(userId, quantity)))
+            .andExpect(status().isOk());
+
+        verify(drinksRepository, times(1)).saveDrink(any());
+    }
+
+    /**
+     * ddl-auto derives varchar(255) from SavedDrink.comments, so a longer value was a
+     * DataIntegrityViolationException and a 500. The same shape as the quantity defect,
+     * one field over, and missed when that one was fixed.
+     */
+    @Test
+    void saveDrinkRejectsCommentsLongerThanTheColumn() throws Exception {
+        UUID userId = UUID.randomUUID();
+        String tooLong = "x".repeat(256);
+
+        mockMvc.perform(post("/v1/drinks/new")
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(drinkBody(userId, "1").replace("\"comments\": null", "\"comments\": \"" + tooLong + "\"")))
+            .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(drinksRepository, recommendationCacheService);
+    }
+
+    @Test
+    void saveDrinkAcceptsCommentsAtTheColumnLimit() throws Exception {
+        UUID userId = UUID.randomUUID();
+        when(drinksRepository.saveDrink(any())).thenReturn(savedDrink(9, userId, BEER_ID));
+
+        mockMvc.perform(post("/v1/drinks/new")
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(drinkBody(userId, "1").replace("\"comments\": null", "\"comments\": \"" + "x".repeat(255) + "\"")))
+            .andExpect(status().isOk());
     }
 
     @Test

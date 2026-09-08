@@ -1,32 +1,48 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { Box, CircularProgress } from '@mui/material';
 import { KeycloakProvider, ProtectedRoute } from './auth';
-import IndexPage from './pages/IndexPage';
-import DetailedPage from './pages/DetailedPage';
-import HistoryPage from './pages/HistoryPage';
-import SuccessPage from './pages/SuccessPage';
-import ErrorPage from './pages/ErrorPage';
-import NewAlcoholPage from './pages/NewAlcoholPage';
-import NewVolumePage from './pages/NewVolumePage';
-import NewBeerBrandPage from './pages/NewBeerBrandPage';
-import NewSubtypePage from './pages/NewSubtypePage';
-import NewBeerFlavourPage from './pages/NewBeerFlavourPage';
+
+/**
+ * Routes are loaded on demand. Every page pulls in MUI, so a single eager bundle
+ * meant the first paint waited on the five "new entry" forms and the history screen
+ * as well as the screen actually being opened.
+ */
+const IndexPage = lazy(() => import('./pages/IndexPage'));
+const DetailedPage = lazy(() => import('./pages/DetailedPage'));
+const HistoryPage = lazy(() => import('./pages/HistoryPage'));
+const SuccessPage = lazy(() => import('./pages/SuccessPage'));
+const ErrorPage = lazy(() => import('./pages/ErrorPage'));
+const NewAlcoholPage = lazy(() => import('./pages/NewAlcoholPage'));
+const NewVolumePage = lazy(() => import('./pages/NewVolumePage'));
+const NewBeerBrandPage = lazy(() => import('./pages/NewBeerBrandPage'));
+const NewSubtypePage = lazy(() => import('./pages/NewSubtypePage'));
+const NewBeerFlavourPage = lazy(() => import('./pages/NewBeerFlavourPage'));
+
+const RouteFallback = () => (
+  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+    <CircularProgress aria-label="Loading page" />
+  </Box>
+);
 
 function App() {
   return (
     <KeycloakProvider>
       <ProtectedRoute>
-        <Routes>
-          <Route path="/" element={<IndexPage />} />
-          <Route path="/detailed" element={<DetailedPage />} />
-          <Route path="/history" element={<HistoryPage />} />
-          <Route path="/success" element={<SuccessPage />} />
-          <Route path="/error" element={<ErrorPage />} />
-          <Route path="/new-alcohol" element={<NewAlcoholPage />} />
-          <Route path="/new-volume" element={<NewVolumePage />} />
-          <Route path="/new-brand" element={<NewBeerBrandPage />} />
-          <Route path="/new-subtype" element={<NewSubtypePage />} />
-          <Route path="/new-beer-flavour" element={<NewBeerFlavourPage />} />
-        </Routes>
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path="/" element={<IndexPage />} />
+            <Route path="/detailed" element={<DetailedPage />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/success" element={<SuccessPage />} />
+            <Route path="/error" element={<ErrorPage />} />
+            <Route path="/new-alcohol" element={<NewAlcoholPage />} />
+            <Route path="/new-volume" element={<NewVolumePage />} />
+            <Route path="/new-brand" element={<NewBeerBrandPage />} />
+            <Route path="/new-subtype" element={<NewSubtypePage />} />
+            <Route path="/new-beer-flavour" element={<NewBeerFlavourPage />} />
+          </Routes>
+        </Suspense>
       </ProtectedRoute>
     </KeycloakProvider>
   );

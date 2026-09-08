@@ -1,4 +1,10 @@
-import apiClient, { getCurrentUserId } from './client';
+/**
+ * Every endpoint here derives the caller's identity from the JWT the request
+ * interceptor attaches, never from a userId in the payload. The client used to send
+ * one in eight places; the backend ignored all eight, so it was dead weight that also
+ * read as though the client's claim about who it was still counted for something.
+ */
+import apiClient from './client';
 import type {
   Drink,
   SavedDrink,
@@ -17,12 +23,8 @@ import type {
 
 // Drinks endpoints
 export const saveDrink = async (drink: Omit<Drink, 'userId' | 'date'> & { date?: string }): Promise<SavedDrink> => {
-  const userId = getCurrentUserId();
-  if (!userId) throw new Error('User not authenticated');
-
-  const payload: Drink = {
+  const payload: Omit<Drink, 'userId'> = {
     ...drink,
-    userId: userId,
     date: drink.date || new Date().toISOString().split('T')[0],
   };
   const response = await apiClient.post<SavedDrink>('/v1/drinks/new', payload);
@@ -37,22 +39,12 @@ export const getRecommendations = async (): Promise<Recommendation[]> => {
 
 // Alcohol endpoints
 export const getAlcoholTypes = async (): Promise<AlcoholType[]> => {
-  const userId = getCurrentUserId();
-  const response = await apiClient.get<AlcoholType[]>('/v1/alcohol/types', {
-    params: { userId },
-  });
+  const response = await apiClient.get<AlcoholType[]>('/v1/alcohol/types');
   return response.data;
 };
 
-export const createAlcoholType = async (entry: Omit<NewAlcoholEntry, 'userId'>): Promise<AlcoholType> => {
-  const userId = getCurrentUserId();
-  if (!userId) throw new Error('User not authenticated');
-
-  const payload: NewAlcoholEntry = {
-    ...entry,
-    userId,
-  };
-  const response = await apiClient.post<AlcoholType>('/v1/alcohol/types', payload);
+export const createAlcoholType = async (entry: NewAlcoholEntry): Promise<AlcoholType> => {
+  const response = await apiClient.post<AlcoholType>('/v1/alcohol/types', entry);
   return response.data;
 };
 
@@ -75,12 +67,8 @@ export const createVolumeForAlcoholType = async (
 };
 
 export const getSubtypesByAlcoholType = async (alcoholTypeId: number): Promise<AlcoholSubtype[]> => {
-  const userId = getCurrentUserId();
-  if (!userId) throw new Error('User not authenticated');
-
   const response = await apiClient.get<AlcoholSubtype[]>(
-    `/v1/alcohol/types/${alcoholTypeId}/subtypes`,
-    { params: { userId } }
+    `/v1/alcohol/types/${alcoholTypeId}/subtypes`
   );
   return response.data;
 };
@@ -89,12 +77,9 @@ export const createSubtypeForAlcoholType = async (
   alcoholTypeId: number,
   name: string
 ): Promise<AlcoholSubtype> => {
-  const userId = getCurrentUserId();
-  if (!userId) throw new Error('User not authenticated');
-
   const response = await apiClient.post<AlcoholSubtype>(
     `/v1/alcohol/types/${alcoholTypeId}/subtypes`,
-    { alcoholTypeId, userId, name }
+    { alcoholTypeId, name }
   );
   return response.data;
 };
@@ -108,10 +93,7 @@ export const getConsumptionTypes = async (amount: number = 100): Promise<Consump
 };
 
 export const getBrands = async (): Promise<Brand[]> => {
-  const userId = getCurrentUserId();
-  const response = await apiClient.get<Brand[]>('/v1/beer/brands', {
-    params: { userId },
-  });
+  const response = await apiClient.get<Brand[]>('/v1/beer/brands');
   return response.data;
 };
 
@@ -121,23 +103,16 @@ export const createBrand = async (brand: NewBeerBrand): Promise<Brand> => {
 };
 
 export const getBeerFlavours = async (brandId: number): Promise<BeerFlavour[]> => {
-  const userId = getCurrentUserId();
-  if (!userId) throw new Error('User not authenticated');
-
   const response = await apiClient.get<BeerFlavour[]>(
-    `/v1/beer/brands/${brandId}/flavours`,
-    { params: { userId } }
+    `/v1/beer/brands/${brandId}/flavours`
   );
   return response.data;
 };
 
 export const createBeerFlavour = async (brandId: number, name: string): Promise<BeerFlavour> => {
-  const userId = getCurrentUserId();
-  if (!userId) throw new Error('User not authenticated');
-
   const response = await apiClient.post<BeerFlavour>(
     `/v1/beer/brands/${brandId}/flavours`,
-    { userId, name }
+    { name }
   );
   return response.data;
 };

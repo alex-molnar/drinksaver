@@ -2,7 +2,11 @@
 #
 # Added because the web test setup pulled in a large number of transitive dev
 # dependencies whose install scripts run in CI, so staying current matters more
-# than it used to. See docs/security-review-2026-09-07-test-frameworks.md.
+# than it used to. Those jobs check out with persist-credentials: false so a
+# compromised dev dependency cannot read the workflow token from .git/config.
+#
+# Actions are covered here by major tag, not by commit SHA. See SEC-2 in
+# docs/remaining-work.md for the pinning decision that is still open.
 version: 2
 updates:
   - package-ecosystem: npm

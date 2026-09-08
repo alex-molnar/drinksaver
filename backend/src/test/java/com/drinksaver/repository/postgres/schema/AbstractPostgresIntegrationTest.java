@@ -22,8 +22,10 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  * @Testcontainers is still present, without @Container, purely for
  * disabledWithoutDocker: it contributes the condition that skips these tests on
  * a machine with no Docker, which is right for a laptop. CI must not rely on
- * that leniency, so the workflow asserts afterwards that the integration tests
- * actually ran.
+ * that leniency, so backend/scripts/assert-integration-tests-ran.sh asserts
+ * afterwards that every *IntegrationTest class produced a report with tests in
+ * it. That script discovers the classes from this source tree, so a new
+ * integration test is covered by it without anyone remembering to add it.
  */
 @DataJpaTest
 @Testcontainers(disabledWithoutDocker = true)

@@ -273,6 +273,21 @@ deploy/values/web-prod.yaml
 Values are stated explicitly rather than inherited from chart defaults, so
 changing a default cannot silently alter production.
 
+### SQL statement logging
+
+`jpa.showSql` is `false` in the chart default and in every environment. Each statement
+Hibernate logs carries the user UUIDs whose rows it touched, so turning it on copies
+consumption data into whatever retention and access control the log sink happens to
+have, rather than the database's.
+
+To debug a query in the test environment, set `jpa.showSql: true` in
+`deploy/values/backend-test.yaml`, deploy, read the logs, and set it back. It is a plain
+Helm value and an env var (`JPA_SHOW_SQL`), so no image rebuild is involved either way.
+
+The local compose stack sets `JPA_SHOW_SQL: "true"` and keeps it there: that stack only
+ever holds the seeded demo data, and seeing the generated SQL is most of the point of
+running it.
+
 ## How web configuration works
 
 The web image contains no environment configuration. `docker-entrypoint.sh`
@@ -342,7 +357,8 @@ permission. It was not adopted because the existing releases are stored as
 Secrets: Helm would not find them, and `upgrade --install` would fall through to
 `install` and collide with the live resources. Worth revisiting if more people
 gain write access to the repository. See
-[the security review](security-review-2026-09-07.md) finding F2.
+[SEC-4 in the remaining work](remaining-work.md#sec-4-ci-serviceaccount-can-read-every-secret-in-both-namespaces),
+which carries the reasoning forward from the 2026-09-07 security review.
 
 To rotate it:
 
@@ -433,12 +449,9 @@ chart's `config.*` values are wrong for that environment.
 
 ## Follow-ups not done here
 
-- Both applications now have tests, so this is no longer outstanding. The web app
-  uses Vitest 5, whose peer range covers Vite 8, which settles the compatibility
-  question that deferred it. The backend uses JUnit 5, with Testcontainers for the
-  repository layer.
-- The web bundle is a single 660 kB chunk. Code splitting would help first load.
-- Four old resources remain from before the consolidation and can be removed
-  once production is cut over: namespaces `drinksaver-backend`,
-  `drinksaver-frontend`, `test-drinksaver-backend`, `test-drinksaver-frontend`.
-  The two test ones no longer hold releases.
+Both items that used to live here are closed. Tests exist for both applications, and the
+web bundle is code split: the largest chunk is 209 kB where it was a single 660 kB one.
+See `docs/fixes-2026-09-08.md`.
+
+What is left, including the four leftover namespaces that need production cutover first,
+is in `docs/remaining-work.md` with a task description each. Add there rather than here.

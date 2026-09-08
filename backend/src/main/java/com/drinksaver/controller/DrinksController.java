@@ -11,6 +11,7 @@ import com.drinksaver.service.RecommendationCacheService;
 import com.drinksaver.service.model.DrinkKey;
 import com.drinksaver.service.namecollector.AlcoholNameCollector;
 import com.drinksaver.service.namecollector.BeerNameCollector;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -46,7 +47,7 @@ public class DrinksController {
     }
 
     @PostMapping("/new")
-    public SavedDrink saveDrink(@AuthenticationPrincipal Jwt jwt, @RequestBody Drink drink) {
+    public SavedDrink saveDrink(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody Drink drink) {
         Drink ownedDrink = drink.withUserId(AuthenticatedUser.id(jwt));
         SavedDrink saved = drinksRepository.saveDrink(ownedDrink);
         recommendationCacheService.onDrinkSaved(ownedDrink);

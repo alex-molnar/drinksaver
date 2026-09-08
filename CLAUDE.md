@@ -175,9 +175,13 @@ Both suites gate CI, as does `npm run lint` for the web app. A red test or a lin
 stops the test deploy and stops the publish. Lint warnings are not blocking.
 
 Coverage is gated too, as a ratchet rather than a target: JaCoCo on the backend
-(`mvn verify`, currently 78% instructions) and v8 on the web app
-(`npm run test:coverage`, currently 91% statements). Raise them as tests are
-added, never lower them to make a build pass.
+(`mvn verify`, floor 90% instructions against 90.50% measured) and v8 on the web app
+(`npm run test:coverage`, floors 93/86/92/95 against 93.67/86.95/92.81/95.15). Raise them
+as tests are added, never lower them to make a build pass. Each threshold carries the date
+and the measured value in a comment, so the size of the gap is visible.
+
+The backend gate checks instructions only. Branch coverage is 78.57% and ungated; see HK-2
+in `docs/remaining-work.md`.
 
 ## Environment and infrastructure
 
@@ -223,15 +227,21 @@ toward something with real character, and present options rather than picking fo
 
 ## Known debt
 
-Listed so it does not get rediscovered every session.
+`docs/remaining-work.md` is the list, with a description per task written to be picked up
+cold. `docs/fixes-2026-09-08.md` records what was closed and how it was verified; read its
+"Already done" section before acting on anything from older material, because several
+findings that read as open are not.
 
-- `npm run lint` reports 12 errors and 6 warnings in `web/src/auth/KeycloakProvider.tsx`
-  and five `web/src/pages/New*Page.tsx` and `DetailedPage.tsx` files. All predate the test
-  setup and none are in files it touched. Lint is not currently a CI gate.
-- `web/README.md` is stale: it claims MUI v5 and React 18, the actual versions are MUI 9
-  and React 19.
-- The web bundle is a single chunk of roughly 660 kB. Code splitting would improve first
-  load.
-- Four namespaces are left over from before the consolidation and can be removed once
-  production is cut over: `drinksaver-backend`, `drinksaver-frontend`,
-  `test-drinksaver-backend`, `test-drinksaver-frontend`.
+Tasks there carry stable ids grouped by kind: `SEC-*`, `PRIV-*`, `FIX-*`, `OPS-*`, `HK-*`.
+Refer to them by id, never by position. The short version:
+
+| Group | What is open |
+| --- | --- |
+| `SEC` | The alcohol volume endpoints take no authenticated principal, so any user can write to any user's type (SEC-1, needs a decision). Actions and base images are on moving tags (SEC-2, SEC-3, a tradeoff left to Alex). The CI ServiceAccount can read every secret in both namespaces (SEC-4, accepted). |
+| `PRIV` | Everything from the GDPR review except SQL logging. All seven gate on a special-category determination that is not an engineer's to make. |
+| `FIX` | Unbounded volume payload, a lost update on `volumeIds`, no error boundary for a lazy chunk that 404s after a deploy. |
+| `OPS` | Prometheus is configured but not wired up. Four namespaces await production cutover. |
+| `HK` | `web/coverage` still tracked, no BRANCH coverage gate, one dead DTO field, one lint warning. |
+
+Do not re-add to this section. Add to `docs/remaining-work.md` instead, appending to the
+relevant group with the next free id.

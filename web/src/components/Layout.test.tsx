@@ -1,8 +1,16 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useLocation } from 'react-router-dom';
 import { renderWithProviders } from '../test/test-utils';
 import Layout from './Layout';
+
+/**
+ * renderWithProviders uses a real MemoryRouter, so navigation actually happens and can be
+ * observed rather than asserted against a mocked useNavigate. This renders the current
+ * pathname as a child of the Layout under test.
+ */
+const RouteProbe = () => <span data-testid="pathname">{useLocation().pathname}</span>;
 
 vi.mock('../auth', () => ({
   useAuth: () => ({ logout: vi.fn() }),
@@ -84,5 +92,46 @@ describe('Layout', () => {
     renderWithProviders(<Layout>Content</Layout>);
 
     expect(screen.getByLabelText(/logout/i)).toBeInTheDocument();
+  });
+
+  describe('bottom navigation', () => {
+    it.each([
+      ['Quick Save', '/'],
+      ['Add Drink', '/detailed'],
+      ['History', '/history'],
+    ])('navigates to %s at %s when its tab is tapped', async (label, expected) => {
+      renderWithProviders(
+        <Layout><RouteProbe /></Layout>,
+        { route: '/success' }
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: new RegExp(label, 'i') }));
+
+      expect(screen.getByTestId('pathname')).toHaveTextContent(expected);
+    });
+
+    it.each([
+      ['/', 'Quick Save'],
+      ['/detailed', 'Add Drink'],
+      ['/history', 'History'],
+    ])('marks the tab for %s as selected', (route, label) => {
+      renderWithProviders(<Layout>Content</Layout>, { route });
+
+      expect(screen.getByRole('button', { name: new RegExp(label, 'i') }))
+        .toHaveClass('Mui-selected');
+    });
+
+    /**
+     * getNavValue returns -1 for anything else, which is what stops a route with no tab
+     * from lighting one up. The form pages and the success and error screens all land here.
+     */
+    it('selects no tab on a route that has none', () => {
+      renderWithProviders(<Layout>Content</Layout>, { route: '/new-volume' });
+
+      for (const label of ['Quick Save', 'Add Drink', 'History']) {
+        expect(screen.getByRole('button', { name: new RegExp(label, 'i') }))
+          .not.toHaveClass('Mui-selected');
+      }
+    });
   });
 });

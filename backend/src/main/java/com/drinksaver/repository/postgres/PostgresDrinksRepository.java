@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
@@ -50,7 +51,10 @@ public class PostgresDrinksRepository implements DrinksRepository {
     @Override
     public List<Integer> ownedDrinkIds(List<Integer> drinkIds, UUID userId) {
         return savedDrinksTable.findAllById(drinkIds).stream()
-            .filter(drink -> drink.getUserId().equals(userId))
+            // Objects.equals, not .equals: user_id is nullable, so one null row whose id
+            // appears in the request would 500 the whole delete. Same defect as the one in
+            // DrinksController, which was fixed without checking for siblings.
+            .filter(drink -> Objects.equals(drink.getUserId(), userId))
             .map(SavedDrink::getId)
             .toList();
     }

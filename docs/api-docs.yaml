@@ -24,6 +24,8 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/SavedDrink"
+        "400":
+          description: quantity is outside 1 to 100
   /v1/beer/brands:
     get:
       tags:
@@ -131,6 +133,8 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/AlcoholType"
+        "400":
+          description: name, volumes or alcoholSubtypes is over its limit
   /v1/alcohol/types/{alcoholTypeId}/volumes:
     get:
       tags:
@@ -176,6 +180,8 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/AlcoholVolume"
+        "404":
+          description: no alcohol type with that id
   /v1/alcohol/types/{alcoholTypeId}/subtypes:
     get:
       tags:
@@ -307,6 +313,10 @@ components:
         userId:
           type: string
           format: uuid
+          readOnly: true
+          description: >-
+            Set by the server from the authenticated JWT subject. A value sent
+            by the client is not bound and has no effect.
         date:
           type: string
         alcoholTypeId:
@@ -329,9 +339,16 @@ components:
           format: int32
         comments:
           type: string
+          maxLength: 255
+          description: Longer than the column, so longer than this is rejected with a 400.
         quantity:
           type: integer
           format: int32
+          minimum: 1
+          maximum: 100
+          description: >-
+            Number of identical rows to write. Absent means one. Anything outside
+            1 to 100 is rejected with a 400.
         addToRecommendations:
           type: boolean
         onlyTemporarily:
@@ -392,9 +409,6 @@ components:
     NewBeerFlavour:
       type: object
       properties:
-        userId:
-          type: string
-          format: uuid
         name:
           type: string
     BeerFlavour:
@@ -417,14 +431,23 @@ components:
         userId:
           type: string
           format: uuid
+          readOnly: true
+          description: >-
+            Set by the server from the authenticated JWT subject. A value sent
+            by the client is not bound and has no effect.
         name:
           type: string
         volumes:
           type: array
+          maxItems: 50
+          description: >-
+            Bounded because createAlcoholType is transactional and writes these one row
+            at a time. More than 50 is rejected with a 400.
           items:
             $ref: "#/components/schemas/NewVolumeEntry"
         alcoholSubtypes:
           type: array
+          maxItems: 50
           items:
             type: string
     NewVolumeEntry:
@@ -471,6 +494,10 @@ components:
         userId:
           type: string
           format: uuid
+          readOnly: true
+          description: >-
+            Set by the server from the authenticated JWT subject. A value sent
+            by the client is not bound and has no effect.
         name:
           type: string
     AlcoholSubtype:
