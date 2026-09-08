@@ -61,6 +61,34 @@ Repo specific rules on top of that:
 - Never edit `deploy/values/backend-prod.yaml` or `deploy/values/web-prod.yaml`, and never
   run the production deploy workflow, unless asked directly.
 
+### Stacked pull requests are the default
+
+Work that spans more than one concern ships as a chain of small pull requests, each based
+on the previous one, not as a single large one. This is the preferred shape: prove it works,
+then split it so each piece can be read on its own.
+
+```
+main <- fix/react-hooks-lint <- test/web-coverage <- test/backend-coverage <- ...
+```
+
+How to run it:
+
+- Pick the boundaries so each PR is independently reviewable and independently defensible.
+  One concern per PR: a refactor, then the tests for it, then the next area. If a reviewer
+  could sensibly reject one while approving its neighbour, that is the right split.
+- Set each PR's base to the branch below it, not to `main`. GitHub retargets the base
+  automatically as each one merges, so the chain collapses cleanly bottom to top.
+- Say in the description which PR it is stacked on, and why the split falls where it does.
+- When something changes in a lower branch, rebase the ones above it and force push with
+  `--force-with-lease`. Never merge the lower branch into the higher one; that turns a
+  readable chain into a tangle.
+- Re-verify after every rebase. A rebase that leaves the suite red is worse than no rebase,
+  and a conflict in a shared file (`CLAUDE.md` and the coverage thresholds are the usual
+  suspects) needs resolving deliberately rather than by taking one side.
+- Merge order is bottom to top, and merging is Alex's call, never yours.
+
+Do not stack a fast path change. Those stay in the working tree with no branch at all.
+
 ## Model and thinking effort
 
 Match the model to the kind of thinking the step needs, not to the size of the repo.
@@ -84,6 +112,24 @@ How to apply it:
   phases, and say out loud when you are switching and why.
 - Fast path changes inherit whatever the session is already set to. Do not switch models
   for a one file edit.
+
+## Long running work
+
+Anything beyond a small change gets `caffeinate` first, before the work starts. A machine
+that sleeps mid-run leaves half-built containers, an interrupted test suite and an agent
+writing into a directory that has moved on, and none of that is obvious afterwards.
+
+```bash
+caffeinate -dimsu -t 28800 &
+```
+
+Run it in the background and always with `-t`, so it expires on its own rather than
+outliving the task. Stop it when the work finishes rather than leaving it holding the
+machine awake.
+
+Worth doing for: a full pipeline feature, a test suite build out, anything driving Docker
+or Testcontainers, an end to end run, or any batch of delegated agents. Not worth doing for
+a one file edit.
 
 ## Verification
 
