@@ -488,6 +488,10 @@ const DetailedPage: React.FC = () => {
         <Fab
           color="primary"
           onClick={handleSave}
+          // The only content is an icon, so without this the primary action of the
+          // screen announces as "button". MUI strips the icon's data-testid from
+          // production bundles, so that was never an alternative for naming it either.
+          aria-label="Save drink"
           disabled={saving || !isFormValid}
           sx={{
             position: 'fixed',

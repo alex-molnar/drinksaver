@@ -29,7 +29,7 @@ test('a beer recorded through the detailed form appears in history', async ({ pa
   // data-testid is stripped from production bundles, which is what compose
   // serves, so that is not an option either. Recorded as a finding; once the
   // FAB gains an aria-label this should become a plain getByRole query.
-  await page.locator('button.MuiFab-root').click();
+  await page.getByRole('button', { name: /save drink/i }).click();
 
   await expect(page).toHaveURL(/success|\/$/, { timeout: 15_000 });
 
