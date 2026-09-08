@@ -5,12 +5,15 @@ import com.drinksaver.model.db.SavedDrink;
 import com.drinksaver.model.dto.Drink;
 import com.drinksaver.model.dto.EditableDrink;
 import com.drinksaver.repository.DrinksRepository;
+import com.drinksaver.security.AuthenticatedUser;
 import com.drinksaver.service.InjectorService;
 import com.drinksaver.service.RecommendationCacheService;
 import com.drinksaver.service.model.DrinkKey;
 import com.drinksaver.service.namecollector.AlcoholNameCollector;
 import com.drinksaver.service.namecollector.BeerNameCollector;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,14 +45,16 @@ public class DrinksController {
     }
 
     @PostMapping("/new")
-    public SavedDrink saveDrink(@RequestBody Drink drink) {
-        SavedDrink saved = drinksRepository.saveDrink(drink);
-        recommendationCacheService.onDrinkSaved(drink);
+    public SavedDrink saveDrink(@AuthenticationPrincipal Jwt jwt, @RequestBody Drink drink) {
+        Drink ownedDrink = drink.withUserId(AuthenticatedUser.id(jwt));
+        SavedDrink saved = drinksRepository.saveDrink(ownedDrink);
+        recommendationCacheService.onDrinkSaved(ownedDrink);
         return saved;
     }
 
-    @GetMapping("/{userId}/date/{date}")
-    public List<EditableDrink> getSavedDrinks(@PathVariable UUID userId, @PathVariable String date) {
+    @GetMapping("/date/{date}")
+    public List<EditableDrink> getSavedDrinks(@AuthenticationPrincipal Jwt jwt, @PathVariable String date) {
+        UUID userId = AuthenticatedUser.id(jwt);
         return drinksRepository
             .getSavedDrinks(userId, date)
                 .stream()
@@ -63,8 +68,10 @@ public class DrinksController {
     }
 
     @DeleteMapping("/byIds")
-    public int deleteSavedDrink(@RequestParam List<Integer> drinkIds) {
-        return drinksRepository.deleteSavedDrink(drinkIds);
+    public int deleteSavedDrink(@AuthenticationPrincipal Jwt jwt, @RequestParam List<Integer> drinkIds) {
+        UUID userId = AuthenticatedUser.id(jwt);
+        List<Integer> ownedIds = drinksRepository.ownedDrinkIds(drinkIds, userId);
+        return drinksRepository.deleteSavedDrink(ownedIds);
     }
 }
 

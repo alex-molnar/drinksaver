@@ -2,7 +2,10 @@ package com.drinksaver.controller;
 
 import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.config.SecurityConfig;
+import com.drinksaver.model.db.AlcoholSubtype;
 import com.drinksaver.model.db.AlcoholType;
+import com.drinksaver.model.dto.NewAlcoholEntry;
+import com.drinksaver.model.dto.NewAlcoholSubtype;
 import com.drinksaver.repository.AlcoholRepository;
 import com.drinksaver.repository.BeerRepository;
 import com.drinksaver.repository.DrinksRepository;
@@ -17,6 +20,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -24,11 +28,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -91,7 +98,8 @@ class AlcoholControllerTest {
 
         when(alcoholRepository.getAlcoholTypes(userId)).thenReturn(List.of(type));
 
-        mockMvc.perform(get("/v1/alcohol/types").param("userId", userId.toString()).with(jwt()))
+        mockMvc.perform(get("/v1/alcohol/types")
+                .with(jwt().jwt(token -> token.subject(userId.toString()))))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(4))
             .andExpect(jsonPath("$[0].name").value("Beer"))
@@ -102,8 +110,23 @@ class AlcoholControllerTest {
     }
 
     @Test
+    void getAlcoholTypesIgnoresClientSuppliedUserIdParamAndUsesJwtSubject() throws Exception {
+        UUID authenticatedUserId = UUID.randomUUID();
+        UUID spoofedUserId = UUID.randomUUID();
+
+        when(alcoholRepository.getAlcoholTypes(authenticatedUserId)).thenReturn(List.of());
+
+        mockMvc.perform(get("/v1/alcohol/types")
+                .param("userId", spoofedUserId.toString())
+                .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString()))))
+            .andExpect(status().isOk());
+
+        verify(alcoholRepository).getAlcoholTypes(authenticatedUserId);
+    }
+
+    @Test
     void getAlcoholTypesWithoutTokenReturnsUnauthorized() throws Exception {
-        mockMvc.perform(get("/v1/alcohol/types").param("userId", UUID.randomUUID().toString()))
+        mockMvc.perform(get("/v1/alcohol/types"))
             .andExpect(status().isUnauthorized());
     }
 
@@ -113,5 +136,58 @@ class AlcoholControllerTest {
             .andExpect(status().isBadRequest());
 
         verifyNoInteractions(alcoholRepository);
+    }
+
+    @Test
+    void getSubtypesByAlcoholTypeUsesJwtSubjectNotClientSuppliedUserIdParam() throws Exception {
+        UUID authenticatedUserId = UUID.randomUUID();
+        UUID spoofedUserId = UUID.randomUUID();
+
+        when(alcoholRepository.getSubtypesByAlcoholType(4, authenticatedUserId)).thenReturn(List.of());
+
+        mockMvc.perform(get("/v1/alcohol/types/{alcoholTypeId}/subtypes", 4)
+                .param("userId", spoofedUserId.toString())
+                .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString()))))
+            .andExpect(status().isOk());
+
+        verify(alcoholRepository).getSubtypesByAlcoholType(4, authenticatedUserId);
+    }
+
+    @Test
+    void createSubtypeForAlcoholTypeIgnoresClientSuppliedUserIdAndUsesJwtSubject() throws Exception {
+        UUID authenticatedUserId = UUID.randomUUID();
+        UUID spoofedUserId = UUID.randomUUID();
+
+        when(alcoholRepository.saveSubtypeForAlcoholType(any(), any()))
+            .thenReturn(new AlcoholSubtype(4, authenticatedUserId, "IPA"));
+
+        mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/subtypes", 4)
+                .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"alcoholTypeId\":4,\"userId\":\"%s\",\"name\":\"IPA\"}".formatted(spoofedUserId)))
+            .andExpect(status().isOk());
+
+        org.mockito.ArgumentCaptor<NewAlcoholSubtype> captor = org.mockito.ArgumentCaptor.forClass(NewAlcoholSubtype.class);
+        verify(alcoholRepository).saveSubtypeForAlcoholType(org.mockito.ArgumentMatchers.eq(4), captor.capture());
+        assertThat(captor.getValue().userId()).isEqualTo(authenticatedUserId);
+    }
+
+    @Test
+    void createAlcoholTypeIgnoresClientSuppliedUserIdAndUsesJwtSubject() throws Exception {
+        UUID authenticatedUserId = UUID.randomUUID();
+        UUID spoofedUserId = UUID.randomUUID();
+
+        when(alcoholRepository.createAlcoholType(any()))
+            .thenReturn(new AlcoholType(authenticatedUserId, "Beer", List.of()));
+
+        mockMvc.perform(post("/v1/alcohol/types")
+                .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"userId\":\"%s\",\"name\":\"Beer\",\"volumes\":[],\"alcoholSubtypes\":[]}".formatted(spoofedUserId)))
+            .andExpect(status().isOk());
+
+        org.mockito.ArgumentCaptor<NewAlcoholEntry> captor = org.mockito.ArgumentCaptor.forClass(NewAlcoholEntry.class);
+        verify(alcoholRepository).createAlcoholType(captor.capture());
+        assertThat(captor.getValue().userId()).isEqualTo(authenticatedUserId);
     }
 }

@@ -31,10 +31,7 @@ export const saveDrink = async (drink: Omit<Drink, 'userId' | 'date'> & { date?:
 
 // Recommendations endpoints
 export const getRecommendations = async (): Promise<Recommendation[]> => {
-  const userId = getCurrentUserId();
-  if (!userId) throw new Error('User not authenticated');
-  
-  const response = await apiClient.get<Recommendation[]>(`/v1/recommendations/${userId}/list`);
+  const response = await apiClient.get<Recommendation[]>('/v1/recommendations/list');
   return response.data;
 };
 
@@ -119,10 +116,7 @@ export const getBrands = async (): Promise<Brand[]> => {
 };
 
 export const createBrand = async (brand: NewBeerBrand): Promise<Brand> => {
-  const userId = getCurrentUserId();
-  if (!userId) throw new Error('User not authenticated');
-
-  const response = await apiClient.post<Brand>(`/v1/beer/${userId}/brands`, brand);
+  const response = await apiClient.post<Brand>('/v1/beer/brands', brand);
   return response.data;
 };
 
@@ -150,12 +144,7 @@ export const createBeerFlavour = async (brandId: number, name: string): Promise<
 
 // History/Consumption endpoints
 export const getSavedDrinksByDate = async (date: string): Promise<EditableDrink[]> => {
-  const userId = getCurrentUserId();
-  if (!userId) throw new Error('User not authenticated');
-
-  const response = await apiClient.get<EditableDrink[]>(
-    `/v1/drinks/${userId}/date/${date}`
-  );
+  const response = await apiClient.get<EditableDrink[]>(`/v1/drinks/date/${date}`);
   return response.data;
 };
 

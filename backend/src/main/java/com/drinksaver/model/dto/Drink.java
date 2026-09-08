@@ -25,4 +25,12 @@ public record Drink(
     public Boolean shouldAddEndDate() {
         return onlyTemporarily != null && onlyTemporarily;
     }
+
+    public Drink withUserId(UUID userId) {
+        return new Drink(
+            userId, date, alcoholTypeId, alcoholSubtypeId, alcoholVolumeId, brandId,
+            beerFlavourId, consumptionTypeId, comments, quantity, addToRecommendations,
+            onlyTemporarily, name
+        );
+    }
 }

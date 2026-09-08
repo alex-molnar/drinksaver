@@ -71,7 +71,8 @@ class RecommendationsControllerTest {
 
         when(recommendationService.getRecommendations(userId)).thenReturn(List.of(recommendation));
 
-        mockMvc.perform(get("/v1/recommendations/{userId}/list", userId).with(jwt()))
+        mockMvc.perform(get("/v1/recommendations/list")
+                .with(jwt().jwt(token -> token.subject(userId.toString()))))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$", org.hamcrest.Matchers.hasSize(1)))
             .andExpect(jsonPath("$[0].id").value(1))
@@ -85,16 +86,20 @@ class RecommendationsControllerTest {
 
     @Test
     void getRecommendationsListWithoutTokenReturnsUnauthorized() throws Exception {
-        mockMvc.perform(get("/v1/recommendations/{userId}/list", UUID.randomUUID()))
+        mockMvc.perform(get("/v1/recommendations/list"))
             .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void getRecommendationsListWithMalformedUserIdReturnsBadRequest() throws Exception {
-        mockMvc.perform(get("/v1/recommendations/{userId}/list", "not-a-uuid").with(jwt()))
-            .andExpect(status().isBadRequest());
+    void getRecommendationsListUsesTheAuthenticatedUserIdNotAClientSuppliedOne() throws Exception {
+        UUID authenticatedUserId = UUID.randomUUID();
 
-        // The malformed path variable must fail before the service is ever consulted.
-        org.mockito.Mockito.verifyNoInteractions(recommendationService);
+        when(recommendationService.getRecommendations(authenticatedUserId)).thenReturn(List.of());
+
+        mockMvc.perform(get("/v1/recommendations/list")
+                .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString()))))
+            .andExpect(status().isOk());
+
+        org.mockito.Mockito.verify(recommendationService).getRecommendations(authenticatedUserId);
     }
 }

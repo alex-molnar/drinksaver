@@ -6,12 +6,14 @@ import com.drinksaver.model.db.ConsumptionType;
 import com.drinksaver.model.dto.NewBeerBrand;
 import com.drinksaver.model.dto.NewBeerFlavour;
 import com.drinksaver.repository.BeerRepository;
+import com.drinksaver.security.AuthenticatedUser;
 import com.drinksaver.service.InjectorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/beer")
@@ -25,8 +27,8 @@ public class BeerController {
     }
 
     @GetMapping("/brands")
-    public List<Brand> getBrandsList(@RequestParam(defaultValue = "10") UUID userId) {
-        return beerRepository.getBrands(userId);
+    public List<Brand> getBrandsList(@AuthenticationPrincipal Jwt jwt) {
+        return beerRepository.getBrands(AuthenticatedUser.id(jwt));
     }
 
     @GetMapping("/consumption-types")
@@ -34,20 +36,19 @@ public class BeerController {
         return beerRepository.getConsumptionTypes(amount);
     }
 
-    @PostMapping("/{userId}/brands")
-    public Brand saveBrand(@PathVariable UUID userId, @RequestBody NewBeerBrand newBeerBrand) {
-        return beerRepository.saveBrand(userId, newBeerBrand.name(), newBeerBrand.flavours());
+    @PostMapping("/brands")
+    public Brand saveBrand(@AuthenticationPrincipal Jwt jwt, @RequestBody NewBeerBrand newBeerBrand) {
+        return beerRepository.saveBrand(AuthenticatedUser.id(jwt), newBeerBrand.name(), newBeerBrand.flavours());
     }
 
     @GetMapping("/brands/{brandId}/flavours")
-    public List<BeerFlavour> getBrandNames(@PathVariable Integer brandId, @RequestParam UUID userId) {
-        return beerRepository.getBeerFlavours(brandId, userId);
+    public List<BeerFlavour> getBrandNames(@AuthenticationPrincipal Jwt jwt, @PathVariable Integer brandId) {
+        return beerRepository.getBeerFlavours(brandId, AuthenticatedUser.id(jwt));
     }
 
     @PostMapping("/brands/{brandId}/flavours")
-    public BeerFlavour saveBrandName(@PathVariable Integer brandId, @RequestBody NewBeerFlavour newBeerFlavour) {
-        return beerRepository.saveBeerFlavour(brandId, newBeerFlavour.userId(), newBeerFlavour.name());
-
+    public BeerFlavour saveBrandName(@AuthenticationPrincipal Jwt jwt, @PathVariable Integer brandId, @RequestBody NewBeerFlavour newBeerFlavour) {
+        return beerRepository.saveBeerFlavour(brandId, AuthenticatedUser.id(jwt), newBeerFlavour.name());
     }
 }
 

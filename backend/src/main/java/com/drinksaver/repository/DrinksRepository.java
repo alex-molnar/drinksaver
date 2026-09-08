@@ -10,6 +10,7 @@ public interface DrinksRepository {
     boolean is(String repositoryType);
     SavedDrink saveDrink(Drink drink);
     List<SavedDrink> getSavedDrinks(UUID userId, String date);
+    List<Integer> ownedDrinkIds(List<Integer> drinkIds, UUID userId);
     int deleteSavedDrink(List<Integer> drinkIds);
 }
 
