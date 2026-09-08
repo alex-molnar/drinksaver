@@ -8,7 +8,7 @@ Project instructions for Claude Code. These sit on top of the global instruction
 A monorepo for a drink tracking app, deployed to a self hosted Kubernetes cluster.
 
 | Path | What it is |
-|---|---|
+| --- | --- |
 | `backend/` | Spring Boot 4, Java 21, Maven. Postgres via JPA, OAuth2 resource server against Keycloak. |
 | `backend/drinksaver-backend/` | The backend Helm chart. Note the location: it is a sibling of `src/`, not under a `helm/` directory. |
 | `web/` | React 19, TypeScript, Vite, MUI 9, TanStack Query, `keycloak-js`, React Router 7. |
@@ -67,7 +67,7 @@ Work that spans more than one concern ships as a chain of small pull requests, e
 on the previous one, not as a single large one. This is the preferred shape: prove it works,
 then split it so each piece can be read on its own.
 
-```
+```sh
 main <- fix/react-hooks-lint <- test/web-coverage <- test/backend-coverage <- ...
 ```
 
@@ -94,7 +94,7 @@ Do not stack a fast path change. Those stay in the working tree with no branch a
 Match the model to the kind of thinking the step needs, not to the size of the repo.
 
 | Kind of work | Model | Thinking effort |
-|---|---|---|
+| --- | --- | --- |
 | High level planning: brainstorming, grilling, architecture, design docs, writing the implementation plan | Opus 5 | `xhigh`, or `max` for architectural decisions that are expensive to reverse |
 | Review: `ecc:orch-review`, `trailofbits:differential-review`, adversarial verification of findings, receiving code review | Opus 5 | `xhigh`, or `max` when the change touches auth, secrets, CI or the cluster |
 | Implementing an already approved plan | Sonnet 5 | `high` |
@@ -153,7 +153,7 @@ Both applications have a suite, and `superpowers:test-driven-development` applie
 feature in the normal way.
 
 | Application | Stack | Command |
-|---|---|---|
+| --- | --- | --- |
 | Backend | JUnit 5, Mockito, AssertJ, Testcontainers | `cd backend && mvn test` |
 | Web | Vitest 5, jsdom, React Testing Library | `cd web && npm run test` |
 
@@ -185,7 +185,7 @@ Everything is built and deployed by GitHub Actions. Nothing is built or pushed f
 laptop. Images and Helm charts live in GHCR under `ghcr.io/alex-molnar/`.
 
 | Environment | Namespace | Trigger |
-|---|---|---|
+| --- | --- | --- |
 | Test | `drinksaver-test` | Push to any branch except `main`, path filtered on `backend/**`, `web/**` or the test values files. |
 | Production | `drinksaver` | Manual `workflow_dispatch` only. |
 
