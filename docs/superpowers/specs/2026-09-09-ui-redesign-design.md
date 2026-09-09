@@ -150,16 +150,32 @@ two instances rather than shipping the full axis.
 
 ### Sheets are routes
 
-Every sheet gets a history entry, as a single `sheet` search parameter on the current route
-holding a dot joined stack: `/?sheet=add.field:type.new:type`.
+The sheet gets a history entry, as one bit: `?sheet=add`. The panel stack inside it is component
+state, not URL.
 
-If a sheet were plain component state, Android's back button would exit the app instead of
-closing the sheet. That is worse than the full page navigation being replaced. Making sheets
-addressable keeps the one thing the `New*` routes were good at while discarding the rest.
+If the sheet were plain state with no history entry, Android's back button would exit the app
+instead of closing it. That is worse than the full page navigation being replaced.
 
-The parser treats the URL as untrusted input: unknown segment kinds yield an empty stack, and a
-deep URL loaded cold is truncated to the deepest segment valid against the current draft and
-applied with `replace`, so no history noise is added.
+An earlier draft encoded the whole panel stack in the URL as a dot joined grammar
+(`?sheet=add.field:type.new:type`). That is dropped, for three reasons found while reviewing it.
+A deep URL is meaningless on a cold load, because the draft it refers to is empty, so every deep
+link collapses to the same single panel anyway. Tracking how many entries to pop with a counter
+is unsound: it survives neither a reload, nor `history.go(-n)` firing one `popstate` rather than
+n, nor a tab switch that drops the parameter without resetting the count. And Keycloak's
+`login-required` cold load makes a cross origin round trip, so the same origin history the counter
+depends on is gone by the time the app renders.
+
+Instead, the dismiss depth is stamped on the entry itself, via `navigate(to, { state })`, which
+React Router serialises into `history.state` and which therefore survives reload and bfcache.
+Dismiss is `navigate(-(depth ?? 0))`, falling back to `replace` at zero. Back, Escape and the
+scrim all route through one `dismiss()`.
+
+**The draft provider mounts above `Routes`, not as a route element.** The sheet host is a sibling
+of `Routes` so it can render over any route, and React context does not flow sideways: a provider
+inside a route element would leave the sheet reading a null context and throwing on first open.
+
+The sheet host needs its own `Suspense` boundary. As a sibling of `Routes` it sits inside the app
+level one, so a lazily loaded panel would otherwise blank the whole screen while its chunk loads.
 
 ### Saving is immediate, deleting is deferred
 
@@ -177,6 +193,21 @@ constructive one fails lossy, because the worst case is that the drink you logge
 The undo window is 6.5 seconds, not the prototype's 4.8. An auto expiring action is a time limit
 under WCAG 2.2 SC 2.2.1, so the timer pauses while focus or hover is inside the strip, the strip
 announces with `role="status"`, and History's delete remains the non timed equivalent.
+
+**The strip renders inside the sheet's portal, not on `document.body`.** MUI's `ModalManager` sets
+`aria-hidden` on every body child that is not the modal, so a strip portalled to the body would be
+hidden from assistive technology and buried under the backdrop the moment a sheet opened. A time
+limit whose extend control cannot be reached does not satisfy SC 2.2.1.
+
+**A deferred delete must survive the tab dying.** Flushing only on `visibilitychange` to hidden
+fails twice over: it never fires if the tab is killed, so the row silently returns with no
+explanation; and it fires on every ordinary app switch, flushing early and leaving an Undo button
+on screen that cannot be honoured, because `getSavedDrinksByDate` returns only id, name and type,
+which is not enough to write the row back. So: flush on `pagehide` as well, flush with
+`fetch(..., { keepalive: true })` rather than the XHR based axios client, which is aborted by
+unload, flush before `keycloak.logout` navigates away, treat hidden as commit and retract so no
+unhonourable Undo is ever shown, and persist pending delete ids to `sessionStorage` and reconcile
+on `pageshow`.
 
 ### One drink-identity module
 
@@ -392,17 +423,33 @@ Bottom to top. Each is independently reviewable and must land green on its own.
 | 5 | `feat/drink-identity` | Identity module, glassware, contrast test. Deletes the duplicated icon maps |
 | 6 | `feat/sheet-primitive` | Sheet path, stack hook, host, registry. No screen changes |
 | 7 | `feat/save-queue` | Queue, undo, deferred delete, retry policy, wired into the existing visual design so the review is about semantics. Routes become redirects. The four e2e specs are rewritten |
-| 8 | `feat/quick-save-redesign` | Plates, board header and nav, dark tokens on. `useResponsiveTileCount` deleted |
-| 9 | `feat/add-sheet` | Draft provider, menu sheet, field and create panels. Deletes `DetailedPage` and the five `New*` pages |
-| 10 | `feat/history-tab` | Seven day strip, paper tab, strike-off delete, bulk selection, date picker |
-| 11 | `chore/redesign-docs` | Component documentation and the `VERSION` bump |
+| 8 | `feat/quick-save-plates` | Plates, board header and nav, dark tokens on. Deletes `IndexPage` and `useResponsiveTileCount`. Keeps `Layout` and `RecommendationButton` |
+| 9 | `feat/add-sheet` | Draft provider, sheet host, menu, field and create panels. Deletes `DetailedPage`, the five `New*` pages, `SuccessPage`, `ErrorPage`, `useNavigation` and `RecommendationButton` together |
+| 10 | `feat/history-tab` | Seven day strip, paper tab, strike-off delete, bulk selection, date picker. Deletes `Layout` |
+| 11 | `chore/redesign-docs` | Component documentation, the eslint hex rule, and one coverage ratchet raise |
 
 PR 7 carries the risk and PR 9 carries the bulk. Keeping 7 visually boring is what makes its review
 tractable.
 
-The pure modules are deliberately at the bottom. They cover to near 100% cheaply and raise the
-measured coverage before the expensive presentational code arrives, which is what protects the
-ratchet. Each deleted page and its test go in the same commit so the ratio never swings.
+**The deletion boundaries are set by measurement, not by tidiness.** The coverage gate's binding
+constraint is lines, with about one line of slack, and every uncovered line added costs nineteen
+covered ones to offset. Two consequences that reshaped the stack:
+
+- **Deleting a well covered file breaks the build.** `useNavigation.ts` is at 100%, and removing it
+  alone drops lines to 94.95 against a floor of 95. So `/success`, `/error` and `useNavigation`
+  cannot retire in the save queue PR, where an earlier draft put them.
+- **`RecommendationButton.tsx` holds a quarter of the project's branches** (99 of 396) at 95.96%.
+  Deleting it alone drops branches to 84.51. It has to go in the same PR as `DetailedPage`, which
+  sits below every floor and pays for it.
+
+The rule, stated so the next person does not rediscover it: **delete the below-floor files early
+and together, and hold the above-floor files until the code replacing them is covered.** "Delete
+each page with its test so the ratio never swings" is false; the ratio always swings, and the sign
+depends on which side of the floor the deleted file sat.
+
+Front loading the pure modules helps, but it is worth roughly twenty uncovered lines across the
+whole redesign, not the free pass it looks like. `src/main.tsx` is excluded from coverage, so
+moving the theme out of it moves that code into the counted pool: a net liability, not a win.
 
 **Version: 3.0.0 to 4.0.0.** A breaking response shape on `POST /v1/drinks/new` and a complete
 replacement of the interaction model, including seven removed routes.
@@ -434,5 +481,9 @@ Unit tests are not sufficient evidence for this work, per `CLAUDE.md`.
   writer to two name collectors for cosmetic gain.
 - Day marks on the strip are drawn only for days already fetched, with a distinct mark for "not
   loaded yet", so the strip never claims a day is empty when it is merely unread.
+- Dates are computed in UTC, so a drink logged between midnight and 02:00 in Budapest is filed
+  under yesterday. Pre-existing, in three places, and the redesign makes it visible rather than
+  causing it. FIX-6.
+- `web/index.html` blocks pinch zoom, which fails WCAG 2.2 SC 1.4.4. Pre-existing. FIX-7.
 - No light theme. Tokens make one additive rather than structural.
 - Backend branch coverage stays ungated (HK-2), unchanged by this work.

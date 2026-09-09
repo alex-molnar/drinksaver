@@ -55,6 +55,8 @@ first. Across groups, `SEC-1` is the item I would pick up before anything else h
 | **FIX-3** | Error boundary for a failed lazy chunk | small | none |
 | **FIX-4** | Deleting a drink leaves the recommendation cache stale | small | none |
 | **FIX-5** | Saving a drink is not idempotent, so a timeout can double log | medium | none |
+| **FIX-6** | Dates are computed in UTC, so drinks after midnight land on the wrong day | small | a decision on back-filling |
+| **FIX-7** | The web app blocks pinch zoom, failing WCAG 2.2 SC 1.4.4 | trivial | none |
 | **OPS-1** | Make Prometheus scraping actually work | medium | a decision on scraper auth |
 | **OPS-2** | Remove the four leftover namespaces | small | production cutover |
 | **OPS-3** | Theme the Keycloak login page | medium | it follows the UI redesign |
@@ -680,6 +682,79 @@ is racy under concurrency, and it does nothing for a client that is not this one
 
 The same request sent twice with the same key produces one set of rows and two identical
 responses, proven by a test.
+
+## FIX-6. Dates are computed in UTC, so a drink logged after midnight lands on the wrong day
+
+**Effort:** small to change, and it needs a decision about rows already written.
+**Blocked by:** that decision.
+
+### Why
+
+`new Date().toISOString().split('T')[0]` appears three times: `web/src/pages/DetailedPage.tsx:47`,
+`web/src/pages/HistoryPage.tsx:26` and `web/src/api/endpoints.ts:28`. `toISOString` is UTC. Europe
+is one or two hours ahead of it, so between midnight and 01:00 CET, or midnight and 02:00 CEST, the
+local date and the UTC date differ.
+
+The app is for logging drinks in a bar. That window is not an edge case, it is Friday night. A
+drink logged at half past midnight is stored against the previous day, and the History screen,
+which computes its default date the same wrong way, agrees with itself, so nothing looks broken
+until you look for that drink a day later.
+
+The redesign makes it louder rather than causing it: the new header says "Today, nothing yet" while
+the drink sits on yesterday's tab, and the seven day strip puts its mark on the wrong day.
+
+### Where
+
+- The three sites above, which should collapse into one `todayISO(now: Date)` built from local
+  components (`getFullYear`, `getMonth`, `getDate`), not from `toISOString`
+- `backend/src/main/java/com/drinksaver/model/db/SavedDrink.java`, where `date` is a varchar holding
+  whatever the client sent
+
+### Do
+
+1. Add one local-date helper and use it everywhere. Take `now` as an argument so it is testable
+   without faking the clock, and add tests at 23:59 and 00:30 in a non-UTC zone.
+2. **Decide what to do about existing rows.** This changes what the backend stores, so history
+   written before the fix stays shifted. Options: leave it and note it, or back-fill by shifting
+   rows written between 00:00 and 02:00 UTC. Back-filling is a guess about where the user was, so
+   leaving it alone is defensible. Do not do it silently either way.
+
+### Done when
+
+A drink logged at 00:30 local time appears under today on the History screen, and a test proves it
+for a zone that is not UTC.
+
+---
+
+## FIX-7. The web app blocks pinch zoom
+
+**Effort:** trivial.
+**Blocked by:** nothing.
+
+### Why
+
+`web/index.html:6` sets `maximum-scale=1.0, user-scalable=no`. That fails WCAG 2.2 SC 1.4.4
+(Resize Text), which requires text to scale to 200% without loss of content or function. It is one
+of the few accessibility failures that cannot be worked around by the user, which is the point of
+the criterion.
+
+The reason it is usually added is iOS zooming a page when a small font input is focused.
+`web/src/index.css:20` already fixes that properly, with a `font-size: 16px !important` rule on
+inputs under 768px. So the workaround is present twice and only one of them is harmful.
+
+### Where
+
+`web/index.html`, the viewport meta tag.
+
+### Do
+
+Drop `maximum-scale=1.0, user-scalable=no`, leaving
+`width=device-width, initial-scale=1.0`. Then check on a real iOS device that focusing an input
+still does not zoom, since that is the behaviour the removed attributes were guarding.
+
+### Done when
+
+The page can be pinch zoomed to 200% and focusing an input does not zoom the layout.
 
 ---
 
