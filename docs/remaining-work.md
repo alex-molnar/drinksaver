@@ -53,8 +53,10 @@ first. Across groups, `SEC-1` is the item I would pick up before anything else h
 | **FIX-1** | Bound the volume entry payload | trivial | none |
 | **FIX-2** | Optimistic locking on `AlcoholType.volumeIds` | small | none |
 | **FIX-3** | Error boundary for a failed lazy chunk | small | none |
+| **FIX-4** | Deleting a drink leaves the recommendation cache stale | small | none |
 | **OPS-1** | Make Prometheus scraping actually work | medium | a decision on scraper auth |
 | **OPS-2** | Remove the four leftover namespaces | small | production cutover |
+| **OPS-3** | Theme the Keycloak login page | medium | it follows the UI redesign |
 | **HK-1** | Untrack `web/coverage` | trivial | none |
 | **HK-2** | Add a BRANCH coverage gate | small | none |
 | **HK-3** | Drop `NewAlcoholSubtype.alcoholTypeId` | trivial | none |
@@ -596,6 +598,51 @@ reloading.
 
 A test that makes a lazy import reject shows the fallback rather than an empty tree.
 
+## FIX-4. Deleting a drink leaves the recommendation cache stale
+
+**Effort:** small for the shallow fix, medium for the correct one.
+**Blocked by:** nothing, but read the concurrency comments in `RecommendationCacheService`
+before touching it.
+
+### Why
+
+`DrinksController.saveDrink` calls `recommendationCacheService.onDrinkSaved`, which bumps a
+per-user counter and evicts the cached recommendations once it crosses a threshold.
+`DrinksController.deleteSavedDrink` calls nothing at all. So a delete never invalidates the
+server-side cache and never decrements the counter.
+
+`HistoryPage.tsx` already invalidates `['recommendations']` on the client after a delete, which
+looks like it covers this and does not: the client refetches and the server hands back the same
+cached list. A drink you deleted keeps shaping your recommendations until some unrelated save
+happens to push the counter over the line.
+
+**This is pre-existing, not introduced by the 2026-09-09 redesign.** It is recorded here because
+that redesign adds undo, which makes it far easier to hit: save three, undo, and the ranking
+still counts three.
+
+### Where
+
+- `backend/src/main/java/com/drinksaver/controller/DrinksController.java`, `deleteSavedDrink`
+- `backend/src/main/java/com/drinksaver/service/RecommendationCacheService.java`
+- The History screen, which already invalidates client-side and is not the problem
+
+### Do
+
+Pick one, because they are not the same size:
+
+- **A.** Invalidate on delete. Two lines in `deleteSavedDrink`. Deletes become visible
+  immediately. The counter still drifts upward, so evictions stay permanently a little early.
+- **B.** An `onDrinkDeleted` that decrements by the number of rows actually deleted and then
+  invalidates. Correct, and it touches the `compareAndSet` logic whose comment records a measured
+  reason for its present shape. Do not rewrite that without re-measuring.
+
+Either way, add a test that saves, deletes, and asserts the next recommendations read no longer
+reflects the deleted drink. There is no such test today, which is why nothing caught this.
+
+### Done when
+
+A delete is reflected in the next recommendations response without waiting for an unrelated save.
+
 ---
 
 # Operations
@@ -671,6 +718,53 @@ command that changes cluster state**, per `CLAUDE.md`.
 ### Done when
 
 `kubectl get ns | grep drinksaver` shows only `drinksaver` and `drinksaver-test`.
+
+## OPS-3. Theme the Keycloak login page
+
+**Effort:** medium.
+**Blocked by:** nothing technically, but it only makes sense once the UI redesign has landed and
+its tokens are stable.
+
+### Why it was left
+
+The 2026-09-09 UI redesign restyles every screen the app owns. It does not own the first one.
+`ProtectedRoute` sends an unauthenticated user to Keycloak, which serves its login page from its
+own theme, so the first thing anyone sees is stock Keycloak and the redesign starts one screen
+late.
+
+Left out deliberately rather than missed. A Keycloak theme is a different artifact in a different
+technology: FreeMarker templates and a resources directory, deployed into the Keycloak instance
+rather than into this app. It touches a shared cluster service, and it can merge on its own
+schedule.
+
+**A note on where this is filed.** None of the five groups is a clean home for unbuilt design
+work. It sits under Operations because delivering it is cluster work, not because it is an
+operational gap. Move it if a better group appears.
+
+### Where
+
+- A new theme directory, plus the delivery question: a mounted volume, a custom Keycloak image,
+  or a provider JAR. The cluster's Keycloak is shared, so decide whether the theme is scoped to
+  the `drinksaver` realm rather than applied globally.
+- `deploy/local/keycloak-realm.json`, so the compose stack shows the same login page as the
+  cluster.
+- The redesign's design tokens, which are the source of truth for ground, ink, plate colours and
+  type. Do not re-pick them here.
+
+### Do
+
+1. Decide how a theme reaches the cluster's Keycloak, and scope it to the realm.
+2. Build the login theme against the redesign's tokens. `login.ftl`, `error.ftl` and
+   `login-reset-password.ftl` cover almost everything an ordinary user hits.
+3. Self-host the fonts in the theme too. Do not reach for the Google Fonts CDN, for the same
+   reason the app does not: it is a third-party data flow into a product whose privacy notice
+   (PRIV-2) is still unwritten.
+4. Set the theme in the realm config so the local compose stack matches the cluster.
+
+### Done when
+
+`docker-compose up` shows a login page that belongs to the same app as the screen behind it, and
+the same is true in `drinksaver-test`.
 
 ---
 
