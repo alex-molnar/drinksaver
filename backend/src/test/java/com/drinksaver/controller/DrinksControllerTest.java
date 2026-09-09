@@ -250,16 +250,18 @@ class DrinksControllerTest {
             """.formatted(userId);
 
         SavedDrink saved = savedDrink(9, userId, BEER_ID);
-        when(drinksRepository.saveDrink(any())).thenReturn(saved);
+        when(drinksRepository.saveDrink(any())).thenReturn(List.of(saved));
 
         mockMvc.perform(post("/v1/drinks/new")
                 .with(jwt().jwt(token -> token.subject(userId.toString())))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(9))
-            .andExpect(jsonPath("$.userId").value(userId.toString()))
-            .andExpect(jsonPath("$.alcoholTypeId").value(BEER_ID));
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(9))
+            .andExpect(jsonPath("$[0].userId").value(userId.toString()))
+            .andExpect(jsonPath("$[0].alcoholTypeId").value(BEER_ID));
 
         org.mockito.InOrder inOrder = org.mockito.Mockito.inOrder(drinksRepository, recommendationCacheService);
         inOrder.verify(drinksRepository, times(1)).saveDrink(any());
@@ -294,7 +296,7 @@ class DrinksControllerTest {
     @ValueSource(strings = {"null", "1", "100"})
     void saveDrinkAcceptsAnAbsentQuantityAndBothEndsOfTheRange(String quantity) throws Exception {
         UUID userId = UUID.randomUUID();
-        when(drinksRepository.saveDrink(any())).thenReturn(savedDrink(9, userId, BEER_ID));
+        when(drinksRepository.saveDrink(any())).thenReturn(List.of(savedDrink(9, userId, BEER_ID)));
 
         mockMvc.perform(post("/v1/drinks/new")
                 .with(jwt().jwt(token -> token.subject(userId.toString())))
@@ -327,7 +329,7 @@ class DrinksControllerTest {
     @Test
     void saveDrinkAcceptsCommentsAtTheColumnLimit() throws Exception {
         UUID userId = UUID.randomUUID();
-        when(drinksRepository.saveDrink(any())).thenReturn(savedDrink(9, userId, BEER_ID));
+        when(drinksRepository.saveDrink(any())).thenReturn(List.of(savedDrink(9, userId, BEER_ID)));
 
         mockMvc.perform(post("/v1/drinks/new")
                 .with(jwt().jwt(token -> token.subject(userId.toString())))
@@ -358,7 +360,7 @@ class DrinksControllerTest {
             }
             """.formatted(spoofedUserId);
 
-        when(drinksRepository.saveDrink(any())).thenReturn(savedDrink(9, authenticatedUserId, BEER_ID));
+        when(drinksRepository.saveDrink(any())).thenReturn(List.of(savedDrink(9, authenticatedUserId, BEER_ID)));
 
         mockMvc.perform(post("/v1/drinks/new")
                 .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))

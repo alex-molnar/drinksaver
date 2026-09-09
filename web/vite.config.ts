@@ -28,9 +28,12 @@ export default defineConfig({
       //
       // Raised 2026-09-08 after the findings work in docs/fixes-2026-09-08.md,
       // from 91/85/89/93. Measured 93.67 / 86.95 / 92.81 / 95.15.
+      //
+      // Branches raised 2026-09-10, from 86, when saveDrink gained tests for both
+      // sides of its deploy-skew shim. Measured 93.70 / 87.43 / 92.81 / 95.18.
       thresholds: {
         statements: 93,
-        branches: 86,
+        branches: 87,
         functions: 92,
         lines: 95,
       },

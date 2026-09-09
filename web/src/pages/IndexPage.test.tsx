@@ -127,7 +127,7 @@ describe('IndexPage', () => {
 
   it('saves a recommendation and navigates to success with the drink name', async () => {
     mockGetRecommendations.mockResolvedValue(mockRecommendations);
-    mockSaveDrink.mockResolvedValue({ id: 100, userId: 'u1', date: '2026-01-01', alcoholTypeId: 4, alcoholVolumeId: 10 });
+    mockSaveDrink.mockResolvedValue([{ id: 100, userId: 'u1', date: '2026-01-01', alcoholTypeId: 4, alcoholVolumeId: 10 }]);
 
     renderWithProviders(<IndexPage />);
 
