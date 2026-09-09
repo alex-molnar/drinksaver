@@ -54,6 +54,7 @@ first. Across groups, `SEC-1` is the item I would pick up before anything else h
 | **FIX-2** | Optimistic locking on `AlcoholType.volumeIds` | small | none |
 | **FIX-3** | Error boundary for a failed lazy chunk | small | none |
 | **FIX-4** | Deleting a drink leaves the recommendation cache stale | small | none |
+| **FIX-5** | Saving a drink is not idempotent, so a timeout can double log | medium | none |
 | **OPS-1** | Make Prometheus scraping actually work | medium | a decision on scraper auth |
 | **OPS-2** | Remove the four leftover namespaces | small | production cutover |
 | **OPS-3** | Theme the Keycloak login page | medium | it follows the UI redesign |
@@ -642,6 +643,43 @@ reflects the deleted drink. There is no such test today, which is why nothing ca
 ### Done when
 
 A delete is reflected in the next recommendations response without waiting for an unrelated save.
+
+## FIX-5. Saving a drink is not idempotent, so a timeout can double log it
+
+**Effort:** medium.
+**Blocked by:** nothing.
+
+### Why
+
+`web/src/api/client.ts` sets a 10 second timeout. When it fires, axios raises `ECONNABORTED` and
+the client has no way to know whether the server completed the insert or not. A naive retry
+therefore logs the drink twice, and the situation that produces the timeout, a phone on bad bar
+wifi, is exactly the situation the app is used in.
+
+The 2026-09-09 redesign works around this client side: its retry policy refetches the day and
+re-POSTs only if the row count did not rise. That closes the realistic case and is not a fix. It
+is racy under concurrency, and it does nothing for a client that is not this one.
+
+### Where
+
+- `backend/src/main/java/com/drinksaver/controller/DrinksController.java`, `saveDrink`
+- `backend/src/main/java/com/drinksaver/model/dto/Drink.java`
+- A new column or table for seen keys, plus its expiry
+- `docs/api-docs.yaml`
+- `web/src/api/endpoints.ts` and the save queue's retry policy, which can then retry directly
+
+### Do
+
+1. Accept a client generated key on `POST /v1/drinks/new`, as a header or a body field.
+2. Record it with the resulting drink ids and return the original result on a repeat, rather than
+   inserting again. Decide the retention window; an hour is generous for a retry.
+3. Once it exists, simplify the client retry policy back to a direct re-POST and delete the
+   verify-before-retry branch, naming this task in the commit so the two stay connected.
+
+### Done when
+
+The same request sent twice with the same key produces one set of rows and two identical
+responses, proven by a test.
 
 ---
 
