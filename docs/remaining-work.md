@@ -23,6 +23,12 @@ not the fast path.
 **Reference tasks by their id, never by position.** The ids are stable: `SEC-1` stays `SEC-1`
 when something is inserted above it.
 
+There is no `FIX-6`. It was filed on 2026-09-09 and closed on 2026-09-10 without ever being open
+work: what it described as a bug turned out to be a rough approximation of a rule the product
+actually wants, and that rule is now specified and implemented. See "The drinking day starts at
+06:00" in `docs/superpowers/specs/2026-09-09-ui-redesign-design.md`. The id is left unused rather
+than reassigned, so older references cannot silently point at something else.
+
 An earlier version numbered tasks 1 to 15 in reading order, with 27 references keyed to those
 numbers inside this file and 5 more in `docs/fixes-2026-09-08.md`, `docs/DEPLOYMENT.md`,
 `CLAUDE.md` and `.github/dependabot.yml`. When four tasks arrived, putting them where they
@@ -55,7 +61,6 @@ first. Across groups, `SEC-1` is the item I would pick up before anything else h
 | **FIX-3** | Error boundary for a failed lazy chunk | small | none |
 | **FIX-4** | Deleting a drink leaves the recommendation cache stale | small | none |
 | **FIX-5** | Saving a drink is not idempotent, so a timeout can double log | medium | none |
-| **FIX-6** | Dates are computed in UTC, so drinks after midnight land on the wrong day | small | a decision on back-filling |
 | **FIX-7** | The web app blocks pinch zoom, failing WCAG 2.2 SC 1.4.4 | trivial | none |
 | **OPS-1** | Make Prometheus scraping actually work | medium | a decision on scraper auth |
 | **OPS-2** | Remove the four leftover namespaces | small | production cutover |
@@ -682,49 +687,6 @@ is racy under concurrency, and it does nothing for a client that is not this one
 
 The same request sent twice with the same key produces one set of rows and two identical
 responses, proven by a test.
-
-## FIX-6. Dates are computed in UTC, so a drink logged after midnight lands on the wrong day
-
-**Effort:** small to change, and it needs a decision about rows already written.
-**Blocked by:** that decision.
-
-### Why
-
-`new Date().toISOString().split('T')[0]` appears three times: `web/src/pages/DetailedPage.tsx:47`,
-`web/src/pages/HistoryPage.tsx:26` and `web/src/api/endpoints.ts:28`. `toISOString` is UTC. Europe
-is one or two hours ahead of it, so between midnight and 01:00 CET, or midnight and 02:00 CEST, the
-local date and the UTC date differ.
-
-The app is for logging drinks in a bar. That window is not an edge case, it is Friday night. A
-drink logged at half past midnight is stored against the previous day, and the History screen,
-which computes its default date the same wrong way, agrees with itself, so nothing looks broken
-until you look for that drink a day later.
-
-The redesign makes it louder rather than causing it: the new header says "Today, nothing yet" while
-the drink sits on yesterday's tab, and the seven day strip puts its mark on the wrong day.
-
-### Where
-
-- The three sites above, which should collapse into one `todayISO(now: Date)` built from local
-  components (`getFullYear`, `getMonth`, `getDate`), not from `toISOString`
-- `backend/src/main/java/com/drinksaver/model/db/SavedDrink.java`, where `date` is a varchar holding
-  whatever the client sent
-
-### Do
-
-1. Add one local-date helper and use it everywhere. Take `now` as an argument so it is testable
-   without faking the clock, and add tests at 23:59 and 00:30 in a non-UTC zone.
-2. **Decide what to do about existing rows.** This changes what the backend stores, so history
-   written before the fix stays shifted. Options: leave it and note it, or back-fill by shifting
-   rows written between 00:00 and 02:00 UTC. Back-filling is a guess about where the user was, so
-   leaving it alone is defensible. Do not do it silently either way.
-
-### Done when
-
-A drink logged at 00:30 local time appears under today on the History screen, and a test proves it
-for a zone that is not UTC.
-
----
 
 ## FIX-7. The web app blocks pinch zoom
 

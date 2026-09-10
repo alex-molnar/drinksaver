@@ -209,6 +209,52 @@ unload, flush before `keycloak.logout` navigates away, treat hidden as commit an
 unhonourable Undo is ever shown, and persist pending delete ids to `sessionStorage` and reconcile
 on `pageshow`.
 
+### The drinking day starts at 06:00
+
+A night out does not respect midnight. A drink at 23:30 and the next at 00:30 belong to the same
+evening, and filing them on different dates makes the history, the day strip and the
+recommendation decay all wrong in the same way.
+
+So the app does not use the calendar day. It uses the **drinking day**: the local date as it was
+six hours ago. Anything logged before 06:00 local belongs to the previous date.
+
+```
+drinkingDay(now) = localDate(now minus 6 hours)
+```
+
+| Local clock | Drinking day |
+| --- | --- |
+| Wednesday 23:30 | Wednesday |
+| Thursday 00:30 | Wednesday |
+| Thursday 05:59 | Wednesday |
+| Thursday 06:00 | Thursday |
+
+**This replaces what was briefly filed as FIX-6, rather than fixing it.** The old code used
+`toISOString`, which is UTC, so it filed anything before 01:00 or 02:00 local, depending on the
+season, under the previous date. That was an accident. It was an accident pointing the same way as
+the rule above, which is why it never read as a bug. A naive correction to the local calendar date
+would have made the product worse, not better: it would have split every night out at midnight.
+
+Everything about this is client side. The backend stores whatever date string it is given and
+computes none itself, so nothing changes there.
+
+- The save path stamps the drinking day.
+- History opens on the drinking day, and the strip marks it as current.
+- The When panel's Today and Yesterday are drinking days.
+- The furthest selectable date is the current drinking day, so at 00:30 you cannot file a drink
+  on a date that has not started yet.
+- The header reads **Tonight** rather than Today between 00:00 and 06:00. Without that, a strip
+  showing yesterday's date as current looks like a glitch rather than the point.
+
+One named constant, `DAY_ROLLOVER_HOUR = 6`, not a setting. `drinkingDay` takes `now` as an
+argument so it is testable without faking a clock, and is tested at 23:30, 00:30, 05:59 and 06:00,
+in a zone that is not UTC, and across a daylight saving transition. Subtracting six hours from an
+absolute instant and then reading local components is DST safe; formatting first and subtracting
+after is not.
+
+Rows written before this change keep their dates. Back-filling would be a guess about where the
+user was, and the old behaviour already approximates the new rule to within a couple of hours.
+
 ### One drink-identity module
 
 A single module owns everything that identifies a drink: its glassware silhouette, its liquid
@@ -418,18 +464,19 @@ Bottom to top. Each is independently reviewable and must land green on its own.
 | 0 | `docs/ui-redesign-spec` | This document, the plan, and the FIX-4, FIX-5, OPS-3 backlog entries |
 | 1 | `feat/drinks-post-returns-list` | The API contract change and `docs/api-docs.yaml` |
 | 2 | `chore/untrack-web-coverage` | HK-1. Zero code, cleans every later diff |
-| 3 | `fix/lazy-route-error-boundary` | FIX-3. Ships value with or without the redesign |
-| 4 | `feat/design-tokens` | Token layers, CSS variable emission, font pipeline. Nothing flips yet |
-| 5 | `feat/drink-identity` | Identity module, glassware, contrast test. Deletes the duplicated icon maps |
-| 6 | `feat/sheet-primitive` | Sheet path, stack hook, host, registry. No screen changes |
-| 7 | `feat/save-queue` | Queue, undo, deferred delete, retry policy, wired into the existing visual design so the review is about semantics. Routes become redirects. The four e2e specs are rewritten |
-| 8 | `feat/quick-save-plates` | Plates, board header and nav, dark tokens on. Deletes `IndexPage` and `useResponsiveTileCount`. Keeps `Layout` and `RecommendationButton` |
-| 9 | `feat/add-sheet` | Draft provider, sheet host, menu, field and create panels. Deletes `DetailedPage`, the five `New*` pages, `SuccessPage`, `ErrorPage`, `useNavigation` and `RecommendationButton` together |
-| 10 | `feat/history-tab` | Seven day strip, paper tab, strike-off delete, bulk selection, date picker. Deletes `Layout` |
-| 11 | `chore/redesign-docs` | Component documentation, the eslint hex rule, and one coverage ratchet raise |
+| 3 | `feat/drinking-day-rollover` | The 06:00 rule and its one helper, wired into the current screens. Ships value with or without the redesign |
+| 4 | `fix/lazy-route-error-boundary` | FIX-3. Ships value with or without the redesign |
+| 5 | `feat/design-tokens` | Token layers, CSS variable emission, font pipeline. Nothing flips yet |
+| 6 | `feat/drink-identity` | Identity module, glassware, contrast test. Deletes the duplicated icon maps |
+| 7 | `feat/sheet-primitive` | Sheet path, stack hook, host, registry. No screen changes |
+| 8 | `feat/save-queue` | Queue, undo, deferred delete, retry policy, wired into the existing visual design so the review is about semantics. Routes become redirects. The four e2e specs are rewritten |
+| 9 | `feat/quick-save-plates` | Plates, board header and nav, dark tokens on. Deletes `IndexPage` and `useResponsiveTileCount`. Keeps `Layout` and `RecommendationButton` |
+| 10 | `feat/add-sheet` | Draft provider, sheet host, menu, field and create panels. Deletes `DetailedPage`, the five `New*` pages, `SuccessPage`, `ErrorPage`, `useNavigation` and `RecommendationButton` together |
+| 11 | `feat/history-tab` | Seven day strip, paper tab, strike-off delete, bulk selection, date picker. Deletes `Layout` |
+| 12 | `chore/redesign-docs` | Component documentation, the eslint hex rule, and one coverage ratchet raise |
 
-PR 7 carries the risk and PR 9 carries the bulk. Keeping 7 visually boring is what makes its review
-tractable.
+PR 8 carries the risk and PR 10 carries the bulk. Keeping 8 visually boring is what makes its
+review tractable.
 
 **The deletion boundaries are set by measurement, not by tidiness.** The coverage gate's binding
 constraint is lines, with about one line of slack, and every uncovered line added costs nineteen
@@ -481,9 +528,6 @@ Unit tests are not sufficient evidence for this work, per `CLAUDE.md`.
   writer to two name collectors for cosmetic gain.
 - Day marks on the strip are drawn only for days already fetched, with a distinct mark for "not
   loaded yet", so the strip never claims a day is empty when it is merely unread.
-- Dates are computed in UTC, so a drink logged between midnight and 02:00 in Budapest is filed
-  under yesterday. Pre-existing, in three places, and the redesign makes it visible rather than
-  causing it. FIX-6.
 - `web/index.html` blocks pinch zoom, which fails WCAG 2.2 SC 1.4.4. Pre-existing. FIX-7.
 - No light theme. Tokens make one additive rather than structural.
 - Backend branch coverage stays ungated (HK-2), unchanged by this work.
