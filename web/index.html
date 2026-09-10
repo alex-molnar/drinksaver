@@ -3,8 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- user-scalable=no fails WCAG 2.2 SC 1.4.4. Pre-existing and tracked as FIX-7, not this PR. -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#1976d2" />
+    <!-- The umber plaster ground (--bg / --ds-surface-ground), verbatim from the design doc. -->
+    <meta name="theme-color" content="#231512" />
+    <!-- Dark only, deliberately: no light theme to offer, so this is not prefers-color-scheme. -->
+    <meta name="color-scheme" content="dark" />
     <meta name="description" content="Track your alcohol consumption easily" />
     <title>DrinkSaver</title>
     <!-- Runtime config. Overwritten by docker-entrypoint.sh in the container. -->
