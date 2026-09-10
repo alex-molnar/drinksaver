@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Box, Button, Paper, Typography } from '@mui/material';
 import type { SaveQueueEntry } from '../drink/saveQueueReducer';
@@ -37,30 +37,40 @@ const messageFor = (entry: SaveQueueEntry): string => {
  * that arrives with the presentational components in a later PR. This one is deliberately boring.
  */
 const TapeStrip: React.FC<TapeStripProps> = ({ entry, onUndo, onRetry, stripHandlers }) => {
-  const [rendered, setRendered] = useState(entry);
-  const [exiting, setExiting] = useState(false);
-  // "Adjusting state when a prop changes", not an effect: both directions must be reflected in
-  // this same render, since `rendered`/`exiting` are what the JSX below reads. The only thing
-  // that genuinely needs an effect is the timer that later clears `rendered` to null - a real
-  // side effect - which is why it is the one piece still below.
-  const [prevEntry, setPrevEntry] = useState(entry);
-  if (entry !== prevEntry) {
-    setPrevEntry(entry);
-    if (entry) {
-      setRendered(entry);
-      setExiting(false);
-    } else {
-      setExiting(true);
-    }
-  }
+  /**
+   * A present entry renders directly. State is only involved on the way *out*, to keep the last
+   * entry on screen for the exit transition after the queue has already dropped it.
+   *
+   * An earlier version mirrored the entry into state during render and read only that mirror.
+   * It never showed the strip for a delete: a delete becomes undoable in a single queue update,
+   * so the mirror had to be adopted and re-rendered within one commit, and when that did not
+   * happen there was nothing else for the JSX to read. A save happened to survive it by going
+   * through two dispatches, which is why the bug looked like it only affected deletes. Deriving
+   * the common case instead of mirroring it removes the failure mode rather than timing it.
+   */
+  const lastShown = useRef(entry);
+  const [exitingEntry, setExitingEntry] = useState<SaveQueueEntry | null>(null);
 
   useEffect(() => {
     if (entry) {
+      // No need to clear `exitingEntry` here: `entry` already wins in the expression below, so a
+      // stale one is unreachable, and clearing it synchronously in an effect only earns a
+      // cascading-render lint error for nothing. The timer below clears it on its own.
+      lastShown.current = entry;
       return;
     }
-    const timer = setTimeout(() => setRendered(null), EXIT_MS);
+    const leaving = lastShown.current;
+    if (!leaving) {
+      return;
+    }
+    setExitingEntry(leaving);
+    lastShown.current = null;
+    const timer = setTimeout(() => setExitingEntry(null), EXIT_MS);
     return () => clearTimeout(timer);
   }, [entry]);
+
+  const rendered = entry ?? exitingEntry;
+  const exiting = !entry && rendered !== null;
 
   if (!rendered) {
     return null;

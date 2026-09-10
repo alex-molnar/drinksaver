@@ -39,13 +39,22 @@ test('a saved drink can be deleted from history and stays deleted after the undo
   await expect.poll(() => ginRows(page), { timeout: 15_000 }).toBe(before + 1);
 
   // Clicking a row toggles its checkbox; the bottom button defers a delete for the selection.
-  await page.getByRole('button').filter({ hasText: GIN }).first().click();
+  const ginRow = page.getByRole('button').filter({ hasText: GIN }).first();
+  await ginRow.click();
+  await expect(ginRow.getByRole('checkbox')).toBeChecked({ timeout: 5_000 });
   await page.getByRole('button', { name: 'delete selected' }).click();
 
-  // The row disappears at once: deleting is deferred, but suppressed from the merged view
-  // immediately, which is the whole point of the undo strip that takes its place.
-  await expect.poll(() => ginRows(page), { timeout: 15_000 }).toBe(before);
+  // The strip is asserted first, and deliberately so: it only exists for the length of the undo
+  // window, so anything polled ahead of it can outlast the thing being checked. The row count is
+  // suppressed from the merged view in the same tick, so nothing is lost by checking it second.
   await expect(page.getByRole('status')).toBeVisible();
+  await expect.poll(() => ginRows(page), { timeout: 15_000 }).toBe(before);
+
+  // Move the pointer off the strip before waiting it out. The strip appears at the bottom of the
+  // viewport, which is where the delete control just was, so Playwright's cursor is left sitting
+  // on top of it. Hovering pauses the window on purpose (WCAG 2.2 SC 2.2.1), so leaving the mouse
+  // there means it never elapses at all. A real user moves; a scripted one has to be told to.
+  await page.mouse.move(0, 0);
 
   // Wait out the undo window rather than racing it with a reload. Once the strip clears, the
   // DELETE has already been sent for real, through the ordinary awaited path - a reload this
@@ -78,9 +87,14 @@ test('undoing a delete keeps the drink, because the delete was never sent', asyn
 
   await page.getByRole('button').filter({ hasText: GIN }).first().click();
   await page.getByRole('button', { name: 'delete selected' }).click();
-  await expect.poll(() => ginRows(page), { timeout: 15_000 }).toBe(before);
 
+  // Undo before anything else. The control lives on a strip that clears itself when the window
+  // closes, so polling the row count first spends the very budget the click needs. Waiting on
+  // the row count here is what made this test burn its whole timeout looking for a button that
+  // had already retired.
+  await expect(page.getByRole('status')).toBeVisible();
   await page.getByRole('button', { name: 'Undo' }).click();
+
   await expect.poll(() => ginRows(page), { timeout: 15_000 }).toBe(before + 1);
 
   await page.reload();
