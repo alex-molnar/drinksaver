@@ -20,27 +20,70 @@ const waitForHistoryLoaded = async (page: Page) => {
 
 const ginRows = (page: Page) => page.getByText(GIN).count();
 
-test('a saved drink can be deleted from history and stays deleted', async ({ page }) => {
+const saveAGinAndTonic = async (page: Page) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Gin and tonic' }).click();
+  // Logging never navigates: the confirmation is an inline strip on the same screen.
+  await expect(page.getByRole('status')).toContainText(/gin and tonic/i, { timeout: 15_000 });
+};
+
+test('a saved drink can be deleted from history and stays deleted after the undo window closes', async ({ page }) => {
   await page.goto('/history');
   await waitForHistoryLoaded(page);
   const before = await ginRows(page);
 
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Gin and tonic' }).click();
-  await expect(page.getByText(/gin and tonic/i)).toBeVisible({ timeout: 15_000 });
+  await saveAGinAndTonic(page);
 
   await page.goto('/history');
   await waitForHistoryLoaded(page);
   await expect.poll(() => ginRows(page), { timeout: 15_000 }).toBe(before + 1);
 
-  // Clicking a row toggles its checkbox; the bottom button deletes the selection.
+  // Clicking a row toggles its checkbox; the bottom button defers a delete for the selection.
   await page.getByRole('button').filter({ hasText: GIN }).first().click();
   await page.getByRole('button', { name: 'delete selected' }).click();
 
+  // The row disappears at once: deleting is deferred, but suppressed from the merged view
+  // immediately, which is the whole point of the undo strip that takes its place.
   await expect.poll(() => ginRows(page), { timeout: 15_000 }).toBe(before);
+  await expect(page.getByRole('status')).toBeVisible();
+
+  // Wait out the undo window rather than racing it with a reload. Once the strip clears, the
+  // DELETE has already been sent for real, through the ordinary awaited path - a reload this
+  // soon would instead be exercising the pagehide/keepalive fallback, which is a different thing
+  // to prove and not what this test is for.
+  await expect(page.getByRole('status')).toHaveCount(0, { timeout: 10_000 });
 
   // It must be gone from the database, not merely from the rendered list.
   await page.reload();
   await waitForHistoryLoaded(page);
   await expect.poll(() => ginRows(page), { timeout: 15_000 }).toBe(before);
+});
+
+/**
+ * There is no undelete endpoint, so undoing a delete has to mean the DELETE is never sent at
+ * all. Reloading proves that: if Undo had merely re-shown the row while the delete still went
+ * through underneath it, the row would vanish again the moment the page re-fetches from the
+ * server.
+ */
+test('undoing a delete keeps the drink, because the delete was never sent', async ({ page }) => {
+  await page.goto('/history');
+  await waitForHistoryLoaded(page);
+  const before = await ginRows(page);
+
+  await saveAGinAndTonic(page);
+
+  await page.goto('/history');
+  await waitForHistoryLoaded(page);
+  await expect.poll(() => ginRows(page), { timeout: 15_000 }).toBe(before + 1);
+
+  await page.getByRole('button').filter({ hasText: GIN }).first().click();
+  await page.getByRole('button', { name: 'delete selected' }).click();
+  await expect.poll(() => ginRows(page), { timeout: 15_000 }).toBe(before);
+
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect.poll(() => ginRows(page), { timeout: 15_000 }).toBe(before + 1);
+
+  await page.reload();
+  await waitForHistoryLoaded(page);
+  await expect.poll(() => ginRows(page), { timeout: 15_000 }).toBe(before + 1);
 });

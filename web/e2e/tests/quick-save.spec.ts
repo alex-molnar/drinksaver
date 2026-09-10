@@ -8,20 +8,26 @@ import { drinkingDay } from '../../src/drink/day';
  */
 const expectedDay = () => drinkingDay(new Date());
 
-test('saving a recommendation records it in history', async ({ page }) => {
+test('saving a recommendation records it in history without navigating away', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Duvel bottle' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Duvel bottle' }).click();
 
-  // The app navigates to a confirmation naming the drink.
-  await expect(page.getByText(/duvel bottle/i)).toBeVisible({ timeout: 15_000 });
+  // Logging never navigates: the confirmation is an inline strip on the same screen, not a
+  // routed page. `/success` is gone from this flow entirely.
+  await expect(page.getByRole('status')).toContainText(/duvel bottle/i, { timeout: 15_000 });
+  await expect(page).toHaveURL('/');
+  await expect(page.getByRole('button', { name: 'Duvel bottle' })).toBeVisible();
 
   await page.goto('/history');
   await expect(page.getByRole('heading', { name: 'History' })).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Date' })).toHaveValue(expectedDay());
 
-  // The drink the backend resolved a name for shows up on the drinking day.
+  // The drink the backend resolved a name for shows up on the drinking day. It has to arrive by
+  // the ordinary route: the save queue's provisional row would show "Duvel bottle" immediately
+  // regardless of whether the write actually landed, so waiting for the composed name here is
+  // what proves the round trip to the backend, not merely the optimistic merge.
   await expect(page.getByText(/duvel/i).first()).toBeVisible({ timeout: 15_000 });
 });
 
@@ -35,13 +41,13 @@ test('saving a recommendation records it in history', async ({ page }) => {
  */
 test('a drink logged after midnight is filed on the night it belongs to', async ({ page }) => {
   // setFixedTime, not install: install also fakes timers, which would stall React Query's
-  // retries and any transition. Only Date needs to move for this rule.
+  // retries and any transition - and now also the save queue's own undo timer.
   await page.clock.setFixedTime(new Date(2026, 8, 10, 0, 30));
 
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Guinness pint' })).toBeVisible();
   await page.getByRole('button', { name: 'Guinness pint' }).click();
-  await expect(page.getByText(/guinness pint/i)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('status')).toContainText(/guinness pint/i, { timeout: 15_000 });
 
   await page.goto('/history');
   await expect(page.getByRole('heading', { name: 'History' })).toBeVisible();

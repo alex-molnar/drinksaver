@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Box,
   TextField,
@@ -13,9 +13,9 @@ import {
   Stack,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
-import { getSavedDrinksByDate, deleteDrinksByIds } from '../api/endpoints';
+import { useDrinksForDate } from '../drink/useDrinksForDate';
+import { useSaveQueue } from '../drink/useSaveQueue';
 import { drinkingDay } from '../drink/day';
 import { drinkIdentity } from '../drink/identity';
 import { Glass } from '../drink/glassware';
@@ -27,18 +27,8 @@ const getTodayDate = () => drinkingDay(new Date());
 const HistoryPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [isDeleting, setIsDeleting] = useState(false);
-  const queryClient = useQueryClient();
-
-  const {
-    data: drinks,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['drinks', selectedDate],
-    queryFn: () => getSavedDrinksByDate(selectedDate),
-  });
+  const { remove } = useSaveQueue();
+  const drinksForDate = useDrinksForDate(selectedDate);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedDate(e.target.value);
@@ -57,49 +47,36 @@ const HistoryPage: React.FC = () => {
     });
   }, []);
 
+  /**
+   * A deferred delete with undo, not the immediate one this used to be: see
+   * `SaveQueueProvider.tsx`. The row disappears from this list at once regardless, because
+   * `useDrinksForDate` already excludes whatever the queue is suppressing - there is no local
+   * "isDeleting" state to track any more, and nothing here awaits the network call.
+   */
   const handleDeleteSingle = useCallback(
-    async (id: number) => {
-      setIsDeleting(true);
-      try {
-        await deleteDrinksByIds([id]);
-        // Remove from selection if it was selected
-        setSelectedIds((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(id);
-          return newSet;
-        });
-        // Refetch the list
-        await refetch();
-        // Invalidate recommendations in case they were affected
-        queryClient.invalidateQueries({ queryKey: ['recommendations'] });
-      } catch (error) {
-        console.error('Failed to delete drink:', error);
-      } finally {
-        setIsDeleting(false);
-      }
+    (drink: EditableDrink) => {
+      remove({ label: drink.name, date: selectedDate, drinkIds: [drink.id] });
+      setSelectedIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(drink.id);
+        return newSet;
+      });
     },
-    [refetch, queryClient]
+    [remove, selectedDate]
   );
 
-  const handleDeleteSelected = useCallback(async () => {
-    if (selectedIds.size === 0) return;
-
-    setIsDeleting(true);
-    try {
-      await deleteDrinksByIds(Array.from(selectedIds));
-      setSelectedIds(new Set());
-      await refetch();
-      // Invalidate recommendations in case they were affected
-      queryClient.invalidateQueries({ queryKey: ['recommendations'] });
-    } catch (error) {
-      console.error('Failed to delete drinks:', error);
-    } finally {
-      setIsDeleting(false);
+  const handleDeleteSelected = useCallback(() => {
+    if (selectedIds.size === 0) {
+      return;
     }
-  }, [selectedIds, refetch, queryClient]);
+    const drinkIds = Array.from(selectedIds);
+    const label = `${drinkIds.length} ${drinkIds.length === 1 ? 'drink' : 'drinks'}`;
+    remove({ label, date: selectedDate, drinkIds });
+    setSelectedIds(new Set());
+  }, [selectedIds, remove, selectedDate]);
 
   const renderContent = () => {
-    if (isLoading) {
+    if (drinksForDate.status === 'loading') {
       return (
         <Box
           sx={{
@@ -114,7 +91,7 @@ const HistoryPage: React.FC = () => {
       );
     }
 
-    if (error) {
+    if (drinksForDate.status === 'error') {
       return (
         <Box
           sx={{
@@ -131,7 +108,9 @@ const HistoryPage: React.FC = () => {
       );
     }
 
-    if (!drinks || drinks.length === 0) {
+    const { rows } = drinksForDate;
+
+    if (rows.length === 0) {
       return (
         <Box
           sx={{
@@ -152,7 +131,7 @@ const HistoryPage: React.FC = () => {
 
     return (
       <Stack spacing={1.5} sx={{ width: '100%' }}>
-        {drinks.map((drink: EditableDrink) => {
+        {rows.map((drink: EditableDrink) => {
           const identity = drinkIdentity(drink.name, drink.alcoholTypeId);
           return (
           <Card
@@ -166,7 +145,6 @@ const HistoryPage: React.FC = () => {
                 transform: 'translateY(-1px)',
                 boxShadow: 3,
               },
-              opacity: isDeleting ? 0.6 : 1,
             }}
           >
             <Box
@@ -178,7 +156,6 @@ const HistoryPage: React.FC = () => {
             >
               <CardActionArea
                 onClick={() => handleToggleSelect(drink.id)}
-                disabled={isDeleting}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -210,8 +187,7 @@ const HistoryPage: React.FC = () => {
               </CardActionArea>
               <IconButton
                 aria-label="delete"
-                onClick={() => handleDeleteSingle(drink.id)}
-                disabled={isDeleting}
+                onClick={() => handleDeleteSingle(drink)}
                 sx={{
                   mr: 1,
                   color: 'error.light',
@@ -260,18 +236,13 @@ const HistoryPage: React.FC = () => {
             color="error"
             aria-label="delete selected"
             onClick={handleDeleteSelected}
-            disabled={isDeleting}
             sx={{
               position: 'fixed',
               bottom: 80, // Above bottom navigation
               right: 16,
             }}
           >
-            {isDeleting ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              <DeleteIcon />
-            )}
+            <DeleteIcon />
           </Fab>
         </Zoom>
       </Box>

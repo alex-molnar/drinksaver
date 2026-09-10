@@ -1,11 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Box, Grid, CircularProgress, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import RecommendationButton from '../components/RecommendationButton';
 import { useAppNavigation } from '../hooks/useNavigation';
 import { useResponsiveTileCount } from '../hooks/useResponsiveTileCount';
-import { getRecommendations, saveDrink } from '../api/endpoints';
+import { useSaveQueue } from '../drink/useSaveQueue';
+import { drinkingDay } from '../drink/day';
+import { getRecommendations } from '../api/endpoints';
 import type { Recommendation } from '../types/api';
 
 // Generate a unique key for a recommendation since id can be null
@@ -14,9 +16,16 @@ const getRecommendationKey = (rec: Recommendation): string => {
 };
 
 const IndexPage: React.FC = () => {
-  const { navigateToSuccess, navigateToError, navigateToDetailed } = useAppNavigation();
-  const [savingKey, setSavingKey] = useState<string | null>(null);
+  // Logging never navigates: a tap saves through the queue and raises the undo strip in place.
+  // Only "Add Custom" still navigates, to the detailed form this PR leaves untouched.
+  const { navigateToDetailed } = useAppNavigation();
+  const { save, queue } = useSaveQueue();
   const { maxRecommendations, tileHeight } = useResponsiveTileCount();
+
+  // The tile that raised a save, and the queue entry id it is waiting on. Never explicitly
+  // cleared: `savingKey` below derives "is it still in flight" fresh from the queue on every
+  // render instead, so a stale `pendingSave` left over from an earlier tap is harmless.
+  const [pendingSave, setPendingSave] = useState<{ key: string; id: string } | null>(null);
 
   const {
     data: recommendations,
@@ -25,34 +34,38 @@ const IndexPage: React.FC = () => {
   } = useQuery({
     queryKey: ['recommendations'],
     queryFn: getRecommendations,
+    // Recommendations are server cached and only actually change every five saves
+    // (`RecommendationCacheService.INVALIDATE_AFTER_SAVES`); SaveQueueProvider defers their
+    // refetch until the queue is idle, and this staleTime keeps an unrelated remount from
+    // refetching them again in the meantime for no reason.
+    staleTime: 5 * 60 * 1000,
   });
 
-  const handleSaveRecommendation = useCallback(
-    async (recommendation: Recommendation) => {
-      setSavingKey(getRecommendationKey(recommendation));
+  // Derived, not stored: the tile's own spinner tracks only "is a POST for this tile in flight
+  // right now". The strip (not this page) carries the outcome once the entry resolves, whichever
+  // way, which is why leaving `entry` is enough to stop counting it without needing an effect.
+  const activeSave =
+    pendingSave && queue.entries.find((e) => e.id === pendingSave.id)?.status === 'saving' ? pendingSave : null;
+  const savingKey = activeSave?.key ?? null;
 
-      const saveOperation = async () => {
-        await saveDrink({
+  const handleSaveRecommendation = useCallback(
+    (recommendation: Recommendation) => {
+      const id = save({
+        label: recommendation.name,
+        date: drinkingDay(new Date()),
+        alcoholTypeId: recommendation.alcoholTypeId,
+        payload: {
           alcoholTypeId: recommendation.alcoholTypeId,
           alcoholSubtypeId: recommendation.alcoholSubtypeId,
           alcoholVolumeId: recommendation.alcoholVolumeId,
           brandId: recommendation.brandId,
           beerFlavourId: recommendation.beerFlavourId,
           consumptionTypeId: recommendation.consumptionTypeId,
-        });
-      };
-
-      try {
-        await saveOperation();
-        navigateToSuccess(`${recommendation.name} has been saved!`);
-      } catch (error) {
-        console.error('Failed to save drink:', error);
-        navigateToError(
-          `Failed to save ${recommendation.name}. Please try again.`
-        );
-      }
+        },
+      });
+      setPendingSave({ key: getRecommendationKey(recommendation), id });
     },
-    [navigateToSuccess, navigateToError, setSavingKey]
+    [save]
   );
 
   if (isLoading) {
