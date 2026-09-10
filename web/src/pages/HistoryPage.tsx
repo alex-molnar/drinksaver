@@ -21,9 +21,11 @@ import NightlifeIcon from '@mui/icons-material/Nightlife';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { getSavedDrinksByDate, deleteDrinksByIds } from '../api/endpoints';
+import { drinkingDay } from '../drink/day';
 import type { EditableDrink } from '../types/api';
 
-const getTodayDate = () => new Date().toISOString().split('T')[0];
+// The drinking day, not the calendar day, so History opens on the night you were just out.
+const getTodayDate = () => drinkingDay(new Date());
 
 /**
  * Icon mapping for alcohol type IDs.

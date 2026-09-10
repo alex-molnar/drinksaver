@@ -5,6 +5,7 @@
  * read as though the client's claim about who it was still counted for something.
  */
 import apiClient from './client';
+import { drinkingDay } from '../drink/day';
 import type {
   Drink,
   SavedDrink,
@@ -34,7 +35,7 @@ import type {
 export const saveDrink = async (drink: Omit<Drink, 'userId' | 'date'> & { date?: string }): Promise<SavedDrink[]> => {
   const payload: Omit<Drink, 'userId'> = {
     ...drink,
-    date: drink.date || new Date().toISOString().split('T')[0],
+    date: drink.date || drinkingDay(new Date()),
   };
   const response = await apiClient.post<SavedDrink | SavedDrink[]>('/v1/drinks/new', payload);
   return Array.isArray(response.data) ? response.data : [response.data];
