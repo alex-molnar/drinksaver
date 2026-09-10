@@ -489,15 +489,22 @@ Bottom to top. Each is independently reviewable and must land green on its own.
 | 4 | `fix/lazy-route-error-boundary` | FIX-3. Ships value with or without the redesign |
 | 5 | `feat/design-tokens` | Token layers, CSS variable emission, font pipeline. Nothing flips yet |
 | 6 | `feat/drink-identity` | Identity module, glassware, contrast test. Deletes the duplicated icon maps |
-| 7 | `feat/sheet-primitive` | Sheet path, stack hook, host, registry. No screen changes |
-| 8 | `feat/save-queue` | Queue, undo, deferred delete, retry policy, wired into the existing visual design so the review is about semantics. Routes become redirects. The four e2e specs are rewritten |
-| 9 | `feat/quick-save-plates` | Plates, board header and nav, dark tokens on. Deletes `IndexPage` and `useResponsiveTileCount`. Keeps `Layout` and `RecommendationButton` |
-| 10 | `feat/add-sheet` | Draft provider, sheet host, menu, field and create panels. Deletes `DetailedPage`, the five `New*` pages, `SuccessPage`, `ErrorPage`, `useNavigation` and `RecommendationButton` together |
-| 11 | `feat/history-tab` | Seven day strip, paper tab, strike-off delete, bulk selection, date picker. Deletes `Layout` |
-| 12 | `chore/redesign-docs` | Component documentation, the eslint hex rule, and one coverage ratchet raise |
+| 7 | `feat/save-queue` | Queue, undo, deferred delete, retry policy, wired into the existing visual design so the review is about semantics. Routes become redirects. The four e2e specs are rewritten |
+| 8 | `feat/quick-save-plates` | Plates, board header and nav, dark tokens on. Deletes `IndexPage` and `useResponsiveTileCount`. Keeps `Layout` and `RecommendationButton` |
+| 9 | `feat/add-sheet` | The sheet primitive, draft provider, menu, field and create panels. Deletes `DetailedPage`, the five `New*` pages, `SuccessPage`, `ErrorPage`, `useNavigation` and `RecommendationButton` together |
+| 10 | `feat/history-tab` | Seven day strip, paper tab, strike-off delete, bulk selection, date picker. Deletes `Layout` |
+| 11 | `chore/redesign-docs` | Component documentation, the eslint hex rule, and one coverage ratchet raise |
 
-PR 8 carries the risk and PR 10 carries the bulk. Keeping 8 visually boring is what makes its
+PR 7 carries the risk and PR 9 carries the bulk. Keeping 7 visually boring is what makes its
 review tractable.
+
+**The sheet primitive no longer has a PR of its own.** An earlier draft gave it one, on the
+grounds that landing the mechanism separately would keep the add-sheet PR small. That was
+written when the sheet stack was a dot joined grammar in the URL with a parser, a normaliser and
+a depth counter. Simplifying it to one search parameter with the panel stack in component state
+took it down to roughly a hook, and a pull request that adds a hook nothing calls is not
+independently reviewable: there is no behaviour to accept or reject, and its own stated
+justification, "no screen changes", is the tell. It ships inside PR 9, where it is first used.
 
 **The deletion boundaries are set by measurement, not by tidiness.** The coverage gate's binding
 constraint is lines, with about one line of slack, and every uncovered line added costs nineteen
