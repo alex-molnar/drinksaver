@@ -28,8 +28,8 @@ vi.mock('./auth', () => ({
 
 vi.mock('./api/endpoints');
 
-vi.mock('./pages/IndexPage', () => {
-  throw new Error('Failed to fetch dynamically imported module: /assets/IndexPage-a1b2c3.js');
+vi.mock('./pages/QuickSavePage', () => {
+  throw new Error('Failed to fetch dynamically imported module: /assets/QuickSavePage-a1b2c3.js');
 });
 
 beforeEach(() => {

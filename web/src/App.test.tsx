@@ -40,7 +40,7 @@ describe('App', () => {
    * pages render an error card without them and would pass for the wrong reason.
    */
   it.each([
-    ['/', 'Quick Save', undefined],
+    ['/', 'Today', undefined],
     ['/detailed', 'Add Drink', undefined],
     ['/history', 'History', undefined],
     ['/success', 'Success', { message: 'Saved' }],

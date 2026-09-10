@@ -10,7 +10,7 @@ import { SaveQueueProvider } from './drink/SaveQueueProvider';
  * meant the first paint waited on the five "new entry" forms and the history screen
  * as well as the screen actually being opened.
  */
-const IndexPage = lazy(() => import('./pages/IndexPage'));
+const QuickSavePage = lazy(() => import('./pages/QuickSavePage'));
 const DetailedPage = lazy(() => import('./pages/DetailedPage'));
 const HistoryPage = lazy(() => import('./pages/HistoryPage'));
 const SuccessPage = lazy(() => import('./pages/SuccessPage'));
@@ -46,7 +46,7 @@ function App() {
           <AppErrorBoundary key={location.pathname}>
             <Suspense fallback={<RouteFallback />}>
               <Routes>
-                <Route path="/" element={<IndexPage />} />
+                <Route path="/" element={<QuickSavePage />} />
                 <Route path="/detailed" element={<DetailedPage />} />
                 <Route path="/history" element={<HistoryPage />} />
                 <Route path="/success" element={<SuccessPage />} />
