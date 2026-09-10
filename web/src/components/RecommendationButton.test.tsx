@@ -65,21 +65,19 @@ describe('RecommendationButton', () => {
     expect(screen.getByTestId('AddIcon')).toBeInTheDocument();
   });
 
-  it('renders the alcohol type icon when provided', () => {
+  it('renders the matching glass for a drink in the identity table', () => {
     const onClick = vi.fn();
-    // Beer type (4) should render SportsBarIcon
-    render(<RecommendationButton name="Heineken" onClick={onClick} alcoholTypeId={4} />);
+    // "Heineken pint" is one of the six drinks in drink/identity.ts, served in a pint glass.
+    render(<RecommendationButton name="Heineken pint" onClick={onClick} />);
 
-    expect(screen.getByTestId('SportsBarIcon')).toBeInTheDocument();
+    expect(screen.getByTestId('glass-pint')).toBeInTheDocument();
   });
 
-  it('renders a default icon when no alcohol type is provided and not an add button', () => {
+  it('renders the default glass for a drink not in the identity table', () => {
     const onClick = vi.fn();
     render(<RecommendationButton name="Unknown Drink" onClick={onClick} />);
 
-    // Should have some icon, likely the default LocalBarIcon
-    const icons = screen.queryAllByTestId(/Icon$/);
-    expect(icons.length).toBeGreaterThan(0);
+    expect(screen.getByTestId('glass-highball')).toBeInTheDocument();
   });
 
   it('disables when loading even if not explicitly disabled', () => {
