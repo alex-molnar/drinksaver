@@ -109,8 +109,43 @@ const DEFAULT_IDENTITY: DrinkIdentity = {
 };
 
 /**
- * Resolves a drink's display name to its identity, falling back to a neutral default for
- * anything not in `DRINK_IDENTITIES`. Takes the name, not an id, because the table itself is
- * keyed by name; see the module doc comment for why.
+ * Glass silhouette by alcohol type id, the second rung of the lookup below.
+ *
+ * These ids are the ones the two deleted `ALCOHOL_TYPE_ICONS` maps carried, kept because this
+ * module now owns that knowledge in one place instead of two. Only id 4 is load bearing across
+ * deployments: the backend's `BEER_ID` property defaults to it and decides which type gets brand
+ * and flavour handling. The rest are catalogue rows that a deployment can define differently, so
+ * an unknown id falls through rather than guessing.
  */
-export const drinkIdentity = (name: string): DrinkIdentity => DRINK_IDENTITIES[name] ?? DEFAULT_IDENTITY;
+const GLASS_BY_ALCOHOL_TYPE: Readonly<Record<number, GlassKind>> = {
+  4: 'pint', 21: 'pint', 24: 'pint',
+  13: 'wine', 14: 'wine', 19: 'wine', 20: 'wine', 22: 'wine',
+  26: 'wine', 27: 'wine', 30: 'wine', 31: 'wine', 32: 'wine',
+  6: 'highball', 7: 'highball', 8: 'highball', 9: 'highball', 10: 'highball',
+  11: 'highball', 12: 'highball', 15: 'highball', 16: 'highball', 17: 'highball',
+  18: 'highball', 25: 'highball', 28: 'highball',
+  23: 'highball', 29: 'highball',
+};
+
+/**
+ * Resolves a drink to its identity, in three rungs.
+ *
+ * 1. The exact display name, which gives the full identity including field and ink. This hits for
+ *    recommendations, whose names come straight out of the `recommendations.name` column.
+ * 2. The alcohol type id, which gives the right silhouette on neutral colours.
+ * 3. A neutral default.
+ *
+ * The second rung is not belt and braces, it is the common path on the History screen. Names
+ * there are composed server side by AlcoholNameCollector and BeerNameCollector, which produce
+ * "Gin (Long drink - 0.25l)" and "Heineken Original (Draft/Tap - 0.50l)". Those never match the
+ * table, so a name-only lookup would draw a highball for every row ever saved. `EditableDrink`
+ * carries `alcoholTypeId` for exactly this reason.
+ */
+export const drinkIdentity = (name: string, alcoholTypeId?: number): DrinkIdentity => {
+  const byName = DRINK_IDENTITIES[name];
+  if (byName) {
+    return byName;
+  }
+  const glass = alcoholTypeId === undefined ? undefined : GLASS_BY_ALCOHOL_TYPE[alcoholTypeId];
+  return glass ? { ...DEFAULT_IDENTITY, glass } : DEFAULT_IDENTITY;
+};

@@ -11,10 +11,9 @@ interface RecommendationButtonProps {
   disabled?: boolean;
   isAddButton?: boolean;
   /**
-   * No longer used to pick an icon: `drinkIdentity` resolves by name alone, because an alcohol
-   * type id is too coarse to tell two brands of the same type apart (see `drink/identity.ts`).
-   * Kept as an accepted prop so existing callers, such as `IndexPage.tsx`, which still passes a
-   * recommendation's `alcoholTypeId`, do not need to change for this.
+   * The second rung of `drinkIdentity`'s lookup. The name alone is enough for a recommendation
+   * whose name is in the identity table, and the id is what resolves everything else to at least
+   * the right silhouette. See `drink/identity.ts`.
    */
   alcoholTypeId?: number;
 }
@@ -25,8 +24,9 @@ const RecommendationButton: React.FC<RecommendationButtonProps> = ({
   loading = false,
   disabled = false,
   isAddButton = false,
+  alcoholTypeId,
 }) => {
-  const identity = drinkIdentity(name);
+  const identity = drinkIdentity(name, alcoholTypeId);
 
   return (
     <Card

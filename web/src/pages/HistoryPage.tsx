@@ -153,7 +153,7 @@ const HistoryPage: React.FC = () => {
     return (
       <Stack spacing={1.5} sx={{ width: '100%' }}>
         {drinks.map((drink: EditableDrink) => {
-          const identity = drinkIdentity(drink.name);
+          const identity = drinkIdentity(drink.name, drink.alcoholTypeId);
           return (
           <Card
             key={drink.id}

@@ -212,3 +212,25 @@ describe('HistoryPage', () => {
     });
   });
 });
+
+/**
+ * A regression test, and the one whose absence let a real bug through.
+ *
+ * History names are composed server side by AlcoholNameCollector and BeerNameCollector, so they
+ * look like "Gin (Long drink - 0.25l)" and never match the drink identity table, which is keyed
+ * by a recommendation's own name. Resolving on the name alone therefore drew the default glass
+ * for every row ever saved. Nothing caught it because no test asserted on the glassware.
+ *
+ * The fixtures above are exactly that case: "Heineken" and "Red Wine" are not in the table, so
+ * only their alcoholTypeId can put the right silhouette on screen.
+ */
+describe('the glass each row is drawn with', () => {
+  it('uses the alcohol type id when the composed name is not in the identity table', async () => {
+    renderWithProviders(<HistoryPage />);
+
+    expect(await screen.findByTestId('glass-pint')).toBeInTheDocument();
+    expect(screen.getByTestId('glass-wine')).toBeInTheDocument();
+    expect(screen.queryByTestId('glass-highball')).not.toBeInTheDocument();
+  });
+});
+
