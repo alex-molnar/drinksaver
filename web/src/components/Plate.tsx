@@ -267,7 +267,7 @@ const Plate: React.FC<PlateProps> = (props) => {
       style={{ ...style, '--fld': identity.field, color: identity.inkDark } as React.CSSProperties}
     >
       <span className="glass">
-        <Glass kind={identity.glass} chroma={identity.chroma} />
+        <Glass kind={identity.glass} chroma={identity.chroma} tone="ink" />
       </span>
       <span className="name">{name}</span>
       {caption ? <span className="caption">{caption}</span> : null}

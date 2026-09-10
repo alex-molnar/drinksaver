@@ -3,6 +3,7 @@ import { screen } from '@testing-library/react';
 import { renderWithProviders } from './test/test-utils';
 import * as endpoints from './api/endpoints';
 import App from './App';
+import { isTonight } from './drink/day';
 
 /**
  * The routing table had no test at all, which mattered once the routes became lazy:
@@ -40,7 +41,7 @@ describe('App', () => {
    * pages render an error card without them and would pass for the wrong reason.
    */
   it.each([
-    ['/', 'Today', undefined],
+    ['/', isTonight(new Date()) ? 'Tonight' : 'Today', undefined],
     ['/detailed', 'Add Drink', undefined],
     ['/history', 'History', undefined],
     ['/success', 'Success', { message: 'Saved' }],

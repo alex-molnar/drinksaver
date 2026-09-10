@@ -22,14 +22,39 @@ describe('AppFrame', () => {
     mockUseDrinksForDate.mockReturnValue({ status: 'loading' });
   });
 
-  it('renders the "Today" heading', () => {
+  it('renders the drinking-day heading', () => {
     renderWithProviders(
       <AppFrame>
         <div />
       </AppFrame>
     );
 
-    expect(screen.getByRole('heading', { name: 'Today' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^(Today|Tonight)$/ })).toBeInTheDocument();
+  });
+
+  /**
+   * The header follows the 06:00 rollover, so between midnight and six it has to say Tonight.
+   * Saying Today there would claim a date the drinking day has not reached, and every other
+   * surface (the strip, the day strip in PR 10) would disagree with it.
+   */
+  it.each([
+    [new Date(2026, 8, 10, 0, 30), 'Tonight'],
+    [new Date(2026, 8, 10, 5, 59), 'Tonight'],
+    [new Date(2026, 8, 10, 6, 0), 'Today'],
+    [new Date(2026, 8, 10, 22, 15), 'Today'],
+  ])('says %s at that hour', (when, expected) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(when);
+    try {
+      renderWithProviders(
+        <AppFrame>
+          <div />
+        </AppFrame>
+      );
+      expect(screen.getByRole('heading', { name: expected })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('renders its children', () => {

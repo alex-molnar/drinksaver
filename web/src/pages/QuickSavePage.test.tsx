@@ -217,7 +217,7 @@ describe('QuickSavePage', () => {
     renderWithProviders(<QuickSavePage />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Today' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /^(Today|Tonight)$/ })).toBeInTheDocument();
     });
     expect(screen.getByText('1 so far')).toBeInTheDocument();
   });

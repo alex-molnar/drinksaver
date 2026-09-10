@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { useAuth } from '../auth';
 import { useDrinksForDate } from '../drink/useDrinksForDate';
-import { drinkingDay } from '../drink/day';
+import { drinkingDay, isTonight } from '../drink/day';
 
 interface AppFrameProps {
   children: React.ReactNode;
@@ -180,7 +180,11 @@ const AppFrame: React.FC<AppFrameProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const today = drinkingDay(new Date());
+  const now = new Date();
+  const today = drinkingDay(now);
+  // "Tonight" between midnight and the 06:00 rollover. Without it the header says Today while
+  // the drinking day is still yesterday's date, which reads as a glitch rather than as the rule.
+  const heading = isTonight(now) ? 'Tonight' : 'Today';
   const drinksToday = useDrinksForDate(today);
   const count = drinksToday.status === 'ready' ? drinksToday.rows.length : null;
   const countText = count === null ? '' : count > 0 ? `${count} so far` : 'Nothing yet';
@@ -188,7 +192,7 @@ const AppFrame: React.FC<AppFrameProps> = ({ children }) => {
   return (
     <Frame>
       <Header>
-        <Heading>Today</Heading>
+        <Heading>{heading}</Heading>
         <Sub>{countText}</Sub>
         <IconButton type="button" onClick={logout} aria-label="Sign out">
           <SignOutIcon />
