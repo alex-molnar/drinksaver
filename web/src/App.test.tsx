@@ -23,6 +23,8 @@ vi.mock('./auth', () => ({
 
 vi.mock('./api/endpoints');
 
+const HOME_HEADING = () => (isTonight(new Date()) ? 'Tonight' : 'Today');
+
 beforeEach(() => {
   vi.mocked(endpoints.getRecommendations).mockResolvedValue([]);
   vi.mocked(endpoints.getAlcoholTypes).mockResolvedValue([]);
@@ -35,25 +37,47 @@ beforeEach(() => {
 });
 
 describe('App', () => {
-  /**
-   * One case per route, so every lazy() factory is actually executed. The state
-   * payloads are the ones the real navigation helpers send; the three "new entry"
-   * pages render an error card without them and would pass for the wrong reason.
-   */
-  it.each([
-    ['/', isTonight(new Date()) ? 'Tonight' : 'Today', undefined],
-    ['/detailed', 'Add Drink', undefined],
-    ['/history', 'History', undefined],
-    ['/success', 'Success', { message: 'Saved' }],
-    ['/error', 'Error', { message: 'Boom' }],
-    ['/new-alcohol', 'New Alcohol Type', undefined],
-    ['/new-volume', 'New Volume', { alcoholTypeId: 1, alcoholTypeName: 'Vodka' }],
-    ['/new-brand', 'New Beer Brand', undefined],
-    ['/new-subtype', 'New Subtype', { alcoholTypeId: 1, alcoholTypeName: 'Vodka' }],
-    ['/new-beer-flavour', 'New Beer Flavour', { brandId: 1, brandName: 'Heineken' }],
-  ])('loads the page for %s', async (route, heading, state) => {
-    renderWithProviders(<App />, { route, state });
+  it('loads the Quick Save screen at /', async () => {
+    renderWithProviders(<App />, { route: '/' });
+    expect(await screen.findByRole('heading', { name: HOME_HEADING() })).toBeInTheDocument();
+  });
 
-    expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument();
+  it('loads the History screen at /history', async () => {
+    renderWithProviders(<App />, { route: '/history' });
+    expect(await screen.findByRole('heading', { name: 'History' })).toBeInTheDocument();
+  });
+
+  /**
+   * `/detailed` no longer has a page of its own: it redirects to the Quick Save screen with the
+   * add sheet already open, so a bookmark or a link from an old session still lands somewhere
+   * useful instead of a blank page.
+   *
+   * The Quick Save heading behind the sheet is deliberately not asserted here: once the sheet's
+   * Drawer is open, MUI's `ModalManager` marks the rest of the page `aria-hidden`, so `findByRole`
+   * correctly cannot see it any more than a screen reader could. That is the sheet behaving
+   * correctly, not a gap in this test - see `SheetPortalContext.ts`'s module doc.
+   */
+  it('redirects /detailed to the Quick Save screen with the add sheet open', async () => {
+    renderWithProviders(<App />, { route: '/detailed' });
+    expect(await screen.findByRole('heading', { name: 'What are you having?' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  /**
+   * One case per retired route, so every one of them is actually exercised rather than assumed.
+   * `/success`, `/error` and the five `/new-*` routes carry no state that matters any more - their
+   * pages are gone - so, unlike `/detailed`, landing at `/` plainly is the whole story.
+   */
+  it.each([['/success'], ['/error'], ['/new-alcohol'], ['/new-volume'], ['/new-brand'], ['/new-subtype'], ['/new-beer-flavour']])(
+    'redirects %s to the Quick Save screen',
+    async (route) => {
+      renderWithProviders(<App />, { route });
+      expect(await screen.findByRole('heading', { name: HOME_HEADING() })).toBeInTheDocument();
+    }
+  );
+
+  it('redirects an unknown path to the Quick Save screen rather than leaving a blank page', async () => {
+    renderWithProviders(<App />, { route: '/this-page-does-not-exist' });
+    expect(await screen.findByRole('heading', { name: HOME_HEADING() })).toBeInTheDocument();
   });
 });
