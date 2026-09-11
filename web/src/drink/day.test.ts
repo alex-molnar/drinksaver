@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { drinkingDay, isTonight, DAY_ROLLOVER_HOUR } from './day';
+import { drinkingDay, isTonight, DAY_ROLLOVER_HOUR, dayStripDates, dayStripTabLabel, dayLabel } from './day';
 
 /**
  * Dates are built from local components on purpose. `drinkingDay` is defined in terms of the
@@ -75,5 +75,67 @@ describe('isTonight', () => {
   it('is false once the drinking day has caught up with the calendar', () => {
     expect(isTonight(at(2026, 9, 10, 6, 0))).toBe(false);
     expect(isTonight(at(2026, 9, 9, 23, 30))).toBe(false);
+  });
+});
+
+describe('dayStripDates', () => {
+  it('returns seven dates by default, ending at the given date', () => {
+    const dates = dayStripDates('2026-09-10');
+    expect(dates).toHaveLength(7);
+    expect(dates[dates.length - 1]).toBe('2026-09-10');
+  });
+
+  it('walks backward one calendar day at a time, oldest first', () => {
+    expect(dayStripDates('2026-09-10')).toEqual([
+      '2026-09-04',
+      '2026-09-05',
+      '2026-09-06',
+      '2026-09-07',
+      '2026-09-08',
+      '2026-09-09',
+      '2026-09-10',
+    ]);
+  });
+
+  it('honours a shorter length', () => {
+    expect(dayStripDates('2026-09-10', 3)).toEqual(['2026-09-08', '2026-09-09', '2026-09-10']);
+  });
+
+  it('steps back across a month boundary', () => {
+    expect(dayStripDates('2026-10-02', 3)).toEqual(['2026-09-30', '2026-10-01', '2026-10-02']);
+  });
+
+  it('steps back across a year boundary', () => {
+    expect(dayStripDates('2026-01-01', 3)).toEqual(['2025-12-30', '2025-12-31', '2026-01-01']);
+  });
+});
+
+describe('dayStripTabLabel', () => {
+  it("reads a date's weekday and day-of-month", () => {
+    // 2026-09-10 is a Thursday.
+    expect(dayStripTabLabel('2026-09-10')).toEqual({ weekday: 'Thu', day: 10 });
+  });
+});
+
+describe('dayLabel', () => {
+  it('names the current drinking day "Today"', () => {
+    expect(dayLabel('2026-09-10', '2026-09-10')).toBe('Today');
+  });
+
+  it('names the day before it "Yesterday"', () => {
+    expect(dayLabel('2026-09-09', '2026-09-10')).toBe('Yesterday');
+  });
+
+  it('spells out anything further back as a full weekday and date', () => {
+    expect(dayLabel('2026-09-04', '2026-09-10')).toBe('Friday 4 September');
+  });
+
+  it('spells out a date picked ahead of the strip the same way', () => {
+    expect(dayLabel('2026-08-20', '2026-09-10')).toBe('Thursday 20 August');
+  });
+
+  it('steps across a month boundary without losing a day', () => {
+    expect(dayLabel('2026-10-01', '2026-10-02')).toBe('Yesterday');
+    expect(dayLabel('2026-09-30', '2026-10-02')).toBe('Wednesday 30 September');
   });
 });

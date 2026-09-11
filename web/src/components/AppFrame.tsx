@@ -11,6 +11,10 @@ import { drinkingDay, isTonight } from '../drink/day';
 
 interface AppFrameProps {
   children: React.ReactNode;
+  /** Overrides the drinking-day heading. History names the screen instead. */
+  title?: string;
+  /** Overrides the day's drink count shown beside the heading. */
+  subtitle?: string;
 }
 
 const Frame = styled.div`
@@ -178,7 +182,7 @@ const ROUTE_ITEMS: { path: string; label: string; Icon: React.FC }[] = [
  * `useDrinksForDate`, the same hook `HistoryPage` builds on - no new endpoint, and no new query
  * either beyond the one that hook already makes.
  */
-const AppFrame: React.FC<AppFrameProps> = ({ children }) => {
+const AppFrame: React.FC<AppFrameProps> = ({ children, title, subtitle }) => {
   const { logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -189,7 +193,9 @@ const AppFrame: React.FC<AppFrameProps> = ({ children }) => {
   const today = drinkingDay(now);
   // "Tonight" between midnight and the 06:00 rollover. Without it the header says Today while
   // the drinking day is still yesterday's date, which reads as a glitch rather than as the rule.
-  const heading = isTonight(now) ? 'Tonight' : 'Today';
+  // Quick Save's header is the drinking day itself; History names the screen and puts the day
+  // beside it, as the prototype does. Hence the override rather than two frames.
+  const heading = title ?? (isTonight(now) ? 'Tonight' : 'Today');
   const drinksToday = useDrinksForDate(today);
   const count = drinksToday.status === 'ready' ? drinksToday.rows.length : null;
   const countText = count === null ? '' : count > 0 ? `${count} so far` : 'Nothing yet';
@@ -198,7 +204,7 @@ const AppFrame: React.FC<AppFrameProps> = ({ children }) => {
     <Frame>
       <Header>
         <Heading>{heading}</Heading>
-        <Sub>{countText}</Sub>
+        <Sub>{subtitle ?? countText}</Sub>
         <IconButton type="button" onClick={logout} aria-label="Sign out">
           <SignOutIcon />
         </IconButton>

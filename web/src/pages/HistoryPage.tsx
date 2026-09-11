@@ -1,65 +1,128 @@
-import React, { useCallback, useState } from 'react';
-import {
-  Box,
-  TextField,
-  Card,
-  CardActionArea,
-  Checkbox,
-  IconButton,
-  CircularProgress,
-  Typography,
-  Fab,
-  Zoom,
-  Stack,
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import Layout from '../components/Layout';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import styled from '@emotion/styled';
+import AppFrame from '../components/AppFrame';
+import DayStrip from '../components/DayStrip';
+import PaperTab from '../components/PaperTab';
+import type { PaperTabRow } from '../components/PaperTab';
 import { useDrinksForDate } from '../drink/useDrinksForDate';
+import { useDayCounts } from '../drink/useDayCounts';
 import { useSaveQueue } from '../drink/useSaveQueue';
-import { drinkingDay } from '../drink/day';
-import { drinkIdentity } from '../drink/identity';
-import { Glass } from '../drink/glassware';
+import { dayStripDates, dayLabel, drinkingDay } from '../drink/day';
 import type { EditableDrink } from '../types/api';
 
-// The drinking day, not the calendar day, so History opens on the night you were just out.
-const getTodayDate = () => drinkingDay(new Date());
+/** How long a struck-through row stays mounted so its exit can play. Matches PaperTab's CSS. */
+const EXIT_MS = 320;
 
+const BulkBar = styled.div`
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  padding: var(--ds-space-sm) var(--ds-space-lg) var(--ds-space-lg);
+`;
+
+const BulkButton = styled.button`
+  min-height: 44px;
+  padding: 0 var(--ds-space-lg);
+  border: 0;
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-accent-danger);
+  color: var(--ds-ink-primary);
+  font-family: var(--ds-type-display-family);
+  font-size: 1rem;
+  cursor: pointer;
+`;
+
+/**
+ * The bar tab. A seven day strip across the top, and the selected day's drinks on a cream paper
+ * card below it.
+ *
+ * Deleting keeps the semantics `useSaveQueue` already owns: the row is suppressed from the merged
+ * read model at once and the DELETE itself is deferred until the undo window closes, because
+ * there is no undelete endpoint and `getSavedDrinksByDate` returns too little to write a row
+ * back. This page only decides how that looks.
+ *
+ * The one piece of state that is genuinely this page's own is `leaving`: a row the read model has
+ * already dropped, kept mounted a beat longer so the strike-through has somewhere to play. The
+ * queue is the source of truth for whether the drink exists; this is only about the animation.
+ */
 const HistoryPage: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState(getTodayDate());
+  const todayDate = drinkingDay(new Date());
+  const [selectedDate, setSelectedDate] = useState(todayDate);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [leaving, setLeaving] = useState<readonly EditableDrink[]>([]);
+
   const { remove } = useSaveQueue();
   const drinksForDate = useDrinksForDate(selectedDate);
+  const dates = useMemo(() => dayStripDates(todayDate), [todayDate]);
+  const counts = useDayCounts(dates);
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedDate(e.target.value);
-    setSelectedIds(new Set()); // Clear selection when date changes
-  };
+  // Memoised, not computed inline: this feeds an effect's dependency list, and a fresh `[]`
+  // literal on every non-ready render would make that effect run on every render.
+  const liveRows = useMemo(
+    () => (drinksForDate.status === 'ready' ? drinksForDate.rows : []),
+    [drinksForDate]
+  );
+  const lastLive = useRef<readonly EditableDrink[]>([]);
 
-  const handleToggleSelect = useCallback((id: number) => {
+  const exitTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Whatever the read model dropped since the previous render is on its way out. Held in an
+  // effect rather than computed during render because it has to outlive the render that noticed
+  // it, which is the whole point of the exit.
+  //
+  // The timer is deliberately not cleared when this effect re-runs. An earlier version returned
+  // `() => clearTimeout(timer)`, which meant the very next render cancelled the pending removal,
+  // so a struck-through row stayed mounted for good and the same drink appeared twice once undo
+  // put it back. Each dropped batch owns its own timer and only unmount cancels them.
+  useEffect(() => {
+    if (drinksForDate.status !== 'ready') {
+      return;
+    }
+    const liveIds = new Set(liveRows.map((r) => r.id));
+    const dropped = lastLive.current.filter((r) => !liveIds.has(r.id));
+    lastLive.current = liveRows;
+    if (dropped.length === 0) {
+      return;
+    }
+    setLeaving((prev) => [...prev, ...dropped]);
+    exitTimers.current.push(
+      setTimeout(
+        () => setLeaving((prev) => prev.filter((r) => !dropped.some((d) => d.id === r.id))),
+        EXIT_MS
+      )
+    );
+  }, [drinksForDate.status, liveRows]);
+
+  useEffect(() => {
+    const timers = exitTimers.current;
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  const handleSelectDate = useCallback((date: string) => {
+    setSelectedDate(date);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleToggleSelect = useCallback((drink: EditableDrink) => {
     setSelectedIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
+      const next = new Set(prev);
+      if (next.has(drink.id)) {
+        next.delete(drink.id);
       } else {
-        newSet.add(id);
+        next.add(drink.id);
       }
-      return newSet;
+      return next;
     });
   }, []);
 
-  /**
-   * A deferred delete with undo, not the immediate one this used to be: see
-   * `SaveQueueProvider.tsx`. The row disappears from this list at once regardless, because
-   * `useDrinksForDate` already excludes whatever the queue is suppressing - there is no local
-   * "isDeleting" state to track any more, and nothing here awaits the network call.
-   */
-  const handleDeleteSingle = useCallback(
+  const handleDeleteOne = useCallback(
     (drink: EditableDrink) => {
       remove({ label: drink.name, date: selectedDate, drinkIds: [drink.id] });
       setSelectedIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(drink.id);
-        return newSet;
+        const next = new Set(prev);
+        next.delete(drink.id);
+        return next;
       });
     },
     [remove, selectedDate]
@@ -75,178 +138,38 @@ const HistoryPage: React.FC = () => {
     setSelectedIds(new Set());
   }, [selectedIds, remove, selectedDate]);
 
-  const renderContent = () => {
-    if (drinksForDate.status === 'loading') {
-      return (
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <CircularProgress color="primary" />
-        </Box>
-      );
-    }
-
-    if (drinksForDate.status === 'error') {
-      return (
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 2,
-          }}
-        >
-          <Typography color="error">Failed to load drinks</Typography>
-        </Box>
-      );
-    }
-
-    const { rows } = drinksForDate;
-
-    if (rows.length === 0) {
-      return (
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 2,
-          }}
-        >
-          <Typography color="text.secondary">
-            No drinks recorded for this date
-          </Typography>
-        </Box>
-      );
-    }
-
-    return (
-      <Stack spacing={1.5} sx={{ width: '100%' }}>
-        {rows.map((drink: EditableDrink) => {
-          const identity = drinkIdentity(drink.name, drink.alcoholTypeId);
-          return (
-          <Card
-            key={drink.id}
-            elevation={1}
-            sx={{
-              borderRadius: 2,
-              transition: 'all 0.2s ease-in-out',
-              '&:hover': {
-                elevation: 3,
-                transform: 'translateY(-1px)',
-                boxShadow: 3,
-              },
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                width: '100%',
-              }}
-            >
-              <CardActionArea
-                onClick={() => handleToggleSelect(drink.id)}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  py: 1.5,
-                  px: 1,
-                  flex: 1,
-                }}
-              >
-                <Checkbox
-                  checked={selectedIds.has(drink.id)}
-                  tabIndex={-1}
-                  disableRipple
-                  sx={{ mr: 1 }}
-                />
-                <Box sx={{ mr: 2, display: 'flex', alignItems: 'center', width: 28, height: 28 }}>
-                  <Glass kind={identity.glass} chroma={identity.chroma} />
-                </Box>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontWeight: 500,
-                    flex: 1,
-                    textAlign: 'left',
-                  }}
-                >
-                  {drink.name}
-                </Typography>
-              </CardActionArea>
-              <IconButton
-                aria-label="delete"
-                onClick={() => handleDeleteSingle(drink)}
-                sx={{
-                  mr: 1,
-                  color: 'error.light',
-                  '&:hover': {
-                    color: 'error.main',
-                    backgroundColor: 'error.light',
-                    '& .MuiSvgIcon-root': {
-                      color: 'error.contrastText',
-                    },
-                  },
-                }}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          </Card>
-          );
-        })}
-      </Stack>
-    );
-  };
+  const rows: PaperTabRow[] = useMemo(
+    () => [
+      ...liveRows.map((drink) => ({ drink, selected: selectedIds.has(drink.id), gone: false })),
+      ...leaving.map((drink) => ({ drink, selected: false, gone: true })),
+    ],
+    [liveRows, leaving, selectedIds]
+  );
 
   return (
-    <Layout title="History">
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* Date Selector */}
-        <TextField
-          label="Date"
-          type="date"
-          value={selectedDate}
-          onChange={handleDateChange}
-          fullWidth
-          slotProps={{
-            inputLabel: { shrink: true },
-            htmlInput: { max: getTodayDate() },
-          }}
-          sx={{ mb: 2 }}
-        />
-
-        {/* Drinks List */}
-        {renderContent()}
-
-        {/* Bulk Delete FAB */}
-        <Zoom in={selectedIds.size > 0}>
-          <Fab
-            color="error"
-            aria-label="delete selected"
-            onClick={handleDeleteSelected}
-            sx={{
-              position: 'fixed',
-              bottom: 80, // Above bottom navigation
-              right: 16,
-            }}
-          >
-            <DeleteIcon />
-          </Fab>
-        </Zoom>
-      </Box>
-    </Layout>
+    <AppFrame title="History" subtitle={dayLabel(selectedDate, todayDate)}>
+      <DayStrip
+        dates={dates}
+        counts={counts}
+        selectedDate={selectedDate}
+        todayDate={todayDate}
+        onSelect={handleSelectDate}
+      />
+      <PaperTab
+        label={dayLabel(selectedDate, todayDate)}
+        status={drinksForDate.status}
+        rows={rows}
+        onToggleSelect={handleToggleSelect}
+        onDeleteOne={handleDeleteOne}
+      />
+      {selectedIds.size > 0 ? (
+        <BulkBar>
+          <BulkButton type="button" onClick={handleDeleteSelected} aria-label="Delete selected">
+            {`Cross off ${selectedIds.size}`}
+          </BulkButton>
+        </BulkBar>
+      ) : null}
+    </AppFrame>
   );
 };
 
