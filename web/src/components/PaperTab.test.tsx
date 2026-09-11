@@ -192,6 +192,31 @@ describe('PaperTab', () => {
     expect(screen.getByRole('button', { name: 'Heineken pint' })).not.toHaveAttribute('data-gone');
   });
 
+  it('counts only live rows while keeping exit rows mounted and inert', () => {
+    render(<PaperTab label="Today" status="ready" rows={[rowFor(heineken, { gone: true }), rowFor(redWine)]}
+      onToggleSelect={vi.fn()} onDeleteOne={vi.fn()} />);
+    expect(screen.getByText('1 drink')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Heineken pint' })).toHaveAttribute('inert');
+    expect(screen.getByRole('button', { name: 'Cross off Heineken pint' })).toBeDisabled();
+  });
+
+  it('the nested cross-off button works from the keyboard without selecting the row', async () => {
+    const remove = vi.fn();
+    const toggle = vi.fn();
+    render(<PaperTab label="Today" status="ready" rows={[rowFor(heineken)]} onToggleSelect={toggle} onDeleteOne={remove} />);
+    screen.getByRole('button', { name: 'Cross off Heineken pint' }).focus();
+    await userEvent.keyboard('{Enter}');
+    expect(remove).toHaveBeenCalledWith(heineken);
+    expect(toggle).not.toHaveBeenCalled();
+  });
+
+  it('reports the particular completed exit to its owner', () => {
+    const finish = vi.fn();
+    render(<PaperTab label="Today" status="ready" rows={[rowFor(heineken, { gone: true, token: 7 })]}
+      onToggleSelect={vi.fn()} onDeleteOne={vi.fn()} onExitComplete={finish} />);
+    expect(finish).toHaveBeenCalledWith(1, 7);
+  });
+
   it('renders an optional serving detail after the leader', () => {
     render(
       <PaperTab

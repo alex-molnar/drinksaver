@@ -314,7 +314,7 @@ colours during design; both moved rather than the threshold.
 | `AddSheet/MenuPanel` | The bar menu: one leader-dot row per field, the quantity stepper and the save control. | Save is disabled until the drink and its size are chosen. | `rows`, `quantity`, `onPushPanel`, `onSave` |
 | `AddSheet/OptionPanel` | The options for one field, plus a "New ..." row where the catalogue allows it. | Branches on the field: dates, notes and the recommendation options render their own controls. | `field`, `onSelect`, `onCreate` |
 | `AddSheet/CreatePanel` | The inline form that replaced all five `New*` pages. On save the new entry is adopted into the draft and you return to the menu. | Idle, submitting, failed. | `field`, `onCreated`, `onBack` |
-| `PaperTab` | The history bar tab: the one light surface in the app. Rows are name, dotted leader, detail and a cross-off. | `loading`, `error`, `ready`. A row being deleted is struck through and collapses while the delete is still deferred. | `label`, `status`, `rows`, `onToggleSelect`, `onDeleteOne` |
+| `PaperTab` | The history bar tab: the one light surface in the app. Rows are name, dotted leader, detail and a cross-off. | `loading`, `error`, `ready`. Explicitly deleted rows stay keyed in place for a pen stroke and fade; the remaining rows then move to close the gap. The count includes live rows only. | `label`, `status`, `rows`, `onToggleSelect`, `onDeleteOne`, `onExitComplete?` |
 | `DayStrip` | Seven day tabs with marks, the current one connecting into the paper tab, plus a pick-a-date control. | A day still loading is drawn and announced differently from a day confirmed to have no drinks. There is no range endpoint, so a strip that says "nothing" about an unread day would be lying. | `dates`, `counts`, `selectedDate`, `todayDate`, `onSelect` |
 | `HistoryPage` | A fixed day strip, a keyboard-focusable vertical list, then feedback and bulk actions above navigation. | Loading, error, empty and populated paper all share the scroll area. Long names wrap; long feedback can scroll within its reserved slot. | None |
 | `AppErrorBoundary` | Catches a lazy route whose chunk has gone after a deploy. | Chunk failure offers a reload; anything else gets a generic fallback. A timestamped guard stops a reload loop without ever disabling the useful message. | `children` |
@@ -336,6 +336,25 @@ journeys separately exercise real persistence. For the Safari engine, install it
 `npx playwright install webkit`, then run
 `E2E_WEBKIT=1 npm run e2e -- history-layout.spec.ts --project=webkit-history`.
 WebKit automation does not replace checking the reported physical iPhone in Safari.
+
+**History row lifecycle (UI-R6/UI-R7).** `HistoryDay` is keyed by the selected date, so navigation
+clears selection and cancels visual exits while the shared save queue keeps its undo window.
+Only an explicit single or bulk cross-off retains rows; ordinary query changes never do.
+`historyPresence` captures their original order and gives each removal a token. Undo restores
+the same keyed row immediately; a stale completion cannot remove a newer exit of that row.
+
+`PaperTabRow` supplies `drink`, `selected`, `gone`, optional serving `detail`, and an exit `token`.
+`onExitComplete(id, token)` releases a retained row after its 200ms left-origin pen stroke and
+120ms opacity fade finish. Cleanup cancels both phases on Undo or unmount. Surviving rows close
+the gap with 200ms translations; a separate paper background scales without scaling the text.
+Overlapping removals or Undo retarget active movement from its current position. No arbitrary
+row height cap, animated height/padding, or cleanup timeout is used. Reduced motion skips the
+sequence, and changing that preference cancels active motion. Retained rows are inert.
+
+Run `E2E_WEBKIT=1 npm run e2e -- history-lifecycle.spec.ts` against local Compose to record
+Chromium and WebKit video plus frame geometry for the stroke, fade, gap, Undo and date switches.
+Most cases use isolated response fixtures; the batch case creates disposable records through
+the real API, checks Undo across reload, and removes only its own records in cleanup.
 
 **Logging never navigates.** A tile tap saves in place and raises the undo strip. `/success` and
 `/error` no longer exist as screens.

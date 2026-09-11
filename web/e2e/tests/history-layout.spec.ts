@@ -109,8 +109,8 @@ for (const viewport of [{ width: 320, height: 740 }, { width: 390, height: 844 }
     await expect.poll(() => history.evaluate((el) => el.clientHeight)).toBeGreaterThanOrEqual(44);
     await expectAbove(history, bulk);
     await undo.click();
-    // The existing strike-off lifecycle can briefly retain an exiting copy (UI-R6).
-    await expect(lastRow).toHaveCount(1);
+    // Undo restores exactly one keyed row, including while its exit is still running.
+    expect(await lastRow.count()).toBe(1);
     await expect(lastRow).toBeVisible();
 
     // Keyboard scrolling must move the list too, without moving the window or navigation.
