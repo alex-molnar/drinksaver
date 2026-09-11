@@ -56,11 +56,13 @@ export const useUndoTimer = ({
   // Latest callbacks and clock in refs, so this effect can depend on just `undoUntil` and
   // `paused` without resubscribing whenever a caller passes a fresh arrow function.
   const onExpireRef = useRef(onExpire);
-  onExpireRef.current = onExpire;
   const onExtendRef = useRef(onExtend);
-  onExtendRef.current = onExtend;
   const nowRef = useRef(now);
-  nowRef.current = now;
+  useEffect(() => {
+    onExpireRef.current = onExpire;
+    onExtendRef.current = onExtend;
+    nowRef.current = now;
+  });
 
   useEffect(() => {
     const clear = () => {
