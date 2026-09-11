@@ -114,6 +114,14 @@ The commitment is to the output, not to the implementation: every colour is a to
 theme later is a token file rather than a rewrite. The document declares `color-scheme: dark` and
 does not consult `prefers-color-scheme`.
 
+One caveat, found while building the token layer rather than while designing it. MUI's palette
+cannot hold `var()` references: its own components run colour maths on `theme.palette.*.main`
+(`alpha`, `decomposeColor`) for things like a hover overlay, and that code throws the moment it
+meets a custom property. So the palette reads the token object's literal values, and `var()` is
+used only inside `styleOverrides`, which MUI passes through to emotion untouched. A second theme
+is therefore a token file **and** a second `createTheme` call, rather than a single attribute
+flip. Still additive, still not a rewrite, but not free either.
+
 ### MUI for behaviour, not appearance
 
 MUI 9 stays as a dependency, for the things that are genuinely hard and already accessible:
