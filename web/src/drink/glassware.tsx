@@ -35,6 +35,18 @@ interface GlassProps {
   /** Fill for the liquid shape. This is a drink's `identity.chroma`. */
   chroma: string;
   /**
+   * How the glass is painted.
+   *
+   * `ink` is the Utolsó Kör treatment and what an enamel plate uses: one flat silhouette in the
+   * surface's own ink, so a sign reads as a sign. `chroma` fills the liquid with the drink's own
+   * colour, which belongs to the luminous direction the redesign did not take, and survives here
+   * only for surfaces not yet restyled.
+   *
+   * The outline is `currentColor` either way. It used to be a fixed bone rgba, which is legible
+   * on a dark ground and all but invisible on the pale Duvel plate.
+   */
+  tone?: 'ink' | 'chroma';
+  /**
    * Fill for the foam shape, drawn only if this glass kind has one (pint and tulip; wine and
    * highball never do) and a colour is given. Not sourced from `identity.ts`: the identity table
    * carries glass, field, ink and chroma only, so foam is a caller's decision until a foam
@@ -53,13 +65,23 @@ interface GlassProps {
  * Every path sets its own `fill` explicitly, including the outline (`fill="none"`), because an
  * SVG `<path>` with no `fill` attribute defaults to solid black rather than to nothing.
  */
-export const Glass: React.FC<GlassProps> = ({ kind, chroma, foam }) => {
+export const Glass: React.FC<GlassProps> = ({ kind, chroma, foam, tone = 'chroma' }) => {
   const paths = GLASS_PATHS[kind];
+  const flat = tone === 'ink';
   return (
     <svg viewBox="0 0 34 50" aria-hidden="true" width="100%" height="100%" data-testid={`glass-${kind}`}>
-      <path d={paths.l} fill={chroma} />
-      {paths.f && foam ? <path d={paths.f} fill={foam} /> : null}
-      <path d={paths.g} fill="none" stroke="rgba(237,230,220,.44)" strokeWidth={1.6} strokeLinejoin="round" />
+      <path d={paths.l} fill={flat ? 'currentColor' : chroma} opacity={flat ? 0.92 : 1} />
+      {paths.f && (flat || foam) ? (
+        <path d={paths.f} fill={flat ? 'currentColor' : (foam as string)} opacity={flat ? 0.45 : 1} />
+      ) : null}
+      <path
+        d={paths.g}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinejoin="round"
+        opacity={flat ? 0.95 : 0.44}
+      />
     </svg>
   );
 };

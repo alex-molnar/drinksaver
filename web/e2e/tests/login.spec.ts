@@ -16,7 +16,9 @@ test('an unauthenticated visitor is sent to Keycloak and lands on the home scree
   await page.getByRole('button', { name: /^sign in$/i }).click();
 
   await page.waitForURL('http://localhost:3000/**', { timeout: 30_000 });
-  await expect(page.getByRole('heading', { name: 'Quick Save' })).toBeVisible();
-  // Seeded recommendations came back from the real API.
+  // The painted-board header reads "Today", not "Quick Save": see feat/quick-save-plates.
+  // Today or Tonight: the header follows the 06:00 drinking-day rollover, and CI runs at any hour.
+  await expect(page.getByRole('heading', { name: /^(Today|Tonight)$/ })).toBeVisible();
+  // Seeded recommendations came back from the real API, rendered as enamel plates.
   await expect(page.getByRole('button', { name: 'Guinness pint' })).toBeVisible();
 });
