@@ -26,6 +26,7 @@ import { useQuery } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import QuantitySelector from '../components/QuantitySelector';
 import { useAppNavigation } from '../hooks/useNavigation';
+import { drinkingDay } from '../drink/day';
 import {
   getAlcoholTypes,
   getVolumesByAlcoholType,
@@ -43,8 +44,8 @@ const DetailedPage: React.FC = () => {
   const { navigateToSuccess, navigateToError, navigateToNewAlcohol, navigateToNewVolume, navigateToNewBrand, navigateToNewSubtype, navigateToNewBeerFlavour } =
     useAppNavigation();
 
-  // Helper to get today's date in YYYY-MM-DD format
-  const getTodayDate = () => new Date().toISOString().split('T')[0];
+  // The drinking day, not the calendar day: before 06:00 a drink still belongs to last night.
+  const getTodayDate = () => drinkingDay(new Date());
 
   // Form state
   const [alcoholTypeId, setAlcoholTypeId] = useState<number | ''>('');

@@ -219,7 +219,7 @@ So the app does not use the calendar day. It uses the **drinking day**: the loca
 six hours ago. Anything logged before 06:00 local belongs to the previous date.
 
 ```
-drinkingDay(now) = localDate(now minus 6 hours)
+drinkingDay(now) = localHour(now) < 6 ? previousLocalDate(now) : localDate(now)
 ```
 
 | Local clock | Drinking day |
@@ -247,10 +247,23 @@ computes none itself, so nothing changes there.
   showing yesterday's date as current looks like a glitch rather than the point.
 
 One named constant, `DAY_ROLLOVER_HOUR = 6`, not a setting. `drinkingDay` takes `now` as an
-argument so it is testable without faking a clock, and is tested at 23:30, 00:30, 05:59 and 06:00,
-in a zone that is not UTC, and across a daylight saving transition. Subtracting six hours from an
-absolute instant and then reading local components is DST safe; formatting first and subtracting
-after is not.
+argument, so it is testable without faking a clock and no module computes a date at import time.
+
+**It compares the local hour and steps the date back. It does not subtract six hours from the
+instant**, even though "the local date as it was six hours ago" is the easiest way to say the rule
+out loud. On the European spring-forward day the clocks jump 02:00 to 03:00, so only five real
+hours pass between 00:30 and 06:30 local, and instant arithmetic would file an 06:30 drink under
+the previous date. The rule is about the user's wall clock, so the code reads the wall clock.
+
+Tested at 23:30, 00:30, 05:59 and 06:00, at every hour of the day, across month, year and leap day
+boundaries, and on a daylight saving day. The unit tests build dates from local components, so they
+hold in any zone, which is what lets them pass unchanged on a UTC runner and on a laptop in
+Budapest.
+
+Verified end to end as well, not only in unit tests: an e2e case pins the browser clock to 00:30,
+saves a drink, and asserts that History opens on the previous date and the drink is on it. That is
+the only way to show the rule survives the round trip to the backend, which is what actually
+stores the date.
 
 Rows written before this change keep their dates. Back-filling would be a guess about where the
 user was, and the old behaviour already approximates the new rule to within a couple of hours.
