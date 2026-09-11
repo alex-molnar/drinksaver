@@ -30,17 +30,21 @@ public class PostgresDrinksRepository implements DrinksRepository {
         return repositoryType.equals("postgres");
     }
 
+    /**
+     * Returns every row written, not just the first. A caller that saved N drinks needs all N
+     * ids to be able to undo the save; returning getFirst() left N-1 rows unreachable.
+     */
     @Override
-    public SavedDrink saveDrink(Drink drink) {
+    public List<SavedDrink> saveDrink(Drink drink) {
         if (drink.shouldAddToRecommendations()) {
             recommendationsTable.save(Recommendation.of(drink));
         }
 
         return drink.quantity() == null
-            ? savedDrinksTable.save(SavedDrink.of(drink))
+            ? List.of(savedDrinksTable.save(SavedDrink.of(drink)))
             : savedDrinksTable.saveAll(
                 IntStream.range(0, drink.quantity()).mapToObj(i -> SavedDrink.of(drink)).toList()
-            ).getFirst();
+            );
     }
 
     @Override

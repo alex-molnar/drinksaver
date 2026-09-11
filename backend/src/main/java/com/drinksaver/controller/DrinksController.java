@@ -46,10 +46,14 @@ public class DrinksController {
         this.repositoryConfiguration = repositoryConfiguration;
     }
 
+    /**
+     * Always returns a list, including a single element one for quantity 1. Two response shapes
+     * would mean two client paths and a bug that only appears above quantity 1.
+     */
     @PostMapping("/new")
-    public SavedDrink saveDrink(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody Drink drink) {
+    public List<SavedDrink> saveDrink(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody Drink drink) {
         Drink ownedDrink = drink.withUserId(AuthenticatedUser.id(jwt));
-        SavedDrink saved = drinksRepository.saveDrink(ownedDrink);
+        List<SavedDrink> saved = drinksRepository.saveDrink(ownedDrink);
         recommendationCacheService.onDrinkSaved(ownedDrink);
         return saved;
     }

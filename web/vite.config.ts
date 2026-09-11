@@ -28,11 +28,20 @@ export default defineConfig({
       //
       // Raised 2026-09-08 after the findings work in docs/fixes-2026-09-08.md,
       // from 91/85/89/93. Measured 93.67 / 86.95 / 92.81 / 95.15.
+      //
+      // Branches raised 2026-09-10, from 86, when saveDrink gained tests for both
+      // sides of its deploy-skew shim. Measured 93.70 / 87.43 / 92.81 / 95.18.
+      //
+      // Raised 2026-09-11, from 93/87/92/95, at the end of the Utolso Kor redesign. Measured
+      // 97.60 / 92.44 / 94.78 / 98.15. Raised once here rather than in each of the ten PRs that
+      // moved it, so rebasing the stack did not mean resolving a conflict in this file every
+      // time. The redesign deleted eleven components and added thirty, and every one of those
+      // PRs ended above the floor it started from.
       thresholds: {
-        statements: 93,
-        branches: 86,
-        functions: 92,
-        lines: 95,
+        statements: 97,
+        branches: 92,
+        functions: 94,
+        lines: 98,
       },
     },
   },

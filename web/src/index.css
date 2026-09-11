@@ -5,6 +5,13 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* Dark only, deliberately: there is no light variant to offer, so this is a fixed
+     declaration rather than a prefers-color-scheme media query. Lets browser-drawn chrome
+     (scrollbars, form controls) match before any of our own CSS has even been read. */
+  color-scheme: dark;
+}
+
 html, body {
   height: 100%;
   width: 100%;
@@ -13,6 +20,28 @@ html, body {
 #root {
   height: 100%;
   width: 100%;
+
+  /*
+   * The umber plaster ground and its noise grain, painted once here rather than repeated per
+   * surface. `background-attachment: fixed` keeps it one static layer sitting behind everything
+   * that scrolls, so the browser decodes the noise texture once for the whole app instead of
+   * once per plate, panel or sheet that would otherwise carry its own copy of the same
+   * feTurbulence data URI. The literal fallback matters here in a way the texture does not: if
+   * `--ds-surface-ground` is not yet set, the app should still show its own colour rather than
+   * default white; a first paint with no noise for an instant is not worth a second fallback.
+   */
+  background-color: var(--ds-surface-ground, #231512);
+  background-image: var(--ds-texture-noise);
+  background-attachment: fixed;
+
+  /*
+   * Additive padding, not a replacement for a component's own: keeps content clear of a notch,
+   * a punch-hole camera or the home indicator bar on a phone with none of the three.
+   */
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
 }
 
 /* Prevent iOS zoom on input focus */

@@ -19,11 +19,16 @@ paths:
         required: true
       responses:
         "200":
-          description: OK
+          description: |
+            Every row written, in insertion order. Always an array, including a single
+            element one when quantity is absent or 1, so a client has one shape to handle.
+            The caller needs all the ids to be able to undo the save.
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/SavedDrink"
+                type: array
+                items:
+                  $ref: "#/components/schemas/SavedDrink"
         "400":
           description: quantity is outside 1 to 100
   /v1/beer/brands:

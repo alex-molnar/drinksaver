@@ -1,214 +1,140 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../test/test-utils';
 import HistoryPage from './HistoryPage';
-import { getSavedDrinksByDate, deleteDrinksByIds } from '../api/endpoints';
+import { useDrinksForDate } from '../drink/useDrinksForDate';
+import { useDayCounts } from '../drink/useDayCounts';
+import { useSaveQueue } from '../drink/useSaveQueue';
 import type { EditableDrink } from '../types/api';
+import type { DrinksForDate } from '../drink/useDrinksForDate';
 
-vi.mock('../api/endpoints');
+vi.mock('../drink/useDrinksForDate');
+vi.mock('../drink/useDayCounts');
+vi.mock('../drink/useSaveQueue');
 vi.mock('../auth', () => ({
   useAuth: () => ({ logout: vi.fn() }),
 }));
 
-const mockGetSavedDrinksByDate = vi.mocked(getSavedDrinksByDate);
-const mockDeleteDrinksByIds = vi.mocked(deleteDrinksByIds);
+const mockUseDrinksForDate = vi.mocked(useDrinksForDate);
+const mockUseDayCounts = vi.mocked(useDayCounts);
+const mockUseSaveQueue = vi.mocked(useSaveQueue);
+const mockRemove = vi.fn();
 
+/**
+ * Names that look like what the server actually composes, not like the identity table's keys.
+ * `AlcoholNameCollector` folds serving detail into the name itself, so a real History row reads
+ * "Gin (Long drink - 0.25l)" and never matches the table by name. Keeping the fixtures honest is
+ * what makes the identity lookup's second rung, the alcohol type id, do visible work here.
+ */
 const mockDrinks: EditableDrink[] = [
-  {
-    id: 1,
-    name: 'Heineken',
-    alcoholTypeId: 4,
-  },
-  {
-    id: 2,
-    name: 'Red Wine',
-    alcoholTypeId: 30,
-  },
+  { id: 1, name: 'Heineken Original (Draft/Tap - 0.50l)', alcoholTypeId: 4 },
+  { id: 2, name: 'Red (Large glass - 0.30l)', alcoholTypeId: 30 },
 ];
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockGetSavedDrinksByDate.mockResolvedValue(mockDrinks);
-  mockDeleteDrinksByIds.mockResolvedValue(2);
+  mockUseDrinksForDate.mockReturnValue({ status: 'ready', rows: mockDrinks });
+  mockUseDayCounts.mockReturnValue(Array.from({ length: 7 }, () => ({ status: 'loading' as const })));
+  mockUseSaveQueue.mockReturnValue({
+    queue: { entries: [] },
+    current: null,
+    save: vi.fn(),
+    remove: mockRemove,
+    undo: vi.fn(),
+    retry: vi.fn(),
+    stripHandlers: { onPointerEnter: vi.fn(), onPointerLeave: vi.fn(), onFocus: vi.fn(), onBlur: vi.fn() },
+  });
 });
 
+const setStatus = (status: DrinksForDate) => mockUseDrinksForDate.mockReturnValue(status);
+
+/** The row itself, by its exact accessible name. A regex would also match the nested cross-off
+ *  control, whose own name contains the drink. */
+const rowFor = (name: string) => screen.getByRole('button', { name });
+const HEINEKEN = 'Heineken Original (Draft/Tap - 0.50l)';
+const RED = 'Red (Large glass - 0.30l)';
+
 describe('HistoryPage', () => {
-  it('renders a spinner while drinks are loading', () => {
-    mockGetSavedDrinksByDate.mockImplementation(() => new Promise(() => {})); // Never resolves
+  it('shows a loading state rather than an empty tab while the day is still arriving', () => {
+    setStatus({ status: 'loading' });
 
     renderWithProviders(<HistoryPage />);
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    // Not "nothing on this day": a day that has not arrived must never read as a day with
+    // nothing on it, which is the same distinction the day strip rests on.
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.queryByText(/nothing on this day/i)).not.toBeInTheDocument();
   });
 
-  it('renders the error state when the query rejects', async () => {
-    mockGetSavedDrinksByDate.mockRejectedValue(new Error('API error'));
+  it('shows an error state when the day cannot be read', () => {
+    setStatus({ status: 'error' });
 
     renderWithProviders(<HistoryPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/failed to load drinks/i)).toBeInTheDocument();
-    });
+    expect(screen.getByRole('alert')).toBeInTheDocument();
   });
 
-  it('renders empty state when no drinks are recorded for the date', async () => {
-    mockGetSavedDrinksByDate.mockResolvedValue([]);
+  it('shows an empty state once the day is confirmed to have nothing on it', () => {
+    setStatus({ status: 'ready', rows: [] });
 
     renderWithProviders(<HistoryPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/no drinks recorded for this date/i)).toBeInTheDocument();
-    });
+    expect(screen.getByText(/nothing on this day/i)).toBeInTheDocument();
   });
 
-  it('fetches drinks for the selected date', async () => {
+  it('renders one row per drink', () => {
     renderWithProviders(<HistoryPage />);
 
-    await waitFor(() => {
-      expect(mockGetSavedDrinksByDate).toHaveBeenCalled();
-    });
-
-    // Should have called with today's date
-    const calls = mockGetSavedDrinksByDate.mock.calls;
-    expect(calls.length).toBeGreaterThan(0);
+    expect(rowFor(HEINEKEN)).toBeInTheDocument();
+    expect(rowFor(RED)).toBeInTheDocument();
   });
 
-  it('renders one card per drink', async () => {
+  it('reads the newly chosen day when one is picked from the strip', async () => {
     renderWithProviders(<HistoryPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/heineken/i)).toBeInTheDocument();
-      expect(screen.getByText(/red wine/i)).toBeInTheDocument();
-    });
+    const yesterday = screen.getByRole('button', { name: /^yesterday,/i });
+    await userEvent.click(yesterday);
+
+    // The read model is asked for a different date than the one it opened on.
+    const datesAsked = mockUseDrinksForDate.mock.calls.map(([d]) => d);
+    expect(new Set(datesAsked).size).toBeGreaterThan(1);
   });
 
-  it('changes the date and refetches drinks', async () => {
-    mockGetSavedDrinksByDate.mockResolvedValue(mockDrinks);
-
+  it('defers a single delete through the queue, naming the drink', async () => {
     renderWithProviders(<HistoryPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/heineken/i)).toBeInTheDocument();
-    });
+    await userEvent.click(within(rowFor(HEINEKEN)).getByRole('button', { name: /cross off/i }));
 
-    const dateInput = screen.getByLabelText(/date/i) as HTMLInputElement;
-    await userEvent.clear(dateInput);
-    await userEvent.type(dateInput, '2026-01-02');
-
-    await waitFor(() => {
-      const calls = mockGetSavedDrinksByDate.mock.calls;
-      expect(calls.some(call => call[0] === '2026-01-02')).toBe(true);
-    });
+    expect(mockRemove).toHaveBeenCalledWith(
+      expect.objectContaining({ label: 'Heineken Original (Draft/Tap - 0.50l)', drinkIds: [1] })
+    );
   });
 
-  it('allows selecting individual drinks and shows delete FAB', async () => {
+  it('defers a bulk delete through the queue, naming how many drinks', async () => {
     renderWithProviders(<HistoryPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/heineken/i)).toBeInTheDocument();
-    });
+    await userEvent.click(rowFor(HEINEKEN));
+    await userEvent.click(rowFor(RED));
+    await userEvent.click(screen.getByRole('button', { name: /delete selected/i }));
 
-    const checkboxes = screen.getAllByRole('checkbox');
-    await userEvent.click(checkboxes[0]);
-
-    // Delete FAB should appear when drinks are selected
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /delete selected/i })).toBeInTheDocument();
-    });
+    expect(mockRemove).toHaveBeenCalledWith(expect.objectContaining({ label: '2 drinks', drinkIds: [1, 2] }));
   });
 
-  it('deletes selected drinks when delete FAB is clicked', async () => {
-    mockDeleteDrinksByIds.mockResolvedValue(1);
-    mockGetSavedDrinksByDate.mockResolvedValueOnce(mockDrinks).mockResolvedValueOnce([mockDrinks[1]]);
-
+  it('offers no bulk control until something is selected', () => {
     renderWithProviders(<HistoryPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/heineken/i)).toBeInTheDocument();
-    });
-
-    const checkboxes = screen.getAllByRole('checkbox');
-    await userEvent.click(checkboxes[0]); // Select first drink
-
-    const deleteButton = screen.getByRole('button', { name: /delete selected/i });
-    await userEvent.click(deleteButton);
-
-    await waitFor(() => {
-      expect(mockDeleteDrinksByIds).toHaveBeenCalledWith([1]);
-    });
+    expect(screen.queryByRole('button', { name: /delete selected/i })).not.toBeInTheDocument();
   });
 
-  it('deletes a single drink when delete icon is clicked', async () => {
-    mockDeleteDrinksByIds.mockResolvedValue(1);
-    mockGetSavedDrinksByDate.mockResolvedValueOnce(mockDrinks).mockResolvedValueOnce([mockDrinks[1]]);
-
+  it('clears the selection when the day changes', async () => {
     renderWithProviders(<HistoryPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/heineken/i)).toBeInTheDocument();
-    });
+    await userEvent.click(rowFor(HEINEKEN));
+    expect(screen.getByRole('button', { name: /delete selected/i })).toBeInTheDocument();
 
-    const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
-    const singleDeleteButton = deleteButtons.find(btn => {
-      const icon = within(btn).queryByTestId('DeleteIcon');
-      return icon !== null;
-    });
+    await userEvent.click(screen.getByRole('button', { name: /^yesterday,/i }));
 
-    if (singleDeleteButton) {
-      await userEvent.click(singleDeleteButton);
-    }
-
-    await waitFor(() => {
-      expect(mockDeleteDrinksByIds).toHaveBeenCalled();
-    });
-  });
-
-  it('sends the selected drink ids when deleting', async () => {
-    mockDeleteDrinksByIds.mockResolvedValue(2);
-    mockGetSavedDrinksByDate.mockResolvedValueOnce(mockDrinks).mockResolvedValueOnce([]);
-
-    renderWithProviders(<HistoryPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/heineken/i)).toBeInTheDocument();
-    });
-
-    const checkboxes = screen.getAllByRole('checkbox');
-    await userEvent.click(checkboxes[0]); // First drink
-    await userEvent.click(checkboxes[1]); // Second drink
-
-    const deleteButton = screen.getByRole('button', { name: /delete selected/i });
-    await userEvent.click(deleteButton);
-
-    await waitFor(() => {
-      expect(mockDeleteDrinksByIds).toHaveBeenCalledWith([1, 2]);
-    });
-  });
-
-  it('clears selection when date changes', async () => {
-    renderWithProviders(<HistoryPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/heineken/i)).toBeInTheDocument();
-    });
-
-    const checkboxes = screen.getAllByRole('checkbox');
-    await userEvent.click(checkboxes[0]); // Select a drink
-
-    // Should show delete FAB
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /delete selected/i })).toBeInTheDocument();
-    });
-
-    // Change date
-    const dateInput = screen.getByLabelText(/date/i) as HTMLInputElement;
-    await userEvent.clear(dateInput);
-    await userEvent.type(dateInput, '2026-01-02');
-
-    // Delete FAB should be hidden (selection cleared)
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /delete selected/i })).not.toBeInTheDocument();
-    });
+    expect(screen.queryByRole('button', { name: /delete selected/i })).not.toBeInTheDocument();
   });
 });

@@ -47,9 +47,7 @@ class PostgresDrinksRepositoryTest {
                 mock(RecommendationsTable.class)
         );
 
-        SavedDrink result = repo.saveDrink(drink);
-
-        assertThat(result).isEqualTo(saved);
+        assertThat(repo.saveDrink(drink)).containsExactly(saved);
         verify(savedTable, times(1)).save(any());
     }
 
@@ -66,12 +64,33 @@ class PostgresDrinksRepositoryTest {
                 mock(RecommendationsTable.class)
         );
 
-        SavedDrink result = repo.saveDrink(drink);
-
-        assertThat(result).isEqualTo(saved);
+        assertThat(repo.saveDrink(drink)).hasSize(3);
         ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
         verify(savedTable).saveAll(captor.capture());
         assertThat(captor.getValue()).hasSize(3);
+    }
+
+    /**
+     * The reason this endpoint's contract changed. `saveAll` writes `quantity` rows and the
+     * repository used to return only `getFirst()`, so a caller that saved three drinks held one
+     * id and could undo exactly one of them. The other two stayed, silently.
+     */
+    @Test
+    void saveDrinkWithQuantityReturnsEveryRowItWrote() {
+        SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
+        SavedDrink first = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null);
+        SavedDrink second = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null);
+        SavedDrink third = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null);
+        when(savedTable.saveAll(any())).thenReturn(List.of(first, second, third));
+
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, 3, null, null, null);
+
+        PostgresDrinksRepository repo = new PostgresDrinksRepository(
+                savedTable,
+                mock(RecommendationsTable.class)
+        );
+
+        assertThat(repo.saveDrink(drink)).containsExactly(first, second, third);
     }
 
     @Test

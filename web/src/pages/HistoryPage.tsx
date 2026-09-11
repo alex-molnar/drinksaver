@@ -1,324 +1,175 @@
-import React, { useState, useCallback } from 'react';
-import {
-  Box,
-  TextField,
-  Card,
-  CardActionArea,
-  Checkbox,
-  IconButton,
-  CircularProgress,
-  Typography,
-  Fab,
-  Zoom,
-  Stack,
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import LocalBarIcon from '@mui/icons-material/LocalBar';
-import SportsBarIcon from '@mui/icons-material/SportsBar';
-import WineBarIcon from '@mui/icons-material/WineBar';
-import LiquorIcon from '@mui/icons-material/Liquor';
-import NightlifeIcon from '@mui/icons-material/Nightlife';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import Layout from '../components/Layout';
-import { getSavedDrinksByDate, deleteDrinksByIds } from '../api/endpoints';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import styled from '@emotion/styled';
+import AppFrame from '../components/AppFrame';
+import DayStrip from '../components/DayStrip';
+import PaperTab from '../components/PaperTab';
+import type { PaperTabRow } from '../components/PaperTab';
+import { useDrinksForDate } from '../drink/useDrinksForDate';
+import { useDayCounts } from '../drink/useDayCounts';
+import { useSaveQueue } from '../drink/useSaveQueue';
+import { dayStripDates, dayLabel, drinkingDay } from '../drink/day';
 import type { EditableDrink } from '../types/api';
 
-const getTodayDate = () => new Date().toISOString().split('T')[0];
+/** How long a struck-through row stays mounted so its exit can play. Matches PaperTab's CSS. */
+const EXIT_MS = 320;
+
+const BulkBar = styled.div`
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  padding: var(--ds-space-sm) var(--ds-space-lg) var(--ds-space-lg);
+`;
+
+const BulkButton = styled.button`
+  min-height: 44px;
+  padding: 0 var(--ds-space-lg);
+  border: 0;
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-accent-danger);
+  color: var(--ds-ink-primary);
+  font-family: var(--ds-type-display-family);
+  font-size: 1rem;
+  cursor: pointer;
+`;
 
 /**
- * Icon mapping for alcohol type IDs.
+ * The bar tab. A seven day strip across the top, and the selected day's drinks on a cream paper
+ * card below it.
+ *
+ * Deleting keeps the semantics `useSaveQueue` already owns: the row is suppressed from the merged
+ * read model at once and the DELETE itself is deferred until the undo window closes, because
+ * there is no undelete endpoint and `getSavedDrinksByDate` returns too little to write a row
+ * back. This page only decides how that looks.
+ *
+ * The one piece of state that is genuinely this page's own is `leaving`: a row the read model has
+ * already dropped, kept mounted a beat longer so the strike-through has somewhere to play. The
+ * queue is the source of truth for whether the drink exists; this is only about the animation.
  */
-const ALCOHOL_TYPE_ICONS: Record<number, React.ReactElement> = {
-  // Beer & similar
-  4: <SportsBarIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  21: <SportsBarIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  24: <SportsBarIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  
-  // Wine & wine-based
-  13: <WineBarIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  14: <WineBarIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  19: <WineBarIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  20: <WineBarIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  22: <WineBarIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  26: <WineBarIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  27: <WineBarIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  30: <WineBarIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  31: <WineBarIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  32: <WineBarIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  
-  // Spirits
-  6: <LiquorIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  7: <LiquorIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  8: <LiquorIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  9: <LiquorIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  10: <LiquorIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  11: <LiquorIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  12: <LiquorIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  15: <LiquorIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  16: <LiquorIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  17: <LiquorIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  18: <LiquorIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  25: <LiquorIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  28: <LiquorIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  
-  // Cocktails & mixed drinks
-  23: <NightlifeIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-  29: <NightlifeIcon sx={{ fontSize: 28, color: 'primary.main' }} />,
-};
-
-const getDrinkIcon = (alcoholTypeId: number) => {
-  return ALCOHOL_TYPE_ICONS[alcoholTypeId] || <LocalBarIcon sx={{ fontSize: 28, color: 'primary.main' }} />;
-};
-
 const HistoryPage: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState(getTodayDate());
+  const todayDate = drinkingDay(new Date());
+  const [selectedDate, setSelectedDate] = useState(todayDate);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [isDeleting, setIsDeleting] = useState(false);
-  const queryClient = useQueryClient();
+  const [leaving, setLeaving] = useState<readonly EditableDrink[]>([]);
 
-  const {
-    data: drinks,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['drinks', selectedDate],
-    queryFn: () => getSavedDrinksByDate(selectedDate),
-  });
+  const { remove } = useSaveQueue();
+  const drinksForDate = useDrinksForDate(selectedDate);
+  const dates = useMemo(() => dayStripDates(todayDate), [todayDate]);
+  const counts = useDayCounts(dates);
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedDate(e.target.value);
-    setSelectedIds(new Set()); // Clear selection when date changes
-  };
+  // Memoised, not computed inline: this feeds an effect's dependency list, and a fresh `[]`
+  // literal on every non-ready render would make that effect run on every render.
+  const liveRows = useMemo(
+    () => (drinksForDate.status === 'ready' ? drinksForDate.rows : []),
+    [drinksForDate]
+  );
+  const lastLive = useRef<readonly EditableDrink[]>([]);
 
-  const handleToggleSelect = useCallback((id: number) => {
+  const exitTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Whatever the read model dropped since the previous render is on its way out. Held in an
+  // effect rather than computed during render because it has to outlive the render that noticed
+  // it, which is the whole point of the exit.
+  //
+  // The timer is deliberately not cleared when this effect re-runs. An earlier version returned
+  // `() => clearTimeout(timer)`, which meant the very next render cancelled the pending removal,
+  // so a struck-through row stayed mounted for good and the same drink appeared twice once undo
+  // put it back. Each dropped batch owns its own timer and only unmount cancels them.
+  useEffect(() => {
+    if (drinksForDate.status !== 'ready') {
+      return;
+    }
+    const liveIds = new Set(liveRows.map((r) => r.id));
+    const dropped = lastLive.current.filter((r) => !liveIds.has(r.id));
+    lastLive.current = liveRows;
+    if (dropped.length === 0) {
+      return;
+    }
+    setLeaving((prev) => [...prev, ...dropped]);
+    exitTimers.current.push(
+      setTimeout(
+        () => setLeaving((prev) => prev.filter((r) => !dropped.some((d) => d.id === r.id))),
+        EXIT_MS
+      )
+    );
+  }, [drinksForDate.status, liveRows]);
+
+  useEffect(() => {
+    const timers = exitTimers.current;
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  const handleSelectDate = useCallback((date: string) => {
+    setSelectedDate(date);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleToggleSelect = useCallback((drink: EditableDrink) => {
     setSelectedIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
+      const next = new Set(prev);
+      if (next.has(drink.id)) {
+        next.delete(drink.id);
       } else {
-        newSet.add(id);
+        next.add(drink.id);
       }
-      return newSet;
+      return next;
     });
   }, []);
 
-  const handleDeleteSingle = useCallback(
-    async (id: number) => {
-      setIsDeleting(true);
-      try {
-        await deleteDrinksByIds([id]);
-        // Remove from selection if it was selected
-        setSelectedIds((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(id);
-          return newSet;
-        });
-        // Refetch the list
-        await refetch();
-        // Invalidate recommendations in case they were affected
-        queryClient.invalidateQueries({ queryKey: ['recommendations'] });
-      } catch (error) {
-        console.error('Failed to delete drink:', error);
-      } finally {
-        setIsDeleting(false);
-      }
+  const handleDeleteOne = useCallback(
+    (drink: EditableDrink) => {
+      remove({ label: drink.name, date: selectedDate, drinkIds: [drink.id] });
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(drink.id);
+        return next;
+      });
     },
-    [refetch, queryClient]
+    [remove, selectedDate]
   );
 
-  const handleDeleteSelected = useCallback(async () => {
-    if (selectedIds.size === 0) return;
-
-    setIsDeleting(true);
-    try {
-      await deleteDrinksByIds(Array.from(selectedIds));
-      setSelectedIds(new Set());
-      await refetch();
-      // Invalidate recommendations in case they were affected
-      queryClient.invalidateQueries({ queryKey: ['recommendations'] });
-    } catch (error) {
-      console.error('Failed to delete drinks:', error);
-    } finally {
-      setIsDeleting(false);
+  const handleDeleteSelected = useCallback(() => {
+    if (selectedIds.size === 0) {
+      return;
     }
-  }, [selectedIds, refetch, queryClient]);
+    const drinkIds = Array.from(selectedIds);
+    const label = `${drinkIds.length} ${drinkIds.length === 1 ? 'drink' : 'drinks'}`;
+    remove({ label, date: selectedDate, drinkIds });
+    setSelectedIds(new Set());
+  }, [selectedIds, remove, selectedDate]);
 
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <CircularProgress color="primary" />
-        </Box>
-      );
-    }
-
-    if (error) {
-      return (
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 2,
-          }}
-        >
-          <Typography color="error">Failed to load drinks</Typography>
-        </Box>
-      );
-    }
-
-    if (!drinks || drinks.length === 0) {
-      return (
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 2,
-          }}
-        >
-          <Typography color="text.secondary">
-            No drinks recorded for this date
-          </Typography>
-        </Box>
-      );
-    }
-
-    return (
-      <Stack spacing={1.5} sx={{ width: '100%' }}>
-        {drinks.map((drink: EditableDrink) => (
-          <Card
-            key={drink.id}
-            elevation={1}
-            sx={{
-              borderRadius: 2,
-              transition: 'all 0.2s ease-in-out',
-              '&:hover': {
-                elevation: 3,
-                transform: 'translateY(-1px)',
-                boxShadow: 3,
-              },
-              opacity: isDeleting ? 0.6 : 1,
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                width: '100%',
-              }}
-            >
-              <CardActionArea
-                onClick={() => handleToggleSelect(drink.id)}
-                disabled={isDeleting}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  py: 1.5,
-                  px: 1,
-                  flex: 1,
-                }}
-              >
-                <Checkbox
-                  checked={selectedIds.has(drink.id)}
-                  tabIndex={-1}
-                  disableRipple
-                  sx={{ mr: 1 }}
-                />
-                <Box sx={{ mr: 2, display: 'flex', alignItems: 'center' }}>
-                  {getDrinkIcon(drink.alcoholTypeId)}
-                </Box>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontWeight: 500,
-                    flex: 1,
-                    textAlign: 'left',
-                  }}
-                >
-                  {drink.name}
-                </Typography>
-              </CardActionArea>
-              <IconButton
-                aria-label="delete"
-                onClick={() => handleDeleteSingle(drink.id)}
-                disabled={isDeleting}
-                sx={{
-                  mr: 1,
-                  color: 'error.light',
-                  '&:hover': {
-                    color: 'error.main',
-                    backgroundColor: 'error.light',
-                    '& .MuiSvgIcon-root': {
-                      color: 'error.contrastText',
-                    },
-                  },
-                }}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          </Card>
-        ))}
-      </Stack>
-    );
-  };
+  const rows: PaperTabRow[] = useMemo(
+    () => [
+      ...liveRows.map((drink) => ({ drink, selected: selectedIds.has(drink.id), gone: false })),
+      ...leaving.map((drink) => ({ drink, selected: false, gone: true })),
+    ],
+    [liveRows, leaving, selectedIds]
+  );
 
   return (
-    <Layout title="History">
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* Date Selector */}
-        <TextField
-          label="Date"
-          type="date"
-          value={selectedDate}
-          onChange={handleDateChange}
-          fullWidth
-          slotProps={{
-            inputLabel: { shrink: true },
-            htmlInput: { max: getTodayDate() },
-          }}
-          sx={{ mb: 2 }}
-        />
-
-        {/* Drinks List */}
-        {renderContent()}
-
-        {/* Bulk Delete FAB */}
-        <Zoom in={selectedIds.size > 0}>
-          <Fab
-            color="error"
-            aria-label="delete selected"
-            onClick={handleDeleteSelected}
-            disabled={isDeleting}
-            sx={{
-              position: 'fixed',
-              bottom: 80, // Above bottom navigation
-              right: 16,
-            }}
-          >
-            {isDeleting ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              <DeleteIcon />
-            )}
-          </Fab>
-        </Zoom>
-      </Box>
-    </Layout>
+    <AppFrame title="History" subtitle={dayLabel(selectedDate, todayDate)}>
+      <DayStrip
+        dates={dates}
+        counts={counts}
+        selectedDate={selectedDate}
+        todayDate={todayDate}
+        onSelect={handleSelectDate}
+      />
+      <PaperTab
+        label={dayLabel(selectedDate, todayDate)}
+        status={drinksForDate.status}
+        rows={rows}
+        onToggleSelect={handleToggleSelect}
+        onDeleteOne={handleDeleteOne}
+      />
+      {selectedIds.size > 0 ? (
+        <BulkBar>
+          <BulkButton type="button" onClick={handleDeleteSelected} aria-label="Delete selected">
+            {`Cross off ${selectedIds.size}`}
+          </BulkButton>
+        </BulkBar>
+      ) : null}
+    </AppFrame>
   );
 };
 
