@@ -105,7 +105,9 @@ export const SaveQueueProvider: React.FC<SaveQueueProviderProps> = ({ children, 
   const [pageFeedbackContainer, setPageFeedbackContainer] = useState<HTMLDivElement | null>(null);
 
   const queueRef = useRef(queue);
-  queueRef.current = queue;
+  useEffect(() => {
+    queueRef.current = queue;
+  });
 
   const seqRef = useRef(0);
   const flushingRef = useRef<Set<string>>(new Set());
