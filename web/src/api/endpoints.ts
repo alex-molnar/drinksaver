@@ -22,13 +22,22 @@ import type {
 } from '../types/api';
 
 // Drinks endpoints
-export const saveDrink = async (drink: Omit<Drink, 'userId' | 'date'> & { date?: string }): Promise<SavedDrink> => {
+/**
+ * Returns every row the server wrote, so a caller that saved `quantity` drinks holds all the
+ * ids and can undo the whole save. Before 4.0.0 the endpoint returned a bare object holding
+ * only the first id, which made undo on a batch save silently orphan the rest.
+ *
+ * The single-object branch is deploy skew tolerance, not a supported shape: the web pod and the
+ * backend pod do not cut over together, so for about a minute after a release a new bundle can
+ * reach an old backend. Remove it in 4.1.0, once no 3.x backend is running anywhere.
+ */
+export const saveDrink = async (drink: Omit<Drink, 'userId' | 'date'> & { date?: string }): Promise<SavedDrink[]> => {
   const payload: Omit<Drink, 'userId'> = {
     ...drink,
     date: drink.date || new Date().toISOString().split('T')[0],
   };
-  const response = await apiClient.post<SavedDrink>('/v1/drinks/new', payload);
-  return response.data;
+  const response = await apiClient.post<SavedDrink | SavedDrink[]>('/v1/drinks/new', payload);
+  return Array.isArray(response.data) ? response.data : [response.data];
 };
 
 // Recommendations endpoints

@@ -33,8 +33,9 @@ public record Drink(
         @Size(max = 255) String comments,
         /**
          * The number of rows to write, so it has to be at least 1. A 0 or a negative
-         * made saveDrink's IntStream range empty, and getFirst() on the empty result
-         * threw NoSuchElementException: a 500 for a plainly bad request.
+         * made saveDrink's IntStream range empty. That used to throw NoSuchElementException
+         * from getFirst(); saveDrink now returns the whole list, so an empty range would
+         * quietly return no rows instead. The bound is what stops either.
          *
          * The upper bound caps how many rows one request can multiply into. 100 is an
          * order of magnitude above the 9 the UI's QuantitySelector allows.

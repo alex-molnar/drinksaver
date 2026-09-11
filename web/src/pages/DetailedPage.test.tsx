@@ -131,13 +131,13 @@ describe('DetailedPage', () => {
   });
 
   it('clears volume, subtype, consumption type, brand and flavour when the alcohol type changes', async () => {
-    vi.mocked(saveDrink).mockResolvedValue({
+    vi.mocked(saveDrink).mockResolvedValue([{
       id: 1,
       userId: 'u1',
       date: '2026-01-01',
       alcoholTypeId: 2,
       alcoholVolumeId: 20,
-    });
+    }]);
     renderWithProviders(<DetailedPage />);
     await screen.findByRole('combobox', { name: /alcohol type/i });
 
@@ -174,13 +174,13 @@ describe('DetailedPage', () => {
   });
 
   it('clears the beer flavour when the brand changes', async () => {
-    vi.mocked(saveDrink).mockResolvedValue({
+    vi.mocked(saveDrink).mockResolvedValue([{
       id: 1,
       userId: 'u1',
       date: '2026-01-01',
       alcoholTypeId: 1,
       alcoholVolumeId: 10,
-    });
+    }]);
     renderWithProviders(<DetailedPage />);
     await screen.findByRole('combobox', { name: /alcohol type/i });
 
@@ -204,13 +204,13 @@ describe('DetailedPage', () => {
   });
 
   it('saves and navigates to success', async () => {
-    vi.mocked(saveDrink).mockResolvedValue({
+    vi.mocked(saveDrink).mockResolvedValue([{
       id: 1,
       userId: 'u1',
       date: '2026-01-01',
       alcoholTypeId: 2,
       alcoholVolumeId: 20,
-    });
+    }]);
     renderWithProviders(<DetailedPage />);
     await screen.findByRole('combobox', { name: /alcohol type/i });
 

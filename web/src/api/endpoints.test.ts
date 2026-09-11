@@ -21,7 +21,7 @@ describe('api/endpoints', () => {
   describe('saveDrink', () => {
     it('posts to /v1/drinks/new with a defaulted date and no userId', async () => {
       mockApiClient.post.mockResolvedValue({
-        data: { id: 1, userId: 'user-123', date: '2026-01-01', alcoholTypeId: 1 },
+        data: [{ id: 1, userId: 'user-123', date: '2026-01-01', alcoholTypeId: 1 }],
       });
 
       const result = await endpoints.saveDrink({
@@ -34,7 +34,29 @@ describe('api/endpoints', () => {
         alcoholVolumeId: 10,
         date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       });
-      expect(result.id).toBe(1);
+      expect(result).toEqual([expect.objectContaining({ id: 1 })]);
+    });
+
+    it('returns every id when several drinks were saved at once', async () => {
+      mockApiClient.post.mockResolvedValue({
+        data: [{ id: 1 }, { id: 2 }, { id: 3 }],
+      });
+
+      const result = await endpoints.saveDrink({ alcoholTypeId: 1, alcoholVolumeId: 10, quantity: 3 });
+
+      expect(result.map((d) => d.id)).toEqual([1, 2, 3]);
+    });
+
+    /**
+     * Deploy skew: a new bundle can reach a 3.x backend for about a minute after a release.
+     * Remove with the shim in 4.1.0.
+     */
+    it('wraps a bare object from a pre-4.0.0 backend', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { id: 7 } });
+
+      const result = await endpoints.saveDrink({ alcoholTypeId: 1, alcoholVolumeId: 10 });
+
+      expect(result).toEqual([{ id: 7 }]);
     });
 
     it('keeps an explicit date rather than defaulting it', async () => {
