@@ -49,7 +49,7 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     }, {
       name: 'webkit-history',
-      testMatch: /history-layout\.spec\.ts/,
+      testMatch: /history-(layout|lifecycle)\.spec\.ts/,
       use: { ...devices['Desktop Safari'], storageState: 'e2e/.auth/webkit-user.json' },
       dependencies: ['setup-webkit'],
     }] : []),

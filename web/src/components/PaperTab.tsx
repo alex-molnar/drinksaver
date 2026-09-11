@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useCallback, useLayoutEffect, useRef } from 'react';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { strikeOff } from './historyMotion';
+import { useHistoryLayoutMotion } from './useHistoryLayoutMotion';
 import styled from '@emotion/styled';
 import { Glass } from '../drink/glassware';
 import { drinkIdentity } from '../drink/identity';
@@ -6,18 +9,13 @@ import type { EditableDrink } from '../types/api';
 
 export type PaperTabStatus = 'loading' | 'error' | 'ready';
 
-/**
- * One row as `PaperTab` renders it: the drink the row is for, whether it is currently selected
- * for a bulk delete, and whether it is mid exit - struck through and collapsing, no longer part
- * of `useDrinksForDate`'s merged read model but kept mounted a beat longer so the strike-then-
- * collapse animation has somewhere to play. `HistoryPage` computes `gone` by diffing the live
- * read model against what it last rendered; `PaperTab` itself owns no timers, so it stays a
- * plain function of its props, the same way `PlateGrid` does.
- */
+/** A live row or an explicitly crossed-off row retained in its original slot until its
+ * animation finishes. Live data wins on Undo; the token identifies this particular exit. */
 export interface PaperTabRow {
   drink: EditableDrink;
   selected: boolean;
   gone: boolean;
+  token?: number;
   /**
    * The serving detail shown after the dotted leader ("0.5 L draft"), if there is one to show.
    * `EditableDrink` - what `getSavedDrinksByDate` actually returns - carries no such field today;
@@ -36,6 +34,7 @@ export interface PaperTabProps {
   rows: readonly PaperTabRow[];
   onToggleSelect: (drink: EditableDrink) => void;
   onDeleteOne: (drink: EditableDrink) => void;
+  onExitComplete?: (id: number, token: number) => void;
 }
 
 /**
@@ -45,11 +44,21 @@ export interface PaperTabProps {
  * of the 4.5:1 this row text needs.
  */
 const Tab = styled.div`
+  position: relative;
+  isolation: isolate;
   margin: 0 var(--ds-space-lg) var(--ds-space-xl);
-  background: var(--ds-surface-paper);
   color: var(--ds-ink-on-paper);
-  border-radius: 0 var(--ds-radius-sm) var(--ds-radius-sm) var(--ds-radius-sm);
   padding: 16px 18px 4px;
+`;
+
+const Surface = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  transform-origin: top;
+  background: var(--ds-surface-paper);
+  border-radius: 0 var(--ds-radius-sm) var(--ds-radius-sm) var(--ds-radius-sm);
   box-shadow: var(--ds-elevation-overlay);
 `;
 
@@ -70,45 +79,22 @@ const Count = styled.span`
   font-weight: var(--ds-type-caption-font-weight);
 `;
 
-/**
- * The red pen stroke. Driven by its own `data-gone` attribute rather than a `[data-gone] &`
- * parent selector referencing `Row`: emotion's component selectors need the babel or SWC plugin,
- * which this project's plain `@vitejs/plugin-react` setup does not run, so `HistoryPage` sets the
- * same attribute on both `Row` and `Strike` instead of this component reaching up to its parent.
- */
+/** The pen draws with a transform, leaving row width and text layout unchanged. */
 const Strike = styled.span`
   position: absolute;
-  left: -2%;
+  left: 0;
   top: 52%;
   height: 2.5px;
-  width: 0;
+  width: 100%;
   background: var(--ds-accent-danger);
   border-radius: 2px;
-  transform: rotate(-1.2deg);
+  transform: rotate(-1.2deg) scaleX(0);
+  transform-origin: left center;
   opacity: 0.9;
-  transition: width 260ms var(--ds-motion-easing-standard);
-
-  &[data-gone] {
-    width: 104%;
-    transition-delay: 0ms;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-  }
+  pointer-events: none;
 `;
 
-/**
- * One history row. A `div[role=button]`, not a native `<button>`: the nested checkbox and
- * cross-off control are both interactive elements, and a `<button>` may not contain other
- * interactive content per the HTML content model. `tabIndex`/`onKeyDown` below restore the
- * keyboard behaviour a native button would have given for free.
- *
- * `data-gone` drives the exit: the row's own height and opacity collapse 220ms after the strike
- * has had time to draw, matching the approved prototype's timing (`.hrow.gone`). Both transitions
- * are skipped under reduced motion; the row is removed from the DOM by `HistoryPage` on the same
- * timer either way; see that file's module doc for why the timer itself does not vary.
- */
+/** No height cap or layout-property transition: long names determine their real height. */
 const Row = styled.div`
   display: flex;
   align-items: baseline;
@@ -116,37 +102,15 @@ const Row = styled.div`
   padding: 13px 0;
   border-bottom: 1px solid color-mix(in srgb, var(--ds-ink-on-paper) 16%, transparent);
   position: relative;
-  overflow: hidden;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  /* Generous, not snug. This cap exists so the row has something to animate to zero from, but
-     it also clips: composed server names run to "Guinness (Draft/Tap - 0.50l)" and wrap to two
-     lines, which a 70px cap cut in half. Any realistic row fits well inside this. */
-  max-height: 240px;
-  transition:
-    max-height var(--ds-motion-duration-slow) var(--ds-motion-easing-standard) 220ms,
-    opacity var(--ds-motion-duration-base) var(--ds-motion-easing-standard) 220ms,
-    padding var(--ds-motion-duration-slow) var(--ds-motion-easing-standard) 220ms;
 
-  &:last-of-type {
-    border-bottom: 0;
-  }
+  &:last-of-type { border-bottom: 0; }
   &:focus-visible {
     outline: 2px solid var(--ds-ink-on-paper);
     outline-offset: -3px;
   }
-  &[data-gone] {
-    max-height: 0;
-    opacity: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    border-bottom-color: transparent;
-    pointer-events: none;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-  }
+  &[data-gone] { pointer-events: none; }
 `;
 
 const RowGlass = styled.span`
@@ -252,26 +216,69 @@ const countText = (n: number): string => {
   return `${n} ${n === 1 ? 'drink' : 'drinks'}`;
 };
 
-/**
- * The bar tab: a cream card listing the selected day's drinks, each row struck through before it
- * collapses on delete. `HistoryPage` owns the selection set, the save queue and the exit timing;
- * this component only renders what it is given, exactly the split `PlateGrid` already uses for
- * Quick Save.
- */
-const PaperTab: React.FC<PaperTabProps> = ({ label, status, rows, onToggleSelect, onDeleteOne }) => {
-  const handleRowKeyDown = (e: React.KeyboardEvent<HTMLDivElement>, drink: EditableDrink) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onToggleSelect(drink);
-    }
-  };
+const HistoryRow: React.FC<{
+  row: PaperTabRow;
+  reduced: boolean;
+  onToggleSelect: PaperTabProps['onToggleSelect'];
+  onDeleteOne: PaperTabProps['onDeleteOne'];
+  onExitComplete: PaperTabProps['onExitComplete'];
+}> = ({ row: { drink, selected, gone, detail, token }, reduced, onToggleSelect, onDeleteOne, onExitComplete }) => {
+  const rowRef = useRef<HTMLDivElement>(null);
+  const strokeRef = useRef<HTMLSpanElement>(null);
+  const finish = useCallback(() => {
+    if (token !== undefined) onExitComplete?.(drink.id, token);
+  }, [drink.id, token, onExitComplete]);
+  useLayoutEffect(() => {
+    if (gone) return strikeOff(rowRef.current!, strokeRef.current!, finish, reduced);
+  }, [gone, reduced, finish]);
+  const identity = drinkIdentity(drink.name, drink.alcoholTypeId);
 
   return (
-    <Tab>
+    <Row
+      ref={rowRef}
+      role="button"
+      tabIndex={gone ? -1 : 0}
+      inert={gone}
+      aria-label={drink.name}
+      data-history-row={drink.id}
+      data-gone={gone ? '' : undefined}
+      onClick={() => onToggleSelect(drink)}
+      onKeyDown={(event) => {
+        if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault();
+          onToggleSelect(drink);
+        }
+      }}
+    >
+      <Strike ref={strokeRef} data-history-strike aria-hidden="true" />
+      <CheckTile type="checkbox" checked={selected} readOnly tabIndex={-1} aria-label={drink.name} />
+      <RowGlass aria-hidden="true"><Glass kind={identity.glass} chroma={identity.chroma} tone="ink" /></RowGlass>
+      <Name>{drink.name}</Name>
+      <Lead aria-hidden="true" />
+      {detail ? <Detail>{detail}</Detail> : null}
+      <CrossButton
+        type="button"
+        disabled={gone}
+        aria-label={`Cross off ${drink.name}`}
+        onClick={(event) => { event.stopPropagation(); onDeleteOne(drink); }}
+      ><CrossIcon /></CrossButton>
+    </Row>
+  );
+};
+
+/** Counts come from live rows; visual exit rows remain keyed until their own sequence finishes. */
+const PaperTab: React.FC<PaperTabProps> = ({ label, status, rows, onToggleSelect, onDeleteOne, onExitComplete }) => {
+  const tabRef = useRef<HTMLDivElement>(null);
+  const reduced = useMediaQuery('(prefers-reduced-motion: reduce)');
+  useHistoryLayoutMotion(tabRef, rows, reduced);
+  const liveCount = rows.filter((row) => !row.gone).length;
+  return (
+    <Tab ref={tabRef}>
+      <Surface data-history-paper aria-hidden="true" />
       <Header>
         {label}
         <Count>
-          {status === 'loading' ? 'loading…' : status === 'error' ? 'unavailable' : countText(rows.length)}
+          {status === 'loading' ? 'loading…' : status === 'error' ? 'unavailable' : countText(liveCount)}
         </Count>
       </Header>
 
@@ -295,40 +302,10 @@ const PaperTab: React.FC<PaperTabProps> = ({ label, status, rows, onToggleSelect
         </Empty>
       )}
 
-      {status === 'ready' &&
-        rows.map(({ drink, selected, gone, detail }) => {
-          const identity = drinkIdentity(drink.name, drink.alcoholTypeId);
-          return (
-            <Row
-              key={drink.id}
-              role="button"
-              tabIndex={0}
-              aria-label={drink.name}
-              data-gone={gone ? '' : undefined}
-              onClick={() => onToggleSelect(drink)}
-              onKeyDown={(e) => handleRowKeyDown(e, drink)}
-            >
-              <Strike aria-hidden="true" data-gone={gone ? '' : undefined} />
-              <CheckTile type="checkbox" checked={selected} readOnly tabIndex={-1} aria-label={drink.name} />
-              <RowGlass aria-hidden="true">
-                <Glass kind={identity.glass} chroma={identity.chroma} tone="ink" />
-              </RowGlass>
-              <Name>{drink.name}</Name>
-              <Lead aria-hidden="true" />
-              {detail ? <Detail>{detail}</Detail> : null}
-              <CrossButton
-                type="button"
-                aria-label={`Cross off ${drink.name}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteOne(drink);
-                }}
-              >
-                <CrossIcon />
-              </CrossButton>
-            </Row>
-          );
-        })}
+      {status === 'ready' && rows.map((row) => (
+        <HistoryRow key={row.drink.id} row={row} reduced={reduced}
+          onToggleSelect={onToggleSelect} onDeleteOne={onDeleteOne} onExitComplete={onExitComplete} />
+      ))}
     </Tab>
   );
 };
