@@ -18,7 +18,9 @@ export interface DayStripProps {
 const MAX_PIPS = 4;
 
 const Strip = styled.div`
+  position: relative;
   display: flex;
+  min-width: 0;
   gap: 7px;
   padding: 14px var(--ds-space-lg) 4px;
   overflow-x: auto;
@@ -65,6 +67,7 @@ const dayTileBase = `
 
 const Day = styled.button`
   ${dayTileBase}
+  position: relative;
 `;
 
 const Weekday = styled.span`
@@ -125,6 +128,10 @@ const PickTile = styled.div<{ $active: boolean }>`
   justify-content: center;
   color: var(--ds-ink-tertiary);
   ${(p) => (p.$active ? 'background: var(--ds-surface-paper); color: var(--ds-ink-on-paper);' : '')}
+  &:has(:focus-visible) {
+    outline: 2px solid var(--ds-ink-primary);
+    outline-offset: 2px;
+  }
 `;
 
 const PickInput = styled.input`
@@ -172,9 +179,15 @@ const DayStrip: React.FC<DayStripProps> = ({ dates, counts, selectedDate, todayD
   // edge. Without this the strip opens showing the oldest days and hiding the one it is
   // actually displaying below.
   useEffect(() => {
-    const current = stripRef.current?.querySelector('[aria-current="date"]');
-    current?.scrollIntoView({ inline: 'center', block: 'nearest' });
-  }, [selectedDate]);
+    const strip = stripRef.current!;
+    const current = strip.querySelector<HTMLElement>('[aria-current="date"]')
+      ?? strip.querySelector<HTMLInputElement>('input')!;
+    const tile = current.getBoundingClientRect();
+    const bounds = strip.getBoundingClientRect();
+    // Move only the strip. scrollIntoView can also pan the window and clip the app frame.
+    // Native scrolling clamps this to the strip's ends; an older date centres the picker.
+    strip.scrollLeft += tile.left - bounds.left - (strip.clientWidth - tile.width) / 2;
+  }, [selectedDate, dates]);
 
   return (
     <Strip ref={stripRef}>

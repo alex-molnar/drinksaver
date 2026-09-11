@@ -22,6 +22,8 @@ export interface TapeStripProps {
    * the design doc, "Saving is immediate, deleting is deferred".
    */
   container?: Element | null;
+  /** A page slot reserves real space above navigation; sheet/body portals stay floating. */
+  inline?: boolean;
 }
 
 /** Brief enough to read as "gone", not as decoration - this PR is deliberately visually boring. */
@@ -39,14 +41,14 @@ const messageFor = (entry: SaveQueueEntry): string => {
  * auto-dismisses (see `saveQueueReducer.ts`'s `currentStripEntry` - a failed entry only ever
  * leaves the strip by a retry succeeding or a newer action superseding it, never by a timer).
  *
- * Portalled to `document.body` with its own stacking context, so it survives whatever route is
- * mounted underneath it and a click during its exit cannot fall through to it: see the
- * `pointer-events` handling below.
+ * Portalled to a page slot, the open sheet, or `document.body`. The queue keeps its lifetime
+ * across navigation; page slots reserve space for the banner instead of covering row controls.
+ * During exit, `pointer-events` prevents the fading banner from intercepting another action.
  *
  * Styled with plain MUI vocabulary against the current theme palette, not the enamel plate look -
  * that arrives with the presentational components in a later PR. This one is deliberately boring.
  */
-const TapeStrip: React.FC<TapeStripProps> = ({ entry, onUndo, onRetry, stripHandlers, container }) => {
+const TapeStrip: React.FC<TapeStripProps> = ({ entry, onUndo, onRetry, stripHandlers, container, inline = false }) => {
   /**
    * A present entry renders directly. State is only involved on the way *out*, to keep the last
    * entry on screen for the exit transition after the queue has already dropped it.
@@ -97,10 +99,11 @@ const TapeStrip: React.FC<TapeStripProps> = ({ entry, onUndo, onRetry, stripHand
       onFocus={stripHandlers.onFocus}
       onBlur={stripHandlers.onBlur}
       sx={{
-        position: 'fixed',
-        left: 16,
-        right: 16,
-        bottom: 88, // above the bottom navigation
+        position: inline ? 'relative' : 'fixed',
+        left: inline ? undefined : 16,
+        right: inline ? undefined : 16,
+        bottom: inline ? undefined : 'calc(88px + env(safe-area-inset-bottom))',
+        m: inline ? 2 : 0,
         zIndex: 1400,
         isolation: 'isolate',
       }}
@@ -125,7 +128,7 @@ const TapeStrip: React.FC<TapeStripProps> = ({ entry, onUndo, onRetry, stripHand
           color: isError ? 'error.contrastText' : 'text.primary',
         }}
       >
-        <Typography variant="body2" sx={{ flex: 1 }}>
+        <Typography variant="body2" sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
           {messageFor(rendered)}
         </Typography>
         {isError ? (

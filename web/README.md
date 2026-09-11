@@ -309,16 +309,33 @@ colours during design; both moved rather than the threshold.
 | `Plate` | One enamel sign. Field colour and ink come from the drink's identity, never from a literal. | `idle`, `saving` (pressed, `aria-busy`), `saved` (stamped for the undo window). A variant renders the dashed "Something else" plate. | `name`, `alcoholTypeId?`, `caption?`, `state`, `onClick` |
 | `PlateGrid` | Two-column grid of plates with deterministic per-index rotation, plus the trailing add plate. | Scrolls; nothing is hidden past the fold. | `items`, `onSelect`, `onAdd` |
 | `Glass` | The four glassware silhouettes. | `tone="ink"` draws a flat silhouette in the surface's own ink, which is what makes a plate read as a sign. `tone="chroma"` fills the liquid with the drink's colour. | `kind`, `chroma`, `foam?`, `tone?` |
-| `TapeStrip` | The undo strip. | `status` (undoable) announces with `role="status"`; the failed variant is `role="alert"` and never auto-dismisses. Its timer pauses while focus or hover is inside it, per WCAG 2.2 SC 2.2.1. | `entry`, `onUndo`, `onRetry`, `stripHandlers`, `container?` |
+| `TapeStrip` | The undo strip. History reserves an in-flow slot; other pages and open sheets use a floating portal. | `status` (undoable) announces with `role="status"`; the failed variant is `role="alert"` and never auto-dismisses. Its timer pauses while focus or hover is inside it, per WCAG 2.2 SC 2.2.1. | `entry`, `onUndo`, `onRetry`, `stripHandlers`, `container?`, `inline?` |
 | `AddSheet/SheetHost` | One Drawer for the whole panel stack, swapping content by the top panel. Owns per-panel focus and the strip's portal slot. | Open or closed; `?sheet=add` is the only part of the stack in the URL. | `sheet`, `children` |
 | `AddSheet/MenuPanel` | The bar menu: one leader-dot row per field, the quantity stepper and the save control. | Save is disabled until the drink and its size are chosen. | `rows`, `quantity`, `onPushPanel`, `onSave` |
 | `AddSheet/OptionPanel` | The options for one field, plus a "New ..." row where the catalogue allows it. | Branches on the field: dates, notes and the recommendation options render their own controls. | `field`, `onSelect`, `onCreate` |
 | `AddSheet/CreatePanel` | The inline form that replaced all five `New*` pages. On save the new entry is adopted into the draft and you return to the menu. | Idle, submitting, failed. | `field`, `onCreated`, `onBack` |
 | `PaperTab` | The history bar tab: the one light surface in the app. Rows are name, dotted leader, detail and a cross-off. | `loading`, `error`, `ready`. A row being deleted is struck through and collapses while the delete is still deferred. | `label`, `status`, `rows`, `onToggleSelect`, `onDeleteOne` |
 | `DayStrip` | Seven day tabs with marks, the current one connecting into the paper tab, plus a pick-a-date control. | A day still loading is drawn and announced differently from a day confirmed to have no drinks. There is no range endpoint, so a strip that says "nothing" about an unread day would be lying. | `dates`, `counts`, `selectedDate`, `todayDate`, `onSelect` |
+| `HistoryPage` | A fixed day strip, a keyboard-focusable vertical list, then feedback and bulk actions above navigation. | Loading, error, empty and populated paper all share the scroll area. Long names wrap; long feedback can scroll within its reserved slot. | None |
 | `AppErrorBoundary` | Catches a lazy route whose chunk has gone after a deploy. | Chunk failure offers a reload; anything else gets a generic fallback. A timestamped guard stops a reload loop without ever disabling the useful message. | `children` |
 
 ### Behaviour worth knowing
+
+**History scroll containment (UI-R1/UI-R2).** Selecting a recent day scrolls only `DayStrip`;
+an older selection reveals its native date picker. Positioned day tiles keep hidden labels
+inside the strip. `HistoryPage` gives `PaperTab` a bounded flex scroll area while feedback,
+bulk actions and navigation keep their own space. `PageFeedbackContext` registers the page's
+feedback slot with the queue provider; an open add sheet takes priority, and leaving History
+returns feedback to the body portal without resetting the undo window. `AppFrame` fills the
+root's available height, which already accounts for device safe areas.
+
+With the local Compose stack running, use `npm run e2e -- history-layout.spec.ts` for narrow
+day navigation, long lists/names, pointer and keyboard scrolling, bulk/single cross-off and
+undo geometry. These use deterministic History response fixtures; the existing save/delete
+journeys separately exercise real persistence. For the Safari engine, install it with
+`npx playwright install webkit`, then run
+`E2E_WEBKIT=1 npm run e2e -- history-layout.spec.ts --project=webkit-history`.
+WebKit automation does not replace checking the reported physical iPhone in Safari.
 
 **Logging never navigates.** A tile tap saves in place and raises the undo strip. `/success` and
 `/error` no longer exist as screens.

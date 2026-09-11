@@ -1,13 +1,11 @@
 import { test as setup, expect } from '@playwright/test';
 
-const AUTH_FILE = 'e2e/.auth/user.json';
-
 /**
  * Logs in through the real Keycloak form once and saves the session for the
  * journey tests. The credentials come from deploy/local/keycloak-realm.json and
  * are local throwaways.
  */
-setup('authenticate', async ({ page }) => {
+setup('authenticate', async ({ page, browserName }) => {
   await page.goto('/');
 
   // Keycloak owns the login form, so wait for its origin rather than a selector
@@ -23,5 +21,5 @@ setup('authenticate', async ({ page }) => {
   await page.waitForURL('http://localhost:3000/**', { timeout: 30_000 });
   await expect(page.locator('body')).toBeVisible();
 
-  await page.context().storageState({ path: AUTH_FILE });
+  await page.context().storageState({ path: `e2e/.auth/${browserName === 'webkit' ? 'webkit-user' : 'user'}.json` });
 });

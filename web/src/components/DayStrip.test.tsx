@@ -117,6 +117,14 @@ describe('DayStrip', () => {
     expect(input.max).toBe(TODAY);
   });
 
+  it('keeps an older selected date in the picker without marking a recent day current', () => {
+    render(
+      <DayStrip dates={DATES} counts={readyCounts()} selectedDate="2026-08-20" todayDate={TODAY} onSelect={vi.fn()} />
+    );
+    expect(screen.getByLabelText('Pick a date')).toHaveValue('2026-08-20');
+    expect(screen.getAllByRole('button').some((button) => button.hasAttribute('aria-current'))).toBe(false);
+  });
+
   it('calls onSelect when a date is picked from the native input', () => {
     const onSelect = vi.fn();
     render(<DayStrip dates={DATES} counts={readyCounts()} selectedDate={TODAY} todayDate={TODAY} onSelect={onSelect} />);

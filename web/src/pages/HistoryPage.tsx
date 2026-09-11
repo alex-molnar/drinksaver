@@ -9,13 +9,34 @@ import { useDayCounts } from '../drink/useDayCounts';
 import { useSaveQueue } from '../drink/useSaveQueue';
 import { dayStripDates, dayLabel, drinkingDay } from '../drink/day';
 import type { EditableDrink } from '../types/api';
+import { useSetPageFeedbackContainer } from '../components/PageFeedbackContext';
 
 /** How long a struck-through row stays mounted so its exit can play. Matches PaperTab's CSS. */
 const EXIT_MS = 320;
 
+const HistoryScroll = styled.section`
+  flex: 1;
+  /* Keep one control's worth of list visible when bulk actions and feedback coexist. */
+  min-height: 44px;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-ink-primary);
+    outline-offset: -2px;
+  }
+`;
+
+const FeedbackSlot = styled.div`
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 40%;
+  overflow-y: auto;
+`;
+
 const BulkBar = styled.div`
-  position: sticky;
-  bottom: 0;
+  flex: none;
   display: flex;
   justify-content: center;
   padding: var(--ds-space-sm) var(--ds-space-lg) var(--ds-space-lg);
@@ -47,6 +68,7 @@ const BulkButton = styled.button`
  * queue is the source of truth for whether the drink exists; this is only about the animation.
  */
 const HistoryPage: React.FC = () => {
+  const setFeedbackContainer = useSetPageFeedbackContainer();
   const todayDate = drinkingDay(new Date());
   const [selectedDate, setSelectedDate] = useState(todayDate);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -155,13 +177,16 @@ const HistoryPage: React.FC = () => {
         todayDate={todayDate}
         onSelect={handleSelectDate}
       />
-      <PaperTab
-        label={dayLabel(selectedDate, todayDate)}
-        status={drinksForDate.status}
-        rows={rows}
-        onToggleSelect={handleToggleSelect}
-        onDeleteOne={handleDeleteOne}
-      />
+      <HistoryScroll aria-label="Drinks for selected day" tabIndex={0}>
+        <PaperTab
+          label={dayLabel(selectedDate, todayDate)}
+          status={drinksForDate.status}
+          rows={rows}
+          onToggleSelect={handleToggleSelect}
+          onDeleteOne={handleDeleteOne}
+        />
+      </HistoryScroll>
+      <FeedbackSlot ref={setFeedbackContainer} />
       {selectedIds.size > 0 ? (
         <BulkBar>
           <BulkButton type="button" onClick={handleDeleteSelected} aria-label="Delete selected">
