@@ -14,8 +14,13 @@ const GIN = /Gin \(Long drink/;
  * nonsense. Wait for the loading spinner to clear instead.
  */
 const waitForHistoryLoaded = async (page: Page) => {
-  await expect(page.getByRole('textbox', { name: 'Date' })).toBeVisible();
-  await expect(page.getByRole('progressbar')).toHaveCount(0, { timeout: 15_000 });
+  await expect(page.getByLabel('Pick a date')).toBeVisible();
+  // The paper tab announces an unread day with role=status, and a day that has arrived drops it.
+  // Waiting on this rather than on a count is what stops an assertion passing against a tab that
+  // has not loaded yet, which is the same distinction the day strip is built on.
+  await expect(page.getByRole('status').filter({ hasText: /loading/i })).toHaveCount(0, {
+    timeout: 15_000,
+  });
 };
 
 const ginRows = (page: Page) => page.getByText(GIN).count();
@@ -42,7 +47,7 @@ test('a saved drink can be deleted from history and stays deleted after the undo
   const ginRow = page.getByRole('button').filter({ hasText: GIN }).first();
   await ginRow.click();
   await expect(ginRow.getByRole('checkbox')).toBeChecked({ timeout: 5_000 });
-  await page.getByRole('button', { name: 'delete selected' }).click();
+  await page.getByRole('button', { name: /delete selected/i }).click();
 
   // The strip is asserted first, and deliberately so: it only exists for the length of the undo
   // window, so anything polled ahead of it can outlast the thing being checked. The row count is
@@ -86,7 +91,7 @@ test('undoing a delete keeps the drink, because the delete was never sent', asyn
   await expect.poll(() => ginRows(page), { timeout: 15_000 }).toBe(before + 1);
 
   await page.getByRole('button').filter({ hasText: GIN }).first().click();
-  await page.getByRole('button', { name: 'delete selected' }).click();
+  await page.getByRole('button', { name: /delete selected/i }).click();
 
   // Undo before anything else. The control lives on a strip that clears itself when the window
   // closes, so polling the row count first spends the very budget the click needs. Waiting on

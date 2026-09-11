@@ -48,3 +48,58 @@ export const drinkingDay = (now: Date): string => {
  * rather than as a glitch.
  */
 export const isTonight = (now: Date): boolean => now.getHours() < DAY_ROLLOVER_HOUR;
+
+/** How many day tabs `DayStrip` shows: the current drinking day and the six before it. */
+export const DAY_STRIP_LENGTH = 7;
+
+/** A `YYYY-MM-DD` string parsed back into local date components, the inverse of `localISODate`. */
+const fromISODate = (date: string): Date => {
+  const [year, month, day] = date.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+/**
+ * The `length` drinking-day dates ending at `latest`, oldest first. Pure calendar arithmetic on
+ * an already-resolved drinking day: `latest` is normally `drinkingDay(new Date())`, resolved
+ * once by the caller, so walking back whole calendar days from it needs no further rollover
+ * logic of its own. `setDate` steps across a month, year or leap day boundary the same way
+ * `drinkingDay` itself does, so this holds on a daylight saving day without special-casing it.
+ */
+export const dayStripDates = (latest: string, length: number = DAY_STRIP_LENGTH): string[] => {
+  const anchor = fromISODate(latest);
+  const dates: string[] = [];
+  for (let i = length - 1; i >= 0; i -= 1) {
+    const d = new Date(anchor.getTime());
+    d.setDate(d.getDate() - i);
+    dates.push(localISODate(d));
+  }
+  return dates;
+};
+
+/** A day tab's compact label: a short weekday and the day-of-month number. */
+export interface DayStripTabLabel {
+  weekday: string;
+  day: number;
+}
+
+export const dayStripTabLabel = (date: string): DayStripTabLabel => {
+  const d = fromISODate(date);
+  return { weekday: d.toLocaleDateString('en-GB', { weekday: 'short' }), day: d.getDate() };
+};
+
+/**
+ * A day's full, human label relative to `today` (itself a drinking day): "Today", "Yesterday",
+ * or a full weekday-and-date for anything further back, or picked from the date input. Shared by
+ * the day strip's screen-reader text and the paper tab's own header, so the two never disagree
+ * about what a given date is called.
+ */
+export const dayLabel = (date: string, today: string): string => {
+  if (date === today) {
+    return 'Today';
+  }
+  const diffDays = Math.round((fromISODate(today).getTime() - fromISODate(date).getTime()) / 86_400_000);
+  if (diffDays === 1) {
+    return 'Yesterday';
+  }
+  return fromISODate(date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+};
