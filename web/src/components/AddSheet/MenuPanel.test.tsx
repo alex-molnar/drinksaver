@@ -75,7 +75,8 @@ describe('MenuPanel', () => {
 
   it('shows the Drink row with no value chosen yet, and the When, Notes and Recommend rows unconditionally', () => {
     renderMenuPanel();
-    expect(screen.getByRole('button', { name: /^Drink,/ })).toHaveAccessibleName(/not set/i);
+    // The accessible name carries the same placeholder the row displays, per WCAG 2.5.3.
+    expect(screen.getByRole('button', { name: /^Drink,/ })).toHaveAccessibleName(/Choose/i);
     expect(screen.getByRole('button', { name: /^When,/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Notes,/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Recommend,/ })).toBeInTheDocument();

@@ -15,6 +15,9 @@ const StyledDrawer = styled(Drawer)`
     background: var(--ds-surface-panel);
     color: var(--ds-ink-primary);
     border-radius: var(--ds-radius-lg) var(--ds-radius-lg) 0 0;
+    /* The painted edge. Without it the sheet reads as a generic drawer rather than as another
+       board in the same room as the plates and the nav, which is the whole visual conceit. */
+    border-top: 3px solid var(--ds-accent-active);
     max-height: 88vh;
   }
 `;

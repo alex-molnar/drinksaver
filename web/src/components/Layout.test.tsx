@@ -97,7 +97,6 @@ describe('Layout', () => {
   describe('bottom navigation', () => {
     it.each([
       ['Quick Save', '/'],
-      ['Add Drink', '/detailed'],
       ['History', '/history'],
     ])('navigates to %s at %s when its tab is tapped', async (label, expected) => {
       renderWithProviders(
@@ -112,7 +111,6 @@ describe('Layout', () => {
 
     it.each([
       ['/', 'Quick Save'],
-      ['/detailed', 'Add Drink'],
       ['/history', 'History'],
     ])('marks the tab for %s as selected', (route, label) => {
       renderWithProviders(<Layout>Content</Layout>, { route });

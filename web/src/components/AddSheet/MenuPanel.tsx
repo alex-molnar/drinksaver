@@ -211,7 +211,15 @@ const provisionalLabel = (catalogue: DraftFieldsCatalogue, draft: { alcoholTypeI
   return detail ? `${typeName} (${detail})` : typeName;
 };
 
-const rowAccessibleName = (row: MenuRow): string => `${row.label}, ${row.value ?? 'not set'}`;
+/**
+ * The placeholder a row shows when nothing is chosen. Shared between the accessible name and the
+ * rendered value on purpose: WCAG 2.5.3 (Label in Name) wants the accessible name to contain the
+ * visible text, so a speech-input user can say what they see. Naming the state ("not set") while
+ * showing an invitation ("Choose") breaks that, and it broke a locator too.
+ */
+const UNSET = 'Choose';
+
+const rowAccessibleName = (row: MenuRow): string => `${row.label}, ${row.value ?? UNSET}`;
 
 /**
  * The sheet's root panel: the bar menu. One row per field from `menuFields`, a quantity stepper
@@ -278,7 +286,7 @@ const MenuPanel: React.FC<MenuPanelProps> = ({ onPushPanel, onDismiss }) => {
           <Row key={row.key} type="button" aria-label={rowAccessibleName(row)} onClick={() => onPushPanel({ kind: 'option', field: row.key })}>
             <Label>{row.label}</Label>
             <Lead aria-hidden="true" />
-            <Value $placeholder={row.value === null}>{row.value ?? 'Choose'}</Value>
+            <Value $placeholder={row.value === null}>{row.value ?? UNSET}</Value>
           </Row>
         ))}
       </Rows>
