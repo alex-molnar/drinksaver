@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 import { KeycloakProvider, ProtectedRoute } from './auth';
 import AppErrorBoundary from './components/AppErrorBoundary';
+import { SaveQueueProvider } from './drink/SaveQueueProvider';
 
 /**
  * Routes are loaded on demand. Every page pulls in MUI, so a single eager bundle
@@ -34,22 +35,31 @@ function App() {
   return (
     <KeycloakProvider>
       <ProtectedRoute>
-        <AppErrorBoundary key={location.pathname}>
-          <Suspense fallback={<RouteFallback />}>
-            <Routes>
-              <Route path="/" element={<IndexPage />} />
-              <Route path="/detailed" element={<DetailedPage />} />
-              <Route path="/history" element={<HistoryPage />} />
-              <Route path="/success" element={<SuccessPage />} />
-              <Route path="/error" element={<ErrorPage />} />
-              <Route path="/new-alcohol" element={<NewAlcoholPage />} />
-              <Route path="/new-volume" element={<NewVolumePage />} />
-              <Route path="/new-brand" element={<NewBeerBrandPage />} />
-              <Route path="/new-subtype" element={<NewSubtypePage />} />
-              <Route path="/new-beer-flavour" element={<NewBeerFlavourPage />} />
-            </Routes>
-          </Suspense>
-        </AppErrorBoundary>
+        {/*
+          Above the error boundary and Routes, deliberately: AppErrorBoundary remounts on every
+          navigation (it is keyed on the pathname, to clear a stuck error), and the queue and its
+          undo strip must survive a route change rather than being torn down by it. The strip
+          itself portals to document.body regardless, but the timers, mutations and lifecycle
+          listeners that drive it live in this provider and must not be remounted mid-window.
+        */}
+        <SaveQueueProvider>
+          <AppErrorBoundary key={location.pathname}>
+            <Suspense fallback={<RouteFallback />}>
+              <Routes>
+                <Route path="/" element={<IndexPage />} />
+                <Route path="/detailed" element={<DetailedPage />} />
+                <Route path="/history" element={<HistoryPage />} />
+                <Route path="/success" element={<SuccessPage />} />
+                <Route path="/error" element={<ErrorPage />} />
+                <Route path="/new-alcohol" element={<NewAlcoholPage />} />
+                <Route path="/new-volume" element={<NewVolumePage />} />
+                <Route path="/new-brand" element={<NewBeerBrandPage />} />
+                <Route path="/new-subtype" element={<NewSubtypePage />} />
+                <Route path="/new-beer-flavour" element={<NewBeerFlavourPage />} />
+              </Routes>
+            </Suspense>
+          </AppErrorBoundary>
+        </SaveQueueProvider>
       </ProtectedRoute>
     </KeycloakProvider>
   );
