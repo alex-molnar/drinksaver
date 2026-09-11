@@ -8,6 +8,9 @@ import { SaveQueueProvider } from './SaveQueueProvider';
 import { useSaveQueue } from './useSaveQueue';
 import { saveDrink, deleteDrinksByIds, getSavedDrinksByDate } from '../api/endpoints';
 import type { SaveDrinkPayload } from './saveQueueReducer';
+import { useState } from 'react';
+import { useSetPageFeedbackContainer } from '../components/PageFeedbackContext';
+import { SheetPortalContext } from '../components/AddSheet/SheetPortalContext';
 
 vi.mock('../api/endpoints');
 vi.mock('../auth/keycloak', () => ({ default: { token: 'test-token' } }));
@@ -87,6 +90,45 @@ afterEach(() => {
 });
 
 describe('SaveQueueProvider', () => {
+  it('keeps undo alive when moving from a page slot into a sheet and back to the body', async () => {
+    const PageSlot = () => <div data-testid="page-feedback" ref={useSetPageFeedbackContainer()} />;
+    const Host = () => {
+      const [pageMounted, setPageMounted] = useState(true);
+      const [sheet, setSheet] = useState<HTMLElement | null>(null);
+      const [sheetOpen, setSheetOpen] = useState(false);
+      return (
+        <SheetPortalContext.Provider value={{ container: sheet, setContainer: setSheet }}>
+          <SaveQueueProvider undoWindowMs={TEST_UNDO_WINDOW_MS}>
+            <Harness />
+            {pageMounted && <PageSlot />}
+            {sheetOpen && <div data-testid="sheet-feedback" ref={setSheet} />}
+            <button onClick={() => setSheetOpen((open) => !open)}>toggle-sheet</button>
+            <button onClick={() => setPageMounted(false)}>leave-page</button>
+          </SaveQueueProvider>
+        </SheetPortalContext.Provider>
+      );
+    };
+    render(
+      <ThemeProvider theme={muiTheme}>
+        <QueryClientProvider client={new QueryClient()}><Host /></QueryClientProvider>
+      </ThemeProvider>
+    );
+
+    await userEvent.click(screen.getByText('trigger-remove-guinness'));
+    expect(screen.getByTestId('page-feedback')).toContainElement(screen.getByRole('status'));
+    expect(screen.getByRole('status')).toHaveStyle({ position: 'relative' });
+    await userEvent.click(screen.getByText('toggle-sheet'));
+    expect(screen.getByTestId('sheet-feedback')).toContainElement(screen.getByRole('status'));
+    expect(screen.getByRole('status')).toHaveStyle({ position: 'fixed' });
+    await userEvent.click(screen.getByText('toggle-sheet'));
+    expect(screen.getByTestId('page-feedback')).toContainElement(screen.getByRole('status'));
+    await userEvent.click(screen.getByText('leave-page'));
+    expect(screen.getByRole('status').parentElement).toBe(document.body);
+    await userEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
+    expect(mockDeleteDrinksByIds).not.toHaveBeenCalled();
+  });
+
   it('renders its children', () => {
     renderProvider();
     expect(screen.getByText('trigger-save-duvel')).toBeInTheDocument();

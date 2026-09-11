@@ -18,7 +18,8 @@ interface AppFrameProps {
 }
 
 const Frame = styled.div`
-  height: 100dvh;
+  /* #root already subtracts the device safe areas from the available height. */
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;

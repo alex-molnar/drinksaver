@@ -42,5 +42,16 @@ export default defineConfig({
       testMatch: /login\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
+    // Optional Safari-engine layout checks; the regular CI job only installs Chromium.
+    ...(process.env.E2E_WEBKIT ? [{
+      name: 'setup-webkit',
+      testMatch: /auth\.setup\.ts/,
+      use: { ...devices['Desktop Safari'] },
+    }, {
+      name: 'webkit-history',
+      testMatch: /history-layout\.spec\.ts/,
+      use: { ...devices['Desktop Safari'], storageState: 'e2e/.auth/webkit-user.json' },
+      dependencies: ['setup-webkit'],
+    }] : []),
   ],
 });

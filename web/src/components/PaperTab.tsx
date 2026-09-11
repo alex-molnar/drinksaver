@@ -165,6 +165,7 @@ const Name = styled.span`
      keeps a few dots either way; it is decoration, and the name is the content. */
   flex: 1 1 auto;
   min-width: 0;
+  overflow-wrap: anywhere;
 `;
 
 const Lead = styled.span`

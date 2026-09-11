@@ -1,8 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 
 const waitForHistoryLoaded = async (page: Page) => {
-  await expect(page.getByRole('textbox', { name: 'Date' })).toBeVisible();
-  await expect(page.getByRole('progressbar')).toHaveCount(0, { timeout: 15_000 });
+  await expect(page.getByLabel('Pick a date')).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: /loading/i })).toHaveCount(0, { timeout: 15_000 });
 };
 
 /** A menu row's accessible name is `"<label>, <value>"` - see `MenuPanel.tsx`'s `rowAccessibleName`

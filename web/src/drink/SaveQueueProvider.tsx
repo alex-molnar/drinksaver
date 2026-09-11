@@ -6,6 +6,7 @@ import keycloak from '../auth/keycloak';
 import { classify } from './retryPolicy';
 import { useUndoTimer, UNDO_WINDOW_MS } from '../hooks/useUndoTimer';
 import TapeStrip from '../components/TapeStrip';
+import { PageFeedbackContext } from '../components/PageFeedbackContext';
 import { useSheetPortalContainer } from '../components/AddSheet/SheetPortalContext';
 import { SaveQueueContext, type SaveQueueSaveInput, type SaveQueueRemoveInput } from './SaveQueueContext';
 import {
@@ -101,6 +102,7 @@ export const SaveQueueProvider: React.FC<SaveQueueProviderProps> = ({ children, 
   // The add sheet's own container while it is open, or null: see `SheetPortalContext.ts`'s module
   // doc for why the strip must not stay on `document.body` while a sheet is open.
   const stripContainer = useSheetPortalContainer();
+  const [pageFeedbackContainer, setPageFeedbackContainer] = useState<HTMLDivElement | null>(null);
 
   const queueRef = useRef(queue);
   queueRef.current = queue;
@@ -381,8 +383,17 @@ export const SaveQueueProvider: React.FC<SaveQueueProviderProps> = ({ children, 
 
   return (
     <SaveQueueContext.Provider value={{ queue, current, save, remove, undo, retry, stripHandlers }}>
-      {children}
-      <TapeStrip entry={current} onUndo={undo} onRetry={retry} stripHandlers={stripHandlers} container={stripContainer} />
+      <PageFeedbackContext.Provider value={setPageFeedbackContainer}>
+        {children}
+      </PageFeedbackContext.Provider>
+      <TapeStrip
+        entry={current}
+        onUndo={undo}
+        onRetry={retry}
+        stripHandlers={stripHandlers}
+        container={stripContainer ?? pageFeedbackContainer}
+        inline={!stripContainer && pageFeedbackContainer !== null}
+      />
     </SaveQueueContext.Provider>
   );
 };

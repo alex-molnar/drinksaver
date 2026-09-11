@@ -22,7 +22,7 @@ test('saving a recommendation records it in history without navigating away', as
 
   await page.goto('/history');
   await expect(page.getByRole('heading', { name: 'History' })).toBeVisible();
-  await expect(page.getByRole('textbox', { name: 'Date' })).toHaveValue(expectedDay());
+  await expect(page.getByLabel('Pick a date')).toHaveValue(expectedDay());
 
   // The drink the backend resolved a name for shows up on the drinking day. It has to arrive by
   // the ordinary route: the save queue's provisional row would show "Duvel bottle" immediately
@@ -53,6 +53,6 @@ test('a drink logged after midnight is filed on the night it belongs to', async 
   await expect(page.getByRole('heading', { name: 'History' })).toBeVisible();
 
   // The night of the 9th, not the calendar date the clock reads.
-  await expect(page.getByRole('textbox', { name: 'Date' })).toHaveValue('2026-09-09');
+  await expect(page.getByLabel('Pick a date')).toHaveValue('2026-09-09');
   await expect(page.getByText(/guinness/i).first()).toBeVisible({ timeout: 15_000 });
 });
