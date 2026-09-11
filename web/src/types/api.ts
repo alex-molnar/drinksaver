@@ -72,30 +72,6 @@ export interface ConsumptionType {
   name: string;
 }
 
-// Navigation state types
-export interface ErrorPageState {
-  message: string;
-}
-
-export interface SuccessPageState {
-  message: string;
-}
-
-export interface NewVolumePageState {
-  alcoholTypeId: number;
-  alcoholTypeName: string;
-}
-
-export interface NewSubtypePageState {
-  alcoholTypeId: number;
-  alcoholTypeName: string;
-}
-
-export interface NewBeerFlavourPageState {
-  brandId: number;
-  brandName: string;
-}
-
 // Alcohol subtype types
 export interface AlcoholSubtype {
   id: number;

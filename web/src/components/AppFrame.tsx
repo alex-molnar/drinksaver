@@ -3,6 +3,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { useAuth } from '../auth';
 import { useDrinksForDate } from '../drink/useDrinksForDate';
+import { useSheet } from '../hooks/useSheet';
+import { MENU_PANEL } from './AddSheet';
+import type { AddSheetPanel } from './AddSheet';
+import { ADD_SHEET_ID } from '../drink/draftReducer';
 import { drinkingDay, isTonight } from '../drink/day';
 
 interface AppFrameProps {
@@ -159,9 +163,8 @@ const SignOutIcon: React.FC = () => (
   </svg>
 );
 
-const NAV_ITEMS: { path: string; label: string; Icon: React.FC }[] = [
+const ROUTE_ITEMS: { path: string; label: string; Icon: React.FC }[] = [
   { path: '/', label: 'Quick', Icon: BoltIcon },
-  { path: '/detailed', label: 'Add', Icon: PlusIcon },
   { path: '/history', label: 'History', Icon: ClockIcon },
 ];
 
@@ -179,6 +182,8 @@ const AppFrame: React.FC<AppFrameProps> = ({ children }) => {
   const { logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { open: openAddSheet, isOpen: addSheetOpen } = useSheet<AddSheetPanel>(ADD_SHEET_ID, MENU_PANEL);
 
   const now = new Date();
   const today = drinkingDay(now);
@@ -200,17 +205,36 @@ const AppFrame: React.FC<AppFrameProps> = ({ children }) => {
       </Header>
       <Main>{children}</Main>
       <Nav>
-        {NAV_ITEMS.map(({ path, label, Icon }) => (
-          <NavButton
-            key={path}
-            type="button"
-            onClick={() => navigate(path)}
-            aria-current={location.pathname === path ? 'page' : undefined}
-          >
-            <Icon />
-            <span>{label}</span>
-          </NavButton>
-        ))}
+        <NavButton
+          key={ROUTE_ITEMS[0].path}
+          type="button"
+          onClick={() => navigate(ROUTE_ITEMS[0].path)}
+          aria-current={location.pathname === ROUTE_ITEMS[0].path ? 'page' : undefined}
+        >
+          <BoltIcon />
+          <span>{ROUTE_ITEMS[0].label}</span>
+        </NavButton>
+
+        {/*
+          Add opens the sheet in place rather than navigating to /detailed and riding its
+          redirect. Going through the redirect works, but it never stamps a dismiss depth, so
+          dismissing afterwards walks back to / instead of to wherever the tab was tapped from.
+          Opened from History, that means the sheet drops you on Quick Save on the way out.
+        */}
+        <NavButton type="button" onClick={openAddSheet} aria-current={addSheetOpen ? 'page' : undefined}>
+          <PlusIcon />
+          <span>Add</span>
+        </NavButton>
+
+        <NavButton
+          key={ROUTE_ITEMS[1].path}
+          type="button"
+          onClick={() => navigate(ROUTE_ITEMS[1].path)}
+          aria-current={location.pathname === ROUTE_ITEMS[1].path ? 'page' : undefined}
+        >
+          <ClockIcon />
+          <span>{ROUTE_ITEMS[1].label}</span>
+        </NavButton>
       </Nav>
     </Frame>
   );

@@ -12,6 +12,16 @@ export interface TapeStripProps {
   /** Spread onto the strip's root: pausing while focus or hover is inside it is what satisfies
    *  WCAG 2.2 SC 2.2.1 for this auto-expiring action. */
   stripHandlers: UseUndoTimerHandlers;
+  /**
+   * Where to portal the strip. Defaults to `document.body`. `SaveQueueProvider` passes the add
+   * sheet's own container while a sheet is open: MUI's `ModalManager` sets `aria-hidden` on every
+   * `document.body` child that is not the open modal's own root, so a strip left on `document.body`
+   * would be hidden from assistive technology and buried under the sheet's backdrop the instant it
+   * opens. Rendering into the sheet's own container instead sidesteps that entirely, because the
+   * strip is then a descendant of the exempted modal root rather than a hidden sibling of it. See
+   * the design doc, "Saving is immediate, deleting is deferred".
+   */
+  container?: Element | null;
 }
 
 /** Brief enough to read as "gone", not as decoration - this PR is deliberately visually boring. */
@@ -36,7 +46,7 @@ const messageFor = (entry: SaveQueueEntry): string => {
  * Styled with plain MUI vocabulary against the current theme palette, not the enamel plate look -
  * that arrives with the presentational components in a later PR. This one is deliberately boring.
  */
-const TapeStrip: React.FC<TapeStripProps> = ({ entry, onUndo, onRetry, stripHandlers }) => {
+const TapeStrip: React.FC<TapeStripProps> = ({ entry, onUndo, onRetry, stripHandlers, container }) => {
   /**
    * A present entry renders directly. State is only involved on the way *out*, to keep the last
    * entry on screen for the exit transition after the queue has already dropped it.
@@ -134,7 +144,7 @@ const TapeStrip: React.FC<TapeStripProps> = ({ entry, onUndo, onRetry, stripHand
         )}
       </Paper>
     </Box>,
-    document.body
+    container ?? document.body
   );
 };
 

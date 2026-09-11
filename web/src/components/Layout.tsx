@@ -18,6 +18,10 @@ import HistoryIcon from '@mui/icons-material/History';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../auth';
+import { useSheet } from '../hooks/useSheet';
+import { MENU_PANEL } from './AddSheet';
+import type { AddSheetPanel } from './AddSheet';
+import { ADD_SHEET_ID } from '../drink/draftReducer';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -36,17 +40,25 @@ const Layout: React.FC<LayoutProps> = ({
   const navigate = useNavigate();
   const { logout } = useAuth();
 
+  const { open: openAddSheet, isOpen: addSheetOpen } = useSheet<AddSheetPanel>(ADD_SHEET_ID, MENU_PANEL);
+
   // Determine active tab based on current route
   const getNavValue = () => {
+    if (addSheetOpen) return 1;
     if (location.pathname === '/') return 0;
-    if (location.pathname === '/detailed') return 1;
     if (location.pathname === '/history') return 2;
     return -1;
   };
 
+  /**
+   * Add opens the sheet in place rather than navigating to /detailed and riding its redirect.
+   * The redirect works, but it never stamps a dismiss depth, so dismissing afterwards walks back
+   * to / rather than to wherever the tab was tapped from. Opened from History, which is the only
+   * screen still using this frame, that means the sheet drops you on Quick Save on the way out.
+   */
   const handleNavChange = (_: React.SyntheticEvent, newValue: number) => {
     if (newValue === 0) navigate('/');
-    else if (newValue === 1) navigate('/detailed');
+    else if (newValue === 1) openAddSheet();
     else if (newValue === 2) navigate('/history');
   };
 

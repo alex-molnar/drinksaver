@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../test/test-utils';
 import QuickSavePage from './QuickSavePage';
 import { getRecommendations } from '../api/endpoints';
-import { useAppNavigation } from '../hooks/useNavigation';
+import { useSheet } from '../hooks/useSheet';
 import { useSaveQueue } from '../drink/useSaveQueue';
 import { useDrinksForDate } from '../drink/useDrinksForDate';
 import type { Recommendation } from '../types/api';
@@ -12,7 +12,7 @@ import type { SaveQueueContextType } from '../drink/SaveQueueContext';
 import type { SaveQueueEntry } from '../drink/saveQueueReducer';
 
 vi.mock('../api/endpoints');
-vi.mock('../hooks/useNavigation');
+vi.mock('../hooks/useSheet');
 vi.mock('../drink/useSaveQueue');
 vi.mock('../drink/useDrinksForDate');
 vi.mock('../auth', () => ({
@@ -20,11 +20,11 @@ vi.mock('../auth', () => ({
 }));
 
 const mockGetRecommendations = vi.mocked(getRecommendations);
-const mockUseNavigation = vi.mocked(useAppNavigation);
+const mockUseSheet = vi.mocked(useSheet);
 const mockUseSaveQueue = vi.mocked(useSaveQueue);
 const mockUseDrinksForDate = vi.mocked(useDrinksForDate);
 
-const navigateToDetailed = vi.fn();
+const openAddSheet = vi.fn();
 const mockSave = vi.fn<SaveQueueContextType['save']>();
 
 /** Mutated by individual tests to simulate the queue moving an entry through its lifecycle. */
@@ -36,16 +36,13 @@ beforeEach(() => {
   vi.clearAllMocks();
   entries = [];
   mockSave.mockReturnValue('save-1');
-  mockUseNavigation.mockReturnValue({
-    navigateToSuccess: vi.fn(),
-    navigateToError: vi.fn(),
-    navigateToDetailed,
-    navigateToHome: vi.fn(),
-    navigateToNewAlcohol: vi.fn(),
-    navigateToNewVolume: vi.fn(),
-    navigateToNewBrand: vi.fn(),
-    navigateToNewSubtype: vi.fn(),
-    navigateToNewBeerFlavour: vi.fn(),
+  mockUseSheet.mockReturnValue({
+    isOpen: false,
+    panels: [],
+    open: openAddSheet,
+    pushPanel: vi.fn(),
+    popPanel: vi.fn(),
+    dismiss: vi.fn(),
   });
   mockUseDrinksForDate.mockReturnValue({ status: 'ready', rows: [] });
   mockUseSaveQueue.mockImplementation(() => ({
@@ -140,7 +137,7 @@ describe('QuickSavePage', () => {
     });
   });
 
-  it('navigates to the detailed form when "Something else" is tapped', async () => {
+  it('opens the add sheet in place when "Something else" is tapped', async () => {
     mockGetRecommendations.mockResolvedValue([]);
 
     renderWithProviders(<QuickSavePage />);
@@ -150,7 +147,7 @@ describe('QuickSavePage', () => {
     });
     await userEvent.click(screen.getByRole('button', { name: 'Something else' }));
 
-    expect(navigateToDetailed).toHaveBeenCalled();
+    expect(openAddSheet).toHaveBeenCalled();
   });
 
   it('saves a recommendation through the queue instead of navigating', async () => {
@@ -177,8 +174,8 @@ describe('QuickSavePage', () => {
         consumptionTypeId: undefined,
       },
     });
-    // Logging never navigates: the URL is asserted implicitly by never calling a navigate helper.
-    expect(navigateToDetailed).not.toHaveBeenCalled();
+    // Logging never navigates, and never opens the sheet either.
+    expect(openAddSheet).not.toHaveBeenCalled();
   });
 
   it('disables the other plates while one is saving, and clears once the entry resolves', async () => {

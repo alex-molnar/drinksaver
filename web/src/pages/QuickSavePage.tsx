@@ -3,8 +3,11 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import AppFrame from '../components/AppFrame';
 import PlateGrid, { type PlateGridItem } from '../components/PlateGrid';
-import { useAppNavigation } from '../hooks/useNavigation';
+import { MENU_PANEL } from '../components/AddSheet';
+import { useSheet } from '../hooks/useSheet';
 import { useSaveQueue } from '../drink/useSaveQueue';
+import { ADD_SHEET_ID } from '../drink/draftReducer';
+import type { AddSheetPanel } from '../components/AddSheet';
 import { drinkingDay } from '../drink/day';
 import { getRecommendations } from '../api/endpoints';
 import type { Recommendation } from '../types/api';
@@ -42,10 +45,11 @@ const CenteredMessage: React.FC<{ children: React.ReactNode }> = ({ children }) 
  * The Quick Save screen: two columns of enamel plates in a painted-board frame. Logging never
  * navigates - a tap saves through the queue in place, `PlateGrid` shows the saving and saved
  * states, and the undo strip (mounted by `SaveQueueProvider`, above this page) carries the
- * outcome. Only "Something else" still navigates, to the detailed form this PR leaves untouched.
+ * outcome. "Something else" opens the add sheet in place too, rather than navigating to a
+ * detailed form: see `SheetHost.tsx`.
  */
 const QuickSavePage: React.FC = () => {
-  const { navigateToDetailed } = useAppNavigation();
+  const { open: openAddSheet } = useSheet<AddSheetPanel>(ADD_SHEET_ID, MENU_PANEL);
   const { save, queue } = useSaveQueue();
 
   // The tile that raised a save, and the queue entry id it is waiting on. Never explicitly
@@ -130,7 +134,7 @@ const QuickSavePage: React.FC = () => {
         savingKey={savingKey}
         doneKey={doneKey}
         saveInFlight={savingKey !== null}
-        onAddCustom={navigateToDetailed}
+        onAddCustom={openAddSheet}
       />
     </AppFrame>
   );

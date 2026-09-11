@@ -14,7 +14,15 @@ vi.mock('../auth', () => ({
   useAuth: () => ({ logout }),
 }));
 
-const RouteProbe = () => <span data-testid="pathname">{useLocation().pathname}</span>;
+const RouteProbe = () => {
+  const location = useLocation();
+  return (
+    <>
+      <span data-testid="pathname">{location.pathname}</span>
+      <span data-testid="search">{location.search}</span>
+    </>
+  );
+};
 
 describe('AppFrame', () => {
   beforeEach(() => {
@@ -123,7 +131,6 @@ describe('AppFrame', () => {
   describe('bottom navigation', () => {
     it.each([
       ['Quick', '/'],
-      ['Add', '/detailed'],
       ['History', '/history'],
     ])('navigates to %s at %s when tapped', async (label, expected) => {
       renderWithProviders(
@@ -136,6 +143,26 @@ describe('AppFrame', () => {
       await userEvent.click(screen.getByRole('button', { name: label }));
 
       expect(screen.getByTestId('pathname')).toHaveTextContent(expected);
+    });
+
+    /**
+     * Add is not a route. Tapping it opens the sheet where you already are, rather than
+     * navigating to /detailed and riding its redirect: that route still works, but arriving
+     * through it never stamps a dismiss depth, so dismissing afterwards walks back to / instead
+     * of to wherever the tab was tapped from.
+     */
+    it('opens the add sheet in place rather than navigating', async () => {
+      renderWithProviders(
+        <AppFrame>
+          <RouteProbe />
+        </AppFrame>,
+        { route: '/history' }
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+      expect(screen.getByTestId('pathname')).toHaveTextContent('/history');
+      expect(screen.getByTestId('search')).toHaveTextContent('sheet=');
     });
 
     it('marks the current route\'s tab with aria-current', () => {
