@@ -4,11 +4,14 @@ A mobile-first web application for tracking alcohol consumption. Built with Reac
 
 ## Features
 
-- **Quick Save**: One-tap saving of recommended drinks
-- **Detailed Entry**: Full form for custom drink entries
-- **Beer Support**: Special fields for beer (brand, consumption type)
-- **CRUD Operations**: Create new alcohol types, volumes, and beer brands
-- **Mobile-First**: Optimized for touch devices with 44px+ touch targets
+- **Quick Save**: one tap on an enamel plate logs a drink, in place, with undo
+- **Add sheet**: a bar menu over whatever screen you are on, never a separate page
+- **Catalogue entries created inline**: a missing brand or size is added without losing the drink
+  you were part way through entering
+- **History**: a paper bar tab you cross off, with a seven day strip and deferred deletes
+- **Beer Support**: brand, flavour and consumption type appear only when they apply
+- **Mobile-First**: optimized for touch devices with 44px+ touch targets, and a day that rolls
+  over at 06:00 rather than midnight
 - **Docker Ready**: Multi-stage Dockerfile with Nginx serving
 - **Kubernetes Ready**: Helm chart included for easy deployment
 
@@ -178,27 +181,41 @@ src/
 │   ├── client.ts        # Axios instance configuration
 │   └── endpoints.ts     # API endpoint functions
 ├── components/
-│   ├── Layout.tsx       # Shared layout wrapper
-│   ├── LoadingButton.tsx # Button with loading state
-│   └── RecommendationButton.tsx # Quick-save button
+│   ├── AppFrame.tsx     # Painted board header and bottom nav
+│   ├── Plate.tsx        # One enamel sign
+│   ├── PlateGrid.tsx    # The Quick Save grid
+│   ├── PaperTab.tsx     # The history bar tab
+│   ├── DayStrip.tsx     # Seven day tabs and the date picker
+│   ├── TapeStrip.tsx    # The undo strip
+│   ├── AppErrorBoundary.tsx # Catches a lazy chunk that went missing in a deploy
+│   ├── LoadingButton.tsx
+│   └── AddSheet/        # SheetHost and its menu, option and create panels
 ├── auth/
 │   ├── KeycloakProvider.tsx # Init, token refresh, auth context
 │   ├── ProtectedRoute.tsx   # Gate for authenticated content
 │   └── useAuth.ts           # Context accessor
+├── theme/
+│   ├── primitives.ts    # Raw scales. No component imports this
+│   ├── tokens.ts        # The ThemeTokens interface and the dark set
+│   ├── cssVars.ts       # Emits --ds-* custom properties
+│   ├── muiTheme.ts      # MUI's behavioural shells, skinned through those variables
+│   └── fonts.css        # Self hosted Fraunces and Familjen Grotesk
+├── drink/
+│   ├── day.ts           # The 06:00 drinking day
+│   ├── identity.ts      # Glass, field, ink and chroma per drink
+│   ├── contrast.ts      # WCAG maths, and the gate on the table above
+│   ├── glassware.tsx    # The four silhouettes
+│   ├── draftReducer.ts  # The add sheet's draft and its cascade rules
+│   ├── saveQueueReducer.ts # Pure, clock injected: saving, undoable, committed
+│   ├── SaveQueueProvider.tsx # Timers, deferred deletes, the lifecycle listeners
+│   ├── useDrinksForDate.ts # The read model both screens build on
+│   └── useDayCounts.ts  # Seven days, distinguishing unread from empty
 ├── hooks/
-│   ├── useNavigation.ts       # Navigation helper hook
-│   └── useResponsiveTileCount.ts
+│   ├── useSheet.ts      # One bit of URL, the panel stack in state
+│   └── useUndoTimer.ts  # The window, and its WCAG pause
 ├── pages/
-│   ├── IndexPage.tsx    # Quick save grid
-│   ├── DetailedPage.tsx # Manual entry form
-│   ├── HistoryPage.tsx  # A day's drinks, with delete
-│   ├── SuccessPage.tsx  # Success message
-│   ├── ErrorPage.tsx    # Error with retry
-│   ├── NewAlcoholPage.tsx
-│   ├── NewVolumePage.tsx
-│   ├── NewSubtypePage.tsx
-│   ├── NewBeerBrandPage.tsx
-│   └── NewBeerFlavourPage.tsx
+│   ├── QuickSavePage.tsx # The plate grid
+│   └── HistoryPage.tsx   # The day strip and the paper tab
 ├── test/
 │   ├── setup.ts         # Vitest setup
 │   └── test-utils.tsx   # renderWithProviders
@@ -208,8 +225,12 @@ src/
 └── main.tsx             # Entry point with providers
 ```
 
-Each page has a sibling `*.test.tsx`. The end-to-end journeys live in `e2e/`, outside
+Every module has a sibling `*.test.ts(x)`. The end-to-end journeys live in `e2e/`, outside
 `src/`, so the Vitest and Playwright runners never collide.
+
+There is no `pages/New*.tsx`, no `DetailedPage`, no `SuccessPage` or `ErrorPage` and no `Layout`
+any more. Those ten screens are one sheet, and their routes redirect rather than 404 so no
+bookmark or tab left open across the change lands on a blank page.
 
 ## API Integration
 
@@ -259,6 +280,57 @@ added, never lower them to make a build pass.
 
 `src/config.ts` builds its export at import time, so any test of it must call
 `vi.resetModules()` and re-import per case. `src/config.test.ts` shows the pattern.
+
+## The interface
+
+The UI is the **Utolsó Kör** direction: a Budapest kocsma. An umber plaster ground, drinks as
+screwed-up enamel signs, a bar menu with dotted leader lines, and a light paper bar tab you cross
+off. Dark only, deliberately. The full reasoning is in
+`docs/superpowers/specs/2026-09-09-ui-redesign-design.md`, which is the contract this code is
+built against.
+
+Two rules hold the whole thing together, and both are enforced rather than remembered.
+
+**No colour literals in a component.** Everything reads `var(--ds-*)`. `src/theme/` defines the
+tokens and `src/drink/identity.ts` owns each drink's own field and ink, which belong to the drink
+rather than to the theme. An eslint rule fails the build on a hex anywhere else. The one
+exception is `AppErrorBoundary`, whose fallback has to render when the stylesheet itself is what
+failed to load, so its custom properties each carry a literal behind them.
+
+**Every field and ink pair is contrast gated.** `src/drink/contrast.ts` computes WCAG 2.2 ratios
+and a test fails below 4.5:1 for every entry in the identity table. That test is what caught two
+colours during design; both moved rather than the threshold.
+
+### Components
+
+| Component | What it is | States | Key props |
+| --- | --- | --- | --- |
+| `AppFrame` | The painted board header and bottom nav that frame every screen. Owns navigation and sign-out directly. | Header reads **Tonight** between midnight and the 06:00 rollover, **Today** otherwise, unless a screen names itself. The Add tab opens the sheet in place rather than navigating. | `title?`, `subtitle?`, `children` |
+| `Plate` | One enamel sign. Field colour and ink come from the drink's identity, never from a literal. | `idle`, `saving` (pressed, `aria-busy`), `saved` (stamped for the undo window). A variant renders the dashed "Something else" plate. | `name`, `alcoholTypeId?`, `caption?`, `state`, `onClick` |
+| `PlateGrid` | Two-column grid of plates with deterministic per-index rotation, plus the trailing add plate. | Scrolls; nothing is hidden past the fold. | `items`, `onSelect`, `onAdd` |
+| `Glass` | The four glassware silhouettes. | `tone="ink"` draws a flat silhouette in the surface's own ink, which is what makes a plate read as a sign. `tone="chroma"` fills the liquid with the drink's colour. | `kind`, `chroma`, `foam?`, `tone?` |
+| `TapeStrip` | The undo strip. | `status` (undoable) announces with `role="status"`; the failed variant is `role="alert"` and never auto-dismisses. Its timer pauses while focus or hover is inside it, per WCAG 2.2 SC 2.2.1. | `entry`, `onUndo`, `onRetry`, `stripHandlers`, `container?` |
+| `AddSheet/SheetHost` | One Drawer for the whole panel stack, swapping content by the top panel. Owns per-panel focus and the strip's portal slot. | Open or closed; `?sheet=add` is the only part of the stack in the URL. | `sheet`, `children` |
+| `AddSheet/MenuPanel` | The bar menu: one leader-dot row per field, the quantity stepper and the save control. | Save is disabled until the drink and its size are chosen. | `rows`, `quantity`, `onPushPanel`, `onSave` |
+| `AddSheet/OptionPanel` | The options for one field, plus a "New ..." row where the catalogue allows it. | Branches on the field: dates, notes and the recommendation options render their own controls. | `field`, `onSelect`, `onCreate` |
+| `AddSheet/CreatePanel` | The inline form that replaced all five `New*` pages. On save the new entry is adopted into the draft and you return to the menu. | Idle, submitting, failed. | `field`, `onCreated`, `onBack` |
+| `PaperTab` | The history bar tab: the one light surface in the app. Rows are name, dotted leader, detail and a cross-off. | `loading`, `error`, `ready`. A row being deleted is struck through and collapses while the delete is still deferred. | `label`, `status`, `rows`, `onToggleSelect`, `onDeleteOne` |
+| `DayStrip` | Seven day tabs with marks, the current one connecting into the paper tab, plus a pick-a-date control. | A day still loading is drawn and announced differently from a day confirmed to have no drinks. There is no range endpoint, so a strip that says "nothing" about an unread day would be lying. | `dates`, `counts`, `selectedDate`, `todayDate`, `onSelect` |
+| `AppErrorBoundary` | Catches a lazy route whose chunk has gone after a deploy. | Chunk failure offers a reload; anything else gets a generic fallback. A timestamped guard stops a reload loop without ever disabling the useful message. | `children` |
+
+### Behaviour worth knowing
+
+**Logging never navigates.** A tile tap saves in place and raises the undo strip. `/success` and
+`/error` no longer exist as screens.
+
+**Saving is immediate; deleting is deferred.** Undo on a save deletes the ids the server returned.
+Undo on a delete means the DELETE was never sent, because there is no undelete endpoint. Deferring
+a destructive operation fails safe; deferring a constructive one loses the drink you logged. A
+pending delete is flushed on `pagehide` with `keepalive`, since unload aborts an XHR.
+
+**The day rolls over at 06:00, not midnight.** A drink at 23:30 and the next at 00:30 are the same
+evening. `src/drink/day.ts` owns that rule and takes `now` as an argument, so nothing computes a
+date at import time.
 
 ## License
 
