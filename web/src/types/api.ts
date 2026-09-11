@@ -134,7 +134,3 @@ export interface NewBeerBrand {
   flavours?: string[];
 }
 
-// Helper to check if a recommendation is for beer
-export const isBeerRecommendation = (rec: Recommendation): boolean => {
-  return rec.brandId !== undefined && rec.brandId !== null && rec.brandId > 0;
-};

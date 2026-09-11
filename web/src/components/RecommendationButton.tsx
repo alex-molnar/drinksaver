@@ -1,58 +1,8 @@
 import React from 'react';
 import { Card, CardActionArea, Typography, Box, CircularProgress } from '@mui/material';
-import LocalBarIcon from '@mui/icons-material/LocalBar';
-import SportsBarIcon from '@mui/icons-material/SportsBar';
-import WineBarIcon from '@mui/icons-material/WineBar';
-import LiquorIcon from '@mui/icons-material/Liquor';
-import NightlifeIcon from '@mui/icons-material/Nightlife';
 import AddIcon from '@mui/icons-material/Add';
-
-/**
- * Icon mapping for alcohol type IDs.
- * 
- * Categories:
- * - Beer & similar (SportsBarIcon): beer, cider, seltzer
- * - Wine (WineBarIcon): wines, champagne, prosecco, port, sherry, mead, fröccs
- * - Spirits (LiquorIcon): vodka, whiskey, rum, gin, tequila, brandy, cognac, etc.
- * - Cocktails (NightlifeIcon): cocktail, long drink
- */
-const ALCOHOL_TYPE_ICONS: Record<number, React.ReactElement> = {
-  // Beer & similar
-  4: <SportsBarIcon sx={{ fontSize: 32 }} />,      // beer
-  21: <SportsBarIcon sx={{ fontSize: 32 }} />,     // cider
-  24: <SportsBarIcon sx={{ fontSize: 32 }} />,     // seltzer
-  
-  // Wine & wine-based
-  13: <WineBarIcon sx={{ fontSize: 32 }} />,       // champagne
-  14: <WineBarIcon sx={{ fontSize: 32 }} />,       // prosecco
-  19: <WineBarIcon sx={{ fontSize: 32 }} />,       // port
-  20: <WineBarIcon sx={{ fontSize: 32 }} />,       // sherry
-  22: <WineBarIcon sx={{ fontSize: 32 }} />,       // mead
-  26: <WineBarIcon sx={{ fontSize: 32 }} />,       // fröccs
-  27: <WineBarIcon sx={{ fontSize: 32 }} />,       // rosé fröccs
-  30: <WineBarIcon sx={{ fontSize: 32 }} />,       // red wine
-  31: <WineBarIcon sx={{ fontSize: 32 }} />,       // white wine
-  32: <WineBarIcon sx={{ fontSize: 32 }} />,       // rose wine
-  
-  // Spirits
-  6: <LiquorIcon sx={{ fontSize: 32 }} />,         // vodka
-  7: <LiquorIcon sx={{ fontSize: 32 }} />,         // whiskey
-  8: <LiquorIcon sx={{ fontSize: 32 }} />,         // rum
-  9: <LiquorIcon sx={{ fontSize: 32 }} />,         // gin
-  10: <LiquorIcon sx={{ fontSize: 32 }} />,        // tequila
-  11: <LiquorIcon sx={{ fontSize: 32 }} />,        // brandy
-  12: <LiquorIcon sx={{ fontSize: 32 }} />,        // cognac
-  15: <LiquorIcon sx={{ fontSize: 32 }} />,        // absinthe
-  16: <LiquorIcon sx={{ fontSize: 32 }} />,        // sake
-  17: <LiquorIcon sx={{ fontSize: 32 }} />,        // soju
-  18: <LiquorIcon sx={{ fontSize: 32 }} />,        // vermouth
-  25: <LiquorIcon sx={{ fontSize: 32 }} />,        // shot
-  28: <LiquorIcon sx={{ fontSize: 32 }} />,        // pálinka
-  
-  // Cocktails & mixed drinks
-  23: <NightlifeIcon sx={{ fontSize: 32 }} />,     // cocktail
-  29: <NightlifeIcon sx={{ fontSize: 32 }} />,     // long drink
-};
+import { drinkIdentity } from '../drink/identity';
+import { Glass } from '../drink/glassware';
 
 interface RecommendationButtonProps {
   name: string;
@@ -60,113 +10,13 @@ interface RecommendationButtonProps {
   loading?: boolean;
   disabled?: boolean;
   isAddButton?: boolean;
+  /**
+   * The second rung of `drinkIdentity`'s lookup. The name alone is enough for a recommendation
+   * whose name is in the identity table, and the id is what resolves everything else to at least
+   * the right silhouette. See `drink/identity.ts`.
+   */
   alcoholTypeId?: number;
 }
-
-/**
- * Get icon for a drink based on alcohol type ID with name-based fallback.
- * Priority: 1) Add button icon, 2) Alcohol type ID mapping, 3) Name keywords, 4) Default
- */
-const getDrinkIcon = (name: string, isAddButton: boolean, alcoholTypeId?: number) => {
-  if (isAddButton) return <AddIcon sx={{ fontSize: 32 }} />;
-  
-  // First, try to match by alcohol type ID (most reliable)
-  if (alcoholTypeId !== undefined && ALCOHOL_TYPE_ICONS[alcoholTypeId]) {
-    return ALCOHOL_TYPE_ICONS[alcoholTypeId];
-  }
-  
-  // Fallback: match by name keywords (expanded list)
-  const lowerName = name.toLowerCase();
-  
-  // Beer & related
-  if (
-    lowerName.includes('beer') ||
-    lowerName.includes('lager') ||
-    lowerName.includes('ale') ||
-    lowerName.includes('stout') ||
-    lowerName.includes('pilsner') ||
-    lowerName.includes('ipa') ||
-    lowerName.includes('porter') ||
-    lowerName.includes('wheat') ||
-    lowerName.includes('hefeweizen') ||
-    lowerName.includes('cider') ||
-    lowerName.includes('seltzer')
-  ) {
-    return <SportsBarIcon sx={{ fontSize: 32 }} />;
-  }
-  
-  // Wine & related
-  if (
-    lowerName.includes('wine') ||
-    lowerName.includes('champagne') ||
-    lowerName.includes('prosecco') ||
-    lowerName.includes('cava') ||
-    lowerName.includes('merlot') ||
-    lowerName.includes('cabernet') ||
-    lowerName.includes('chardonnay') ||
-    lowerName.includes('pinot') ||
-    lowerName.includes('riesling') ||
-    lowerName.includes('sangria') ||
-    lowerName.includes('rosé') ||
-    lowerName.includes('rose') ||
-    lowerName.includes('fröccs') ||
-    lowerName.includes('froccs') ||
-    lowerName.includes('mead') ||
-    lowerName.includes('port') ||
-    lowerName.includes('sherry')
-  ) {
-    return <WineBarIcon sx={{ fontSize: 32 }} />;
-  }
-  
-  // Spirits/Liquor
-  if (
-    lowerName.includes('whiskey') ||
-    lowerName.includes('whisky') ||
-    lowerName.includes('vodka') ||
-    lowerName.includes('gin') ||
-    lowerName.includes('rum') ||
-    lowerName.includes('tequila') ||
-    lowerName.includes('brandy') ||
-    lowerName.includes('cognac') ||
-    lowerName.includes('bourbon') ||
-    lowerName.includes('scotch') ||
-    lowerName.includes('mezcal') ||
-    lowerName.includes('schnapps') ||
-    lowerName.includes('liqueur') ||
-    lowerName.includes('absinthe') ||
-    lowerName.includes('shot') ||
-    lowerName.includes('pálinka') ||
-    lowerName.includes('palinka') ||
-    lowerName.includes('sake') ||
-    lowerName.includes('soju') ||
-    lowerName.includes('vermouth')
-  ) {
-    return <LiquorIcon sx={{ fontSize: 32 }} />;
-  }
-  
-  // Cocktails & mixed drinks
-  if (
-    lowerName.includes('cocktail') ||
-    lowerName.includes('martini') ||
-    lowerName.includes('mojito') ||
-    lowerName.includes('margarita') ||
-    lowerName.includes('daiquiri') ||
-    lowerName.includes('cosmopolitan') ||
-    lowerName.includes('negroni') ||
-    lowerName.includes('spritz') ||
-    lowerName.includes('highball') ||
-    lowerName.includes('sour') ||
-    lowerName.includes('fizz') ||
-    lowerName.includes('collins') ||
-    lowerName.includes('mule') ||
-    lowerName.includes('long drink')
-  ) {
-    return <NightlifeIcon sx={{ fontSize: 32 }} />;
-  }
-  
-  // Default: cocktail glass icon
-  return <LocalBarIcon sx={{ fontSize: 32 }} />;
-};
 
 const RecommendationButton: React.FC<RecommendationButtonProps> = ({
   name,
@@ -176,6 +26,8 @@ const RecommendationButton: React.FC<RecommendationButtonProps> = ({
   isAddButton = false,
   alcoholTypeId,
 }) => {
+  const identity = drinkIdentity(name, alcoholTypeId);
+
   return (
     <Card
       sx={{
@@ -214,9 +66,15 @@ const RecommendationButton: React.FC<RecommendationButtonProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              width: 32,
+              height: 32,
             }}
           >
-            {getDrinkIcon(name, isAddButton, alcoholTypeId)}
+            {isAddButton ? (
+              <AddIcon sx={{ fontSize: 32 }} />
+            ) : (
+              <Glass kind={identity.glass} chroma={identity.chroma} />
+            )}
           </Box>
         )}
         <Typography
