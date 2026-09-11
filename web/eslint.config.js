@@ -21,4 +21,38 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    /**
+     * No colour literals outside the two modules that are allowed to own one.
+     *
+     * The redesign's whole claim is that a second theme is a token file rather than a rewrite,
+     * and that only stays true while every component reads `var(--ds-*)`. A single hex in a
+     * component is invisible until someone tries the swap and finds one surface that will not
+     * move, so this is checked rather than remembered.
+     *
+     * Scoped to where components live. `theme/` defines the tokens and `drink/identity.ts` owns
+     * the enamel field and ink colours, which are a drink's identity rather than the theme's:
+     * both are exempt by not being listed here. `AppErrorBoundary` is the one deliberate
+     * exception inside this scope, and says why in its own comment: its fallback has to render
+     * when the stylesheet itself failed to load, so each custom property there carries a literal
+     * behind it.
+     */
+    files: ['src/components/**/*.{ts,tsx}', 'src/pages/**/*.{ts,tsx}'],
+    ignores: [
+      // Tests assert on colour values, which is the one place naming a literal is the point:
+      // a swatch fixture or a contrast assertion has nothing to read a token for.
+      '**/*.test.{ts,tsx}',
+      'src/components/AppErrorBoundary.tsx',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'Literal[value=/^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/]',
+          message:
+            'No colour literals here. Read a token instead: var(--ds-*). Tokens live in src/theme, and a drink\'s own colours in src/drink/identity.ts.',
+        },
+      ],
+    },
+  },
 ])

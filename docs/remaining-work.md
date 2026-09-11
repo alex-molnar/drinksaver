@@ -23,6 +23,11 @@ not the fast path.
 **Reference tasks by their id, never by position.** The ids are stable: `SEC-1` stays `SEC-1`
 when something is inserted above it.
 
+`FIX-3`, `HK-1` and `HK-4` were closed by the 2026-09-11 UI redesign and have left this document.
+FIX-3's boundary is `web/src/components/AppErrorBoundary.tsx`; HK-1 untracked `web/coverage`; and
+HK-4's warning lived in `DetailedPage.tsx`, so it went when that file did. Their ids stay unused,
+for the same reason as the one below.
+
 There is no `FIX-6`. It was filed on 2026-09-09 and closed on 2026-09-10 without ever being open
 work: what it described as a bug turned out to be a rough approximation of a rule the product
 actually wants, and that rule is now specified and implemented. See "The drinking day starts at
@@ -58,17 +63,14 @@ first. Across groups, `SEC-1` is the item I would pick up before anything else h
 | **PRIV-7** | Organizational records (RoPA, DPAs, DPIA) | outside this repo | PRIV-1 |
 | **FIX-1** | Bound the volume entry payload | trivial | none |
 | **FIX-2** | Optimistic locking on `AlcoholType.volumeIds` | small | none |
-| **FIX-3** | Error boundary for a failed lazy chunk | small | none |
 | **FIX-4** | Deleting a drink leaves the recommendation cache stale | small | none |
 | **FIX-5** | Saving a drink is not idempotent, so a timeout can double log | medium | none |
 | **FIX-7** | The web app blocks pinch zoom, failing WCAG 2.2 SC 1.4.4 | trivial | none |
 | **OPS-1** | Make Prometheus scraping actually work | medium | a decision on scraper auth |
 | **OPS-2** | Remove the four leftover namespaces | small | production cutover |
 | **OPS-3** | Theme the Keycloak login page | medium | it follows the UI redesign |
-| **HK-1** | Untrack `web/coverage` | trivial | none |
 | **HK-2** | Add a BRANCH coverage gate | small | none |
 | **HK-3** | Drop `NewAlcoholSubtype.alcoholTypeId` | trivial | none |
-| **HK-4** | The last remaining lint warning | trivial | none |
 
 ---
 
@@ -556,55 +558,6 @@ A Testcontainers test drives two concurrent appends to one type and both volumes
 referenced, or the loser gets a 409. Assert the row count, not just the absence of an
 exception.
 
-## FIX-3. Add an error boundary around the lazy routes
-
-**Effort:** small.
-**Blocked by:** nothing.
-
-### Why
-
-Routes became `React.lazy` on 2026-09-08 with a `Suspense` boundary and no error boundary. A
-dynamic import that rejects therefore propagates to the root, React unmounts the tree, and the
-page goes blank with nothing offering a way out.
-
-The reachable trigger is a deploy. Chunk filenames are content-hashed, so a tab left open
-across a release asks for a chunk that no longer exists.
-
-**What that returns, checked rather than assumed.** `web/nginx.conf` has a regex location for
-static assets:
-
-```nginx
-location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
-    expires 1y;
-    add_header Cache-Control "public, immutable";
-}
-```
-
-A regex location outranks the unmodified `location /` prefix, and this one has no `try_files`,
-so a missing `.js` falls through to nginx's static handler and returns a plain **404**. It does
-*not* get the SPA fallback. An earlier draft of this task claimed `try_files` served
-`index.html` with a 200 and `text/html`, producing a MIME error; that is wrong, and the
-correction is recorded here because the wrong version makes the bug sound like a caching
-problem rather than a missing-file one.
-
-Either way the import rejects and the tree unmounts, so the task stands. It fails closed:
-the unmount cleanup added in the same release stops the token refresh, and no token is
-persisted anywhere.
-
-### Where
-
-`web/src/App.tsx`, around the existing `Suspense`.
-
-### Do
-
-Add an error boundary that offers a reload. A chunk that 404s after a deploy is fixed by
-reloading, so saying that is more useful than a generic apology. Distinguishing a chunk load
-failure from a component error is worth the extra branch, because only one of them is fixed by
-reloading.
-
-### Done when
-
-A test that makes a lazy import reject shows the fallback rather than an empty tree.
 
 ## FIX-4. Deleting a drink leaves the recommendation cache stale
 
@@ -847,33 +800,6 @@ the same is true in `drinksaver-test`.
 
 Small, independent, and safe to pick up in any order.
 
-## HK-1. Untrack `web/coverage`
-
-**Effort:** trivial. Two minutes.
-**Blocked by:** nothing.
-
-### Why it is still here
-
-`web/.gitignore` has listed `coverage/` since `2c66bd2`, whose own comment reads "Committed by
-mistake in 2c66bd2 and untracked again there". The untracking did not take: **42 generated files
-are still in the index**, because `.gitignore` has no effect on paths git already tracks.
-
-The consequence is that every branch which runs the coverage reporter picks up a diff in 42 HTML
-files plus `lcov.info`. That is how it was noticed, on a branch where they were nearly swept into
-an unrelated commit.
-
-### Do
-
-```sh
-git rm -r --cached web/coverage
-git commit -m "Untrack web/coverage, which .gitignore already excludes"
-```
-
-The files stay on disk. The existing ignore rule then does what it was written to do.
-
-### Done when
-
-`git ls-files web/coverage | wc -l` is 0, and a coverage run leaves `git status` clean.
 
 ## HK-2. Add a BRANCH coverage gate to the backend
 
@@ -929,23 +855,3 @@ Remove the component, drop it from the client payload in `web/src/api/endpoints.
 `grep -rn alcoholTypeId web/src/api/endpoints.ts` finds only path-variable uses, and both
 suites are green.
 
-## HK-4. The last lint warning
-
-**Effort:** trivial.
-**Blocked by:** nothing.
-
-`npm run lint` reports 0 errors and 1 warning:
-
-```
-web/src/pages/DetailedPage.tsx
-  166:6  warning  React Hook useCallback has an unnecessary dependency: 'isBeer'
-```
-
-Lint errors are a CI gate; warnings are not. This is the only one left, down from 6. Removing
-`isBeer` from that dependency array should be safe because it is derived from
-`alcoholTypeId`, which is already a dependency, but read the callback before believing that.
-
-### Done when
-
-`npx eslint .` is completely silent, at which point consider whether `--max-warnings=0` should
-become the gate.
