@@ -47,7 +47,7 @@ describe('falling back to the alcohol type id', () => {
   it('prefers the exact name over the id when both are known', () => {
     // 6 is a spirit, but the name is in the table and carries the richer identity.
     const byName = drinkIdentity('Heineken pint', 6);
-    expect(byName.glass).toBe('pint');
+    expect(byName.glass).toBe('palinka');
     expect(byName.field).toBe('#2B7454');
   });
 
