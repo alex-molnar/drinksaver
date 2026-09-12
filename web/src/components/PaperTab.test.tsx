@@ -257,7 +257,10 @@ describe('PaperTab', () => {
       <PaperTab
         label="Today"
         status="ready"
-        rows={[rowFor(heineken), rowFor(redWine)]}
+        rows={[
+          rowFor({ ...heineken, name: 'Heineken Original (Draft/Tap - 0.50l)' }),
+          rowFor({ ...redWine, name: 'Red (Large glass - 0.30l)' }),
+        ]}
         onToggleSelect={vi.fn()}
         onDeleteOne={vi.fn()}
       />
