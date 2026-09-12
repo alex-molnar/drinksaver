@@ -94,7 +94,7 @@ export const PALETTES: Readonly<Record<PaletteKey, DrinkPalette>> = {
 export const DRINK_IDENTITIES: Readonly<Record<string, DrinkIdentity>> = {
   'Heineken pint': {
     ...PALETTES.green,
-    glass: 'pint',
+    glass: 'palinka',
     chroma: '#E0A828',
   },
   'Guinness pint': {
