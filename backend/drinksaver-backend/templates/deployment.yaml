@@ -75,6 +75,8 @@ spec:
               value: {{ .Values.repository.drink | quote }}
             - name: "RECOMMENDATION_REPOSITORY"
               value: {{ .Values.repository.recommendation | quote }}
+            - name: "DESIGN_REPOSITORY"
+              value: {{ .Values.repository.design | quote }}
             - name: "ADMIN_USER_LIST"
               value: {{ .Values.repository.adminUserList | quote }}
             - name: "POSTGRES_DATASOURCE_URL"

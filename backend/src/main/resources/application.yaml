@@ -3,6 +3,7 @@ repository:
   beer: "${BEER_REPOSITORY:hardcoded}"
   drink: "${DRINK_REPOSITORY:hardcoded}"
   recommendation: "${RECOMMENDATION_REPOSITORY:hardcoded}"
+  design: "${DESIGN_REPOSITORY:hardcoded}"
   admin-user-list: "${ADMIN_USER_LIST:00000000-0000-0000-0000-000000000000}"
   beer-id: "${BEER_ID:4}"
   max-personal-recommendations: "${MAX_PERSONAL_RECOMMENDATIONS:10}"
