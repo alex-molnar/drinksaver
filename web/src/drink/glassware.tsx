@@ -2,9 +2,9 @@ import React from 'react';
 import type { GlassKind } from './identity';
 
 /**
- * The four glass silhouettes' path data, reused verbatim from the approved prototype rather
- * than redrawn. `g` is the glass outline, `l` the liquid, `f` the foam, `null` where a glass has
- * none (wine and highball). All four share the same 34x50 viewBox.
+ * Glass silhouettes sharing a 34x50 viewBox. The original pint, tulip, wine and highball paths
+ * come from the approved prototype. `g` is the glass outline, `l` the liquid, and `f` the foam
+ * (null for glasses without foam). Short glasses keep their proportions and align at the base.
  */
 const GLASS_PATHS: Record<GlassKind, { g: string; l: string; f: string | null }> = {
   pint: {
@@ -27,10 +27,30 @@ const GLASS_PATHS: Record<GlassKind, { g: string; l: string; f: string | null }>
     l: 'M11.4 13.6h11.2v28.9a1.5 1.5 0 0 1-1.5 1.4h-8.2a1.5 1.5 0 0 1-1.5-1.4Z',
     f: null,
   },
+  rocks: {
+    g: 'M6 22h22l-1.4 21.5a3 3 0 0 1-3 2.5H10.4a3 3 0 0 1-3-2.5Z',
+    l: 'M8 29h18l-.95 14.2a1.4 1.4 0 0 1-1.4 1.2h-13.3a1.4 1.4 0 0 1-1.4-1.2Z',
+    f: null,
+  },
+  shot: {
+    g: 'M10 29h14l-1.6 17H11.6Z',
+    l: 'M11.9 33h10.2l-1.05 11.4h-8.1Z',
+    f: null,
+  },
+  coupe: {
+    g: 'M4 13h26c-1 8-6 12-13 12S5 21 4 13Z M16.1 25h1.8v17h-1.8Z M9.8 44h14.4v3H9.8Z',
+    l: 'M6.5 17h21c-2 4.5-5.5 7-10.5 7S8.5 21.5 6.5 17Z',
+    f: null,
+  },
+  flute: {
+    g: 'M11 4h12v19c0 6-2 9-6 11-4-2-6-5-6-11Z M16.1 34h1.8v8.3h-1.8Z M10.4 44h13.2v3H10.4Z',
+    l: 'M12.6 12h8.8v11c0 5-1.4 7.8-4.4 9.4-3-1.6-4.4-4.4-4.4-9.4Z',
+    f: null,
+  },
 };
 
 interface GlassProps {
-  /** Which of the four silhouettes to draw. */
+  /** Which glass silhouette to draw. */
   kind: GlassKind;
   /** Fill for the liquid shape. This is a drink's `identity.chroma`. */
   chroma: string;
@@ -47,8 +67,8 @@ interface GlassProps {
    */
   tone?: 'ink' | 'chroma';
   /**
-   * Fill for the foam shape, drawn only if this glass kind has one (pint and tulip; wine and
-   * highball never do) and a colour is given. Not sourced from `identity.ts`: the identity table
+   * Fill for the foam shape, drawn only if this glass kind has one (pint and tulip)
+   * and a colour is given. Not sourced from `identity.ts`: the identity table
    * carries glass, field, ink and chroma only, so foam is a caller's decision until a foam
    * colour becomes part of that table.
    */
