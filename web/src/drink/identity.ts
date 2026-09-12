@@ -22,7 +22,7 @@
  */
 
 /** The glass silhouettes `glassware.tsx` can draw. */
-export type GlassKind = 'pint' | 'tulip' | 'wine' | 'highball' | 'rocks' | 'shot' | 'coupe' | 'flute';
+export type GlassKind = 'pint' | 'tulip' | 'wine' | 'highball' | 'rocks' | 'shot' | 'coupe' | 'flute' | 'palinka';
 
 export type PaletteKey = 'green' | 'brown' | 'cream' | 'red' | 'blue' | 'plum' | 'amber' | 'rose';
 
