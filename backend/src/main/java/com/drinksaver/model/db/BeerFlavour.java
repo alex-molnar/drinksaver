@@ -22,6 +22,7 @@ public class BeerFlavour {
     private Integer brandId;
     private UUID userId;
     private String name;
+    private Integer colorPaletteId;  // TODO: temporary, set this properly
 
     public BeerFlavour(Integer brandId, UUID userId, String name) {
         this.brandId = brandId;

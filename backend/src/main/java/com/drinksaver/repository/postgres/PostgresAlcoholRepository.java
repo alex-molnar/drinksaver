@@ -106,7 +106,7 @@ public class PostgresAlcoholRepository implements AlcoholRepository {
                 .map(newEntry -> alcoholVolumeTable.save(AlcoholVolume.of(newEntry)).getId())
                 .toList()
             : Collections.emptyList();
-        AlcoholType result = alcoholTypesTable.save(new AlcoholType(newAlcoholEntry.userId(), newAlcoholEntry.name(), volumeIds));
+        AlcoholType result = alcoholTypesTable.save(new AlcoholType(newAlcoholEntry.userId(), newAlcoholEntry.name(), volumeIds));  // TODO: this right now defaults color palettte, set this properly
         if (newAlcoholEntry.alcoholSubtypes() != null && !newAlcoholEntry.alcoholSubtypes().isEmpty()) {
             alcoholSubtypesTable.saveAll(
                     newAlcoholEntry.alcoholSubtypes()

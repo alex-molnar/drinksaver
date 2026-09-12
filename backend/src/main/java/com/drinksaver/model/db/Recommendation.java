@@ -28,6 +28,8 @@ public class Recommendation {
     private Integer beerFlavourId;
     private Integer consumptionTypeId;
     private LocalDateTime endDate;
+    private Integer colorPaletteId;
+    private Integer glasswareId;
 
     public static Recommendation of(Drink drink) {
         Recommendation recommendation = new Recommendation();

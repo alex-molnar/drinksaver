@@ -24,6 +24,7 @@ public class AlcoholType {
     private UUID userId;
     private String name;
     private List<Integer> volumeIds;
+    private Integer colorPaletteId;
 
     public AlcoholType(UUID userId, String name, List<Integer> volumeIds) {
         this.userId = userId;
