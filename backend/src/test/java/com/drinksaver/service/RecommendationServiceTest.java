@@ -29,11 +29,11 @@ class RecommendationServiceTest {
     private static final UUID USER = UUID.randomUUID();
 
     private static final DrinkKey NAMED_BEER =
-            new DrinkKey(4, null, 6, 1, 1, 3, Optional.of("Heineken pint"));
+            new DrinkKey(4, null, 6, 1, 1, 3, null, null, Optional.of("Heineken pint"));
     private static final DrinkKey NAMELESS_BEER =
-            new DrinkKey(4, null, 6, 1, 1, 3, Optional.empty());
+            new DrinkKey(4, null, 6, 1, 1, 3, null, null, Optional.empty());
     private static final DrinkKey NAMELESS_GIN =
-            new DrinkKey(1, 1, 2, null, null, null, Optional.empty());
+            new DrinkKey(1, 1, 2, null, null, null, null, null, Optional.empty());
 
     private RecommendationService serviceWith(Map<String, RecommendationSource> sources) {
         BeerNameCollector beerNames = mock(BeerNameCollector.class);
@@ -43,7 +43,7 @@ class RecommendationServiceTest {
         when(alcoholNames.collectAlcoholName(any())).thenAnswer(i -> i.getArgument(0, DrinkKey.class).withName("A drink"));
 
         RepositoryConfiguration configuration = new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres",
+                "postgres", "postgres", "postgres", "postgres", "postgres",
                 List.of(UUID.randomUUID()), 4, 10, 0.97
         );
         return new RecommendationService(configuration, sources, beerNames, alcoholNames);

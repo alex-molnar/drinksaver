@@ -39,7 +39,7 @@ class AlcoholNameCollectorTest {
                 mock(AlcoholSubtypesTable.class)
         );
 
-        DrinkKey key = new DrinkKey(1, null, 2, null, null, null, Optional.empty());
+        DrinkKey key = new DrinkKey(1, null, 2, null, null, null, null, null, Optional.empty());
         DrinkKey result = collector.collectAlcoholName(key);
 
         assertThat(result.name()).isPresent();
@@ -63,7 +63,7 @@ class AlcoholNameCollectorTest {
                 subtypesTable
         );
 
-        DrinkKey key = new DrinkKey(1, 3, 2, null, null, null, Optional.empty());
+        DrinkKey key = new DrinkKey(1, 3, 2, null, null, null, null, null, Optional.empty());
         DrinkKey result = collector.collectAlcoholName(key);
 
         assertThat(result.name()).isPresent();
@@ -90,7 +90,7 @@ class AlcoholNameCollectorTest {
                 subtypesTable
         );
 
-        DrinkKey key = new DrinkKey(1, 3, 2, null, null, null, Optional.empty());
+        DrinkKey key = new DrinkKey(1, 3, 2, null, null, null, null, null, Optional.empty());
         DrinkKey result = collector.collectAlcoholName(key);
 
         assertThat(result.name()).isPresent();
@@ -113,7 +113,7 @@ class AlcoholNameCollectorTest {
                 mock(AlcoholSubtypesTable.class)
         );
 
-        DrinkKey key = new DrinkKey(1, null, 2, null, null, null, Optional.empty());
+        DrinkKey key = new DrinkKey(1, null, 2, null, null, null, null, null, Optional.empty());
         DrinkKey result = collector.collectAlcoholName(key);
 
         assertThat(result.name()).isPresent();
@@ -133,7 +133,7 @@ class AlcoholNameCollectorTest {
                 mock(AlcoholSubtypesTable.class)
         );
 
-        DrinkKey key = new DrinkKey(null, null, 2, null, null, null, Optional.empty());
+        DrinkKey key = new DrinkKey(null, null, 2, null, null, null, null, null, Optional.empty());
         DrinkKey result = collector.collectAlcoholName(key);
 
         assertThat(result.name()).isPresent();
@@ -156,7 +156,7 @@ class AlcoholNameCollectorTest {
                 mock(AlcoholSubtypesTable.class)
         );
 
-        DrinkKey key = new DrinkKey(1, null, 2, null, null, null, Optional.empty());
+        DrinkKey key = new DrinkKey(1, null, 2, null, null, null, null, null, Optional.empty());
         DrinkKey result = collector.collectAlcoholName(key);
 
         assertThat(result.name()).isPresent();
@@ -178,7 +178,7 @@ class AlcoholNameCollectorTest {
                 mock(AlcoholSubtypesTable.class)
         );
 
-        DrinkKey key = new DrinkKey(1, null, null, null, null, null, Optional.empty());
+        DrinkKey key = new DrinkKey(1, null, null, null, null, null, null, null, Optional.empty());
         DrinkKey result = collector.collectAlcoholName(key);
 
         assertThat(result.name()).isPresent();
@@ -211,7 +211,7 @@ class AlcoholNameCollectorTest {
                     mock(AlcoholSubtypesTable.class)
             );
 
-            DrinkKey key = new DrinkKey(1, null, 2, null, null, null, Optional.empty());
+            DrinkKey key = new DrinkKey(1, null, 2, null, null, null, null, null, Optional.empty());
             DrinkKey result = collector.collectAlcoholName(key);
 
             assertThat(result.name()).isPresent();

@@ -33,7 +33,7 @@ class DynamicPersonalRecommendationSourceTest {
 
     private RepositoryConfiguration configWithDecay(double decayFactor) {
         return new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres",
+                "postgres", "postgres", "postgres", "postgres", "postgres",
                 List.of(), 4, 10, decayFactor
         );
     }

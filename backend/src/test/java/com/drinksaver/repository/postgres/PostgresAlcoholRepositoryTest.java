@@ -32,7 +32,7 @@ class PostgresAlcoholRepositoryTest {
 
     private RepositoryConfiguration configWithAdmins(List<UUID> admins) {
         return new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres",
+                "postgres", "postgres", "postgres", "postgres", "postgres",
                 admins, 4, 10, 0.97
         );
     }

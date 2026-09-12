@@ -41,7 +41,7 @@ class BeerNameCollectorTest {
                 mock(BeerFlavoursTable.class)
         );
 
-        DrinkKey key = new DrinkKey(4, null, 2, 1, null, null, Optional.empty());
+        DrinkKey key = new DrinkKey(4, null, 2, 1, null, null, null, null, Optional.empty());
         DrinkKey result = collector.collectBeerName(key);
 
         assertThat(result.name()).isPresent();
@@ -70,7 +70,7 @@ class BeerNameCollectorTest {
                 flavoursTable
         );
 
-        DrinkKey key = new DrinkKey(4, null, 2, 1, 3, null, Optional.empty());
+        DrinkKey key = new DrinkKey(4, null, 2, 1, 3, null, null, null, Optional.empty());
         DrinkKey result = collector.collectBeerName(key);
 
         assertThat(result.name()).isPresent();
@@ -99,7 +99,7 @@ class BeerNameCollectorTest {
                 mock(BeerFlavoursTable.class)
         );
 
-        DrinkKey key = new DrinkKey(4, null, 2, 1, null, 4, Optional.empty());
+        DrinkKey key = new DrinkKey(4, null, 2, 1, null, 4, null, null, Optional.empty());
         DrinkKey result = collector.collectBeerName(key);
 
         assertThat(result.name()).isPresent();
@@ -120,7 +120,7 @@ class BeerNameCollectorTest {
                 mock(BeerFlavoursTable.class)
         );
 
-        DrinkKey key = new DrinkKey(4, null, 2, null, null, null, Optional.empty());
+        DrinkKey key = new DrinkKey(4, null, 2, null, null, null, null, null, Optional.empty());
         DrinkKey result = collector.collectBeerName(key);
 
         assertThat(result.name()).isPresent();
@@ -144,7 +144,7 @@ class BeerNameCollectorTest {
                 mock(BeerFlavoursTable.class)
         );
 
-        DrinkKey key = new DrinkKey(4, null, 2, 1, null, null, Optional.empty());
+        DrinkKey key = new DrinkKey(4, null, 2, 1, null, null, null, null, Optional.empty());
         DrinkKey result = collector.collectBeerName(key);
 
         assertThat(result.name()).isPresent();
@@ -172,7 +172,7 @@ class BeerNameCollectorTest {
                 flavoursTable
         );
 
-        DrinkKey key = new DrinkKey(4, null, 2, 1, 3, null, Optional.empty());
+        DrinkKey key = new DrinkKey(4, null, 2, 1, 3, null, null, null, Optional.empty());
         DrinkKey result = collector.collectBeerName(key);
 
         assertThat(result.name()).isPresent();
@@ -200,7 +200,7 @@ class BeerNameCollectorTest {
                 mock(BeerFlavoursTable.class)
         );
 
-        DrinkKey key = new DrinkKey(4, null, 2, 1, null, 4, Optional.empty());
+        DrinkKey key = new DrinkKey(4, null, 2, 1, null, 4, null, null, Optional.empty());
         DrinkKey result = collector.collectBeerName(key);
 
         assertThat(result.name()).isPresent();
@@ -230,7 +230,7 @@ class BeerNameCollectorTest {
                 mock(BeerFlavoursTable.class)
         );
 
-        DrinkKey key = new DrinkKey(4, null, null, 1, null, null, Optional.empty());
+        DrinkKey key = new DrinkKey(4, null, null, 1, null, null, null, null, Optional.empty());
         DrinkKey result = collector.collectBeerName(key);
 
         assertThat(result.name()).isPresent();
@@ -258,7 +258,7 @@ class BeerNameCollectorTest {
                 mock(BeerFlavoursTable.class)
         );
 
-        DrinkKey key = new DrinkKey(4, null, 2, 1, null, null, Optional.empty());
+        DrinkKey key = new DrinkKey(4, null, 2, 1, null, null, null, null, Optional.empty());
         DrinkKey result = collector.collectBeerName(key);
 
         assertThat(result.name()).isPresent();
@@ -290,7 +290,7 @@ class BeerNameCollectorTest {
                     mock(BeerFlavoursTable.class)
             );
 
-            DrinkKey key = new DrinkKey(4, null, 2, 1, null, null, Optional.empty());
+            DrinkKey key = new DrinkKey(4, null, 2, 1, null, null, null, null, Optional.empty());
             DrinkKey result = collector.collectBeerName(key);
 
             assertThat(result.name()).isPresent();

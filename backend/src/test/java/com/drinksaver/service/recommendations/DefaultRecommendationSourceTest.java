@@ -26,7 +26,7 @@ class DefaultRecommendationSourceTest {
         when(table.findByUserIdIn(admins)).thenReturn(recommendations);
 
         RepositoryConfiguration config = new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres",
+                "postgres", "postgres", "postgres", "postgres", "postgres",
                 admins, 4, 10, 0.97
         );
         return new DefaultRecommendationSource(table, config);
@@ -43,7 +43,7 @@ class DefaultRecommendationSourceTest {
     void nullAdminListReturnsEmptyMap() {
         RecommendationsTable table = mock(RecommendationsTable.class);
         RepositoryConfiguration config = new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres",
+                "postgres", "postgres", "postgres", "postgres", "postgres",
                 null, 4, 10, 0.97
         );
         DefaultRecommendationSource source = new DefaultRecommendationSource(table, config);

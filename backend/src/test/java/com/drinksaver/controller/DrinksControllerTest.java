@@ -102,13 +102,14 @@ class DrinksControllerTest {
                 Map.of("alcohol", mock(AlcoholRepository.class)),
                 Map.of("beer", mock(BeerRepository.class)),
                 Map.of("drinks", drinksRepository),
+                Map.of(),
                 repositoryConfiguration()
             );
         }
 
         @Bean
         RepositoryConfiguration repositoryConfiguration() {
-            return new RepositoryConfiguration("mock", "mock", "mock", "mock", List.of(), BEER_ID, 10, 0.97);
+            return new RepositoryConfiguration("mock", "mock", "mock", "mock", "mock", List.of(), BEER_ID, 10, 0.97);
         }
     }
 

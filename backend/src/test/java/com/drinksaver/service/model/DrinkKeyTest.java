@@ -25,11 +25,11 @@ class DrinkKeyTest {
     private static final UUID USER = UUID.randomUUID();
 
     private DrinkKey namelessBeer() {
-        return new DrinkKey(4, null, 6, 1, 1, 3, Optional.empty());
+        return new DrinkKey(4, null, 6, 1, 1, 3, null, null, Optional.empty());
     }
 
     private DrinkKey namedBeer(String name) {
-        return new DrinkKey(4, null, 6, 1, 1, 3, Optional.of(name));
+        return new DrinkKey(4, null, 6, 1, 1, 3, null, null, Optional.of(name));
     }
 
     @Test
@@ -64,7 +64,7 @@ class DrinkKeyTest {
 
     @Test
     void genuinelyDifferentDrinksStayDistinct() {
-        DrinkKey gin = new DrinkKey(1, 1, 2, null, null, null, Optional.empty());
+        DrinkKey gin = new DrinkKey(1, 1, 2, null, null, null, null, null, Optional.empty());
 
         assertThat(gin).isNotEqualTo(namelessBeer());
         Map<DrinkKey, Double> scores = new HashMap<>();
