@@ -18,8 +18,5 @@ public class ConsumptionType {
     private Integer id;
 
     private String name;
-
-    public ConsumptionType(String name) {
-        this.name = name;
-    }
+    private String glasswareId;
 }
