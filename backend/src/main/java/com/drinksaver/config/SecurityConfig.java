@@ -1,9 +1,11 @@
 package com.drinksaver.config;
 
+import com.drinksaver.security.RejectMultipartRequestsFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.config.Customizer;
 
 @Configuration
@@ -12,6 +14,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
             .cors(Customizer.withDefaults())
+            .addFilterBefore(new RejectMultipartRequestsFilter(), CsrfFilter.class)
             .authorizeHttpRequests(authz -> authz
                 // Spring Boot reuses this exact filter chain for the management port too
                 // (management.server.port) whenever the app defines its own SecurityFilterChain,
