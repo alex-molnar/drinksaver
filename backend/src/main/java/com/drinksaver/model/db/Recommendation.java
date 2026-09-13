@@ -43,6 +43,8 @@ public class Recommendation {
         recommendation.setConsumptionTypeId(drink.consumptionTypeId());
         if (drink.shouldAddEndDate())
             recommendation.setEndDate(LocalDateTime.now().plusHours(24));
+        recommendation.setGlasswareId(1); // TODO default change it
+        recommendation.setColorPaletteId(3); // TODO default change it
         return recommendation;
     }
 }
