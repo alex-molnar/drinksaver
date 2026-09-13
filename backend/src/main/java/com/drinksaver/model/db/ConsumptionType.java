@@ -18,5 +18,5 @@ public class ConsumptionType {
     private Integer id;
 
     private String name;
-    private String glasswareId;
+    private Integer glasswareId;
 }

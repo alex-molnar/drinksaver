@@ -80,7 +80,7 @@ class BeerNameCollectorTest {
     @Test
     void collectsWithConsumptionType() {
         Brand brand = new Brand(USER, "Heineken");
-        ConsumptionType consumption = new ConsumptionType(1, "Draught");
+        ConsumptionType consumption = new ConsumptionType(1, "Draught", 1);
         AlcoholVolume volume = new AlcoholVolume(1, "Pint", 0.568f);
 
         BrandsTable brandsTable = mock(BrandsTable.class);
