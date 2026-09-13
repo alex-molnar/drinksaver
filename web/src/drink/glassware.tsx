@@ -52,6 +52,7 @@ const GLASS_PATHS: Record<GlassKind, { g: string; l: string; f: string | null }>
     l: 'M10.5 19h13c1.6 3.3-1.5 5.2-6.5 7.1-5-1.9-8.1-3.8-6.5-7.1Z',
     f: null,
   },
+  // TODO: Play around in svg editor to get the umbrella right as well as a beercan and beer bottle
 };
 
 interface GlassProps {
