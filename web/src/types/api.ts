@@ -65,6 +65,8 @@ export interface Recommendation {
   brandId?: number;
   beerFlavourId?: number;
   consumptionTypeId?: number;
+  colorPaletteId?: number | null;
+  glasswareId?: number | null;
 }
 
 export interface ConsumptionType {
@@ -109,4 +111,3 @@ export interface NewBeerBrand {
   name: string;
   flavours?: string[];
 }
-

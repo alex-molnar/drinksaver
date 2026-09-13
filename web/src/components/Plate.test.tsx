@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Plate from './Plate';
-import { DRINK_IDENTITIES } from '../drink/identity';
+import { PALETTES } from '../drink/identity';
 
 describe('Plate', () => {
   describe('drink variant', () => {
@@ -13,22 +13,22 @@ describe('Plate', () => {
     });
 
     it("draws the drink's glass silhouette", () => {
-      render(<Plate variant="drink" name="Glass of red" rotation={0.5} onClick={vi.fn()} />);
+      render(<Plate variant="drink" name="Glass of red" glasswareId={3} rotation={0.5} onClick={vi.fn()} />);
 
       expect(screen.getByTestId('glass-wine')).toBeInTheDocument();
     });
 
-    it('falls back to a neutral glass for a name outside the identity table', () => {
+    it('falls back to a highball when glassware is missing', () => {
       render(<Plate variant="drink" name="Mystery cocktail" rotation={0.5} onClick={vi.fn()} />);
 
       expect(screen.getByTestId('glass-highball')).toBeInTheDocument();
     });
 
     it("carries the drink's field colour as a CSS custom property, never a literal", () => {
-      render(<Plate variant="drink" name="Duvel bottle" rotation={0.5} onClick={vi.fn()} />);
+      render(<Plate variant="drink" name="Duvel bottle" colorPaletteId={3} rotation={0.5} onClick={vi.fn()} />);
 
       const button = screen.getByRole('button', { name: 'Duvel bottle' });
-      expect(button.style.getPropertyValue('--fld')).toBe(DRINK_IDENTITIES['Duvel bottle'].field);
+      expect(button.style.getPropertyValue('--fld')).toBe(PALETTES.cream.field);
       expect(button.style.color).not.toBe('');
     });
 

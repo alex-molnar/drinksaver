@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../test/test-utils';
 import QuickSavePage from './QuickSavePage';
@@ -10,6 +10,7 @@ import { useDrinksForDate } from '../drink/useDrinksForDate';
 import type { Recommendation } from '../types/api';
 import type { SaveQueueContextType } from '../drink/SaveQueueContext';
 import type { SaveQueueEntry } from '../drink/saveQueueReducer';
+import { PALETTES } from '../drink/identity';
 
 vi.mock('../api/endpoints');
 vi.mock('../hooks/useSheet');
@@ -59,8 +60,8 @@ beforeEach(() => {
 /** Two recommendations whose id is null - the common case, since `DrinkKey.toRecommendation`
  *  never sets one - distinguished only by their other fields. */
 const nullIdRecommendations: Recommendation[] = [
-  { id: null as unknown as number, userId: 'user-1', name: 'Heineken pint', alcoholTypeId: 4, alcoholVolumeId: 10, brandId: 50 },
-  { id: null as unknown as number, userId: 'user-1', name: 'Guinness pint', alcoholTypeId: 4, alcoholVolumeId: 10, brandId: 51 },
+  { id: null as unknown as number, userId: 'user-1', name: 'Heineken pint', alcoholTypeId: 4, alcoholVolumeId: 10, brandId: 50, colorPaletteId: 1, glasswareId: 1 },
+  { id: null as unknown as number, userId: 'user-1', name: 'Guinness pint', alcoholTypeId: 4, alcoholVolumeId: 10, brandId: 51, colorPaletteId: 2, glasswareId: 1 },
 ];
 
 const savingEntry = (label: string): SaveQueueEntry => ({
@@ -79,6 +80,71 @@ const savingEntry = (label: string): SaveQueueEntry => ({
 });
 
 describe('QuickSavePage', () => {
+  it.each([
+    { colorPaletteId: 1, glasswareId: 9, palette: PALETTES.green, glass: 'palinka' },
+    { colorPaletteId: 2, glasswareId: 1, palette: PALETTES.brown, glass: 'pint' },
+    { colorPaletteId: 3, glasswareId: 2, palette: PALETTES.cream, glass: 'tulip' },
+    { colorPaletteId: 4, glasswareId: 7, palette: PALETTES.red, glass: 'coupe' },
+    { colorPaletteId: 5, glasswareId: 4, palette: PALETTES.blue, glass: 'highball' },
+    { colorPaletteId: 6, glasswareId: 3, palette: PALETTES.plum, glass: 'wine' },
+    { colorPaletteId: 7, glasswareId: 5, palette: PALETTES.amber, glass: 'rocks' },
+    { colorPaletteId: 8, glasswareId: 8, palette: PALETTES.rose, glass: 'flute' },
+    { colorPaletteId: 7, glasswareId: 6, palette: PALETTES.amber, glass: 'shot' },
+  ])('renders API palette $colorPaletteId and glassware $glasswareId on a recommendation tile', async ({ colorPaletteId, glasswareId, palette, glass }) => {
+    const recommendation = {
+      ...nullIdRecommendations[0],
+      name: 'Custom pálinka (Small glass - 0.05l)',
+      colorPaletteId,
+      glasswareId,
+    };
+    mockGetRecommendations.mockResolvedValue([recommendation]);
+
+    renderWithProviders(<QuickSavePage />);
+
+    const tile = await screen.findByRole('button', { name: recommendation.name });
+    expect(tile.style.getPropertyValue('--fld')).toBe(palette.field);
+    expect(tile).toHaveStyle({ color: palette.inkDark });
+    expect(within(tile).getByTestId(`glass-${glass}`)).toBeInTheDocument();
+  });
+
+  it.each([
+    { colorPaletteId: undefined, glasswareId: undefined, palette: PALETTES.cream, glass: 'highball' },
+    { colorPaletteId: null, glasswareId: null, palette: PALETTES.cream, glass: 'highball' },
+    { colorPaletteId: 999, glasswareId: 999, palette: PALETTES.cream, glass: 'highball' },
+    { colorPaletteId: 0, glasswareId: 0, palette: PALETTES.cream, glass: 'highball' },
+    { colorPaletteId: 999, glasswareId: 9, palette: PALETTES.cream, glass: 'palinka' },
+    { colorPaletteId: 7, glasswareId: 999, palette: PALETTES.amber, glass: 'highball' },
+  ])('falls back independently for palette $colorPaletteId and glassware $glasswareId', async ({ colorPaletteId, glasswareId, palette, glass }) => {
+    mockGetRecommendations.mockResolvedValue([{ ...nullIdRecommendations[0], colorPaletteId, glasswareId }]);
+
+    renderWithProviders(<QuickSavePage />);
+
+    const tile = await screen.findByRole('button', { name: 'Heineken pint' });
+    expect(tile.style.getPropertyValue('--fld')).toBe(palette.field);
+    expect(tile).toHaveStyle({ color: palette.inkDark });
+    expect(within(tile).getByTestId(`glass-${glass}`)).toBeInTheDocument();
+  });
+
+  it('keeps appearance when the label changes and updates the same tile when design IDs change', async () => {
+    mockGetRecommendations.mockResolvedValue([nullIdRecommendations[0]]);
+    const { client } = renderWithProviders(<QuickSavePage />);
+    const tile = await screen.findByRole('button', { name: 'Heineken pint' });
+    const renamed = { ...nullIdRecommendations[0], name: 'My usual (Draft/Tap - 0.50l)' };
+
+    act(() => client.setQueryData(['recommendations'], [renamed]));
+
+    expect(await screen.findByRole('button', { name: renamed.name })).toBe(tile);
+    expect(tile.style.getPropertyValue('--fld')).toBe(PALETTES.green.field);
+    expect(within(tile).getByTestId('glass-pint')).toBeInTheDocument();
+
+    act(() => client.setQueryData(['recommendations'], [{ ...renamed, colorPaletteId: 8, glasswareId: 9 }]));
+
+    await waitFor(() => expect(tile.style.getPropertyValue('--fld')).toBe(PALETTES.rose.field));
+    expect(screen.getByRole('button', { name: renamed.name })).toBe(tile);
+    expect(tile).toHaveStyle({ color: PALETTES.rose.inkDark });
+    expect(within(tile).getByTestId('glass-palinka')).toBeInTheDocument();
+  });
+
   /**
    * The regression this PR exists to fix. `IndexPage.tsx:118` keyed React's reconciliation on
    * `rec.id` alone, which is null for both of these, while the save state already keyed on the

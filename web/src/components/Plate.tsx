@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import { drinkIdentity } from '../drink/identity';
+import { recommendationIdentity } from '../drink/identity';
 import { Glass } from '../drink/glassware';
 
 /**
@@ -24,8 +24,9 @@ interface DrinkPlateProps extends BasePlateProps {
   /** The drink's display name. Also the accessible name: nothing else in the button renders
    *  visible text of its own besides an optional caption, which is plain content, not a label. */
   name: string;
-  /** The second rung of `drinkIdentity`'s lookup - see `drink/identity.ts`. */
-  alcoholTypeId?: number;
+  /** Backend design IDs, resolved independently of the display name. */
+  colorPaletteId?: number | null;
+  glasswareId?: number | null;
   /** Optional serving detail ("0.5 L draft"). Renders at full ink opacity: see the design doc's
    *  drink identity table, which was gated against exactly the caption's own opacity being 1. */
   caption?: string;
@@ -231,9 +232,9 @@ const AddButton = styled.button`
  * The enamel sign, or its dashed "add" sibling. A real `<button>` either way, never a `div` with
  * a click handler, so it is focusable and has an accessible name for free.
  *
- * Field colour and ink always come from `drinkIdentity`, never from a literal here: this
+ * Field colour and ink always come from `recommendationIdentity`, never from a literal here: this
  * component only ever reads `identity.field` / `identity.inkDark` / `identity.chroma` /
- * `identity.glass`, all resolved by `drinkIdentity`, and passes the two colours through as CSS
+ * `identity.glass`, all resolved from design IDs, and passes the two colours through as CSS
  * custom properties (`--fld`, plus the inherited `color`) rather than as styled-component props,
  * so nothing needs filtering before it reaches the DOM.
  */
@@ -252,8 +253,8 @@ const Plate: React.FC<PlateProps> = (props) => {
     );
   }
 
-  const { name, alcoholTypeId, caption, status = 'idle' } = props;
-  const identity = drinkIdentity(name, alcoholTypeId);
+  const { name, colorPaletteId, glasswareId, caption, status = 'idle' } = props;
+  const identity = recommendationIdentity(colorPaletteId, glasswareId);
   const isSaving = status === 'saving';
   const isDone = status === 'done';
 

@@ -2,13 +2,8 @@
  * Shared palettes and drink identities define the glass a drink is served in, the liquid's
  * decorative colour, the enamel plate's field colour, and the ink that sits on that field.
  *
- * This replaces the alcohol-type-ID icon maps that used to be duplicated in
- * `RecommendationButton.tsx` and `HistoryPage.tsx`. Those maps were keyed on `alcoholTypeId`,
- * which is too coarse for this table: Heineken pint and Guinness pint are both alcoholTypeId 4
- * (Beer), but need different identities. So the drink identity table is keyed on the display name
- * instead, which is exactly what the backend already composes and what the recommendation and
- * history endpoints already return (see the `recommendations` rows in
- * `deploy/local/seed.sql`, whose `name` column is verbatim what appears below).
+ * Recommendations resolve their palette and glass from the backend's design IDs. History
+ * still uses the legacy display-name/type lookup until its response carries design metadata.
  *
  * Identity is data, not theme: a field colour is the drink's identity and should stay
  * recognisable in any theme, and only the lettering is meant to flip. So the record carries
@@ -90,6 +85,17 @@ export const PALETTES: Readonly<Record<PaletteKey, DrinkPalette>> = {
   },
 };
 
+/** Temporary catalogue ID mappings, shared with the backend until design data is fetched. */
+const PALETTE_BY_ID: Readonly<Partial<Record<number, PaletteKey>>> = {
+  1: 'green', 2: 'brown', 3: 'cream', 4: 'red',
+  5: 'blue', 6: 'plum', 7: 'amber', 8: 'rose',
+};
+
+const GLASS_BY_ID: Readonly<Partial<Record<number, GlassKind>>> = {
+  1: 'pint', 2: 'tulip', 3: 'wine', 4: 'highball', 5: 'rocks',
+  6: 'shot', 7: 'coupe', 8: 'flute', 9: 'palinka',
+};
+
 /** The existing prototype identities compose a palette with their glass and liquid colour. */
 export const DRINK_IDENTITIES: Readonly<Record<string, DrinkIdentity>> = {
   'Heineken pint': {
@@ -144,6 +150,16 @@ const DEFAULT_IDENTITY: DrinkIdentity = {
   inkLight: null,
   chroma: '#A69A88',
 };
+
+/** Resolve each design ID independently; labels and serving details never affect tile style. */
+export const recommendationIdentity = (
+  colorPaletteId?: number | null,
+  glasswareId?: number | null,
+): DrinkIdentity => ({
+  ...DEFAULT_IDENTITY,
+  ...PALETTES[PALETTE_BY_ID[colorPaletteId ?? 0] ?? 'cream'],
+  glass: GLASS_BY_ID[glasswareId ?? 0] ?? 'highball',
+});
 
 /**
  * Glass silhouette by alcohol type id, the second rung of the lookup below.

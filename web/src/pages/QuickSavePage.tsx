@@ -118,7 +118,8 @@ const QuickSavePage: React.FC = () => {
     : (recommendations ?? []).map((rec) => ({
         key: getRecommendationKey(rec),
         name: rec.name,
-        alcoholTypeId: rec.alcoholTypeId,
+        colorPaletteId: rec.colorPaletteId,
+        glasswareId: rec.glasswareId,
         onSave: () => handleSave(rec),
       }));
 

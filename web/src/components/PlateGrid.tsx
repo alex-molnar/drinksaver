@@ -8,7 +8,8 @@ export interface PlateGridItem {
    *  see `QuickSavePage.tsx`'s module doc for the bug this replaces. */
   key: string;
   name: string;
-  alcoholTypeId: number;
+  colorPaletteId?: number | null;
+  glasswareId?: number | null;
   onSave: () => void;
 }
 
@@ -111,7 +112,8 @@ const PlateGrid: React.FC<PlateGridProps> = ({ items, savingKey, doneKey, saveIn
                   key={item.key}
                   variant="drink"
                   name={item.name}
-                  alcoholTypeId={item.alcoholTypeId}
+                  colorPaletteId={item.colorPaletteId}
+                  glasswareId={item.glasswareId}
                   rotation={rotation}
                   status={status}
                   disabled={saveInFlight && savingKey !== item.key}
