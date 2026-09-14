@@ -39,7 +39,7 @@ const GLASS_PATHS: Record<GlassKind, { g: string; l: string; f: string | null }>
   },
   coupe: {
     g: 'M 4 13 h 18 L 26 9 L 22 5 C 26 3 33 10 31 14 L 27 10 L 24 13 L 27 13 c -1 8 -6 12 -13 12 S 2 21 1 13 Z M 13.1 25 H 14.9 v 17 h -1.8 Z M 7.8 44 h 12.4 v 3 H 7.8 Z',
-    l: 'M 3.5 17 h 18 c -0.5 4 -5.5 7 -9.5 7 S 4 21 3.5 17 Z', //'M6.5 17h21c-2 4.5-5.5 7-10.5 7S8.5 21.5 6.5 17Z',
+    l: 'M 3.5 17 h 21 c -2 4.5 -5.5 7 -10.5 7 S 5.5 21.5 3.5 17 Z',
     f: null,
   },
   flute: {
