@@ -43,7 +43,7 @@ class DynamicPersonalRecommendationSourceTest {
     }
 
     private SavedDrink drinkOn(String date, int alcoholTypeId) {
-        return new SavedDrink(USER, date, alcoholTypeId, null, 3, null, null, null, null);
+        return new SavedDrink(USER, date, alcoholTypeId, null, 3, null, null, null, null, null, null);
     }
 
     @Test

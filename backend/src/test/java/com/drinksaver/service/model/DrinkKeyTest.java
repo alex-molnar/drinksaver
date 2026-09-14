@@ -75,7 +75,7 @@ class DrinkKeyTest {
 
     @Test
     void keysBuiltFromADrinkAndFromARecommendationMeet() {
-        SavedDrink drink = new SavedDrink(USER, "2026-03-15", 4, null, 6, 1, 1, 3, null);
+        SavedDrink drink = new SavedDrink(USER, "2026-03-15", 4, null, 6, 1, 1, 3, null, null, null);
 
         Recommendation recommendation = new Recommendation();
         recommendation.setUserId(USER);

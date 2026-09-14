@@ -36,7 +36,7 @@ class RecommendationCacheServiceTest {
         when(cacheManager.getCache(SAVE_COUNTER_CACHE)).thenReturn(null);
 
         RecommendationCacheService service = new RecommendationCacheService(cacheManager);
-        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, false, null, null);
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, null, false, null, null);
 
         service.onDrinkSaved(drink);
 
@@ -52,7 +52,7 @@ class RecommendationCacheServiceTest {
         when(cacheManager.getCache(RECOMMENDATIONS_CACHE)).thenReturn(recCache);
 
         RecommendationCacheService service = new RecommendationCacheService(cacheManager);
-        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, true, null, null);
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, null, true, null, null);
 
         service.onDrinkSaved(drink);
 
@@ -75,7 +75,7 @@ class RecommendationCacheServiceTest {
         when(cacheManager.getCache(RECOMMENDATIONS_CACHE)).thenReturn(recCache);
 
         RecommendationCacheService service = new RecommendationCacheService(cacheManager);
-        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, 1, false, null, null);
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, 1, false, null, null);
 
         service.onDrinkSaved(drink);
 
@@ -120,7 +120,7 @@ class RecommendationCacheServiceTest {
         when(cacheManager.getCache(RECOMMENDATIONS_CACHE)).thenReturn(recCache);
 
         RecommendationCacheService service = new RecommendationCacheService(cacheManager);
-        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, false, null, null);
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, null, false, null, null);
 
         service.onDrinkSaved(drink);
 
@@ -139,7 +139,7 @@ class RecommendationCacheServiceTest {
         when(cacheManager.getCache(RECOMMENDATIONS_CACHE)).thenReturn(recCache);
 
         RecommendationCacheService service = new RecommendationCacheService(cacheManager);
-        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, 1, false, null, null);
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, 1, false, null, null);
 
         service.onDrinkSaved(drink);
 
@@ -220,7 +220,7 @@ class RecommendationCacheServiceTest {
         when(cacheManager.getCache(RECOMMENDATIONS_CACHE)).thenReturn(recCache);
 
         RecommendationCacheService service = new RecommendationCacheService(cacheManager);
-        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, 1, false, null, null);
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, 1, false, null, null);
 
         CountDownLatch startTogether = new CountDownLatch(1);
         CountDownLatch finished = new CountDownLatch(threads);

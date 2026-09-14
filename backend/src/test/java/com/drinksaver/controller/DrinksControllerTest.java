@@ -115,7 +115,7 @@ class DrinksControllerTest {
 
     private SavedDrink savedDrink(int id, UUID userId, Integer alcoholTypeId) {
         SavedDrink drink = new SavedDrink(
-            userId, "2026-01-01", alcoholTypeId, null, 2, null, null, null, null
+            userId, "2026-01-01", alcoholTypeId, null, 2, null, null, null, null, null, null
         );
         drink.setId(id);
         return drink;
