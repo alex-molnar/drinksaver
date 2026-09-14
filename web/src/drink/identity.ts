@@ -17,7 +17,19 @@
  */
 
 /** The glass silhouettes `glassware.tsx` can draw. */
-export type GlassKind = 'pint' | 'tulip' | 'wine' | 'highball' | 'rocks' | 'shot' | 'coupe' | 'flute' | 'palinka';
+export type GlassKind =
+  | 'pint'
+  | 'tulip'
+  | 'wine'
+  | 'highball'
+  | 'rocks'
+  | 'shot'
+  | 'coupe'
+  | 'flute'
+  | 'palinka'
+  | 'beercan'
+  | 'beerbottle'
+  | 'beerjug';
 
 export type PaletteKey = 'green' | 'brown' | 'cream' | 'red' | 'blue' | 'plum' | 'amber' | 'rose';
 
@@ -97,7 +109,8 @@ export const paletteForId = (colorPaletteId?: number | null): DrinkPalette =>
 
 const GLASS_BY_ID: Readonly<Partial<Record<number, GlassKind>>> = {
   1: 'pint', 2: 'tulip', 3: 'wine', 4: 'highball', 5: 'rocks',
-  6: 'shot', 7: 'coupe', 8: 'flute', 9: 'palinka',
+  6: 'shot', 7: 'coupe', 8: 'flute', 9: 'palinka', 10: 'beercan',
+  11: 'beerbottle', 12: 'beerjug',
 };
 
 /** The existing prototype identities compose a palette with their glass and liquid colour. */

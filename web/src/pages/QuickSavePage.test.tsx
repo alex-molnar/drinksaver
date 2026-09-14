@@ -90,6 +90,9 @@ describe('QuickSavePage', () => {
     { colorPaletteId: 7, glasswareId: 5, palette: PALETTES.amber, glass: 'rocks' },
     { colorPaletteId: 8, glasswareId: 8, palette: PALETTES.rose, glass: 'flute' },
     { colorPaletteId: 7, glasswareId: 6, palette: PALETTES.amber, glass: 'shot' },
+    { colorPaletteId: 7, glasswareId: 10, palette: PALETTES.amber, glass: 'beercan' },
+    { colorPaletteId: 2, glasswareId: 11, palette: PALETTES.brown, glass: 'beerbottle' },
+    { colorPaletteId: 3, glasswareId: 12, palette: PALETTES.cream, glass: 'beerjug' },
   ])('renders API palette $colorPaletteId and glassware $glasswareId on a recommendation tile', async ({ colorPaletteId, glasswareId, palette, glass }) => {
     const recommendation = {
       ...nullIdRecommendations[0],

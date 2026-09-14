@@ -12,6 +12,9 @@ const designs: { colorPaletteId: number; glasswareId: number; palette: PaletteKe
   { colorPaletteId: 7, glasswareId: 7, palette: 'amber', glass: 'coupe' },
   { colorPaletteId: 8, glasswareId: 8, palette: 'rose', glass: 'flute' },
   { colorPaletteId: 7, glasswareId: 9, palette: 'amber', glass: 'palinka' },
+  { colorPaletteId: 7, glasswareId: 10, palette: 'amber', glass: 'beercan' },
+  { colorPaletteId: 2, glasswareId: 11, palette: 'brown', glass: 'beerbottle' },
+  { colorPaletteId: 3, glasswareId: 12, palette: 'cream', glass: 'beerjug' },
   { colorPaletteId: 999, glasswareId: 999, palette: 'cream', glass: 'highball' },
 ];
 

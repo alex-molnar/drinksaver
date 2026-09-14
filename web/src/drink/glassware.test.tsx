@@ -3,7 +3,20 @@ import { render } from '@testing-library/react';
 import { Glass } from './glassware';
 
 describe('Glass', () => {
-  it.each(['pint', 'tulip', 'wine', 'highball'] as const)('renders %s as an aria-hidden svg', (kind) => {
+  it.each([
+    'pint',
+    'tulip',
+    'wine',
+    'highball',
+    'rocks',
+    'shot',
+    'coupe',
+    'flute',
+    'palinka',
+    'beercan',
+    'beerbottle',
+    'beerjug',
+  ] as const)('renders %s as an aria-hidden svg', (kind) => {
     const { container } = render(<Glass kind={kind} chroma="#123456" />);
     const svg = container.querySelector('svg');
     expect(svg).not.toBeNull();
@@ -32,6 +45,12 @@ describe('Glass', () => {
 
     const highball = render(<Glass kind="highball" chroma="#123456" foam="#EBDCC0" />);
     expect(highball.container.querySelectorAll('path')).toHaveLength(2);
+  });
+
+  it('draws a foam crown for the beer jug', () => {
+    const jug = render(<Glass kind="beerjug" chroma="#E0A828" foam="#EBDCC0" />);
+    expect(jug.container.querySelectorAll('path')).toHaveLength(3);
+    expect(jug.container.querySelectorAll('path')[1]).toHaveAttribute('fill', '#EBDCC0');
   });
 
   it('leaves the outline path explicitly unfilled', () => {

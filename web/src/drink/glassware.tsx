@@ -39,7 +39,7 @@ const GLASS_PATHS: Record<GlassKind, { g: string; l: string; f: string | null }>
   },
   coupe: {
     g: 'M 4 13 h 18 L 26 9 L 22 5 C 26 3 33 10 31 14 L 27 10 L 24 13 L 27 13 c -1 8 -6 12 -13 12 S 2 21 1 13 Z M 13.1 25 H 14.9 v 17 h -1.8 Z M 7.8 44 h 12.4 v 3 H 7.8 Z',
-    l: 'M6.5 17h21c-2 4.5-5.5 7-10.5 7S8.5 21.5 6.5 17Z',
+    l: 'M 3.5 17 h 18 c -0.5 4 -5.5 7 -9.5 7 S 4 21 3.5 17 Z', //'M6.5 17h21c-2 4.5-5.5 7-10.5 7S8.5 21.5 6.5 17Z',
     f: null,
   },
   flute: {
@@ -52,7 +52,21 @@ const GLASS_PATHS: Record<GlassKind, { g: string; l: string; f: string | null }>
     l: 'M10.5 19h13c1.6 3.3-1.5 5.2-6.5 7.1-5-1.9-8.1-3.8-6.5-7.1Z',
     f: null,
   },
-  // TODO: Play around in svg editor to get the umbrella right as well as a beercan and beer bottle
+  beercan: {
+    g: 'M10 5h14l2 3v34l-2 3H10l-2-3V8Z M8.8 10h16.4 M8.8 40h16.4 M11 16h12 M11 34h12 M13 6.8h8 M15 8.4h4',
+    l: 'M9.8 12h14.4v26H9.8Z',
+    f: null,
+  },
+  beerbottle: {
+    g: 'M14 3h6v4l-1 1v9c0 2 1 3.5 3 5.5 2 2.5 3 5.5 3 9.5v12a3 3 0 0 1-3 3H12a3 3 0 0 1-3-3V32c0-4 1-7 3-9.5 2-2 3-3.5 3-5.5V8l-1-1Z M14 5h6 M12 29h10 M12 39h10',
+    l: 'M11 26h12v17a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2Z',
+    f: null,
+  },
+  beerjug: {
+    g: 'M5 14h20v30a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3Z M25 19h3a3 3 0 0 1 3 3v13a3 3 0 0 1-3 3h-3 M25 23h2v11h-2 M10 21v22 M15 21v22 M20 21v22',
+    l: 'M7 18h16v25a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2Z',
+    f: 'M5 15c0-4 2.5-7 6-7 1.5-4 7.5-5 10-1 3.5-.5 6 2.5 6 6v4H5Z',
+  },
 };
 
 interface GlassProps {
@@ -73,7 +87,7 @@ interface GlassProps {
    */
   tone?: 'ink' | 'chroma';
   /**
-   * Fill for the foam shape, drawn only if this glass kind has one (pint and tulip)
+   * Fill for the foam shape, drawn only if this glass kind has one (pint, tulip and beer jug)
    * and a colour is given. Not sourced from `identity.ts`: the identity table
    * carries glass, field, ink and chroma only, so foam is a caller's decision until a foam
    * colour becomes part of that table.
