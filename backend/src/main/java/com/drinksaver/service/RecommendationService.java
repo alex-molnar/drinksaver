@@ -37,7 +37,7 @@ public class RecommendationService {
 
     @Cacheable(value = "recommendations", key = "#userId")
     public List<Recommendation> getRecommendations(UUID userId) {
-        return recommendationSources
+        Map<DrinkKey, Double> collectedRecs =  recommendationSources
             .values()
             .stream()
             .flatMap(source -> source.buildRecommendation(userId).entrySet().stream())
@@ -45,13 +45,16 @@ public class RecommendationService {
                 Map.Entry::getKey,
                 Map.Entry::getValue,
                 Math::max
-            ))
+            ));
+        collectedRecs.forEach((e, d) -> System.out.printf("%s (%s): %f", e.name(), e.toString(), d));
+        List<Recommendation> ret =  collectedRecs
             .entrySet().stream()
             .map(entry -> new AbstractMap.SimpleEntry<>(withName(entry.getKey()), entry.getValue()))
             .filter(entry -> entry.getKey().name().isPresent())
             .sorted(Map.Entry.<DrinkKey, Double>comparingByValue().reversed())
-            .limit(repositoryConfiguration.maxPersonalRecommendations())
-            .map(entry -> entry.getKey().toRecommendation(userId))
+            .map(entry -> entry.getKey().toRecommendation(userId)).toList();
+        return ret.stream()
+            .limit(repositoryConfiguration.maxPersonalRecommendations())  // TODO limit before
             .toList();
     }
 
