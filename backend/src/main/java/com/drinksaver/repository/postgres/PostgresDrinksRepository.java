@@ -8,6 +8,7 @@ import com.drinksaver.repository.postgres.schema.RecommendationsTable;
 import com.drinksaver.repository.postgres.schema.SavedDrinksTable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
@@ -35,6 +36,7 @@ public class PostgresDrinksRepository implements DrinksRepository {
      * ids to be able to undo the save; returning getFirst() left N-1 rows unreachable.
      */
     @Override
+    @Transactional
     public List<SavedDrink> saveDrink(Drink drink) {
         if (drink.shouldAddToRecommendations()) {
             Integer maxOrder = recommendationsTable.findNonTemporaryByUserId(drink.userId()).getFirst();

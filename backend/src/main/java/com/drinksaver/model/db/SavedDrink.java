@@ -40,6 +40,8 @@ public class SavedDrink {
         this.brandId = brandId;
         this.beerFlavourId = beerFlavourId;
         this.consumptionTypeId = consumptionTypeId;
+        this.colorPaletteId = colorPaletteId;
+        this.glasswareId = glasswareId;
         this.comments = comments;
     }
 
