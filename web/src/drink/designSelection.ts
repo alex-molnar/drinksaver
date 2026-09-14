@@ -14,6 +14,23 @@ const requiredDesignId = (value: number | null | undefined, source: string): num
   return value;
 };
 
+export const resolveBeerColorPaletteId = (
+  flavourColorPaletteId: number | null | undefined,
+  brandColorPaletteId: number | null | undefined,
+  alcoholTypeColorPaletteId: number | null | undefined,
+): number => requiredDesignId(
+  flavourColorPaletteId ?? brandColorPaletteId ?? alcoholTypeColorPaletteId,
+  'beer palette',
+);
+
+export const resolveAlcoholColorPaletteId = (
+  subtypeColorPaletteId: number | null | undefined,
+  alcoholTypeColorPaletteId: number | null | undefined,
+): number => requiredDesignId(
+  subtypeColorPaletteId ?? alcoholTypeColorPaletteId,
+  'alcohol palette',
+);
+
 /** Recommendation saves already carry their final design; fail closed if an obsolete response does not. */
 export const resolveRecommendationDesign = (
   recommendation: Pick<Recommendation, 'colorPaletteId' | 'glasswareId'>,
@@ -39,9 +56,10 @@ export const resolveDraftDesign = (
     const consumptionType = catalogue.consumptionTypes?.find((item) => item.id === draft.consumptionTypeId);
 
     return {
-      colorPaletteId: requiredDesignId(
-        flavour?.colorPaletteId ?? brand?.colorPaletteId ?? alcoholType?.colorPaletteId,
-        'beer palette',
+      colorPaletteId: resolveBeerColorPaletteId(
+        flavour?.colorPaletteId,
+        brand?.colorPaletteId,
+        alcoholType?.colorPaletteId,
       ),
       glasswareId: requiredDesignId(consumptionType?.glasswareId, 'beer glassware'),
     };
@@ -49,9 +67,9 @@ export const resolveDraftDesign = (
 
   const subtype = catalogue.subtypes?.find((item) => item.id === draft.subtypeId);
   return {
-    colorPaletteId: requiredDesignId(
-      subtype?.colorPaletteId ?? alcoholType?.colorPaletteId,
-      'alcohol palette',
+    colorPaletteId: resolveAlcoholColorPaletteId(
+      subtype?.colorPaletteId,
+      alcoholType?.colorPaletteId,
     ),
     glasswareId: requiredDesignId(
       subtype?.glasswareId ?? alcoholType?.glasswareId,

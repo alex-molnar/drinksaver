@@ -8,7 +8,7 @@ for (const viewport of [
   { name: 'narrow portrait', width: 375, height: 812 },
   { name: 'phone landscape', width: 812, height: 375 },
 ]) {
-  test(`drink and brand palettes follow API IDs in the ${viewport.name} add sheet`, async ({ page }) => {
+  test(`catalogue palettes follow API IDs and fallbacks in the ${viewport.name} add sheet`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.route('**/v1/alcohol/types', (route) => route.fulfill({
       json: [
@@ -20,6 +20,12 @@ for (const viewport of [
     await page.route('**/v1/alcohol/types/1/volumes', (route) => route.fulfill({
       json: [{ id: 10, name: 'Pint', volume: 0.5 }],
     }));
+    await page.route('**/v1/alcohol/types/2/subtypes', (route) => route.fulfill({
+      json: [
+        { id: 30, alcoholTypeId: 2, name: 'Red', colorPaletteId: 4, glasswareId: 8 },
+        { id: 31, alcoholTypeId: 2, name: 'White', colorPaletteId: null, glasswareId: 3 },
+      ],
+    }));
     await page.route('**/v1/beer/consumption-types?*', (route) => route.fulfill({
       json: [{ id: 40, name: 'Draft', glasswareId: 5 }],
     }));
@@ -29,7 +35,12 @@ for (const viewport of [
         { id: 51, name: 'Guinness', colorPaletteId: 2 },
       ],
     }));
-    await page.route('**/v1/beer/brands/51/flavours', (route) => route.fulfill({ json: [] }));
+    await page.route('**/v1/beer/brands/51/flavours', (route) => route.fulfill({
+      json: [
+        { id: 60, brandId: 51, name: 'Stout', colorPaletteId: 7 },
+        { id: 61, brandId: 51, name: 'Classic', colorPaletteId: null },
+      ],
+    }));
     await page.route('**/v1/drinks/new', (route) => route.fulfill({
       json: [{ id: 9001, userId: 'user-1', date: '2026-09-14', alcoholTypeId: 1, alcoholVolumeId: 10 }],
     }));
@@ -47,6 +58,15 @@ for (const viewport of [
     await expect(wine.locator('[data-color-palette-id="6"]')).toHaveCSS('background-color', rgb(PALETTES.plum.field));
     await expect(custom.locator('[data-color-palette-id="999"]')).toHaveCSS('background-color', rgb(PALETTES.cream.field));
 
+    await wine.click();
+    await menuRow(page, 'Subtype').click();
+    await expect(page.getByRole('button', { name: 'Red', exact: true }).locator('[data-color-palette-id="4"]'))
+      .toHaveCSS('background-color', rgb(PALETTES.red.field));
+    await expect(page.getByRole('button', { name: 'White', exact: true }).locator('[data-color-palette-id="6"]'))
+      .toHaveCSS('background-color', rgb(PALETTES.plum.field));
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
+    await menuRow(page, 'Drink').click();
+
     await beer.click();
     await expect(menuRow(page, 'Drink').locator('[data-color-palette-id="1"]')).toHaveCSS('background-color', rgb(PALETTES.green.field));
 
@@ -59,6 +79,13 @@ for (const viewport of [
     await guinness.click();
     await expect(menuRow(page, 'Brand')).toHaveAccessibleName('Brand, Guinness');
     await expect(menuRow(page, 'Brand').locator('[data-color-palette-id="2"]')).toHaveCSS('background-color', rgb(PALETTES.brown.field));
+
+    await menuRow(page, 'Flavour').click();
+    await expect(page.getByRole('button', { name: 'Stout', exact: true }).locator('[data-color-palette-id="7"]'))
+      .toHaveCSS('background-color', rgb(PALETTES.amber.field));
+    await expect(page.getByRole('button', { name: 'Classic', exact: true }).locator('[data-color-palette-id="2"]'))
+      .toHaveCSS('background-color', rgb(PALETTES.brown.field));
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
 
     await menuRow(page, 'Size').click();
     await page.getByRole('button', { name: 'Pint (0.5L)', exact: true }).click();

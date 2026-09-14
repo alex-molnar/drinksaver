@@ -24,12 +24,18 @@ const YESTERDAY = previousIsoDate(TODAY);
 const dispatch = vi.fn();
 
 const CATALOGUE = {
-  alcoholTypes: { data: [{ id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 1 }, { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6 }], isLoading: false },
+  alcoholTypes: { data: [{ id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 3, glasswareId: 1 }, { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6, glasswareId: 3 }], isLoading: false },
   volumes: { data: [{ id: 10, name: 'Pint', volume: 0.5 }], isLoading: false },
-  subtypes: { data: [{ id: 30, name: 'Red', alcoholTypeId: 2 }], isLoading: false },
-  consumptionTypes: { data: [{ id: 40, name: 'Draft' }], isLoading: false },
+  subtypes: { data: [
+    { id: 30, name: 'Red', alcoholTypeId: 2, colorPaletteId: 4 },
+    { id: 31, name: 'White', alcoholTypeId: 2, colorPaletteId: null },
+  ], isLoading: false },
+  consumptionTypes: { data: [{ id: 40, name: 'Draft', glasswareId: 1 }], isLoading: false },
   brands: { data: [{ id: 50, name: 'Heineken', colorPaletteId: 1 }], isLoading: false } as { data: { id: number; name: string; colorPaletteId?: number | null }[] | undefined; isLoading: boolean },
-  beerFlavours: { data: [{ id: 60, name: 'Lager', brandId: 50 }], isLoading: false },
+  beerFlavours: { data: [
+    { id: 60, name: 'Lager', brandId: 50, colorPaletteId: 7 },
+    { id: 61, name: 'Pils', brandId: 50, colorPaletteId: null },
+  ], isLoading: false },
   isBeer: false,
 };
 
@@ -94,10 +100,10 @@ describe('OptionPanel', () => {
 
     it('uses backend palette IDs for drink and brand identity swatches', () => {
       renderOptionPanel('alcoholType');
-      const beerSwatch = screen.getByRole('button', { name: 'Beer' }).querySelector('[data-color-palette-id="1"]');
+      const beerSwatch = screen.getByRole('button', { name: 'Beer' }).querySelector('[data-color-palette-id="3"]');
       const wineSwatch = screen.getByRole('button', { name: 'Wine' }).querySelector('[data-color-palette-id="6"]');
 
-      expect(beerSwatch).toHaveStyle({ '--palette-swatch-field': PALETTES.green.field });
+      expect(beerSwatch).toHaveStyle({ '--palette-swatch-field': PALETTES.cream.field });
       expect(wineSwatch).toHaveStyle({ '--palette-swatch-field': PALETTES.plum.field });
       expect(document.querySelectorAll('[data-color-palette-id]')).toHaveLength(2);
 
@@ -105,6 +111,40 @@ describe('OptionPanel', () => {
       renderOptionPanel('brand');
       expect(screen.getByRole('button', { name: 'Heineken' }).querySelector('[data-color-palette-id="1"]')).toHaveStyle({
         '--palette-swatch-field': PALETTES.green.field,
+      });
+    });
+
+    it('uses subtype palettes before falling back to the selected alcohol type', () => {
+      setDraft({ alcoholTypeId: 2 });
+      renderOptionPanel('subtype');
+
+      expect(screen.getByRole('button', { name: 'Red' }).querySelector('[data-color-palette-id="4"]')).toHaveStyle({
+        '--palette-swatch-field': PALETTES.red.field,
+      });
+      expect(screen.getByRole('button', { name: 'White' }).querySelector('[data-color-palette-id="6"]')).toHaveStyle({
+        '--palette-swatch-field': PALETTES.plum.field,
+      });
+    });
+
+    it('uses flavour, brand, then alcohol-type palettes in the beer flavour selector', () => {
+      setDraft({ alcoholTypeId: 1, brandId: 50 });
+      renderOptionPanel('beerFlavour');
+
+      expect(screen.getByRole('button', { name: 'Lager' }).querySelector('[data-color-palette-id="7"]')).toHaveStyle({
+        '--palette-swatch-field': PALETTES.amber.field,
+      });
+      expect(screen.getByRole('button', { name: 'Pils' }).querySelector('[data-color-palette-id="1"]')).toHaveStyle({
+        '--palette-swatch-field': PALETTES.green.field,
+      });
+
+      cleanup();
+      setDraft(
+        { alcoholTypeId: 1, brandId: 50 },
+        { brands: { data: [{ id: 50, name: 'Heineken', colorPaletteId: null }], isLoading: false } },
+      );
+      renderOptionPanel('beerFlavour');
+      expect(screen.getByRole('button', { name: 'Pils' }).querySelector('[data-color-palette-id="3"]')).toHaveStyle({
+        '--palette-swatch-field': PALETTES.cream.field,
       });
     });
 
@@ -129,6 +169,7 @@ describe('OptionPanel', () => {
     });
 
     it('lists subtype options and selects one', async () => {
+      setDraft({ alcoholTypeId: 2 });
       const { onPopPanel } = renderOptionPanel('subtype');
       await userEvent.click(screen.getByRole('button', { name: 'Red' }));
       expect(dispatch).toHaveBeenCalledWith({ type: 'select', field: 'subtype', id: 30 });
@@ -136,6 +177,7 @@ describe('OptionPanel', () => {
     });
 
     it('lists beer flavour options and selects one', async () => {
+      setDraft({ alcoholTypeId: 1, brandId: 50 });
       const { onPopPanel } = renderOptionPanel('beerFlavour');
       await userEvent.click(screen.getByRole('button', { name: 'Lager' }));
       expect(dispatch).toHaveBeenCalledWith({ type: 'select', field: 'beerFlavour', id: 60 });
