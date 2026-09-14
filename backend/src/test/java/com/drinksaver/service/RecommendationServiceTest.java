@@ -62,6 +62,19 @@ class RecommendationServiceTest {
         assertThat(result).containsExactly(first, second);
     }
 
+    @Test
+    void canBuildRecommendationsAgainAfterTheCacheIsInvalidated() {
+        Recommendation persistent = recommendation("Persistent", 1);
+        Recommendation dynamic = recommendation("Dynamic", 2);
+        RecommendationService service = serviceWith(10, sources(
+                source(0, List.of(persistent)),
+                source(1, List.of(dynamic))
+        ));
+
+        assertThat(service.getRecommendations(USER)).containsExactly(persistent, dynamic);
+        assertThat(service.getRecommendations(USER)).containsExactly(persistent, dynamic);
+    }
+
     private RecommendationService serviceWith(int maximum, Map<String, RecommendationSource> sources) {
         RepositoryConfiguration configuration = new RepositoryConfiguration(
                 "postgres", "postgres", "postgres", "postgres", "postgres",

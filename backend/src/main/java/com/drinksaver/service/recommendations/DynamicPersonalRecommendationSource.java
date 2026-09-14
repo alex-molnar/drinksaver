@@ -4,6 +4,8 @@ import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.repository.postgres.schema.SavedDrinksTable;
 import com.drinksaver.service.model.DrinkKey;
+import com.drinksaver.service.namecollector.AlcoholNameCollector;
+import com.drinksaver.service.namecollector.BeerNameCollector;
 import com.drinksaver.service.recommendations.api.RecommendationSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,14 +26,18 @@ public class DynamicPersonalRecommendationSource implements RecommendationSource
 
     private final RepositoryConfiguration repositoryConfiguration;
     private final SavedDrinksTable savedDrinksTable;
+    private final BeerNameCollector beerNameCollector;
+    private final AlcoholNameCollector alcoholNameCollector;
     private final Clock clock;
 
     @Autowired
     public DynamicPersonalRecommendationSource(
         RepositoryConfiguration repositoryConfiguration,
-        SavedDrinksTable savedDrinksTable
+        SavedDrinksTable savedDrinksTable,
+        BeerNameCollector beerNameCollector,
+        AlcoholNameCollector alcoholNameCollector
     ) {
-        this(repositoryConfiguration, savedDrinksTable, Clock.systemDefaultZone());
+        this(repositoryConfiguration, savedDrinksTable, beerNameCollector, alcoholNameCollector, Clock.systemDefaultZone());
     }
 
     /**
@@ -42,10 +48,14 @@ public class DynamicPersonalRecommendationSource implements RecommendationSource
     DynamicPersonalRecommendationSource(
         RepositoryConfiguration repositoryConfiguration,
         SavedDrinksTable savedDrinksTable,
+        BeerNameCollector beerNameCollector,
+        AlcoholNameCollector alcoholNameCollector,
         Clock clock
     ) {
         this.repositoryConfiguration = repositoryConfiguration;
         this.savedDrinksTable = savedDrinksTable;
+        this.beerNameCollector = beerNameCollector;
+        this.alcoholNameCollector = alcoholNameCollector;
         this.clock = clock;
     }
 
@@ -72,7 +82,7 @@ public class DynamicPersonalRecommendationSource implements RecommendationSource
                 .entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByValue())
-                .map(e -> e.getKey().toRecommendation(userId))
+                .map(e -> withName(e.getKey()).toRecommendation(userId))
         )
         .distinct()
         .peek(e -> System.out.printf("%s: %s%n", e.getName(), e)); // TODO peek
@@ -92,6 +102,20 @@ public class DynamicPersonalRecommendationSource implements RecommendationSource
             return Math.max(0, ChronoUnit.DAYS.between(drinkDate, today));
         } catch (DateTimeParseException e) {
             return 30; // Default for unparseable dates
+        }
+    }
+
+    private DrinkKey withName(DrinkKey key) {
+        if (key.name().isPresent()) {
+            return key;
+        }
+
+        try {
+            return Objects.equals(key.alcoholTypeId(), repositoryConfiguration.beerId())
+                    ? beerNameCollector.collectBeerName(key)
+                    : alcoholNameCollector.collectAlcoholName(key);
+        } catch (Exception e) {
+            return key;
         }
     }
 }
