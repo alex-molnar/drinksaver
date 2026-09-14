@@ -1,6 +1,7 @@
 package com.drinksaver.service.recommendations;
 
 import com.drinksaver.config.RepositoryConfiguration;
+import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.repository.postgres.schema.SavedDrinksTable;
 import com.drinksaver.service.model.DrinkKey;
 import com.drinksaver.service.recommendations.api.RecommendationSource;
@@ -14,6 +15,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class DynamicPersonalRecommendationSource implements RecommendationSource {
@@ -48,21 +50,37 @@ public class DynamicPersonalRecommendationSource implements RecommendationSource
     }
 
     @Override
-    public Map<DrinkKey, Double> buildRecommendation(UUID userId) {
+    public Stream<Recommendation> buildRecommendation(UUID userId, Stream<Recommendation> processed) {
         LocalDate today = LocalDate.now(clock);
 
-        return savedDrinksTable
-            .findByUserId(userId)
-            .stream()
-            .map(drink -> new AbstractMap.SimpleEntry<>(
+        System.out.println("\nDynamic\n");
+
+        return Stream.concat(
+            processed,
+            savedDrinksTable
+                .findByUserId(userId)
+                .stream()
+                .map(drink -> new AbstractMap.SimpleEntry<>(
                     DrinkKey.of(drink),
                     Math.pow(repositoryConfiguration.decayFactor(), calculateDaysSince(drink.getDate(), today))
-            ))
-            .collect(Collectors.toMap(
-                Map.Entry::getKey,
-                Map.Entry::getValue,
-                Double::sum
-            ));
+                ))
+                .collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    Map.Entry::getValue,
+                    Double::sum
+                ))
+                .entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue())
+                .map(e -> e.getKey().toRecommendation(userId))
+        )
+        .distinct()
+        .peek(e -> System.out.printf("%s: %s%n", e.getName(), e)); // TODO peek
+    }
+
+    @Override
+    public Integer orderId() {
+        return 1;
     }
 
     private long calculateDaysSince(String dateStr, LocalDate today) {

@@ -93,8 +93,8 @@ public record DrinkKey(
                 drink.getBrandId(),
                 drink.getBeerFlavourId(),
                 drink.getConsumptionTypeId(),
-                3,  // TODO Set this properly, right now it defaults
-                1,  // TODO Set this properly, right now it defaults
+                3,  // TODO Set this properly, right now it defaults from frontend since info will be known
+                1,  // TODO Set this properly, right now it defaults from frontend since info will be known
                 Optional.empty()
         );
     }

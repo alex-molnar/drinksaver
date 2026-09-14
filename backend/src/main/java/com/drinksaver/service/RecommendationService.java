@@ -2,7 +2,6 @@ package com.drinksaver.service;
 
 import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.db.Recommendation;
-import com.drinksaver.repository.postgres.schema.*;
 import com.drinksaver.service.model.DrinkKey;
 import com.drinksaver.service.namecollector.AlcoholNameCollector;
 import com.drinksaver.service.namecollector.BeerNameCollector;
@@ -12,13 +11,12 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class RecommendationService {
 
     private final RepositoryConfiguration repositoryConfiguration;
-    private final Map<String, RecommendationSource> recommendationSources;
+    private final Iterator<RecommendationSource> recommendationSources;
     private final BeerNameCollector beerNameCollector;
     private final AlcoholNameCollector alcoholNameCollector;
 
@@ -30,35 +28,21 @@ public class RecommendationService {
         AlcoholNameCollector alcoholNameCollector
     ) {
         this.repositoryConfiguration = repositoryConfiguration;
-        this.recommendationSources = recommendationSources;
+        this.recommendationSources = recommendationSources.values().stream().sorted().iterator();
         this.beerNameCollector = beerNameCollector;
         this.alcoholNameCollector = alcoholNameCollector;
     }
 
     @Cacheable(value = "recommendations", key = "#userId")
     public List<Recommendation> getRecommendations(UUID userId) {
-        Map<DrinkKey, Double> collectedRecs =  recommendationSources
-            .values()
-            .stream()
-            .flatMap(source -> source.buildRecommendation(userId).entrySet().stream())
-            .collect(Collectors.toMap(
-                Map.Entry::getKey,
-                Map.Entry::getValue,
-                Math::max
-            ));
-        System.out.println("Now start with collected");
-        collectedRecs.forEach((e, d) -> System.out.printf("%s (%s): %f%n", e.name(), e.toString(), d));
-        List<Recommendation> ret =  collectedRecs
-            .entrySet().stream()
-            .map(entry -> new AbstractMap.SimpleEntry<>(withName(entry.getKey()), entry.getValue()))
-            .filter(entry -> entry.getKey().name().isPresent())
-            .sorted(Map.Entry.<DrinkKey, Double>comparingByValue().reversed())
-            .map(entry -> entry.getKey().toRecommendation(userId)).toList();
-        System.out.printf("Now start with rank, limit to %d%n", repositoryConfiguration.maxPersonalRecommendations());
-        ret.forEach(rec -> System.out.printf("%s: %n", rec.getName()));
-        return ret.stream()
-            .limit(repositoryConfiguration.maxPersonalRecommendations())  // TODO limit before
-            .toList();
+        List<Recommendation> collected = Collections.emptyList();
+        while (collected.size() < repositoryConfiguration.maxPersonalRecommendations() && recommendationSources.hasNext()) {
+            RecommendationSource source = recommendationSources.next();
+            collected = source.buildRecommendation(userId, collected.stream())
+                .limit(repositoryConfiguration.maxPersonalRecommendations())
+                .toList();
+        }
+        return collected;
     }
 
     private DrinkKey withName(DrinkKey key) {

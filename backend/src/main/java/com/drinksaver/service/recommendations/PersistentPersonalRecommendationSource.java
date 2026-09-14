@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class PersistentPersonalRecommendationSource implements RecommendationSource {
@@ -23,19 +24,14 @@ public class PersistentPersonalRecommendationSource implements RecommendationSou
     }
 
     @Override
-    public Map<DrinkKey, Double> buildRecommendation(UUID userId) {
-        List<Recommendation> rec = RecommendationsTable.findValidByUserId(
-            userId,
-            LocalDateTime.now()
-        );
-        System.out.printf("Got number of recs: %d%n", rec.size());
-        rec.forEach(r -> System.out.printf("Rec: %s%n", r.getName()));
-        Map<DrinkKey, Double> ret = rec.stream().collect(Collectors.toMap(
-            DrinkKey::of,
-            notUsed -> Double.MAX_VALUE,
-            (k1, k2) -> k1
-        ));
-        ret.entrySet().forEach((e -> System.out.printf("K: %s, V: %f%n", e.getKey().name(), e.getValue())));
-        return ret; // TODO obviously
+    public Stream<Recommendation> buildRecommendation(UUID userId, Stream<Recommendation> processed) {
+        System.out.println("\nPersistent\n");
+        return Stream.concat(processed, RecommendationsTable.findValidByUserId(userId, LocalDateTime.now()).stream()).distinct()
+                .peek(e -> System.out.printf("%s: %s%n", e.getName(), e)); // TODO peek
+    }
+
+    @Override
+    public Integer orderId() {
+        return 0;
     }
 }
