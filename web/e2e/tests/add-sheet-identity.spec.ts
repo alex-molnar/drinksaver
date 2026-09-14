@@ -12,7 +12,7 @@ for (const viewport of [
     await page.setViewportSize(viewport);
     await page.route('**/v1/alcohol/types', (route) => route.fulfill({
       json: [
-        { id: 1, name: 'Beer', volumeIds: [10], colorPaletteId: 1, glasswareId: 4 },
+        { id: 1, name: 'Beer', volumeIds: [10], colorPaletteId: 7, glasswareId: 4 },
         { id: 2, name: 'Wine', volumeIds: [10], colorPaletteId: 6, glasswareId: 3 },
         { id: 3, name: 'Custom', volumeIds: [10], colorPaletteId: 999, glasswareId: 4 },
       ],
@@ -33,6 +33,7 @@ for (const viewport of [
       json: [
         { id: 50, name: 'Heineken', colorPaletteId: 1 },
         { id: 51, name: 'Guinness', colorPaletteId: 2 },
+        { id: 52, name: 'House lager', colorPaletteId: null },
       ],
     }));
     await page.route('**/v1/beer/brands/51/flavours', (route) => route.fulfill({
@@ -54,7 +55,7 @@ for (const viewport of [
     const beer = page.getByRole('button', { name: 'Beer', exact: true });
     const wine = page.getByRole('button', { name: 'Wine', exact: true });
     const custom = page.getByRole('button', { name: 'Custom', exact: true });
-    await expect(beer.locator('[data-color-palette-id="1"]')).toHaveCSS('background-color', rgb(PALETTES.green.field));
+    await expect(beer.locator('[data-color-palette-id="7"]')).toHaveCSS('background-color', rgb(PALETTES.amber.field));
     await expect(wine.locator('[data-color-palette-id="6"]')).toHaveCSS('background-color', rgb(PALETTES.plum.field));
     await expect(custom.locator('[data-color-palette-id="999"]')).toHaveCSS('background-color', rgb(PALETTES.cream.field));
 
@@ -68,13 +69,15 @@ for (const viewport of [
     await menuRow(page, 'Drink').click();
 
     await beer.click();
-    await expect(menuRow(page, 'Drink').locator('[data-color-palette-id="1"]')).toHaveCSS('background-color', rgb(PALETTES.green.field));
+    await expect(menuRow(page, 'Drink').locator('[data-color-palette-id="7"]')).toHaveCSS('background-color', rgb(PALETTES.amber.field));
 
     await menuRow(page, 'Brand').click();
     const heineken = page.getByRole('button', { name: 'Heineken', exact: true });
     const guinness = page.getByRole('button', { name: 'Guinness', exact: true });
+    const houseLager = page.getByRole('button', { name: 'House lager', exact: true });
     await expect(heineken.locator('[data-color-palette-id="1"]')).toHaveCSS('background-color', rgb(PALETTES.green.field));
     await expect(guinness.locator('[data-color-palette-id="2"]')).toHaveCSS('background-color', rgb(PALETTES.brown.field));
+    await expect(houseLager.locator('[data-color-palette-id="7"]')).toHaveCSS('background-color', rgb(PALETTES.amber.field));
 
     await guinness.click();
     await expect(menuRow(page, 'Brand')).toHaveAccessibleName('Brand, Guinness');

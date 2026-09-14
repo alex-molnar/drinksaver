@@ -6,7 +6,7 @@ import { useSaveQueue } from '../../drink/useSaveQueue';
 import { menuFields, isDraftReady, type DraftFieldsCatalogue, type MenuRow } from '../../drink/draftFields';
 import { QUANTITY_MAX, QUANTITY_MIN } from '../../drink/draftReducer';
 import { drinkingDay } from '../../drink/day';
-import { resolveDraftDesign } from '../../drink/designSelection';
+import { resolveBrandColorPaletteId, resolveDraftDesign } from '../../drink/designSelection';
 import type { AddSheetPanel } from './panels';
 import PaletteSwatch from './PaletteSwatch';
 
@@ -241,8 +241,11 @@ const paletteIdForRow = (
   if (row.key === 'alcoholType') {
     return catalogue.alcoholTypes?.find((item) => item.id === draft.alcoholTypeId)?.colorPaletteId;
   }
-  if (row.key === 'brand') {
-    return catalogue.brands?.find((item) => item.id === draft.brandId)?.colorPaletteId;
+  if (row.key === 'brand' && draft.brandId !== null) {
+    return resolveBrandColorPaletteId(
+      catalogue.brands?.find((item) => item.id === draft.brandId)?.colorPaletteId,
+      catalogue.alcoholTypes?.find((item) => item.id === draft.alcoholTypeId)?.colorPaletteId,
+    );
   }
   return undefined;
 };

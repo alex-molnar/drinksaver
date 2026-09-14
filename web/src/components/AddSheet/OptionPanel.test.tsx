@@ -31,7 +31,10 @@ const CATALOGUE = {
     { id: 31, name: 'White', alcoholTypeId: 2, colorPaletteId: null },
   ], isLoading: false },
   consumptionTypes: { data: [{ id: 40, name: 'Draft', glasswareId: 1 }], isLoading: false },
-  brands: { data: [{ id: 50, name: 'Heineken', colorPaletteId: 1 }], isLoading: false } as { data: { id: number; name: string; colorPaletteId?: number | null }[] | undefined; isLoading: boolean },
+  brands: { data: [
+    { id: 50, name: 'Heineken', colorPaletteId: 1 },
+    { id: 51, name: 'House lager', colorPaletteId: null },
+  ], isLoading: false } as { data: { id: number; name: string; colorPaletteId?: number | null }[] | undefined; isLoading: boolean },
   beerFlavours: { data: [
     { id: 60, name: 'Lager', brandId: 50, colorPaletteId: 7 },
     { id: 61, name: 'Pils', brandId: 50, colorPaletteId: null },
@@ -108,9 +111,13 @@ describe('OptionPanel', () => {
       expect(document.querySelectorAll('[data-color-palette-id]')).toHaveLength(2);
 
       cleanup();
+      setDraft({ alcoholTypeId: 1 });
       renderOptionPanel('brand');
       expect(screen.getByRole('button', { name: 'Heineken' }).querySelector('[data-color-palette-id="1"]')).toHaveStyle({
         '--palette-swatch-field': PALETTES.green.field,
+      });
+      expect(screen.getByRole('button', { name: 'House lager' }).querySelector('[data-color-palette-id="3"]')).toHaveStyle({
+        '--palette-swatch-field': PALETTES.cream.field,
       });
     });
 
@@ -158,6 +165,7 @@ describe('OptionPanel', () => {
     });
 
     it('offers a New row for a creatable field, and pushes the create panel', async () => {
+      setDraft({ alcoholTypeId: 1 });
       const { onPushPanel } = renderOptionPanel('brand');
       await userEvent.click(screen.getByRole('button', { name: 'New brand' }));
       expect(onPushPanel).toHaveBeenCalledWith({ kind: 'create', field: 'brand' });

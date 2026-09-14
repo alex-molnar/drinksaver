@@ -106,6 +106,21 @@ describe('MenuPanel', () => {
     expect(brandRow.querySelector('[data-color-palette-id="1"]')).toHaveAttribute('aria-hidden', 'true');
   });
 
+  it('falls back to the selected beer palette when the selected brand has none', () => {
+    setDraft({ alcoholTypeId: 1, brandId: 50 }, true);
+    mockUseCatalogue.mockReturnValue({
+      ...READY_CATALOGUE,
+      brands: { data: [{ id: 50, name: 'House lager', colorPaletteId: null }], isLoading: false },
+      isBeer: true,
+    } as unknown as ReturnType<typeof useCatalogue>);
+    renderMenuPanel();
+
+    const brandRow = screen.getByRole('button', { name: /^Brand, House lager$/ });
+    expect(brandRow.querySelector('[data-color-palette-id="1"]')).toHaveStyle({
+      '--palette-swatch-field': PALETTES.green.field,
+    });
+  });
+
   it('pushes an option panel for the tapped row', async () => {
     const { onPushPanel } = renderMenuPanel();
     await userEvent.click(screen.getByRole('button', { name: /^Drink,/ }));

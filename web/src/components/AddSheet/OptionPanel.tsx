@@ -6,7 +6,11 @@ import { previousIsoDate, type MenuRowKey } from '../../drink/draftFields';
 import { drinkingDay } from '../../drink/day';
 import type { DraftFieldKey, DraftState } from '../../drink/draftReducer';
 import type { CreatableCatalogueField } from '../../drink/useCreateCatalogueEntry';
-import { resolveAlcoholColorPaletteId, resolveBeerColorPaletteId } from '../../drink/designSelection';
+import {
+  resolveAlcoholColorPaletteId,
+  resolveBeerColorPaletteId,
+  resolveBrandColorPaletteId,
+} from '../../drink/designSelection';
 import type { AddSheetPanel } from './panels';
 import PaletteSwatch from './PaletteSwatch';
 
@@ -224,7 +228,10 @@ const buildOptionList = (
         options: (catalogue.brands.data ?? []).map((b) => ({
           id: b.id,
           label: b.name,
-          colorPaletteId: b.colorPaletteId,
+          colorPaletteId: resolveBrandColorPaletteId(
+            b.colorPaletteId,
+            alcoholTypeColorPaletteId,
+          ),
         })),
         showPalette: true,
       };

@@ -14,14 +14,22 @@ const requiredDesignId = (value: number | null | undefined, source: string): num
   return value;
 };
 
+export const resolveBrandColorPaletteId = (
+  brandColorPaletteId: number | null | undefined,
+  alcoholTypeColorPaletteId: number | null | undefined,
+): number => requiredDesignId(
+  brandColorPaletteId ?? alcoholTypeColorPaletteId,
+  'beer brand palette',
+);
+
 export const resolveBeerColorPaletteId = (
   flavourColorPaletteId: number | null | undefined,
   brandColorPaletteId: number | null | undefined,
   alcoholTypeColorPaletteId: number | null | undefined,
-): number => requiredDesignId(
-  flavourColorPaletteId ?? brandColorPaletteId ?? alcoholTypeColorPaletteId,
-  'beer palette',
-);
+): number => flavourColorPaletteId ?? resolveBrandColorPaletteId(
+    brandColorPaletteId,
+    alcoholTypeColorPaletteId,
+  );
 
 export const resolveAlcoholColorPaletteId = (
   subtypeColorPaletteId: number | null | undefined,
