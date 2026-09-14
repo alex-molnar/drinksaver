@@ -38,7 +38,7 @@ const GLASS_PATHS: Record<GlassKind, { g: string; l: string; f: string | null }>
     f: null,
   },
   coupe: {
-    g: 'M4 13h26c-1 8-6 12-13 12S5 21 4 13Z M16.1 25h1.8v17h-1.8Z M9.8 44h14.4v3H9.8Z',
+    g: 'M 4 13 h 21 L 29 9 L 25 5 C 29 3 36 10 34 14 L 30 10 L 27 13 L 30 13 c -1 8 -6 12 -13 12 S 5 21 4 13 Z M 16.1 25 h 1.8 v 17 h -1.8 Z M 9.8 44 h 14.4 v 3 H 9.8 Z',
     l: 'M6.5 17h21c-2 4.5-5.5 7-10.5 7S8.5 21.5 6.5 17Z',
     f: null,
   },
