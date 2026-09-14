@@ -9,6 +9,7 @@ import { useSaveQueue } from '../drink/useSaveQueue';
 import { ADD_SHEET_ID } from '../drink/draftReducer';
 import type { AddSheetPanel } from '../components/AddSheet';
 import { drinkingDay } from '../drink/day';
+import { resolveRecommendationDesign } from '../drink/designSelection';
 import { getRecommendations } from '../api/endpoints';
 import type { Recommendation } from '../types/api';
 
@@ -82,6 +83,7 @@ const QuickSavePage: React.FC = () => {
 
   const handleSave = useCallback(
     (recommendation: Recommendation) => {
+      const design = resolveRecommendationDesign(recommendation);
       const id = save({
         label: recommendation.name,
         date: drinkingDay(new Date()),
@@ -93,6 +95,7 @@ const QuickSavePage: React.FC = () => {
           brandId: recommendation.brandId,
           beerFlavourId: recommendation.beerFlavourId,
           consumptionTypeId: recommendation.consumptionTypeId,
+          ...design,
         },
       });
       setPendingSave({ key: getRecommendationKey(recommendation), id });

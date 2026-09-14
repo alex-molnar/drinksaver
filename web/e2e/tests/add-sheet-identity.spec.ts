@@ -12,16 +12,26 @@ for (const viewport of [
     await page.setViewportSize(viewport);
     await page.route('**/v1/alcohol/types', (route) => route.fulfill({
       json: [
-        { id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 1 },
-        { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6 },
-        { id: 3, name: 'Custom', volumeIds: [], colorPaletteId: 999 },
+        { id: 1, name: 'Beer', volumeIds: [10], colorPaletteId: 1, glasswareId: 4 },
+        { id: 2, name: 'Wine', volumeIds: [10], colorPaletteId: 6, glasswareId: 3 },
+        { id: 3, name: 'Custom', volumeIds: [10], colorPaletteId: 999, glasswareId: 4 },
       ],
+    }));
+    await page.route('**/v1/alcohol/types/1/volumes', (route) => route.fulfill({
+      json: [{ id: 10, name: 'Pint', volume: 0.5 }],
+    }));
+    await page.route('**/v1/beer/consumption-types?*', (route) => route.fulfill({
+      json: [{ id: 40, name: 'Draft', glasswareId: 5 }],
     }));
     await page.route('**/v1/beer/brands', (route) => route.fulfill({
       json: [
         { id: 50, name: 'Heineken', colorPaletteId: 1 },
         { id: 51, name: 'Guinness', colorPaletteId: 2 },
       ],
+    }));
+    await page.route('**/v1/beer/brands/51/flavours', (route) => route.fulfill({ json: [] }));
+    await page.route('**/v1/drinks/new', (route) => route.fulfill({
+      json: [{ id: 9001, userId: 'user-1', date: '2026-09-14', alcoholTypeId: 1, alcoholVolumeId: 10 }],
     }));
 
     await page.goto('/');
@@ -49,6 +59,16 @@ for (const viewport of [
     await guinness.click();
     await expect(menuRow(page, 'Brand')).toHaveAccessibleName('Brand, Guinness');
     await expect(menuRow(page, 'Brand').locator('[data-color-palette-id="2"]')).toHaveCSS('background-color', rgb(PALETTES.brown.field));
+
+    await menuRow(page, 'Size').click();
+    await page.getByRole('button', { name: 'Pint (0.5L)', exact: true }).click();
+    await menuRow(page, 'Served').click();
+    await page.getByRole('button', { name: 'Draft', exact: true }).click();
+
+    const saveRequest = page.waitForRequest('**/v1/drinks/new');
+    await page.getByRole('button', { name: 'Save drink', exact: true }).click();
+    const savedPayload = (await saveRequest).postDataJSON();
+    expect(savedPayload).toMatchObject({ colorPaletteId: 2, glasswareId: 5 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(viewport.width);
   });
 }

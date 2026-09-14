@@ -24,12 +24,12 @@ const wrapper = ({ children }: { children: ReactNode }) => {
 
 beforeEach(() => {
   vi.mocked(getAlcoholTypes).mockResolvedValue([
-    { id: 1, name: 'Beer', volumeIds: [] },
-    { id: 2, name: 'Wine', volumeIds: [] },
+    { id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 3, glasswareId: 1 },
+    { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6, glasswareId: 3 },
   ]);
   vi.mocked(getVolumesByAlcoholType).mockResolvedValue([{ id: 10, name: 'Pint', volume: 0.5 }]);
   vi.mocked(getSubtypesByAlcoholType).mockResolvedValue([{ id: 30, name: 'Red', alcoholTypeId: 2 }]);
-  vi.mocked(getConsumptionTypes).mockResolvedValue([{ id: 40, name: 'Draft' }]);
+  vi.mocked(getConsumptionTypes).mockResolvedValue([{ id: 40, name: 'Draft', glasswareId: 1 }]);
   vi.mocked(getBrands).mockResolvedValue([{ id: 50, name: 'Heineken' }]);
   vi.mocked(getBeerFlavours).mockResolvedValue([{ id: 60, name: 'Lager', brandId: 50 }]);
 });

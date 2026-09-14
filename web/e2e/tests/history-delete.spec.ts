@@ -26,6 +26,20 @@ const waitForHistoryLoaded = async (page: Page) => {
 const ginRows = (page: Page) => page.getByText(GIN).count();
 
 const saveAGinAndTonic = async (page: Page) => {
+  // The local recommendation seed predates the endpoint's required design metadata. Keep the
+  // save/delete calls real, but expose the current recommendation contract to the frontend.
+  await page.route('**/v1/recommendations/list', (route) => route.fulfill({
+    json: [{
+      id: 5,
+      userId: '423c91e4-491f-4f82-aba6-3c982857e0e4',
+      name: 'Gin and tonic',
+      alcoholTypeId: 1,
+      alcoholSubtypeId: 1,
+      alcoholVolumeId: 2,
+      colorPaletteId: 1,
+      glasswareId: 4,
+    }],
+  }));
   await page.goto('/');
   await page.getByRole('button', { name: 'Gin and tonic' }).click();
   // Logging never navigates: the confirmation is an inline strip on the same screen.

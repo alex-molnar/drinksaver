@@ -32,7 +32,13 @@ import type {
  * backend pod do not cut over together, so for about a minute after a release a new bundle can
  * reach an old backend. Remove it in 4.1.0, once no 3.x backend is running anywhere.
  */
-export const saveDrink = async (drink: Omit<Drink, 'userId' | 'date'> & { date?: string }): Promise<SavedDrink[]> => {
+export type SaveDrinkRequest = Omit<Drink, 'userId' | 'date' | 'colorPaletteId' | 'glasswareId'> & {
+  date?: string;
+  colorPaletteId: number;
+  glasswareId: number;
+};
+
+export const saveDrink = async (drink: SaveDrinkRequest): Promise<SavedDrink[]> => {
   const payload: Omit<Drink, 'userId'> = {
     ...drink,
     date: drink.date || drinkingDay(new Date()),

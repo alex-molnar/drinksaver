@@ -72,7 +72,7 @@ const savingEntry = (label: string): SaveQueueEntry => ({
   date: '2026-09-10',
   drinkIds: [],
   alcoholTypeId: 4,
-  payload: { alcoholTypeId: 4, alcoholVolumeId: 10 },
+  payload: { alcoholTypeId: 4, alcoholVolumeId: 10, colorPaletteId: 1, glasswareId: 1 },
   undoUntil: null,
   error: null,
   seq: 1,
@@ -238,6 +238,8 @@ describe('QuickSavePage', () => {
         brandId: 50,
         beerFlavourId: undefined,
         consumptionTypeId: undefined,
+        colorPaletteId: 1,
+        glasswareId: 1,
       },
     });
     // Logging never navigates, and never opens the sheet either.

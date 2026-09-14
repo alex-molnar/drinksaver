@@ -35,7 +35,13 @@ const useHarness = (onAdopted?: () => void) => ({
 });
 
 beforeEach(() => {
-  vi.mocked(createAlcoholType).mockResolvedValue({ id: 101, name: 'Whiskey', volumeIds: [] });
+  vi.mocked(createAlcoholType).mockResolvedValue({
+    id: 101,
+    name: 'Whiskey',
+    volumeIds: [],
+    colorPaletteId: 3,
+    glasswareId: 4,
+  });
   vi.mocked(createVolumeForAlcoholType).mockResolvedValue({ id: 102, name: 'Shot', volume: 0.04 });
   vi.mocked(createSubtypeForAlcoholType).mockResolvedValue({ id: 103, alcoholTypeId: 2, name: 'Single Malt' });
   vi.mocked(createBrand).mockResolvedValue({ id: 104, name: 'Corona' });

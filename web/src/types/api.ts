@@ -14,6 +14,8 @@ export interface Drink {
   brandId?: number;
   beerFlavourId?: number;
   consumptionTypeId?: number;
+  colorPaletteId?: number | null;
+  glasswareId?: number | null;
   comments?: string;
   quantity?: number; // 1-100, rejected with a 400 outside that
   addToRecommendations?: boolean;
@@ -37,7 +39,8 @@ export interface AlcoholType {
   userId?: string;
   name: string;
   volumeIds: number[];
-  colorPaletteId?: number | null;
+  colorPaletteId: number;
+  glasswareId: number;
 }
 
 export interface AlcoholVolume {
@@ -74,6 +77,7 @@ export interface Recommendation {
 export interface ConsumptionType {
   id: number;
   name: string;
+  glasswareId: number;
 }
 
 // Alcohol subtype types
@@ -82,6 +86,8 @@ export interface AlcoholSubtype {
   alcoholTypeId: number;
   userId?: string;
   name: string;
+  colorPaletteId?: number | null;
+  glasswareId?: number | null;
 }
 
 export interface NewAlcoholSubtype {
@@ -95,6 +101,7 @@ export interface BeerFlavour {
   brandId: number;
   userId?: string;
   name: string;
+  colorPaletteId?: number | null;
 }
 
 export interface NewBeerFlavour {

@@ -6,6 +6,7 @@ import { useSaveQueue } from '../../drink/useSaveQueue';
 import { menuFields, isDraftReady, type DraftFieldsCatalogue, type MenuRow } from '../../drink/draftFields';
 import { QUANTITY_MAX, QUANTITY_MIN } from '../../drink/draftReducer';
 import { drinkingDay } from '../../drink/day';
+import { resolveDraftDesign } from '../../drink/designSelection';
 import type { AddSheetPanel } from './panels';
 import PaletteSwatch from './PaletteSwatch';
 
@@ -279,6 +280,7 @@ const MenuPanel: React.FC<MenuPanelProps> = ({ onPushPanel, onDismiss }) => {
   // never actually fires this handler in that state. Guarding it a second time here would be
   // defensive code with no path that could ever exercise it.
   const handleSave = () => {
+    const design = resolveDraftDesign(draft, draftCatalogue, catalogue.isBeer);
     save({
       label: provisionalLabel(draftCatalogue, draft, catalogue.isBeer),
       date: draft.date,
@@ -290,6 +292,7 @@ const MenuPanel: React.FC<MenuPanelProps> = ({ onPushPanel, onDismiss }) => {
         brandId: draft.brandId ?? undefined,
         beerFlavourId: draft.beerFlavourId ?? undefined,
         consumptionTypeId: draft.consumptionTypeId ?? undefined,
+        ...design,
         comments: draft.comments.trim() ? draft.comments : undefined,
         quantity: draft.quantity > 1 ? draft.quantity : undefined,
         addToRecommendations: draft.addToRecommendations || undefined,

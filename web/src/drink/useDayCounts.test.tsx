@@ -122,7 +122,7 @@ describe('useDayCounts', () => {
       date: '2026-09-08',
       drinkIds: [42],
       alcoholTypeId: 4,
-      payload: { alcoholTypeId: 4, alcoholVolumeId: 10 },
+      payload: { alcoholTypeId: 4, alcoholVolumeId: 10, colorPaletteId: 3, glasswareId: 2 },
       undoUntil: 9000,
       error: null,
       seq: 1,

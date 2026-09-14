@@ -36,8 +36,8 @@ const mockSaveDrink = vi.mocked(saveDrink);
 const mockDeleteDrinksByIds = vi.mocked(deleteDrinksByIds);
 const mockGetSavedDrinksByDate = vi.mocked(getSavedDrinksByDate);
 
-const DUVEL: SaveDrinkPayload = { alcoholTypeId: 4, alcoholVolumeId: 10 };
-const HEINEKEN: SaveDrinkPayload = { alcoholTypeId: 4, alcoholVolumeId: 20 };
+const DUVEL: SaveDrinkPayload = { alcoholTypeId: 4, alcoholVolumeId: 10, colorPaletteId: 3, glasswareId: 2 };
+const HEINEKEN: SaveDrinkPayload = { alcoholTypeId: 4, alcoholVolumeId: 20, colorPaletteId: 1, glasswareId: 1 };
 
 const Harness: React.FC = () => {
   const { save, remove, undo, retry } = useSaveQueue();

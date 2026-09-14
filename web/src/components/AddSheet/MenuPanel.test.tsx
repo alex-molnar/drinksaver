@@ -26,12 +26,12 @@ const save = vi.fn().mockReturnValue('save-1');
 /** A catalogue where every query has already resolved, so a test only has to override the one
  *  field it cares about. */
 const READY_CATALOGUE = {
-  alcoholTypes: { data: [{ id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 1 }, { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6 }], isLoading: false },
+  alcoholTypes: { data: [{ id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 1, glasswareId: 1 }, { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6, glasswareId: 3 }], isLoading: false },
   volumes: { data: [{ id: 10, name: 'Pint', volume: 0.5 }], isLoading: false },
-  subtypes: { data: [{ id: 30, name: 'Red', alcoholTypeId: 2 }], isLoading: false },
-  consumptionTypes: { data: [{ id: 40, name: 'Draft' }], isLoading: false },
+  subtypes: { data: [{ id: 30, name: 'Red', alcoholTypeId: 2, colorPaletteId: 4, glasswareId: 8 }], isLoading: false },
+  consumptionTypes: { data: [{ id: 40, name: 'Draft', glasswareId: 5 }], isLoading: false },
   brands: { data: [{ id: 50, name: 'Heineken', colorPaletteId: 1 }], isLoading: false },
-  beerFlavours: { data: [{ id: 60, name: 'Lager', brandId: 50 }], isLoading: false },
+  beerFlavours: { data: [{ id: 60, name: 'Lager', brandId: 50, colorPaletteId: 7 }], isLoading: false },
   isBeer: false,
 } as unknown as ReturnType<typeof useCatalogue>;
 
@@ -149,6 +149,8 @@ describe('MenuPanel', () => {
         alcoholTypeId: 2,
         alcoholVolumeId: 10,
         alcoholSubtypeId: 30,
+        colorPaletteId: 4,
+        glasswareId: 8,
         comments: 'A lovely evening',
       },
     });
@@ -164,6 +166,7 @@ describe('MenuPanel', () => {
     await userEvent.click(screen.getByRole('button', { name: /save drink/i }));
 
     expect(save.mock.calls[0][0].label).toBe('Beer (Heineken)');
+    expect(save.mock.calls[0][0].payload).toMatchObject({ colorPaletteId: 1, glasswareId: 5 });
   });
 
   it('omits quantity from the payload for a single drink, and includes it above one', async () => {
