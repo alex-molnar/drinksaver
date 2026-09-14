@@ -7,6 +7,7 @@ import { drinkingDay } from '../../drink/day';
 import type { DraftFieldKey, DraftState } from '../../drink/draftReducer';
 import type { CreatableCatalogueField } from '../../drink/useCreateCatalogueEntry';
 import type { AddSheetPanel } from './panels';
+import PaletteSwatch from './PaletteSwatch';
 
 export interface OptionPanelProps {
   field: MenuRowKey;
@@ -156,7 +157,8 @@ interface OptionListSpec {
   title: string;
   createLabel?: string;
   isLoading: boolean;
-  options: { id: number; label: string }[];
+  options: { id: number; label: string; colorPaletteId?: number | null }[];
+  showPalette?: boolean;
 }
 
 /** Every catalogue-backed field's list, and how to label its options. `volume` is the only field
@@ -169,7 +171,12 @@ const buildOptionList = (field: DraftFieldKey, catalogue: UseCatalogueResult): O
         title: 'What are you drinking?',
         createLabel: 'drink type',
         isLoading: catalogue.alcoholTypes.isLoading,
-        options: (catalogue.alcoholTypes.data ?? []).map((t) => ({ id: t.id, label: t.name })),
+        options: (catalogue.alcoholTypes.data ?? []).map((t) => ({
+          id: t.id,
+          label: t.name,
+          colorPaletteId: t.colorPaletteId,
+        })),
+        showPalette: true,
       };
     case 'volume':
       return {
@@ -196,7 +203,12 @@ const buildOptionList = (field: DraftFieldKey, catalogue: UseCatalogueResult): O
         title: 'Which brand?',
         createLabel: 'brand',
         isLoading: catalogue.brands.isLoading,
-        options: (catalogue.brands.data ?? []).map((b) => ({ id: b.id, label: b.name })),
+        options: (catalogue.brands.data ?? []).map((b) => ({
+          id: b.id,
+          label: b.name,
+          colorPaletteId: b.colorPaletteId,
+        })),
+        showPalette: true,
       };
     case 'beerFlavour':
       return {
@@ -259,6 +271,7 @@ const CatalogueField: React.FC<{
                 onPopPanel();
               }}
             >
+              {spec.showPalette ? <PaletteSwatch colorPaletteId={option.colorPaletteId} /> : null}
               <OptionName>{option.label}</OptionName>
               {option.id === selectedId ? <Selected aria-hidden="true">✓</Selected> : null}
             </OptionRow>

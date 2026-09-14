@@ -1,5 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { DRINK_IDENTITIES, drinkIdentity } from './identity';
+import { DRINK_IDENTITIES, PALETTES, drinkIdentity, paletteForId } from './identity';
+
+describe('paletteForId', () => {
+  it.each([
+    [1, PALETTES.green],
+    [2, PALETTES.brown],
+    [3, PALETTES.cream],
+    [4, PALETTES.red],
+    [5, PALETTES.blue],
+    [6, PALETTES.plum],
+    [7, PALETTES.amber],
+    [8, PALETTES.rose],
+  ])('resolves backend palette %s', (id, palette) => {
+    expect(paletteForId(id)).toBe(palette);
+  });
+
+  it.each([undefined, null, 0, 999])('falls back to cream for unsupported palette %s', (id) => {
+    expect(paletteForId(id)).toBe(PALETTES.cream);
+  });
+});
 
 describe('drinkIdentity', () => {
   it.each(Object.keys(DRINK_IDENTITIES))('resolves "%s" to its table entry', (name) => {

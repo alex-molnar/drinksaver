@@ -91,6 +91,10 @@ const PALETTE_BY_ID: Readonly<Partial<Record<number, PaletteKey>>> = {
   5: 'blue', 6: 'plum', 7: 'amber', 8: 'rose',
 };
 
+/** Resolve a backend palette ID for any UI that needs the same colour contract as a plate. */
+export const paletteForId = (colorPaletteId?: number | null): DrinkPalette =>
+  PALETTES[PALETTE_BY_ID[colorPaletteId ?? 0] ?? 'cream'];
+
 const GLASS_BY_ID: Readonly<Partial<Record<number, GlassKind>>> = {
   1: 'pint', 2: 'tulip', 3: 'wine', 4: 'highball', 5: 'rocks',
   6: 'shot', 7: 'coupe', 8: 'flute', 9: 'palinka',
@@ -157,7 +161,7 @@ export const recommendationIdentity = (
   glasswareId?: number | null,
 ): DrinkIdentity => ({
   ...DEFAULT_IDENTITY,
-  ...PALETTES[PALETTE_BY_ID[colorPaletteId ?? 0] ?? 'cream'],
+  ...paletteForId(colorPaletteId),
   glass: GLASS_BY_ID[glasswareId ?? 0] ?? 'highball',
 });
 

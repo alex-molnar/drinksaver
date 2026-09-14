@@ -29,6 +29,7 @@ export interface Brand {
   id: number;
   userId?: string;
   name: string;
+  colorPaletteId?: number | null;
 }
 
 export interface AlcoholType {
@@ -36,6 +37,7 @@ export interface AlcoholType {
   userId?: string;
   name: string;
   volumeIds: number[];
+  colorPaletteId?: number | null;
 }
 
 export interface AlcoholVolume {

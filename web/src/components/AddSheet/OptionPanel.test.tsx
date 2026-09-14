@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { muiTheme } from '../../theme/muiTheme';
@@ -9,6 +9,7 @@ import { useCatalogue } from '../../drink/useCatalogue';
 import { initialDraftState, type DraftState } from '../../drink/draftReducer';
 import { previousIsoDate } from '../../drink/draftFields';
 import { drinkingDay } from '../../drink/day';
+import { PALETTES } from '../../drink/identity';
 import type { MenuRowKey } from '../../drink/draftFields';
 
 vi.mock('../../drink/useDraft');
@@ -23,11 +24,11 @@ const YESTERDAY = previousIsoDate(TODAY);
 const dispatch = vi.fn();
 
 const CATALOGUE = {
-  alcoholTypes: { data: [{ id: 1, name: 'Beer', volumeIds: [] }, { id: 2, name: 'Wine', volumeIds: [] }], isLoading: false },
+  alcoholTypes: { data: [{ id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 1 }, { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6 }], isLoading: false },
   volumes: { data: [{ id: 10, name: 'Pint', volume: 0.5 }], isLoading: false },
   subtypes: { data: [{ id: 30, name: 'Red', alcoholTypeId: 2 }], isLoading: false },
   consumptionTypes: { data: [{ id: 40, name: 'Draft' }], isLoading: false },
-  brands: { data: [{ id: 50, name: 'Heineken' }], isLoading: false } as { data: { id: number; name: string }[] | undefined; isLoading: boolean },
+  brands: { data: [{ id: 50, name: 'Heineken', colorPaletteId: 1 }], isLoading: false } as { data: { id: number; name: string; colorPaletteId?: number | null }[] | undefined; isLoading: boolean },
   beerFlavours: { data: [{ id: 60, name: 'Lager', brandId: 50 }], isLoading: false },
   isBeer: false,
 };
@@ -89,6 +90,31 @@ describe('OptionPanel', () => {
       renderOptionPanel('alcoholType');
       expect(screen.getByRole('button', { name: 'Wine' })).toHaveAttribute('aria-pressed', 'true');
       expect(screen.getByRole('button', { name: 'Beer' })).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('uses backend palette IDs for drink and brand identity swatches', () => {
+      renderOptionPanel('alcoholType');
+      const beerSwatch = screen.getByRole('button', { name: 'Beer' }).querySelector('[data-color-palette-id="1"]');
+      const wineSwatch = screen.getByRole('button', { name: 'Wine' }).querySelector('[data-color-palette-id="6"]');
+
+      expect(beerSwatch).toHaveStyle({ '--palette-swatch-field': PALETTES.green.field });
+      expect(wineSwatch).toHaveStyle({ '--palette-swatch-field': PALETTES.plum.field });
+      expect(document.querySelectorAll('[data-color-palette-id]')).toHaveLength(2);
+
+      cleanup();
+      renderOptionPanel('brand');
+      expect(screen.getByRole('button', { name: 'Heineken' }).querySelector('[data-color-palette-id="1"]')).toHaveStyle({
+        '--palette-swatch-field': PALETTES.green.field,
+      });
+    });
+
+    it('keeps labels and selected state meaningful without exposing decorative swatches', () => {
+      setDraft({ alcoholTypeId: 2 });
+      renderOptionPanel('alcoholType');
+
+      const wine = screen.getByRole('button', { name: 'Wine' });
+      expect(wine).toHaveAttribute('aria-pressed', 'true');
+      expect(wine.querySelector('[data-color-palette-id="6"]')).toHaveAttribute('aria-hidden', 'true');
     });
 
     it('offers a New row for a creatable field, and pushes the create panel', async () => {

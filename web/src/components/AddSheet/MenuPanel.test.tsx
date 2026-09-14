@@ -8,6 +8,7 @@ import { useDraft } from '../../drink/useDraft';
 import { useCatalogue } from '../../drink/useCatalogue';
 import { useSaveQueue } from '../../drink/useSaveQueue';
 import { initialDraftState, type DraftState } from '../../drink/draftReducer';
+import { PALETTES } from '../../drink/identity';
 
 vi.mock('../../drink/useDraft');
 vi.mock('../../drink/useCatalogue');
@@ -25,11 +26,11 @@ const save = vi.fn().mockReturnValue('save-1');
 /** A catalogue where every query has already resolved, so a test only has to override the one
  *  field it cares about. */
 const READY_CATALOGUE = {
-  alcoholTypes: { data: [{ id: 1, name: 'Beer', volumeIds: [] }, { id: 2, name: 'Wine', volumeIds: [] }], isLoading: false },
+  alcoholTypes: { data: [{ id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 1 }, { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6 }], isLoading: false },
   volumes: { data: [{ id: 10, name: 'Pint', volume: 0.5 }], isLoading: false },
   subtypes: { data: [{ id: 30, name: 'Red', alcoholTypeId: 2 }], isLoading: false },
   consumptionTypes: { data: [{ id: 40, name: 'Draft' }], isLoading: false },
-  brands: { data: [{ id: 50, name: 'Heineken' }], isLoading: false },
+  brands: { data: [{ id: 50, name: 'Heineken', colorPaletteId: 1 }], isLoading: false },
   beerFlavours: { data: [{ id: 60, name: 'Lager', brandId: 50 }], isLoading: false },
   isBeer: false,
 } as unknown as ReturnType<typeof useCatalogue>;
@@ -87,7 +88,22 @@ describe('MenuPanel', () => {
   it('shows the chosen drink type in the Drink row', () => {
     setDraft({ alcoholTypeId: 2 });
     renderMenuPanel();
-    expect(screen.getByRole('button', { name: /^Drink,/ })).toHaveAccessibleName(/wine/i);
+    const drinkRow = screen.getByRole('button', { name: /^Drink,/ });
+    expect(drinkRow).toHaveAccessibleName(/wine/i);
+    expect(drinkRow.querySelector('[data-color-palette-id="6"]')).toHaveStyle({
+      '--palette-swatch-field': PALETTES.plum.field,
+    });
+  });
+
+  it('shows the selected beer brand palette without replacing its readable value', () => {
+    setDraft({ alcoholTypeId: 1, brandId: 50 }, true);
+    renderMenuPanel();
+
+    const brandRow = screen.getByRole('button', { name: /^Brand, Heineken$/ });
+    expect(brandRow.querySelector('[data-color-palette-id="1"]')).toHaveStyle({
+      '--palette-swatch-field': PALETTES.green.field,
+    });
+    expect(brandRow.querySelector('[data-color-palette-id="1"]')).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('pushes an option panel for the tapped row', async () => {
