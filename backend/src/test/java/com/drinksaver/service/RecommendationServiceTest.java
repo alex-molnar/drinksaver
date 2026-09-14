@@ -2,8 +2,6 @@ package com.drinksaver.service;
 
 import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.db.Recommendation;
-import com.drinksaver.service.namecollector.AlcoholNameCollector;
-import com.drinksaver.service.namecollector.BeerNameCollector;
 import com.drinksaver.service.recommendations.api.RecommendationSource;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +12,6 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 class RecommendationServiceTest {
 
@@ -80,12 +77,7 @@ class RecommendationServiceTest {
                 "postgres", "postgres", "postgres", "postgres", "postgres",
                 List.of(UUID.randomUUID()), 4, maximum, 0.97
         );
-        return new RecommendationService(
-                configuration,
-                sources,
-                mock(BeerNameCollector.class),
-                mock(AlcoholNameCollector.class)
-        );
+        return new RecommendationService(configuration, sources);
     }
 
     private Map<String, RecommendationSource> sources(RecommendationSource... sources) {
