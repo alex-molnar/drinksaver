@@ -63,8 +63,6 @@ public class DynamicPersonalRecommendationSource implements RecommendationSource
     public Stream<Recommendation> buildRecommendation(UUID userId, Stream<Recommendation> processed) {
         LocalDate today = LocalDate.now(clock);
 
-        System.out.println("\nDynamic\n");
-
         return Stream.concat(
             processed,
             savedDrinksTable
@@ -84,8 +82,7 @@ public class DynamicPersonalRecommendationSource implements RecommendationSource
                 .sorted(Map.Entry.comparingByValue())
                 .map(e -> withName(e.getKey()).toRecommendation(userId))
         )
-        .distinct()
-        .peek(e -> System.out.printf("%s: %s%n", e.getName(), e)); // TODO peek
+        .distinct();
     }
 
     @Override

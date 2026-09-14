@@ -37,7 +37,8 @@ public class PostgresDrinksRepository implements DrinksRepository {
     @Override
     public List<SavedDrink> saveDrink(Drink drink) {
         if (drink.shouldAddToRecommendations()) {
-            recommendationsTable.save(Recommendation.of(drink));  // TODO: This right now falls to default color palette and glassware, set this properly
+            Integer maxOrder = recommendationsTable.findNonTemporaryByUserId(drink.userId()).getFirst();
+            recommendationsTable.save(Recommendation.of(drink, maxOrder));
         }
 
         return drink.quantity() == null

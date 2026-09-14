@@ -28,9 +28,7 @@ public class DefaultRecommendationSource implements RecommendationSource {
             return Stream.empty();
         }
 
-        System.out.println("\nDefault\n");
-
-        return Stream.concat(processed, recommendationsTable.findByUserIdIn(adminUserIds).stream()).distinct().peek(e -> System.out.printf("%s: %s%n", e.getName(), e)); // TODO: peek
+        return Stream.concat(processed, recommendationsTable.findByUserIdIn(adminUserIds).stream()).distinct();
     }
 
     @Override

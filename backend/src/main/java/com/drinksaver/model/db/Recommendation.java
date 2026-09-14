@@ -71,7 +71,7 @@ public class Recommendation {
         );
     }
 
-    public static Recommendation of(Drink drink) {
+    public static Recommendation of(Drink drink, Integer maxOrder) {
         Recommendation recommendation = new Recommendation();
         recommendation.setUserId(drink.userId());
         recommendation.setName(drink.name());
@@ -83,9 +83,9 @@ public class Recommendation {
         recommendation.setConsumptionTypeId(drink.consumptionTypeId());
         if (drink.shouldAddEndDate())
             recommendation.setEndDate(LocalDateTime.now().plusHours(24));
-        recommendation.setGlasswareId(1); // TODO default change it
-        recommendation.setColorPaletteId(3); // TODO default change it
-        recommendation.setOrderNumber(5); // TODO default change it
+        recommendation.setGlasswareId(drink.glasswareId());
+        recommendation.setColorPaletteId(drink.colorPaletteId());
+        recommendation.setOrderNumber(maxOrder != null ? maxOrder + 1 : 1);
         return recommendation;
     }
 }

@@ -370,6 +370,12 @@ components:
         consumptionTypeId:
           type: integer
           format: int32
+        colorPaletteId:
+          type: integer
+          format: int32
+        glasswareId:
+          type: integer
+          format: int32
         comments:
           type: string
           maxLength: 255

@@ -25,9 +25,7 @@ public class PersistentPersonalRecommendationSource implements RecommendationSou
 
     @Override
     public Stream<Recommendation> buildRecommendation(UUID userId, Stream<Recommendation> processed) {
-        System.out.println("\nPersistent\n");
-        return Stream.concat(processed, RecommendationsTable.findValidByUserId(userId, LocalDateTime.now()).stream()).distinct()
-                .peek(e -> System.out.printf("%s: %s%n", e.getName(), e)); // TODO peek
+        return Stream.concat(processed, RecommendationsTable.findValidByUserId(userId, LocalDateTime.now()).stream()).distinct();
     }
 
     @Override
