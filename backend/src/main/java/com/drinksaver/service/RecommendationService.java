@@ -46,13 +46,16 @@ public class RecommendationService {
                 Map.Entry::getValue,
                 Math::max
             ));
-        collectedRecs.forEach((e, d) -> System.out.printf("%s (%s): %f", e.name(), e.toString(), d));
+        System.out.println("Now start with collected");
+        collectedRecs.forEach((e, d) -> System.out.printf("%s (%s): %f%n", e.name(), e.toString(), d));
         List<Recommendation> ret =  collectedRecs
             .entrySet().stream()
             .map(entry -> new AbstractMap.SimpleEntry<>(withName(entry.getKey()), entry.getValue()))
             .filter(entry -> entry.getKey().name().isPresent())
             .sorted(Map.Entry.<DrinkKey, Double>comparingByValue().reversed())
             .map(entry -> entry.getKey().toRecommendation(userId)).toList();
+        System.out.printf("Now start with rank, limit to %d%n", repositoryConfiguration.maxPersonalRecommendations());
+        ret.forEach(rec -> System.out.printf("%s: %n", rec.getName()));
         return ret.stream()
             .limit(repositoryConfiguration.maxPersonalRecommendations())  // TODO limit before
             .toList();
