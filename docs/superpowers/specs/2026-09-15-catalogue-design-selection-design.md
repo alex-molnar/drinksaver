@@ -37,10 +37,11 @@ design endpoints before it can be submitted. A subtype, beer brand, or beer flav
 - beer brand palette inherits from the selected beer alcohol type when one is in the draft;
 - beer flavour palette inherits from its selected brand, then its selected beer alcohol type.
 
-If a brand has no selected beer parent, it requires a real palette selection instead of guessing
-from a display name. Beer context is the backend's configured structural ID (the deployed contract
-currently fixes it to ID `4`), never an alcohol type's display label. The client never posts the
-display-only fallback design ID `0`.
+If a brand has no selected beer parent, it requires a real palette selection. The creation panel
+uses the add sheet's existing Beer classification, so it follows a deployment whose backend
+configures Beer to an ID other than the local default of `4`. The current API does not expose that
+configured ID; exposing it as explicit catalogue metadata is a separate contract improvement. The
+client never posts the display-only fallback design ID `0`.
 
 The existing “Recommend this?” panel adds the same two controls after the optional name. Each
 starts as “Use drink default”, previews the current resolved drink design, and stores an override

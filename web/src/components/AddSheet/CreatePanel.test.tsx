@@ -155,15 +155,18 @@ describe('CreatePanel', () => {
     expect(mutate).toHaveBeenCalledWith({ field: 'brand', name: 'Corona', colorPaletteId: 3 });
   });
 
-  it('requires a palette for a non-structural type even when it is named Beer', async () => {
-    setDraft({ alcoholTypeId: 1 });
+  it('inherits a non-4 beer type palette when the catalogue classifies it as beer', async () => {
+    setDraft({ alcoholTypeId: 1 }, { isBeer: true });
     renderCreatePanel('brand');
     await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Corona');
-    expect(screen.getByRole('button', { name: /add and use it/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /add and use it/i })).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
+
+    expect(mutate).toHaveBeenCalledWith({ field: 'brand', name: 'Corona' });
   });
 
-  it('keeps a structural beer brand palette-only and inherits ID 4\'s palette', async () => {
-    setDraft({ alcoholTypeId: 4 });
+  it('keeps a beer brand palette-only and inherits its type palette', async () => {
+    setDraft({ alcoholTypeId: 4 }, { isBeer: true });
     renderCreatePanel('brand');
     expect(screen.getByLabelText('Color palette')).toHaveValue('');
     expect(screen.queryByLabelText('Glassware')).not.toBeInTheDocument();
@@ -235,12 +238,14 @@ describe('CreatePanel', () => {
     expect(mutate).toHaveBeenCalledWith({ field: 'beerFlavour', name: 'Radler', brandId: 50 });
   });
 
-  it('requires a flavour palette when neither its selected brand nor a structural beer parent has one', async () => {
-    setDraft({ alcoholTypeId: 1, brandId: 51 });
+  it('falls back from a palette-less brand to a non-4 beer type palette', async () => {
+    setDraft({ alcoholTypeId: 1, brandId: 51 }, { isBeer: true });
     renderCreatePanel('beerFlavour');
     await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Radler');
 
-    expect(screen.getByRole('button', { name: /add and use it/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /add and use it/i })).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
+    expect(mutate).toHaveBeenCalledWith({ field: 'beerFlavour', name: 'Radler', brandId: 51 });
   });
 
   it('uses a palette-only selector for beer flavour overrides', async () => {

@@ -168,12 +168,14 @@ class AlcoholControllerTest {
         mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/subtypes", 4)
                 .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"alcoholTypeId\":4,\"userId\":\"%s\",\"name\":\"IPA\"}".formatted(spoofedUserId)))
+                .content("{\"alcoholTypeId\":4,\"userId\":\"%s\",\"name\":\"IPA\",\"colorPaletteId\":3,\"glasswareId\":4}".formatted(spoofedUserId)))
             .andExpect(status().isOk());
 
         org.mockito.ArgumentCaptor<NewAlcoholSubtype> captor = org.mockito.ArgumentCaptor.forClass(NewAlcoholSubtype.class);
         verify(alcoholRepository).saveSubtypeForAlcoholType(org.mockito.ArgumentMatchers.eq(4), captor.capture());
         assertThat(captor.getValue().userId()).isEqualTo(authenticatedUserId);
+        assertThat(captor.getValue().colorPaletteId()).isEqualTo(3);
+        assertThat(captor.getValue().glasswareId()).isEqualTo(4);
     }
 
     @Test
@@ -187,12 +189,14 @@ class AlcoholControllerTest {
         mockMvc.perform(post("/v1/alcohol/types")
                 .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"userId\":\"%s\",\"name\":\"Beer\",\"volumes\":[],\"alcoholSubtypes\":[]}".formatted(spoofedUserId)))
+                .content("{\"userId\":\"%s\",\"name\":\"Beer\",\"volumes\":[],\"alcoholSubtypes\":[],\"colorPaletteId\":3,\"glasswareId\":4}".formatted(spoofedUserId)))
             .andExpect(status().isOk());
 
         org.mockito.ArgumentCaptor<NewAlcoholEntry> captor = org.mockito.ArgumentCaptor.forClass(NewAlcoholEntry.class);
         verify(alcoholRepository).createAlcoholType(captor.capture());
         assertThat(captor.getValue().userId()).isEqualTo(authenticatedUserId);
+        assertThat(captor.getValue().colorPaletteId()).isEqualTo(3);
+        assertThat(captor.getValue().glasswareId()).isEqualTo(4);
     }
 
     /**

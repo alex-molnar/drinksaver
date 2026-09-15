@@ -120,9 +120,6 @@ const CREATE_TITLES: Record<CreatableCatalogueField, string> = {
   beerFlavour: 'flavour',
 };
 
-/** Matches the deployed `repository.beer-id` contract; creation inheritance must not inspect names. */
-const BEER_ALCOHOL_TYPE_ID = 4;
-
 /**
  * The sheet's create panel: one small form behind any "New ..." row in `OptionPanel`. Adopts the
  * created entry into the draft and returns to the menu on success - see `useCreateCatalogueEntry`,
@@ -153,7 +150,9 @@ const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
   // fallback chain through a sibling that has not been chosen here.
   const parentAlcoholType = catalogue.alcoholTypes.data?.find((t) => t.id === draft.alcoholTypeId);
   const parentBrand = catalogue.brands.data?.find((b) => b.id === draft.brandId);
-  const structuralBeerParent = draft.alcoholTypeId === BEER_ALCOHOL_TYPE_ID ? parentAlcoholType : undefined;
+  // Use the same resolved beer classification as the rest of the add sheet, including deployments
+  // whose backend config maps Beer to an ID other than the local default of 4.
+  const structuralBeerParent = catalogue.isBeer ? parentAlcoholType : undefined;
 
   const contextName = field === 'subtype' ? parentAlcoholType?.name : field === 'beerFlavour' ? parentBrand?.name : undefined;
 
