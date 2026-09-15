@@ -5,23 +5,39 @@ import { ThemeProvider } from '@mui/material/styles';
 import { muiTheme } from '../../theme/muiTheme';
 import CreatePanel from './CreatePanel';
 import { useDraft } from '../../drink/useDraft';
+import { useCatalogue } from '../../drink/useCatalogue';
 import { useCreateCatalogueEntry } from '../../drink/useCreateCatalogueEntry';
 import { initialDraftState, type DraftState } from '../../drink/draftReducer';
 import type { CreatableCatalogueField } from '../../drink/useCreateCatalogueEntry';
 
 vi.mock('../../drink/useDraft');
+vi.mock('../../drink/useCatalogue');
 vi.mock('../../drink/useCreateCatalogueEntry');
 
 const mockUseDraft = vi.mocked(useDraft);
+const mockUseCatalogue = vi.mocked(useCatalogue);
 const mockUseCreateCatalogueEntry = vi.mocked(useCreateCatalogueEntry);
 
 const TODAY = '2026-09-10';
 const dispatch = vi.fn();
 const mutate = vi.fn();
 
+/** A catalogue where every query has already resolved, so a test only has to override the one
+ *  field it cares about. */
+const READY_CATALOGUE = {
+  alcoholTypes: { data: [{ id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 1, glasswareId: 1 }, { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6, glasswareId: 3 }], isLoading: false },
+  volumes: { data: [], isLoading: false },
+  subtypes: { data: [], isLoading: false },
+  consumptionTypes: { data: [], isLoading: false },
+  brands: { data: [{ id: 50, name: 'Heineken', colorPaletteId: 1 }], isLoading: false },
+  beerFlavours: { data: [], isLoading: false },
+  isBeer: false,
+} as unknown as ReturnType<typeof useCatalogue>;
+
 const setDraft = (overrides: Partial<DraftState> = {}) => {
   const draft: DraftState = { ...initialDraftState(TODAY), ...overrides };
   mockUseDraft.mockReturnValue({ draft, dispatch });
+  mockUseCatalogue.mockReturnValue(READY_CATALOGUE);
   return draft;
 };
 
@@ -117,6 +133,12 @@ describe('CreatePanel', () => {
     expect(mutate).toHaveBeenCalledWith({ field: 'subtype', name: 'Single Malt', alcoholTypeId: 2 });
   });
 
+  it('names the alcohol type a new subtype is being added for', () => {
+    setDraft({ alcoholTypeId: 2 });
+    renderCreatePanel('subtype');
+    expect(screen.getByText(/for wine\./i)).toBeInTheDocument();
+  });
+
   it('passes the current brand when creating a beer flavour', async () => {
     setDraft({ brandId: 50 });
     renderCreatePanel('beerFlavour');
@@ -124,6 +146,17 @@ describe('CreatePanel', () => {
     await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
 
     expect(mutate).toHaveBeenCalledWith({ field: 'beerFlavour', name: 'Radler', brandId: 50 });
+  });
+
+  it('names the brand a new beer flavour is being added for', () => {
+    setDraft({ brandId: 50 });
+    renderCreatePanel('beerFlavour');
+    expect(screen.getByText(/for heineken\./i)).toBeInTheDocument();
+  });
+
+  it('shows no parent context for a field with none, such as brand', () => {
+    renderCreatePanel('brand');
+    expect(screen.queryByText(/^for /i)).not.toBeInTheDocument();
   });
 
   describe('creating a volume', () => {

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styled from '@emotion/styled';
 import { useDraft } from '../../drink/useDraft';
+import { useCatalogue } from '../../drink/useCatalogue';
 import { useCreateCatalogueEntry, type CreatableCatalogueField } from '../../drink/useCreateCatalogueEntry';
 
 export interface CreatePanelProps {
@@ -119,6 +120,7 @@ const CREATE_TITLES: Record<CreatableCatalogueField, string> = {
  */
 const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
   const { draft } = useDraft();
+  const catalogue = useCatalogue(draft);
   const [name, setName] = useState('');
   const [volume, setVolume] = useState('');
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -129,6 +131,17 @@ const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
 
   const onAdopted = useCallback(() => onPopPanel(), [onPopPanel]);
   const mutation = useCreateCatalogueEntry(onAdopted);
+
+  // Only these two fields nest under another catalogue choice already on the draft - see
+  // `handleSubmit` below, which is what actually needs the parent id. This just names it back to
+  // the user, the way the pre-sheet `NewSubtypePage`/`NewBeerFlavourPage` did with their own
+  // "Adding a new ... for ..." banner.
+  const contextName =
+    field === 'subtype'
+      ? catalogue.alcoholTypes.data?.find((t) => t.id === draft.alcoholTypeId)?.name
+      : field === 'beerFlavour'
+        ? catalogue.brands.data?.find((b) => b.id === draft.brandId)?.name
+        : undefined;
 
   const trimmedName = name.trim();
   const volumeNumber = Number(volume);
@@ -166,7 +179,10 @@ const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
       <Heading id="add-sheet-heading" tabIndex={-1} ref={headingRef}>
         New {CREATE_TITLES[field]}
       </Heading>
-      <Hint>It is saved and picked for you. You stay right here.</Hint>
+      <Hint>
+        {contextName ? `For ${contextName}. ` : ''}
+        It is saved and picked for you. You stay right here.
+      </Hint>
       <Form onSubmit={handleSubmit}>
         <div>
           <FieldLabel htmlFor="add-sheet-create-name">Name</FieldLabel>
