@@ -57,7 +57,7 @@ public class PostgresAlcoholRepository implements AlcoholRepository {
 
     @Override
     public AlcoholSubtype saveSubtypeForAlcoholType(Integer alcoholTypeId, NewAlcoholSubtype newAlcoholSubtype) {
-        return alcoholSubtypesTable.save(new AlcoholSubtype(alcoholTypeId, newAlcoholSubtype.userId(), newAlcoholSubtype.name()));
+        return alcoholSubtypesTable.save(new AlcoholSubtype(alcoholTypeId, newAlcoholSubtype.userId(), newAlcoholSubtype.name(), newAlcoholSubtype.colorPaletteId(), newAlcoholSubtype.glasswareId()));
     }
 
     @Override
@@ -106,7 +106,7 @@ public class PostgresAlcoholRepository implements AlcoholRepository {
                 .map(newEntry -> alcoholVolumeTable.save(AlcoholVolume.of(newEntry)).getId())
                 .toList()
             : Collections.emptyList();
-        AlcoholType result = alcoholTypesTable.save(new AlcoholType(newAlcoholEntry.userId(), newAlcoholEntry.name(), volumeIds));  // TODO: this right now defaults color palettte, and glassware set this properly
+        AlcoholType result = alcoholTypesTable.save(new AlcoholType(newAlcoholEntry.userId(), newAlcoholEntry.name(), volumeIds, newAlcoholEntry.colorPaletteId(), newAlcoholEntry.glasswareId()));
         if (newAlcoholEntry.alcoholSubtypes() != null && !newAlcoholEntry.alcoholSubtypes().isEmpty()) {
             alcoholSubtypesTable.saveAll(
                     newAlcoholEntry.alcoholSubtypes()

@@ -79,7 +79,7 @@ class BeerControllerTest {
     @Test
     void getBrandsListReturnsOkWithExpectedShape() throws Exception {
         UUID userId = UUID.randomUUID();
-        Brand brand = new Brand(userId, "Heineken");
+        Brand brand = new Brand(userId, "Heineken", null);
         brand.setId(7);
 
         when(beerRepository.getBrands(userId)).thenReturn(List.of(brand));
@@ -116,19 +116,19 @@ class BeerControllerTest {
     @Test
     void saveBrandUsesJwtSubjectNotAClientSuppliedPathUserId() throws Exception {
         UUID authenticatedUserId = UUID.randomUUID();
-        Brand saved = new Brand(authenticatedUserId, "Heineken");
+        Brand saved = new Brand(authenticatedUserId, "Heineken", null);
         saved.setId(7);
 
-        when(beerRepository.saveBrand(eq(authenticatedUserId), any(), any())).thenReturn(saved);
+        when(beerRepository.saveBrand(eq(authenticatedUserId), any(), any(), any())).thenReturn(saved);
 
         mockMvc.perform(post("/v1/beer/brands")
                 .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"Heineken\",\"flavours\":[]}"))
+                .content("{\"name\":\"Heineken\",\"flavours\":[],\"colorPaletteId\":3}"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.userId").value(authenticatedUserId.toString()));
 
-        verify(beerRepository).saveBrand(authenticatedUserId, "Heineken", List.of());
+        verify(beerRepository).saveBrand(authenticatedUserId, "Heineken", List.of(), 3);
     }
 
     @Test
@@ -151,16 +151,16 @@ class BeerControllerTest {
         UUID authenticatedUserId = UUID.randomUUID();
         UUID spoofedUserId = UUID.randomUUID();
 
-        when(beerRepository.saveBeerFlavour(eq(7), eq(authenticatedUserId), eq("Radler")))
+        when(beerRepository.saveBeerFlavour(eq(7), eq(authenticatedUserId), eq("Radler"), any()))
             .thenReturn(new BeerFlavour(7, authenticatedUserId, "Radler"));
 
         mockMvc.perform(post("/v1/beer/brands/{brandId}/flavours", 7)
                 .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"userId\":\"%s\",\"name\":\"Radler\"}".formatted(spoofedUserId)))
+                .content("{\"userId\":\"%s\",\"name\":\"Radler\",\"colorPaletteId\":3}".formatted(spoofedUserId)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.userId").value(authenticatedUserId.toString()));
 
-        verify(beerRepository).saveBeerFlavour(7, authenticatedUserId, "Radler");
+        verify(beerRepository).saveBeerFlavour(7, authenticatedUserId, "Radler", 3);
     }
 }

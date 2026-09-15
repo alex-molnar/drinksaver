@@ -24,7 +24,7 @@ class AlcoholTypesTableIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void volumeIdsArrayRoundTrips() {
-        AlcoholType type = new AlcoholType(USER, "Vodka", List.of(1, 2, 3));
+        AlcoholType type = new AlcoholType(USER, "Vodka", List.of(1, 2, 3), null, null);
         alcoholTypesTable.save(type);
 
         Optional<AlcoholType> result = alcoholTypesTable.findById(type.getId());
@@ -35,7 +35,7 @@ class AlcoholTypesTableIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void emptyVolumeIdsArrayRoundTrips() {
-        AlcoholType type = new AlcoholType(USER, "Vodka", List.of());
+        AlcoholType type = new AlcoholType(USER, "Vodka", List.of(), null, null);
         alcoholTypesTable.save(type);
 
         Optional<AlcoholType> result = alcoholTypesTable.findById(type.getId());
@@ -47,9 +47,9 @@ class AlcoholTypesTableIntegrationTest extends AbstractPostgresIntegrationTest {
     @Test
     void findAllByUserIdInOrderByNameAscOrdersCorrectly() {
         alcoholTypesTable.saveAll(List.of(
-                new AlcoholType(USER, "Whiskey", List.of()),
-                new AlcoholType(USER, "Vodka", List.of()),
-                new AlcoholType(USER, "Gin", List.of())
+                new AlcoholType(USER, "Whiskey", List.of(), null, null),
+                new AlcoholType(USER, "Vodka", List.of(), null, null),
+                new AlcoholType(USER, "Gin", List.of(), null, null)
         ));
 
         List<AlcoholType> result = alcoholTypesTable.findAllByUserIdInOrderByNameAsc(List.of(USER));

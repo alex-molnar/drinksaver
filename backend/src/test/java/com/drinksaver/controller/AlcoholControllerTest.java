@@ -97,7 +97,7 @@ class AlcoholControllerTest {
     @Test
     void getAlcoholTypesReturnsOkWithExpectedShape() throws Exception {
         UUID userId = UUID.randomUUID();
-        AlcoholType type = new AlcoholType(userId, "Beer", List.of(1, 2));
+        AlcoholType type = new AlcoholType(userId, "Beer", List.of(1, 2), null, null);
         type.setId(4);
 
         when(alcoholRepository.getAlcoholTypes(userId)).thenReturn(List.of(type));
@@ -168,12 +168,14 @@ class AlcoholControllerTest {
         mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/subtypes", 4)
                 .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"alcoholTypeId\":4,\"userId\":\"%s\",\"name\":\"IPA\"}".formatted(spoofedUserId)))
+                .content("{\"alcoholTypeId\":4,\"userId\":\"%s\",\"name\":\"IPA\",\"colorPaletteId\":3,\"glasswareId\":4}".formatted(spoofedUserId)))
             .andExpect(status().isOk());
 
         org.mockito.ArgumentCaptor<NewAlcoholSubtype> captor = org.mockito.ArgumentCaptor.forClass(NewAlcoholSubtype.class);
         verify(alcoholRepository).saveSubtypeForAlcoholType(org.mockito.ArgumentMatchers.eq(4), captor.capture());
         assertThat(captor.getValue().userId()).isEqualTo(authenticatedUserId);
+        assertThat(captor.getValue().colorPaletteId()).isEqualTo(3);
+        assertThat(captor.getValue().glasswareId()).isEqualTo(4);
     }
 
     @Test
@@ -182,17 +184,19 @@ class AlcoholControllerTest {
         UUID spoofedUserId = UUID.randomUUID();
 
         when(alcoholRepository.createAlcoholType(any()))
-            .thenReturn(new AlcoholType(authenticatedUserId, "Beer", List.of()));
+            .thenReturn(new AlcoholType(authenticatedUserId, "Beer", List.of(), null, null));
 
         mockMvc.perform(post("/v1/alcohol/types")
                 .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"userId\":\"%s\",\"name\":\"Beer\",\"volumes\":[],\"alcoholSubtypes\":[]}".formatted(spoofedUserId)))
+                .content("{\"userId\":\"%s\",\"name\":\"Beer\",\"volumes\":[],\"alcoholSubtypes\":[],\"colorPaletteId\":3,\"glasswareId\":4}".formatted(spoofedUserId)))
             .andExpect(status().isOk());
 
         org.mockito.ArgumentCaptor<NewAlcoholEntry> captor = org.mockito.ArgumentCaptor.forClass(NewAlcoholEntry.class);
         verify(alcoholRepository).createAlcoholType(captor.capture());
         assertThat(captor.getValue().userId()).isEqualTo(authenticatedUserId);
+        assertThat(captor.getValue().colorPaletteId()).isEqualTo(3);
+        assertThat(captor.getValue().glasswareId()).isEqualTo(4);
     }
 
     /**
@@ -269,7 +273,7 @@ class AlcoholControllerTest {
             .collect(java.util.stream.Collectors.joining(","));
         UUID userId = UUID.randomUUID();
         when(alcoholRepository.createAlcoholType(any()))
-            .thenReturn(new AlcoholType(userId, "Gin", List.of()));
+            .thenReturn(new AlcoholType(userId, "Gin", List.of(), null, null));
 
         // A UUID subject, not the bare jwt() default of "user": this endpoint derives the
         // owner from the subject, so a non-UUID one is a 500 rather than a validation error.

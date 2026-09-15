@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { initialDraftState, type DraftState } from './draftReducer';
 import type { DraftFieldsCatalogue } from './draftFields';
-import { resolveDraftDesign, resolveRecommendationDesign } from './designSelection';
+import {
+  resolveDraftDesign,
+  resolveDraftPreviewDesign,
+  resolveRecommendationDesign,
+  resolveRecommendationSaveDesign,
+} from './designSelection';
 
 const TYPE = { id: 1, name: 'Beer', volumeIds: [10], colorPaletteId: 3, glasswareId: 4 };
 const BASE_CATALOGUE: DraftFieldsCatalogue = {
@@ -68,9 +73,32 @@ describe('resolveDraftDesign', () => {
   });
 });
 
+describe('resolveDraftPreviewDesign', () => {
+  it('resolves a non-beer type preview without requiring a selected volume', () => {
+    const wine = { id: 2, name: 'Wine', volumeIds: [11], colorPaletteId: 6, glasswareId: 3 };
+    expect(resolveDraftPreviewDesign(
+      draft({ alcoholTypeId: 2, volumeId: null }),
+      { ...BASE_CATALOGUE, alcoholTypes: [TYPE, wine] },
+      false,
+    )).toEqual({ colorPaletteId: 6, glasswareId: 3 });
+  });
+
+  it('leaves beer glassware unknown until a consumption type is selected', () => {
+    expect(resolveDraftPreviewDesign(draft({ consumptionTypeId: null }), BASE_CATALOGUE, true))
+      .toEqual({ colorPaletteId: 3, glasswareId: undefined });
+  });
+});
+
 describe('resolveRecommendationDesign', () => {
   it('uses the final design returned by the recommendation endpoint', () => {
     expect(resolveRecommendationDesign({ colorPaletteId: 8, glasswareId: 9 }))
       .toEqual({ colorPaletteId: 8, glasswareId: 9 });
+  });
+
+  it('applies only explicit recommendation overrides over the resolved drink design', () => {
+    expect(resolveRecommendationSaveDesign(
+      { colorPaletteId: 3, glasswareId: 4 },
+      { colorPaletteId: null, glasswareId: 8 },
+    )).toEqual({ colorPaletteId: 3, glasswareId: 8 });
   });
 });

@@ -11,8 +11,8 @@ public interface BeerRepository {
     boolean is(String repositoryType);
     List<Brand> getBrands(UUID userId);
     List<ConsumptionType> getConsumptionTypes(Integer maxAmount);
-    Brand saveBrand(UUID userId, String name, List<String> flavours);
+    Brand saveBrand(UUID userId, String name, List<String> flavours, Integer colorPaletteId);
     List<BeerFlavour> getBeerFlavours(Integer brandId, UUID userId);
-    BeerFlavour saveBeerFlavour(Integer brandId, UUID userId, String name);
+    BeerFlavour saveBeerFlavour(Integer brandId, UUID userId, String name, Integer colorPaletteId);
 }
 

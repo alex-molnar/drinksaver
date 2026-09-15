@@ -53,6 +53,8 @@ export interface NewAlcoholEntry {
   name: string;
   volumes?: NewVolumeEntry[];
   alcoholSubtypes?: string[];
+  colorPaletteId?: number;
+  glasswareId?: number;
 }
 
 export interface NewVolumeEntry {
@@ -109,6 +111,8 @@ export interface AlcoholSubtype {
 export interface NewAlcoholSubtype {
   alcoholTypeId: number;
   name: string;
+  colorPaletteId?: number;
+  glasswareId?: number;
 }
 
 // Beer flavour types
@@ -122,6 +126,7 @@ export interface BeerFlavour {
 
 export interface NewBeerFlavour {
   name: string;
+  colorPaletteId?: number;
 }
 
 // Editable drink (for history view)
@@ -135,4 +140,5 @@ export interface EditableDrink {
 export interface NewBeerBrand {
   name: string;
   flavours?: string[];
+  colorPaletteId?: number;
 }

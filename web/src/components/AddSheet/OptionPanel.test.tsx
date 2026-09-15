@@ -28,6 +28,13 @@ const YESTERDAY = previousIsoDate(TODAY);
 
 const dispatch = vi.fn();
 
+/** Opens the DesignSelector picker labelled `fieldLabel` and clicks the named option - a
+ *  click-driven stand-in for `userEvent.selectOptions`, which only works on a native <select>. */
+const pickDesignOption = async (fieldLabel: string, optionName: string) => {
+  await userEvent.click(screen.getByRole('button', { name: fieldLabel }));
+  await userEvent.click(screen.getByRole('option', { name: optionName }));
+};
+
 const CATALOGUE = {
   alcoholTypes: { data: [{ id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 3, glasswareId: 1 }, { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6, glasswareId: 3 }], isLoading: false },
   volumes: { data: [{ id: 10, name: 'Pint', volume: 0.5 }], isLoading: false },
@@ -277,20 +284,67 @@ describe('OptionPanel', () => {
       expect(dispatch).toHaveBeenCalledWith({ type: 'setRecommend', addToRecommendations: true });
     });
 
-    it('shows the sub-options once addToRecommendations is already on', async () => {
-      setDraft({ addToRecommendations: true, onlyTemporarily: true, recommendationName: 'House lager' });
+    it('shows inherited design previews and dispatches only explicit recommendation design overrides', async () => {
+      setDraft({
+        alcoholTypeId: 1,
+        volumeId: 10,
+        consumptionTypeId: 40,
+        addToRecommendations: true,
+        onlyTemporarily: true,
+        recommendationName: 'House lager',
+      }, { isBeer: true });
       renderOptionPanel('recommend');
 
       const onlyTemporarily = screen.getByRole('checkbox', { name: /only temporarily/i });
       expect(onlyTemporarily).toBeChecked();
       const nameField = screen.getByRole('textbox', { name: /name/i });
       expect(nameField).toHaveValue('House lager');
+      expect(screen.getByRole('button', { name: 'Color palette' })).toHaveTextContent('Use inherited default');
+      expect(screen.getByRole('button', { name: 'Glassware' })).toHaveTextContent('Use inherited default');
+      expect(screen.getByTestId('palette-preview')).toHaveStyle({ background: TEST_PALETTE_BY_NAME.cream.field });
 
       await userEvent.click(onlyTemporarily);
       expect(dispatch).toHaveBeenCalledWith({ type: 'setOnlyTemporarily', onlyTemporarily: false });
 
       await userEvent.type(nameField, '!');
       expect(dispatch).toHaveBeenCalledWith({ type: 'setRecommendationName', recommendationName: 'House lager!' });
+
+      await pickDesignOption('Color palette', 'amber');
+      await pickDesignOption('Glassware', 'flute');
+      expect(dispatch).toHaveBeenCalledWith({ type: 'setRecommendationColorPaletteId', colorPaletteId: 7 });
+      expect(dispatch).toHaveBeenCalledWith({ type: 'setRecommendationGlasswareId', glasswareId: 8 });
+    });
+
+    it('saves concrete recommendation override IDs without changing the normal drink hierarchy', async () => {
+      setDraft({
+        alcoholTypeId: 1,
+        volumeId: 10,
+        consumptionTypeId: 40,
+        addToRecommendations: true,
+        recommendationColorPaletteId: 7,
+        recommendationGlasswareId: 8,
+      }, { isBeer: true });
+      renderOptionPanel('recommend');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Save drink' }));
+
+      expect(save).toHaveBeenCalledWith(expect.objectContaining({
+        payload: expect.objectContaining({
+          addToRecommendations: true,
+          colorPaletteId: 7,
+          glasswareId: 8,
+        }),
+      }));
+    });
+
+    it('previews a selected wine design before its size is selected', () => {
+      setDraft({ alcoholTypeId: 2, addToRecommendations: true });
+      renderOptionPanel('recommend');
+
+      expect(screen.getByRole('button', { name: 'Color palette' })).toHaveTextContent('Use inherited default');
+      expect(screen.getByRole('button', { name: 'Glassware' })).toHaveTextContent('Use inherited default');
+      expect(screen.getByTestId('palette-preview')).toHaveStyle({ background: TEST_PALETTE_BY_NAME.plum.field });
+      expect(screen.getByTestId('glass-wine')).toHaveAttribute('data-glassware-id', '3');
     });
   });
 });

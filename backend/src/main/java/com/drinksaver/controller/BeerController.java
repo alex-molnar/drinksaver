@@ -38,7 +38,7 @@ public class BeerController {
 
     @PostMapping("/brands")
     public Brand saveBrand(@AuthenticationPrincipal Jwt jwt, @RequestBody NewBeerBrand newBeerBrand) {
-        return beerRepository.saveBrand(AuthenticatedUser.id(jwt), newBeerBrand.name(), newBeerBrand.flavours());
+        return beerRepository.saveBrand(AuthenticatedUser.id(jwt), newBeerBrand.name(), newBeerBrand.flavours(), newBeerBrand.colorPaletteId());
     }
 
     @GetMapping("/brands/{brandId}/flavours")
@@ -48,7 +48,7 @@ public class BeerController {
 
     @PostMapping("/brands/{brandId}/flavours")
     public BeerFlavour saveBrandName(@AuthenticationPrincipal Jwt jwt, @PathVariable Integer brandId, @RequestBody NewBeerFlavour newBeerFlavour) {
-        return beerRepository.saveBeerFlavour(brandId, AuthenticatedUser.id(jwt), newBeerFlavour.name());
+        return beerRepository.saveBeerFlavour(brandId, AuthenticatedUser.id(jwt), newBeerFlavour.name(), newBeerFlavour.colorPaletteId());
     }
 }
 

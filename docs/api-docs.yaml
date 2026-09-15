@@ -423,6 +423,12 @@ components:
         consumptionTypeId:
           type: integer
           format: int32
+        colorPaletteId:
+          type: integer
+          format: int32
+        glasswareId:
+          type: integer
+          format: int32
         comments:
           type: string
     NewBeerBrand:
@@ -434,6 +440,9 @@ components:
           type: array
           items:
             type: string
+        colorPaletteId:
+          type: integer
+          format: int32
     Brand:
       type: object
       properties:
@@ -453,6 +462,9 @@ components:
       properties:
         name:
           type: string
+        colorPaletteId:
+          type: integer
+          format: int32
     BeerFlavour:
       type: object
       properties:
@@ -495,6 +507,12 @@ components:
           maxItems: 50
           items:
             type: string
+        colorPaletteId:
+          type: integer
+          format: int32
+        glasswareId:
+          type: integer
+          format: int32
     NewVolumeEntry:
       type: object
       properties:
@@ -551,6 +569,12 @@ components:
             by the client is not bound and has no effect.
         name:
           type: string
+        colorPaletteId:
+          type: integer
+          format: int32
+        glasswareId:
+          type: integer
+          format: int32
     AlcoholSubtype:
       type: object
       properties:

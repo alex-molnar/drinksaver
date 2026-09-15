@@ -25,7 +25,7 @@ class BeerNameCollectorTest {
 
     @Test
     void collectsBrandAndVolumeOnly() {
-        Brand brand = new Brand(USER, "Heineken");
+        Brand brand = new Brand(USER, "Heineken", null);
         AlcoholVolume volume = new AlcoholVolume(1, "Pint", 0.568f);
 
         BrandsTable brandsTable = mock(BrandsTable.class);
@@ -50,7 +50,7 @@ class BeerNameCollectorTest {
 
     @Test
     void collectsBrandFlavourAndVolume() {
-        Brand brand = new Brand(USER, "Heineken");
+        Brand brand = new Brand(USER, "Heineken", null);
         BeerFlavour flavour = new BeerFlavour(1, USER, "Premium");
         AlcoholVolume volume = new AlcoholVolume(1, "Pint", 0.568f);
 
@@ -79,7 +79,7 @@ class BeerNameCollectorTest {
 
     @Test
     void collectsWithConsumptionType() {
-        Brand brand = new Brand(USER, "Heineken");
+        Brand brand = new Brand(USER, "Heineken", null);
         ConsumptionType consumption = new ConsumptionType(1, "Draught", 1);
         AlcoholVolume volume = new AlcoholVolume(1, "Pint", 0.568f);
 
@@ -153,7 +153,7 @@ class BeerNameCollectorTest {
 
     @Test
     void fallsBackToBrandWhenFlavourNotFound() {
-        Brand brand = new Brand(USER, "Heineken");
+        Brand brand = new Brand(USER, "Heineken", null);
         AlcoholVolume volume = new AlcoholVolume(1, "Pint", 0.568f);
 
         BrandsTable brandsTable = mock(BrandsTable.class);
@@ -181,7 +181,7 @@ class BeerNameCollectorTest {
 
     @Test
     void skipsConsumptionTypeWhenNotFound() {
-        Brand brand = new Brand(USER, "Heineken");
+        Brand brand = new Brand(USER, "Heineken", null);
         AlcoholVolume volume = new AlcoholVolume(1, "Pint", 0.568f);
 
         BrandsTable brandsTable = mock(BrandsTable.class);
@@ -215,7 +215,7 @@ class BeerNameCollectorTest {
      */
     @Test
     void skipsTheVolumeLookupWhenTheVolumeIdIsNull() {
-        Brand brand = new Brand(USER, "Heineken");
+        Brand brand = new Brand(USER, "Heineken", null);
 
         BrandsTable brandsTable = mock(BrandsTable.class);
         when(brandsTable.findById(1)).thenReturn(Optional.of(brand));
@@ -239,7 +239,7 @@ class BeerNameCollectorTest {
 
     @Test
     void skipsTheConsumptionTypeLookupWhenItsIdIsNull() {
-        Brand brand = new Brand(USER, "Heineken");
+        Brand brand = new Brand(USER, "Heineken", null);
         AlcoholVolume volume = new AlcoholVolume(1, "Pint", 0.568f);
 
         BrandsTable brandsTable = mock(BrandsTable.class);
@@ -274,7 +274,7 @@ class BeerNameCollectorTest {
         Locale original = Locale.getDefault();
         Locale.setDefault(Locale.GERMANY);
         try {
-            Brand brand = new Brand(USER, "Heineken");
+            Brand brand = new Brand(USER, "Heineken", null);
             AlcoholVolume volume = new AlcoholVolume(1, "Half litre", 0.5f);
 
             BrandsTable brandsTable = mock(BrandsTable.class);

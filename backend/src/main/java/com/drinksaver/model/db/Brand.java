@@ -21,10 +21,11 @@ public class Brand {
 
     private UUID userId;
     private String name;
-    private Integer colorPaletteId;  // TODO: temporary, set this properly
+    private Integer colorPaletteId;
 
-    public Brand(UUID userId, String name) {
+    public Brand(UUID userId, String name, Integer colorPaletteId) {
         this.userId = userId;
         this.name = name;
+        this.colorPaletteId = colorPaletteId;
     }
 }

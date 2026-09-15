@@ -79,7 +79,7 @@ class PostgresAlcoholRepositoryTransactionIntegrationTest {
     @Test
     void createAlcoholTypeCommitsTheTypeAndItsVolumesTogether() {
         NewAlcoholEntry entry = new NewAlcoholEntry(
-            COMMITTING_USER, "Gin", List.of(new NewVolumeEntry("Shot", 0.05f)), List.of("London Dry")
+            COMMITTING_USER, "Gin", List.of(new NewVolumeEntry("Shot", 0.05f)), List.of("London Dry"), null, null
         );
         when(alcoholSubtypesTable.saveAll(any())).thenReturn(List.of());
         long volumesBefore = alcoholVolumeTable.count();
@@ -98,7 +98,7 @@ class PostgresAlcoholRepositoryTransactionIntegrationTest {
     @Test
     void createAlcoholTypeRollsBackTheVolumesAndTheTypeWhenTheSubtypesFail() {
         NewAlcoholEntry entry = new NewAlcoholEntry(
-            ROLLING_BACK_USER, "Rum", List.of(new NewVolumeEntry("Shot", 0.05f)), List.of("Spiced")
+            ROLLING_BACK_USER, "Rum", List.of(new NewVolumeEntry("Shot", 0.05f)), List.of("Spiced"), null, null
         );
         when(alcoholSubtypesTable.saveAll(any()))
             .thenThrow(new IllegalStateException("subtype write failed"));

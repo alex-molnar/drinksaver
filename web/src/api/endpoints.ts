@@ -15,10 +15,12 @@ import type {
   AlcoholSubtype,
   NewAlcoholEntry,
   NewVolumeEntry,
+  NewAlcoholSubtype,
   Recommendation,
   ConsumptionType,
   BeerFlavour,
   NewBeerBrand,
+  NewBeerFlavour,
   EditableDrink,
   ColorPalette,
   Glassware,
@@ -62,7 +64,10 @@ export const getAlcoholTypes = async (): Promise<AlcoholType[]> => {
 };
 
 export const createAlcoholType = async (entry: NewAlcoholEntry): Promise<AlcoholType> => {
-  const response = await apiClient.post<AlcoholType>('/v1/alcohol/types', entry);
+  const response = await apiClient.post<AlcoholType>(
+    '/v1/alcohol/types',
+    withoutUndefinedDesignOverrides(entry)
+  );
   return response.data;
 };
 
@@ -93,11 +98,11 @@ export const getSubtypesByAlcoholType = async (alcoholTypeId: number): Promise<A
 
 export const createSubtypeForAlcoholType = async (
   alcoholTypeId: number,
-  name: string
+  entry: NewAlcoholSubtype
 ): Promise<AlcoholSubtype> => {
   const response = await apiClient.post<AlcoholSubtype>(
     `/v1/alcohol/types/${alcoholTypeId}/subtypes`,
-    { alcoholTypeId, name }
+    withoutUndefinedDesignOverrides(entry)
   );
   return response.data;
 };
@@ -116,7 +121,10 @@ export const getBrands = async (): Promise<Brand[]> => {
 };
 
 export const createBrand = async (brand: NewBeerBrand): Promise<Brand> => {
-  const response = await apiClient.post<Brand>('/v1/beer/brands', brand);
+  const response = await apiClient.post<Brand>(
+    '/v1/beer/brands',
+    withoutUndefinedDesignOverrides(brand)
+  );
   return response.data;
 };
 
@@ -127,12 +135,27 @@ export const getBeerFlavours = async (brandId: number): Promise<BeerFlavour[]> =
   return response.data;
 };
 
-export const createBeerFlavour = async (brandId: number, name: string): Promise<BeerFlavour> => {
+export const createBeerFlavour = async (
+  brandId: number,
+  entry: NewBeerFlavour
+): Promise<BeerFlavour> => {
   const response = await apiClient.post<BeerFlavour>(
     `/v1/beer/brands/${brandId}/flavours`,
-    { name }
+    withoutUndefinedDesignOverrides(entry)
   );
   return response.data;
+};
+
+const withoutUndefinedDesignOverrides = <T extends {
+  colorPaletteId?: number;
+  glasswareId?: number;
+}>(entry: T) => {
+  const { colorPaletteId, glasswareId, ...payload } = entry;
+  return {
+    ...payload,
+    ...(colorPaletteId !== undefined ? { colorPaletteId } : {}),
+    ...(glasswareId !== undefined ? { glasswareId } : {}),
+  };
 };
 
 // Design endpoints

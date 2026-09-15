@@ -232,6 +232,21 @@ There is no `pages/New*.tsx`, no `DetailedPage`, no `SuccessPage` or `ErrorPage`
 any more. Those ten screens are one sheet, and their routes redirect rather than 404 so no
 bookmark or tab left open across the change lands on a blank page.
 
+### `DesignSelector`
+
+`components/AddSheet/DesignSelector.tsx` is the controlled design override used in the catalogue
+create panels and the recommendation panel. `colorPaletteId` and `glasswareId` are independent:
+each is either a fetched design ID or `null`, while the optional inherited IDs supply the preview
+and the “Use inherited default” state. Selecting that default keeps the field `null`, so the
+create request omits the override and the server-side parent design applies.
+
+The selector renders only the palette and glassware values returned by the design endpoints; it
+never derives IDs from names or invents a fallback ID for a request. It exposes palette-only mode
+when no glassware callback is supplied. Beer brands and beer flavours use that mode: they can
+override a palette, but inherit their glassware and must not send a glassware override. A
+recommendation can independently override both fields; saving resolves those explicit IDs over
+the normal drink design before `POST /v1/drinks/new`.
+
 ## API Integration
 
 `docs/api-docs.yaml` at the repository root is the canonical contract. The app talks to

@@ -22,6 +22,8 @@ export const FALLBACK_GLASSWARE: Glassware = {
 };
 
 export interface DesignCatalogue {
+  palettes: readonly ColorPalette[];
+  glassware: readonly Glassware[];
   paletteForId: (id?: number | null) => ColorPalette;
   paletteForName: (name?: string | null) => ColorPalette;
   glasswareForId: (id?: number | null) => Glassware;
@@ -40,6 +42,8 @@ export const createDesignCatalogue = (
   const fallbackGlassware = glasswareByName.get('highball') ?? FALLBACK_GLASSWARE;
 
   return {
+    palettes,
+    glassware,
     paletteForId: (id) => palettesById.get(id ?? 0) ?? fallbackPalette,
     paletteForName: (name) => palettesByName.get(name?.toLowerCase() ?? '') ?? fallbackPalette,
     glasswareForId: (id) => glasswareById.get(id ?? 0) ?? fallbackGlassware,
