@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import DesignSelector from './DesignSelector';
@@ -95,6 +95,68 @@ describe('DesignSelector', () => {
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
     expect(onGlasswareIdChange).not.toHaveBeenCalled();
+  });
+
+  it('moves focus back up with ArrowUp after moving down', async () => {
+    const { onColorPaletteIdChange } = renderSelector({ inheritedColorPaletteId: undefined });
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Color palette' }));
+    await user.keyboard('{ArrowDown}'); // green -> brown
+    await user.keyboard('{ArrowUp}'); // brown -> back to green
+    await user.keyboard('{Enter}');
+
+    expect(onColorPaletteIdChange).toHaveBeenCalledWith(1);
+  });
+
+  it('jumps to the last option with End and the first with Home', async () => {
+    const { onColorPaletteIdChange } = renderSelector({ inheritedColorPaletteId: undefined });
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Color palette' }));
+    await user.keyboard('{End}');
+    await user.keyboard('{Enter}');
+    expect(onColorPaletteIdChange).toHaveBeenCalledWith(8); // rose, last of the 8 test palettes
+
+    await user.click(screen.getByRole('button', { name: 'Color palette' }));
+    await user.keyboard('{Home}');
+    await user.keyboard('{Enter}');
+    expect(onColorPaletteIdChange).toHaveBeenLastCalledWith(1); // green, first
+  });
+
+  it('closes on Tab without changing the selection', async () => {
+    const { onGlasswareIdChange } = renderSelector();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Glassware' }));
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+
+    await user.keyboard('{Tab}');
+
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(onGlasswareIdChange).not.toHaveBeenCalled();
+  });
+
+  it('ignores a key press on the trigger while its own listbox is already open', async () => {
+    renderSelector();
+    const trigger = screen.getByRole('button', { name: 'Color palette' });
+
+    fireEvent.click(trigger);
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+
+    fireEvent.keyDown(trigger, { key: 'ArrowDown' });
+
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+  });
+
+  it('lets you explicitly pick "Use inherited default" to clear an override back to null', async () => {
+    const { onColorPaletteIdChange } = renderSelector();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Color palette' }));
+    await user.click(screen.getByRole('option', { name: 'Use inherited default' }));
+
+    expect(onColorPaletteIdChange).toHaveBeenCalledWith(null);
   });
 
   it('closes when a click lands outside the picker', async () => {
