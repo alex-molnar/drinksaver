@@ -32,12 +32,29 @@ The test fixture then gained realistic palette and glassware API values. The fin
 `toHaveCount(1)`, since browser-native `option` elements are present but Playwright correctly
 does not classify them as visible. No product code was changed to make the test pass.
 
+### Review round 1: independent inherited and explicit state
+
+The subtype assertion was changed first to require an inherited palette omission together with an
+explicit glassware ID. The focused suite failed in both mobile viewports, as intended, because the
+existing journey sent `colorPaletteId: 1`:
+
+```text
+Expected subtype POST: { alcoholTypeId: 100, name: 'Dry', glasswareId: 2 }
+Received subtype POST: { alcoholTypeId: 100, name: 'Dry', colorPaletteId: 1, glasswareId: 2 }
+```
+
+The green change leaves Color palette on “Use inherited default.” It focuses the native Glassware
+select, presses `t`, and verifies that the browser's native type-ahead selects the fetched `tulip`
+option, ID `2`. The final POST omits `colorPaletteId` and sends `glasswareId: 2`, proving the two
+fields act independently without using Playwright's `selectOption` for this path.
+
 ## Browser coverage
 
 The new journey runs at the existing narrow portrait `375 × 812` and phone landscape `812 × 375`
 sizes. It waits for `networkidle` before inspecting the rendered page and does not use arbitrary
 waits. It uses role and label locators throughout, and it focuses the recommendation checkbox and
-uses Space to toggle it.
+uses Space to toggle it. The subtype's native Glassware select is also focused and changed through
+keyboard type-ahead.
 
 Each write is route-fulfilled and asserted, so the test does not create data in the local stack:
 
@@ -45,7 +62,7 @@ Each write is route-fulfilled and asserted, so the test does not create data in 
 | --- | --- |
 | `POST /v1/alcohol/types` | `Cider` carries selected palette `8` and glassware `12` |
 | `POST /v1/alcohol/types/100/volumes` | `Small` carries only its name and `0.33` volume |
-| `POST /v1/alcohol/types/100/subtypes` | `Dry` carries selected palette `1` and glassware `2` |
+| `POST /v1/alcohol/types/100/subtypes` | `Dry` omits inherited palette override and carries keyboard-selected glassware `2` |
 | `POST /v1/beer/brands` | `Hops House` omits its inherited palette override |
 | `POST /v1/beer/brands/103/flavours` | `Crisp` omits its inherited palette override |
 | `POST /v1/drinks/new` | A keyboard-enabled recommendation save sends explicit palette `5` and glassware `6`, alongside its beer IDs and `addToRecommendations: true` |
@@ -71,6 +88,13 @@ cd web && npm run e2e -- add-sheet-identity.spec.ts
 
 cd web && npm test
 50 files and 550 tests passed (11.21s)
+
+# Review round 1 final verification
+cd web && npm run lint
+exit 0
+
+cd web && npm run e2e -- add-sheet-identity.spec.ts
+5 passed (18.3s)
 ```
 
 The local `localhost:3000` compose web container was initially stale and did not contain the

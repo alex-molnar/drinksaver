@@ -238,14 +238,17 @@ for (const viewport of [
     await menuRow(page, 'Subtype').click();
     await page.getByRole('button', { name: 'New subtype', exact: true }).click();
     await page.getByLabel('Name').fill('Dry');
-    await chooseDesignId(page, 'Color palette', 1);
-    await chooseDesignId(page, 'Glassware', 2);
+    await expect(page.getByLabel('Color palette')).toHaveValue('');
+    const subtypeGlassware = page.getByLabel('Glassware');
+    await subtypeGlassware.focus();
+    await expect(subtypeGlassware).toBeFocused();
+    await subtypeGlassware.press('t');
+    await expect(subtypeGlassware).toHaveValue('2');
     const newSubtypeRequest = postTo(page, '/v1/alcohol/types/100/subtypes');
     await page.getByRole('button', { name: 'Add and use it', exact: true }).click();
     expect((await newSubtypeRequest).postDataJSON()).toEqual({
       alcoholTypeId: 100,
       name: 'Dry',
-      colorPaletteId: 1,
       glasswareId: 2,
     });
     await page.getByRole('button', { name: 'Back', exact: true }).click();
