@@ -18,7 +18,10 @@ public class Glassware {
     private Integer id;
 
     private String name;
+    @Column(columnDefinition = "TEXT")
     private String g;
+    @Column(columnDefinition = "TEXT")
     private String l;
+    @Column(columnDefinition = "TEXT")
     private String f;
 }
