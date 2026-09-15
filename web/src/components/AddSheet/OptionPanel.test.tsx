@@ -28,6 +28,13 @@ const YESTERDAY = previousIsoDate(TODAY);
 
 const dispatch = vi.fn();
 
+/** Opens the DesignSelector picker labelled `fieldLabel` and clicks the named option - a
+ *  click-driven stand-in for `userEvent.selectOptions`, which only works on a native <select>. */
+const pickDesignOption = async (fieldLabel: string, optionName: string) => {
+  await userEvent.click(screen.getByRole('button', { name: fieldLabel }));
+  await userEvent.click(screen.getByRole('option', { name: optionName }));
+};
+
 const CATALOGUE = {
   alcoholTypes: { data: [{ id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 3, glasswareId: 1 }, { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6, glasswareId: 3 }], isLoading: false },
   volumes: { data: [{ id: 10, name: 'Pint', volume: 0.5 }], isLoading: false },
@@ -292,8 +299,8 @@ describe('OptionPanel', () => {
       expect(onlyTemporarily).toBeChecked();
       const nameField = screen.getByRole('textbox', { name: /name/i });
       expect(nameField).toHaveValue('House lager');
-      expect(screen.getByLabelText('Color palette')).toHaveValue('');
-      expect(screen.getByLabelText('Glassware')).toHaveValue('');
+      expect(screen.getByRole('button', { name: 'Color palette' })).toHaveTextContent('Use inherited default');
+      expect(screen.getByRole('button', { name: 'Glassware' })).toHaveTextContent('Use inherited default');
       expect(screen.getByTestId('palette-preview')).toHaveStyle({ background: TEST_PALETTE_BY_NAME.cream.field });
 
       await userEvent.click(onlyTemporarily);
@@ -302,8 +309,8 @@ describe('OptionPanel', () => {
       await userEvent.type(nameField, '!');
       expect(dispatch).toHaveBeenCalledWith({ type: 'setRecommendationName', recommendationName: 'House lager!' });
 
-      await userEvent.selectOptions(screen.getByLabelText('Color palette'), '7');
-      await userEvent.selectOptions(screen.getByLabelText('Glassware'), '8');
+      await pickDesignOption('Color palette', 'amber');
+      await pickDesignOption('Glassware', 'flute');
       expect(dispatch).toHaveBeenCalledWith({ type: 'setRecommendationColorPaletteId', colorPaletteId: 7 });
       expect(dispatch).toHaveBeenCalledWith({ type: 'setRecommendationGlasswareId', glasswareId: 8 });
     });
@@ -334,8 +341,8 @@ describe('OptionPanel', () => {
       setDraft({ alcoholTypeId: 2, addToRecommendations: true });
       renderOptionPanel('recommend');
 
-      expect(screen.getByLabelText('Color palette')).toHaveValue('');
-      expect(screen.getByLabelText('Glassware')).toHaveValue('');
+      expect(screen.getByRole('button', { name: 'Color palette' })).toHaveTextContent('Use inherited default');
+      expect(screen.getByRole('button', { name: 'Glassware' })).toHaveTextContent('Use inherited default');
       expect(screen.getByTestId('palette-preview')).toHaveStyle({ background: TEST_PALETTE_BY_NAME.plum.field });
       expect(screen.getByTestId('glass-wine')).toHaveAttribute('data-glassware-id', '3');
     });

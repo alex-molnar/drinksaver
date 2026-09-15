@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import DesignSelector from './DesignSelector';
@@ -28,42 +28,99 @@ const renderSelector = (props: Partial<React.ComponentProps<typeof DesignSelecto
 };
 
 describe('DesignSelector', () => {
-  it('starts with the inherited palette and glassware options selected and previews their resolved designs', () => {
+  it('starts collapsed on the inherited palette and glassware, previewing their resolved designs', () => {
     renderSelector();
 
-    expect(screen.getByLabelText('Color palette')).toHaveValue('');
-    expect(screen.getByLabelText('Glassware')).toHaveValue('');
-    expect(screen.getAllByRole('option', { name: 'Use inherited default' })).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Color palette' })).toHaveTextContent('Use inherited default');
+    expect(screen.getByRole('button', { name: 'Glassware' })).toHaveTextContent('Use inherited default');
+    expect(screen.getByRole('button', { name: 'Color palette' })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
     expect(screen.getByTestId('palette-preview')).toHaveStyle({ background: '#C9973B' });
     expect(screen.getByTestId('glass-highball')).toHaveAttribute('data-glassware-id', '4');
   });
 
-  it('tints each option to its own palette so the colour is visible before it is chosen', () => {
+  it('opens the color palette listbox on click and shows every real option tinted to its own colour', async () => {
     renderSelector();
+    const user = userEvent.setup();
 
-    const amberInherited = screen.getAllByRole('option', { name: 'Use inherited default' })[0];
-    expect(amberInherited).toHaveStyle({ backgroundColor: '#C9973B', color: '#2B1A14' });
+    await user.click(screen.getByRole('button', { name: 'Color palette' }));
 
-    const green = screen.getByRole('option', { name: 'green' });
-    expect(green).toHaveStyle({ backgroundColor: '#2B7454', color: '#F4E9CE' });
+    expect(screen.getByRole('button', { name: 'Color palette' })).toHaveAttribute('aria-expanded', 'true');
+    const listbox = screen.getByRole('listbox', { name: 'Color palette' });
+    const green = within(listbox).getByRole('option', { name: 'green' });
+    const brown = within(listbox).getByRole('option', { name: 'brown' });
+    expect(green.firstElementChild).toHaveStyle({ background: '#2B7454' });
+    expect(brown.firstElementChild).toHaveStyle({ background: '#2B1A13' });
   });
 
-  it('marks each real glassware option as a glass, since the drawn art cannot render inside a native option', () => {
+  it('shows the drawn glass art for every glassware option, not just its name', async () => {
     renderSelector();
+    const user = userEvent.setup();
 
-    expect(screen.getByRole('option', { name: '🥃 pint' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: '🥃 highball' })).toBeInTheDocument();
+    await user.click(screen.getByLabelText('Glassware'));
+
+    const listbox = screen.getByRole('listbox', { name: 'Glassware' });
+    const pint = within(listbox).getByRole('option', { name: 'pint' });
+    expect(within(pint).getByTestId('glass-pint')).toBeInTheDocument();
   });
 
-  it('requires real design choices when no inherited defaults exist', () => {
+  it('supports full keyboard use: open, arrow to an option, Enter picks it and returns focus to the trigger', async () => {
+    const { onColorPaletteIdChange } = renderSelector();
+    const user = userEvent.setup();
+    const trigger = screen.getByLabelText('Color palette');
+
+    trigger.focus();
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('listbox', { name: 'Color palette' })).toBeInTheDocument();
+
+    // Focus opens on the resolved "Use inherited default" row; one more Down reaches "green".
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{Enter}');
+
+    expect(onColorPaletteIdChange).toHaveBeenCalledWith(1);
+    expect(trigger).toHaveFocus();
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  });
+
+  it('closes on Escape without changing the selection', async () => {
+    const { onGlasswareIdChange } = renderSelector();
+    const user = userEvent.setup();
+    const trigger = screen.getByLabelText('Glassware');
+
+    await user.click(trigger);
+    expect(screen.getByRole('listbox', { name: 'Glassware' })).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+    expect(onGlasswareIdChange).not.toHaveBeenCalled();
+  });
+
+  it('closes when a click lands outside the picker', async () => {
+    renderSelector();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByLabelText('Color palette'));
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+
+    await user.click(document.body);
+
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  });
+
+  it('requires real design choices when no inherited defaults exist', async () => {
     renderSelector({ inheritedColorPaletteId: undefined, inheritedGlasswareId: undefined });
+    const user = userEvent.setup();
 
     const palette = screen.getByLabelText('Color palette');
     const glassware = screen.getByLabelText('Glassware');
-    expect(palette).toBeRequired();
-    expect(glassware).toBeRequired();
-    expect(screen.getByRole('option', { name: 'Choose a color palette' })).toBeDisabled();
-    expect(screen.getByRole('option', { name: 'Choose glassware' })).toBeDisabled();
+    expect(palette).toHaveAttribute('aria-required', 'true');
+    expect(glassware).toHaveAttribute('aria-required', 'true');
+    expect(palette).toHaveTextContent('Choose a color palette');
+    expect(glassware).toHaveTextContent('Choose glassware');
+
+    await user.click(palette);
     expect(screen.queryByRole('option', { name: 'Use inherited default' })).not.toBeInTheDocument();
   });
 
@@ -71,8 +128,10 @@ describe('DesignSelector', () => {
     const { onColorPaletteIdChange, onGlasswareIdChange } = renderSelector();
     const user = userEvent.setup();
 
-    await user.selectOptions(screen.getByLabelText('Color palette'), '6');
-    await user.selectOptions(screen.getByLabelText('Glassware'), '8');
+    await user.click(screen.getByLabelText('Color palette'));
+    await user.click(screen.getByRole('option', { name: 'plum' }));
+    await user.click(screen.getByLabelText('Glassware'));
+    await user.click(screen.getByRole('option', { name: 'flute' }));
 
     expect(onColorPaletteIdChange).toHaveBeenCalledWith(6);
     expect(onGlasswareIdChange).toHaveBeenCalledWith(8);

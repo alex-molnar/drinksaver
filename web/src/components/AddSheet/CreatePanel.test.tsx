@@ -56,6 +56,14 @@ const setDraft = (overrides: Partial<DraftState> = {}, catalogueOverrides: Parti
   return draft;
 };
 
+/** Opens the DesignSelector picker labelled `fieldLabel` (its accessible name comes from the
+ *  field's own <label for>, not its current text) and clicks the named option - a click-driven
+ *  stand-in for `userEvent.selectOptions`, which only works on a real native <select>. */
+const pickDesignOption = async (fieldLabel: string, optionName: string) => {
+  await userEvent.click(screen.getByRole('button', { name: fieldLabel }));
+  await userEvent.click(screen.getByRole('option', { name: optionName }));
+};
+
 let capturedOnAdopted: (() => void) | undefined;
 
 const setMutationState = (overrides: Partial<ReturnType<typeof useCreateCatalogueEntry>> = {}) => {
@@ -113,7 +121,7 @@ describe('CreatePanel', () => {
 
     await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Corona');
     expect(screen.getByRole('button', { name: /add and use it/i })).toBeDisabled();
-    await userEvent.selectOptions(screen.getByLabelText('Color palette'), '3');
+    await pickDesignOption('Color palette', 'cream');
     expect(screen.getByRole('button', { name: /add and use it/i })).toBeEnabled();
   });
 
@@ -122,8 +130,8 @@ describe('CreatePanel', () => {
     await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Whiskey');
     expect(screen.getByRole('button', { name: /add and use it/i })).toBeDisabled();
 
-    await userEvent.selectOptions(screen.getByLabelText('Color palette'), '3');
-    await userEvent.selectOptions(screen.getByLabelText('Glassware'), '4');
+    await pickDesignOption('Color palette', 'cream');
+    await pickDesignOption('Glassware', 'highball');
     await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
 
     expect(mutate).toHaveBeenCalledWith({
@@ -149,7 +157,7 @@ describe('CreatePanel', () => {
     await userEvent.type(screen.getByRole('textbox', { name: /name/i }), '  Corona  ');
     expect(screen.getByRole('button', { name: /add and use it/i })).toBeDisabled();
 
-    await userEvent.selectOptions(screen.getByLabelText('Color palette'), '3');
+    await pickDesignOption('Color palette', 'cream');
     await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
 
     expect(mutate).toHaveBeenCalledWith({ field: 'brand', name: 'Corona', colorPaletteId: 3 });
@@ -168,7 +176,7 @@ describe('CreatePanel', () => {
   it('keeps a beer brand palette-only and inherits its type palette', async () => {
     setDraft({ alcoholTypeId: 4 }, { isBeer: true });
     renderCreatePanel('brand');
-    expect(screen.getByLabelText('Color palette')).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Color palette' })).toHaveTextContent('Use inherited default');
     expect(screen.queryByLabelText('Glassware')).not.toBeInTheDocument();
 
     await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Corona');
@@ -190,12 +198,12 @@ describe('CreatePanel', () => {
   it('keeps subtype defaults inherited until explicit palette and glassware choices are made', async () => {
     setDraft({ alcoholTypeId: 2 });
     renderCreatePanel('subtype');
-    expect(screen.getByLabelText('Color palette')).toHaveValue('');
-    expect(screen.getByLabelText('Glassware')).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Color palette' })).toHaveTextContent('Use inherited default');
+    expect(screen.getByRole('button', { name: 'Glassware' })).toHaveTextContent('Use inherited default');
 
     await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Single Malt');
-    await userEvent.selectOptions(screen.getByLabelText('Color palette'), '3');
-    await userEvent.selectOptions(screen.getByLabelText('Glassware'), '4');
+    await pickDesignOption('Color palette', 'cream');
+    await pickDesignOption('Glassware', 'highball');
     await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
 
     expect(mutate).toHaveBeenCalledWith({
@@ -254,7 +262,7 @@ describe('CreatePanel', () => {
     expect(screen.queryByLabelText('Glassware')).not.toBeInTheDocument();
 
     await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Radler');
-    await userEvent.selectOptions(screen.getByLabelText('Color palette'), '7');
+    await pickDesignOption('Color palette', 'amber');
     await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
 
     expect(mutate).toHaveBeenCalledWith({ field: 'beerFlavour', name: 'Radler', brandId: 50, colorPaletteId: 7 });
