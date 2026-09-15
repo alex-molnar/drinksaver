@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { initialDraftState, type DraftState } from './draftReducer';
 import type { DraftFieldsCatalogue } from './draftFields';
-import { resolveDraftDesign, resolveRecommendationDesign } from './designSelection';
+import { resolveDraftDesign, resolveRecommendationDesign, resolveRecommendationSaveDesign } from './designSelection';
 
 const TYPE = { id: 1, name: 'Beer', volumeIds: [10], colorPaletteId: 3, glasswareId: 4 };
 const BASE_CATALOGUE: DraftFieldsCatalogue = {
@@ -72,5 +72,12 @@ describe('resolveRecommendationDesign', () => {
   it('uses the final design returned by the recommendation endpoint', () => {
     expect(resolveRecommendationDesign({ colorPaletteId: 8, glasswareId: 9 }))
       .toEqual({ colorPaletteId: 8, glasswareId: 9 });
+  });
+
+  it('applies only explicit recommendation overrides over the resolved drink design', () => {
+    expect(resolveRecommendationSaveDesign(
+      { colorPaletteId: 3, glasswareId: 4 },
+      { colorPaletteId: null, glasswareId: 8 },
+    )).toEqual({ colorPaletteId: 3, glasswareId: 8 });
   });
 });

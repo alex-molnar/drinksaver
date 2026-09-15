@@ -4,6 +4,7 @@ import { useDraft } from '../../drink/useDraft';
 import { useCatalogue } from '../../drink/useCatalogue';
 import { useDesign } from '../../drink/useDesign';
 import { useCreateCatalogueEntry, type CreatableCatalogueField } from '../../drink/useCreateCatalogueEntry';
+import DesignSelector from './DesignSelector';
 
 export interface CreatePanelProps {
   field: CreatableCatalogueField;
@@ -131,6 +132,8 @@ const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
   const design = useDesign();
   const [name, setName] = useState('');
   const [volume, setVolume] = useState('');
+  const [colorPaletteId, setColorPaletteId] = useState<number | null>(null);
+  const [glasswareId, setGlasswareId] = useState<number | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -157,10 +160,28 @@ const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
         ? (parentBrand?.colorPaletteId ?? parentAlcoholType?.colorPaletteId)
         : undefined;
 
+  const inheritedColorPaletteId =
+    field === 'subtype'
+      ? parentAlcoholType?.colorPaletteId
+      : field === 'brand'
+        ? (catalogue.isBeer ? parentAlcoholType?.colorPaletteId : undefined)
+        : field === 'beerFlavour'
+          ? (parentBrand?.colorPaletteId ?? (catalogue.isBeer ? parentAlcoholType?.colorPaletteId : undefined))
+          : undefined;
+  const inheritedGlasswareId = field === 'subtype' ? parentAlcoholType?.glasswareId : undefined;
+  const supportsPalette = field !== 'volume';
+  const supportsGlassware = field === 'alcoholType' || field === 'subtype';
+  const hasPaletteChoice = !supportsPalette || colorPaletteId !== null || inheritedColorPaletteId !== undefined;
+  const hasGlasswareChoice = !supportsGlassware || glasswareId !== null || inheritedGlasswareId !== undefined;
+
   const trimmedName = name.trim();
   const volumeNumber = Number(volume);
   const volumeProvided = volume.trim() !== '' && Number.isFinite(volumeNumber) && volumeNumber > 0;
-  const canSubmit = trimmedName !== '' && (field !== 'volume' || volumeProvided) && !mutation.isPending;
+  const canSubmit = trimmedName !== '' && (field !== 'volume' || volumeProvided) && hasPaletteChoice && hasGlasswareChoice && !mutation.isPending;
+  const designOverrides = {
+    ...(colorPaletteId !== null ? { colorPaletteId } : {}),
+    ...(glasswareId !== null ? { glasswareId } : {}),
+  };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -169,16 +190,16 @@ const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
     }
     switch (field) {
       case 'alcoholType':
-        mutation.mutate({ field, name: trimmedName });
+        mutation.mutate({ field, name: trimmedName, ...designOverrides });
         return;
       case 'brand':
-        mutation.mutate({ field, name: trimmedName });
+        mutation.mutate({ field, name: trimmedName, ...designOverrides });
         return;
       case 'subtype':
-        mutation.mutate({ field, name: trimmedName, alcoholTypeId: draft.alcoholTypeId ?? undefined });
+        mutation.mutate({ field, name: trimmedName, alcoholTypeId: draft.alcoholTypeId ?? undefined, ...designOverrides });
         return;
       case 'beerFlavour':
-        mutation.mutate({ field, name: trimmedName, brandId: draft.brandId ?? undefined });
+        mutation.mutate({ field, name: trimmedName, brandId: draft.brandId ?? undefined, ...designOverrides });
         return;
       case 'volume':
         mutation.mutate({ field, name: trimmedName, volume: volumeNumber, alcoholTypeId: draft.alcoholTypeId ?? undefined });
@@ -218,6 +239,16 @@ const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
               placeholder="Litres"
             />
           </div>
+        ) : null}
+        {supportsPalette ? (
+          <DesignSelector
+            colorPaletteId={colorPaletteId}
+            inheritedColorPaletteId={inheritedColorPaletteId}
+            onColorPaletteIdChange={setColorPaletteId}
+            glasswareId={supportsGlassware ? glasswareId : undefined}
+            inheritedGlasswareId={supportsGlassware ? inheritedGlasswareId : undefined}
+            onGlasswareIdChange={supportsGlassware ? setGlasswareId : undefined}
+          />
         ) : null}
         <SubmitButton type="submit" disabled={!canSubmit}>
           Add and use it

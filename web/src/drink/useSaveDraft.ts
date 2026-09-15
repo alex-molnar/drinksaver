@@ -2,7 +2,7 @@ import { useCatalogue } from './useCatalogue';
 import { useDraft } from './useDraft';
 import { useSaveQueue } from './useSaveQueue';
 import { isDraftReady, type DraftFieldsCatalogue } from './draftFields';
-import { resolveDraftDesign } from './designSelection';
+import { resolveDraftDesign, resolveRecommendationSaveDesign } from './designSelection';
 
 /**
  * A provisional display name for the row the queue and the strip show until the server's
@@ -46,7 +46,13 @@ export const useSaveDraft = (onSaved: () => void) => {
   // never actually fires this in that state. Guarding it a second time here would be defensive
   // code with no path that could ever exercise it.
   const handleSave = () => {
-    const design = resolveDraftDesign(draft, draftCatalogue, catalogue.isBeer);
+    const design = resolveRecommendationSaveDesign(
+      resolveDraftDesign(draft, draftCatalogue, catalogue.isBeer),
+      {
+        colorPaletteId: draft.addToRecommendations ? draft.recommendationColorPaletteId : null,
+        glasswareId: draft.addToRecommendations ? draft.recommendationGlasswareId : null,
+      },
+    );
     save({
       label: provisionalLabel(draftCatalogue, draft, catalogue.isBeer),
       date: draft.date,

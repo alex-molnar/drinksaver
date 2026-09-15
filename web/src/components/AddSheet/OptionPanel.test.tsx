@@ -277,20 +277,57 @@ describe('OptionPanel', () => {
       expect(dispatch).toHaveBeenCalledWith({ type: 'setRecommend', addToRecommendations: true });
     });
 
-    it('shows the sub-options once addToRecommendations is already on', async () => {
-      setDraft({ addToRecommendations: true, onlyTemporarily: true, recommendationName: 'House lager' });
+    it('shows inherited design previews and dispatches only explicit recommendation design overrides', async () => {
+      setDraft({
+        alcoholTypeId: 1,
+        volumeId: 10,
+        consumptionTypeId: 40,
+        addToRecommendations: true,
+        onlyTemporarily: true,
+        recommendationName: 'House lager',
+      }, { isBeer: true });
       renderOptionPanel('recommend');
 
       const onlyTemporarily = screen.getByRole('checkbox', { name: /only temporarily/i });
       expect(onlyTemporarily).toBeChecked();
       const nameField = screen.getByRole('textbox', { name: /name/i });
       expect(nameField).toHaveValue('House lager');
+      expect(screen.getByLabelText('Color palette')).toHaveValue('');
+      expect(screen.getByLabelText('Glassware')).toHaveValue('');
+      expect(screen.getByTestId('palette-preview')).toHaveStyle({ background: TEST_PALETTE_BY_NAME.cream.field });
 
       await userEvent.click(onlyTemporarily);
       expect(dispatch).toHaveBeenCalledWith({ type: 'setOnlyTemporarily', onlyTemporarily: false });
 
       await userEvent.type(nameField, '!');
       expect(dispatch).toHaveBeenCalledWith({ type: 'setRecommendationName', recommendationName: 'House lager!' });
+
+      await userEvent.selectOptions(screen.getByLabelText('Color palette'), '7');
+      await userEvent.selectOptions(screen.getByLabelText('Glassware'), '8');
+      expect(dispatch).toHaveBeenCalledWith({ type: 'setRecommendationColorPaletteId', colorPaletteId: 7 });
+      expect(dispatch).toHaveBeenCalledWith({ type: 'setRecommendationGlasswareId', glasswareId: 8 });
+    });
+
+    it('saves concrete recommendation override IDs without changing the normal drink hierarchy', async () => {
+      setDraft({
+        alcoholTypeId: 1,
+        volumeId: 10,
+        consumptionTypeId: 40,
+        addToRecommendations: true,
+        recommendationColorPaletteId: 7,
+        recommendationGlasswareId: 8,
+      }, { isBeer: true });
+      renderOptionPanel('recommend');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Save drink' }));
+
+      expect(save).toHaveBeenCalledWith(expect.objectContaining({
+        payload: expect.objectContaining({
+          addToRecommendations: true,
+          colorPaletteId: 7,
+          glasswareId: 8,
+        }),
+      }));
     });
   });
 });

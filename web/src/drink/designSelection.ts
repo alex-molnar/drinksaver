@@ -47,6 +47,15 @@ export const resolveRecommendationDesign = (
   glasswareId: requiredDesignId(recommendation.glasswareId, 'recommendation glassware'),
 });
 
+/** Applies recommendation-only selections without changing the normal drink's resolved design. */
+export const resolveRecommendationSaveDesign = (
+  design: DraftDesign,
+  overrides: { colorPaletteId: number | null; glasswareId: number | null },
+): DraftDesign => ({
+  colorPaletteId: overrides.colorPaletteId ?? design.colorPaletteId,
+  glasswareId: overrides.glasswareId ?? design.glasswareId,
+});
+
 /**
  * Resolves the design metadata accumulated by the manual add flow. Each property has its own
  * nullish fallback chain: a palette choice must never change the glass choice, or vice versa.

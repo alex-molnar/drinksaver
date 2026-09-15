@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import styled from '@emotion/styled';
 import { useDraft } from '../../drink/useDraft';
 import { useCatalogue, type UseCatalogueResult } from '../../drink/useCatalogue';
-import { previousIsoDate, type MenuRowKey } from '../../drink/draftFields';
+import { isDraftReady, previousIsoDate, type DraftFieldsCatalogue, type MenuRowKey } from '../../drink/draftFields';
 import { drinkingDay } from '../../drink/day';
 import type { DraftFieldKey, DraftState } from '../../drink/draftReducer';
 import type { CreatableCatalogueField } from '../../drink/useCreateCatalogueEntry';
@@ -10,10 +10,12 @@ import {
   resolveAlcoholColorPaletteId,
   resolveBeerColorPaletteId,
   resolveBrandColorPaletteId,
+  resolveDraftDesign,
 } from '../../drink/designSelection';
 import type { AddSheetPanel } from './panels';
 import PaletteSwatch from './PaletteSwatch';
 import SaveControls from './SaveControls';
+import DesignSelector from './DesignSelector';
 
 export interface OptionPanelProps {
   field: MenuRowKey;
@@ -445,6 +447,18 @@ const RecommendField: React.FC<{ headingRef: React.Ref<HTMLHeadingElement>; onDi
   onDismiss,
 }) => {
   const { draft, dispatch } = useDraft();
+  const catalogue = useCatalogue(draft);
+  const draftCatalogue: DraftFieldsCatalogue = {
+    alcoholTypes: catalogue.alcoholTypes.data,
+    volumes: catalogue.volumes.data,
+    subtypes: catalogue.subtypes.data,
+    consumptionTypes: catalogue.consumptionTypes.data,
+    brands: catalogue.brands.data,
+    beerFlavours: catalogue.beerFlavours.data,
+  };
+  const inheritedDesign = isDraftReady(draft, catalogue.isBeer)
+    ? resolveDraftDesign(draft, draftCatalogue, catalogue.isBeer)
+    : undefined;
 
   return (
     <>
@@ -482,6 +496,14 @@ const RecommendField: React.FC<{ headingRef: React.Ref<HTMLHeadingElement>; onDi
                 onChange={(e) => dispatch({ type: 'setRecommendationName', recommendationName: e.target.value })}
               />
             </div>
+            <DesignSelector
+              colorPaletteId={draft.recommendationColorPaletteId}
+              inheritedColorPaletteId={inheritedDesign?.colorPaletteId}
+              onColorPaletteIdChange={(colorPaletteId) => dispatch({ type: 'setRecommendationColorPaletteId', colorPaletteId })}
+              glasswareId={draft.recommendationGlasswareId}
+              inheritedGlasswareId={inheritedDesign?.glasswareId}
+              onGlasswareIdChange={(glasswareId) => dispatch({ type: 'setRecommendationGlasswareId', glasswareId })}
+            />
           </>
         ) : null}
       </FieldPanel>

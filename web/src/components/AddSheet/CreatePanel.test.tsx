@@ -42,10 +42,10 @@ const READY_CATALOGUE = {
   isBeer: false,
 } as unknown as ReturnType<typeof useCatalogue>;
 
-const setDraft = (overrides: Partial<DraftState> = {}) => {
+const setDraft = (overrides: Partial<DraftState> = {}, catalogueOverrides: Partial<typeof READY_CATALOGUE> = {}) => {
   const draft: DraftState = { ...initialDraftState(TODAY), ...overrides };
   mockUseDraft.mockReturnValue({ draft, dispatch });
-  mockUseCatalogue.mockReturnValue(READY_CATALOGUE);
+  mockUseCatalogue.mockReturnValue({ ...READY_CATALOGUE, ...catalogueOverrides });
   return draft;
 };
 
@@ -100,20 +100,31 @@ describe('CreatePanel', () => {
     expect(onPopPanel).toHaveBeenCalledTimes(1);
   });
 
-  it('disables Add and use it until a name is entered', async () => {
+  it('disables Add and use it until every required input is entered', async () => {
     renderCreatePanel('brand');
     expect(screen.getByRole('button', { name: /add and use it/i })).toBeDisabled();
 
     await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Corona');
+    expect(screen.getByRole('button', { name: /add and use it/i })).toBeDisabled();
+    await userEvent.selectOptions(screen.getByLabelText('Color palette'), '3');
     expect(screen.getByRole('button', { name: /add and use it/i })).toBeEnabled();
   });
 
-  it('creates an alcohol type with the trimmed name', async () => {
+  it('requires real palette and glassware choices before creating an alcohol type', async () => {
     renderCreatePanel('alcoholType');
     await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Whiskey');
+    expect(screen.getByRole('button', { name: /add and use it/i })).toBeDisabled();
+
+    await userEvent.selectOptions(screen.getByLabelText('Color palette'), '3');
+    await userEvent.selectOptions(screen.getByLabelText('Glassware'), '4');
     await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
 
-    expect(mutate).toHaveBeenCalledWith({ field: 'alcoholType', name: 'Whiskey' });
+    expect(mutate).toHaveBeenCalledWith({
+      field: 'alcoholType',
+      name: 'Whiskey',
+      colorPaletteId: 3,
+      glasswareId: 4,
+    });
   });
 
   it('ignores a form submission while the control is not ready to submit', () => {
@@ -126,9 +137,25 @@ describe('CreatePanel', () => {
     expect(mutate).not.toHaveBeenCalled();
   });
 
-  it('creates a brand with the trimmed name', async () => {
+  it('requires a palette for a brand without a selected beer type', async () => {
     renderCreatePanel('brand');
     await userEvent.type(screen.getByRole('textbox', { name: /name/i }), '  Corona  ');
+    expect(screen.getByRole('button', { name: /add and use it/i })).toBeDisabled();
+
+    await userEvent.selectOptions(screen.getByLabelText('Color palette'), '3');
+    await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
+
+    expect(mutate).toHaveBeenCalledWith({ field: 'brand', name: 'Corona', colorPaletteId: 3 });
+  });
+
+  it('keeps a beer brand palette-only and inherits its selected beer type palette', async () => {
+    setDraft({ alcoholTypeId: 1 }, { isBeer: true });
+    renderCreatePanel('brand');
+    expect(screen.getByLabelText('Color palette')).toHaveValue('');
+    expect(screen.queryByLabelText('Glassware')).not.toBeInTheDocument();
+
+    await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Corona');
+    expect(screen.getByRole('button', { name: /add and use it/i })).toBeEnabled();
     await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
 
     expect(mutate).toHaveBeenCalledWith({ field: 'brand', name: 'Corona' });
@@ -141,6 +168,26 @@ describe('CreatePanel', () => {
     await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
 
     expect(mutate).toHaveBeenCalledWith({ field: 'subtype', name: 'Single Malt', alcoholTypeId: 2 });
+  });
+
+  it('keeps subtype defaults inherited until explicit palette and glassware choices are made', async () => {
+    setDraft({ alcoholTypeId: 2 });
+    renderCreatePanel('subtype');
+    expect(screen.getByLabelText('Color palette')).toHaveValue('');
+    expect(screen.getByLabelText('Glassware')).toHaveValue('');
+
+    await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Single Malt');
+    await userEvent.selectOptions(screen.getByLabelText('Color palette'), '3');
+    await userEvent.selectOptions(screen.getByLabelText('Glassware'), '4');
+    await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
+
+    expect(mutate).toHaveBeenCalledWith({
+      field: 'subtype',
+      name: 'Single Malt',
+      alcoholTypeId: 2,
+      colorPaletteId: 3,
+      glasswareId: 4,
+    });
   });
 
   it('names the alcohol type a new subtype is being added for, in the heading', () => {
@@ -162,6 +209,18 @@ describe('CreatePanel', () => {
     await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
 
     expect(mutate).toHaveBeenCalledWith({ field: 'beerFlavour', name: 'Radler', brandId: 50 });
+  });
+
+  it('uses a palette-only selector for beer flavour overrides', async () => {
+    setDraft({ brandId: 50 });
+    renderCreatePanel('beerFlavour');
+    expect(screen.queryByLabelText('Glassware')).not.toBeInTheDocument();
+
+    await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Radler');
+    await userEvent.selectOptions(screen.getByLabelText('Color palette'), '7');
+    await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
+
+    expect(mutate).toHaveBeenCalledWith({ field: 'beerFlavour', name: 'Radler', brandId: 50, colorPaletteId: 7 });
   });
 
   it('names the brand a new beer flavour is being added for, in the heading', () => {

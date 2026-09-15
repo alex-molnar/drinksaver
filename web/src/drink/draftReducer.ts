@@ -36,6 +36,9 @@ export interface DraftState {
   readonly addToRecommendations: boolean;
   readonly onlyTemporarily: boolean;
   readonly recommendationName: string;
+  /** Explicit recommendation-only overrides. `null` retains the normal drink design. */
+  readonly recommendationColorPaletteId: number | null;
+  readonly recommendationGlasswareId: number | null;
 }
 
 /** The stepper's floor. Unchanged by this PR. */
@@ -62,6 +65,8 @@ export const initialDraftState = (today: string): DraftState => ({
   addToRecommendations: false,
   onlyTemporarily: false,
   recommendationName: '',
+  recommendationColorPaletteId: null,
+  recommendationGlasswareId: null,
 });
 
 export type DraftAction =
@@ -73,6 +78,8 @@ export type DraftAction =
   | { type: 'setRecommend'; addToRecommendations: boolean }
   | { type: 'setOnlyTemporarily'; onlyTemporarily: boolean }
   | { type: 'setRecommendationName'; recommendationName: string }
+  | { type: 'setRecommendationColorPaletteId'; colorPaletteId: number | null }
+  | { type: 'setRecommendationGlasswareId'; glasswareId: number | null }
   | { type: 'reset'; today: string };
 
 /** The one cascade rule, shared by `select` and `adoptCreated`: see the module doc. */
@@ -123,13 +130,26 @@ export const reduceDraft = (state: DraftState, action: DraftAction): DraftState 
       // earlier "on" cannot resurface silently if the checkbox is ticked again later.
       return action.addToRecommendations
         ? { ...state, addToRecommendations: true }
-        : { ...state, addToRecommendations: false, onlyTemporarily: false, recommendationName: '' };
+        : {
+            ...state,
+            addToRecommendations: false,
+            onlyTemporarily: false,
+            recommendationName: '',
+            recommendationColorPaletteId: null,
+            recommendationGlasswareId: null,
+          };
 
     case 'setOnlyTemporarily':
       return { ...state, onlyTemporarily: action.onlyTemporarily };
 
     case 'setRecommendationName':
       return { ...state, recommendationName: action.recommendationName };
+
+    case 'setRecommendationColorPaletteId':
+      return { ...state, recommendationColorPaletteId: action.colorPaletteId };
+
+    case 'setRecommendationGlasswareId':
+      return { ...state, recommendationGlasswareId: action.glasswareId };
 
     case 'reset':
       return initialDraftState(action.today);

@@ -119,7 +119,7 @@ describe('reduceDraft', () => {
     });
   });
 
-  describe('setNotes / setRecommend / setOnlyTemporarily / setRecommendationName', () => {
+  describe('setNotes / recommendation fields', () => {
     it('updates comments without touching anything else', () => {
       const state = initialDraftState(TODAY);
       const next = reduceDraft(state, { type: 'setNotes', comments: 'A lovely evening' });
@@ -134,11 +134,13 @@ describe('reduceDraft', () => {
       );
     });
 
-    it('clears onlyTemporarily and the recommendation name when addToRecommendations is turned off', () => {
+    it('clears recommendation-only overrides with its other sub-fields when addToRecommendations is turned off', () => {
       const state = [
         { type: 'setRecommend' as const, addToRecommendations: true },
         { type: 'setOnlyTemporarily' as const, onlyTemporarily: true },
         { type: 'setRecommendationName' as const, recommendationName: 'House lager' },
+        { type: 'setRecommendationColorPaletteId' as const, colorPaletteId: 7 },
+        { type: 'setRecommendationGlasswareId' as const, glasswareId: 8 },
       ].reduce(reduceDraft, initialDraftState(TODAY));
 
       const afterTurnedOff = reduceDraft(state, { type: 'setRecommend', addToRecommendations: false });
@@ -147,6 +149,8 @@ describe('reduceDraft', () => {
         addToRecommendations: false,
         onlyTemporarily: false,
         recommendationName: '',
+        recommendationColorPaletteId: null,
+        recommendationGlasswareId: null,
       });
     });
 
@@ -157,6 +161,16 @@ describe('reduceDraft', () => {
         { type: 'setRecommendationName', recommendationName: 'House lager' }
       );
       expect(next).toMatchObject({ onlyTemporarily: true, recommendationName: 'House lager' });
+    });
+
+    it('stores recommendation design overrides independently', () => {
+      const state = reduceDraft(initialDraftState(TODAY), { type: 'setRecommend', addToRecommendations: true });
+      const next = reduceDraft(
+        reduceDraft(state, { type: 'setRecommendationColorPaletteId', colorPaletteId: 7 }),
+        { type: 'setRecommendationGlasswareId', glasswareId: 8 },
+      );
+
+      expect(next).toMatchObject({ recommendationColorPaletteId: 7, recommendationGlasswareId: 8 });
     });
   });
 
