@@ -38,6 +38,23 @@ describe('DesignSelector', () => {
     expect(screen.getByTestId('glass-highball')).toHaveAttribute('data-glassware-id', '4');
   });
 
+  it('tints each option to its own palette so the colour is visible before it is chosen', () => {
+    renderSelector();
+
+    const amberInherited = screen.getAllByRole('option', { name: 'Use inherited default' })[0];
+    expect(amberInherited).toHaveStyle({ backgroundColor: '#C9973B', color: '#2B1A14' });
+
+    const green = screen.getByRole('option', { name: 'green' });
+    expect(green).toHaveStyle({ backgroundColor: '#2B7454', color: '#F4E9CE' });
+  });
+
+  it('marks each real glassware option as a glass, since the drawn art cannot render inside a native option', () => {
+    renderSelector();
+
+    expect(screen.getByRole('option', { name: '🥃 pint' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: '🥃 highball' })).toBeInTheDocument();
+  });
+
   it('requires real design choices when no inherited defaults exist', () => {
     renderSelector({ inheritedColorPaletteId: undefined, inheritedGlasswareId: undefined });
 

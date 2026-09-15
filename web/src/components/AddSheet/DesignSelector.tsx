@@ -39,8 +39,13 @@ const Select = styled.select`
   padding: 0 12px;
   border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 22%, transparent);
   border-radius: var(--ds-radius-sm);
-  background: color-mix(in srgb, var(--ds-ink-primary) 5%, transparent);
+  background: var(--ds-surface-recess);
   color: var(--ds-ink-primary);
+
+  option {
+    background: var(--ds-surface-recess);
+    color: inherit;
+  }
   font: inherit;
   font-size: 16px;
 
@@ -81,6 +86,10 @@ const Help = styled.p`
   font-size: var(--ds-type-caption-font-size);
   color: var(--ds-ink-tertiary);
 `;
+
+/** Native <option> elements can't render the drawn glass art, so this marks each real glassware
+ *  choice as a glass at a glance instead of leaving the option list as bare names. */
+const GLASS_OPTION_GLYPH = '🥃';
 
 const idForChange = <T extends { id: number }>(value: string, entries: readonly T[]): number | null => {
   if (value === '') {
@@ -142,11 +151,15 @@ const DesignSelector: React.FC<DesignSelectorProps> = ({
             disabled={paletteUnavailable}
             onChange={(event) => onColorPaletteIdChange(idForChange(event.target.value, design.palettes))}
           >
-            <option value="" disabled={!paletteHasInheritedDefault}>
+            <option
+              value=""
+              disabled={!paletteHasInheritedDefault}
+              style={paletteHasInheritedDefault ? { backgroundColor: palette.field, color: palette.inkDark } : undefined}
+            >
               {paletteHasInheritedDefault ? 'Use inherited default' : 'Choose a color palette'}
             </option>
             {design.palettes.map((item) => (
-              <option key={item.id} value={item.id}>
+              <option key={item.id} value={item.id} style={{ backgroundColor: item.field, color: item.inkDark }}>
                 {item.name}
               </option>
             ))}
@@ -176,7 +189,7 @@ const DesignSelector: React.FC<DesignSelectorProps> = ({
               </option>
               {design.glassware.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.name}
+                  {GLASS_OPTION_GLYPH} {item.name}
                 </option>
               ))}
             </Select>
