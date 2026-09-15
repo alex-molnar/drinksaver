@@ -141,6 +141,46 @@ describe('useDayCounts', () => {
     expect(result.current[0]).toMatchObject({ status: 'ready', count: 1 });
   });
 
+  it('does not count a saved-in-session row after that same id is crossed off', async () => {
+    mockGetSavedDrinksByDate.mockResolvedValue([
+      { id: 1, name: 'Heineken pint', alcoholTypeId: 4 },
+      { id: 2, name: 'Red Wine', alcoholTypeId: 30 },
+    ]);
+    const saveEntry: SaveQueueEntry = {
+      id: 's1',
+      kind: 'save',
+      status: 'committed',
+      label: 'Old optimistic Heineken name',
+      date: '2026-09-08',
+      drinkIds: [1],
+      alcoholTypeId: 4,
+      payload: { alcoholTypeId: 4, alcoholVolumeId: 10, colorPaletteId: 3, glasswareId: 2 },
+      undoUntil: 9000,
+      error: null,
+      seq: 1,
+      createdAt: 1000,
+    };
+    const deleteEntry: SaveQueueEntry = {
+      id: 'd1',
+      kind: 'delete',
+      status: 'undoable',
+      label: 'Heineken pint',
+      date: '2026-09-08',
+      drinkIds: [1],
+      undoUntil: 10_000,
+      error: null,
+      seq: 2,
+      createdAt: 2000,
+    };
+
+    const { result } = renderHook(() => useDayCounts(['2026-09-08']), {
+      wrapper: wrapperWithQueue({ entries: [saveEntry, deleteEntry] }),
+    });
+
+    await waitFor(() => expect(result.current[0].status).toBe('ready'));
+    expect(result.current[0]).toMatchObject({ status: 'ready', count: 1 });
+  });
+
   it("derives swatches from each row's drink identity field, in row order", async () => {
     mockGetSavedDrinksByDate.mockResolvedValue([
       { id: 1, name: 'Heineken pint', alcoholTypeId: 4 },
