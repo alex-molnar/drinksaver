@@ -36,11 +36,21 @@ const Row = styled.div`
   gap: 10px;
 `;
 
+/** The actual flex child of `Row` - the trigger button alone can't answer to `flex: 1` there,
+ *  because its real parent is this wrapper (`DesignPicker`'s root), one level further in. Without
+ *  this, the wrapper shrink-wraps to the button's content and the button just fills whatever
+ *  width that leaves it, so its width tracks the current option's text length instead of staying
+ *  fixed. */
+const PickerWrap = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
 const Trigger = styled.button`
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 1;
+  width: 100%;
   min-width: 0;
   min-height: 44px;
   padding: 0 12px;
@@ -328,7 +338,7 @@ const DesignPicker: React.FC<DesignPickerProps> = ({
   };
 
   return (
-    <div ref={wrapRef}>
+    <PickerWrap ref={wrapRef}>
       <Trigger
         ref={triggerRef}
         type="button"
@@ -374,7 +384,7 @@ const DesignPicker: React.FC<DesignPickerProps> = ({
           ))}
         </OptionList>
       ) : null}
-    </div>
+    </PickerWrap>
   );
 };
 
