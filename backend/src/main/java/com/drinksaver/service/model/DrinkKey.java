@@ -98,18 +98,4 @@ public record DrinkKey(
                 Optional.empty()
         );
     }
-
-    public static DrinkKey of(Recommendation recommendation) {
-        return new DrinkKey(
-                recommendation.getAlcoholTypeId(),
-                recommendation.getAlcoholSubtypeId(),
-                recommendation.getAlcoholVolumeId(),
-                recommendation.getBrandId(),
-                recommendation.getBeerFlavourId(),
-                recommendation.getConsumptionTypeId(),
-                recommendation.getColorPaletteId(),
-                recommendation.getGlasswareId(),
-                Optional.ofNullable(recommendation.getName())
-        );
-    }
 }

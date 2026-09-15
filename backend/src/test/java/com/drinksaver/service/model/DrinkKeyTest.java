@@ -74,31 +74,6 @@ class DrinkKeyTest {
     }
 
     @Test
-    void keysBuiltFromADrinkAndFromARecommendationMeet() {
-        SavedDrink drink = new SavedDrink(USER, "2026-03-15", 4, null, 6, 1, 1, 3, null, null, null);
-
-        Recommendation recommendation = new Recommendation();
-        recommendation.setUserId(USER);
-        recommendation.setName("Heineken pint");
-        recommendation.setAlcoholTypeId(4);
-        recommendation.setAlcoholVolumeId(6);
-        recommendation.setBrandId(1);
-        recommendation.setBeerFlavourId(1);
-        recommendation.setConsumptionTypeId(3);
-
-        DrinkKey fromDrink = DrinkKey.of(drink);
-        DrinkKey fromRecommendation = DrinkKey.of(recommendation);
-
-        assertThat(fromDrink).isEqualTo(fromRecommendation);
-        assertThat(fromDrink).hasSameHashCodeAs(fromRecommendation);
-
-        Map<DrinkKey, Double> merged = new HashMap<>();
-        merged.merge(fromRecommendation, 0.0, Math::max);
-        merged.merge(fromDrink, 0.9, Math::max);
-        assertThat(merged).hasSize(1);
-    }
-
-    @Test
     void withNameDoesNotChangeIdentity() {
         DrinkKey key = namelessBeer();
         DrinkKey renamed = key.withName("Heineken pint");
