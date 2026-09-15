@@ -5,7 +5,7 @@ export interface UseSheetResult<P> {
   isOpen: boolean;
   /** The pushed panel stack, root first. Component state, not URL: see the module doc. */
   panels: readonly P[];
-  open: () => void;
+  open: (initialPanel?: P) => void;
   pushPanel: (panel: P) => void;
   /** Pops one panel. Dismisses the whole sheet instead, once there is nothing left under the
    *  current one - a header "back" affordance never has to know which case it is in. */
@@ -16,12 +16,13 @@ export interface UseSheetResult<P> {
   dismiss: () => void;
 }
 
-interface SheetLocationState {
+interface SheetLocationState<P> {
   /** How many router history entries this sheet's own `open()` pushed, so `dismiss` knows how
    *  many to pop. Stamped via `navigate(to, { state })`, which React Router serialises into
    *  `history.state`, so unlike a plain in-memory counter it survives a reload and bfcache. See
    *  the design doc, "Sheets are routes". */
   sheetDismissDepth?: number;
+  sheetInitialPanel?: P;
 }
 
 /**
@@ -48,9 +49,25 @@ export const useSheet = <P,>(sheetId: string, initialPanel: P): UseSheetResult<P
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isOpen = searchParams.get('sheet') === sheetId;
+  const requestedPanel = (location.state as SheetLocationState<P> | null)?.sheetInitialPanel;
+  const initialPanels = requestedPanel === undefined ? [initialPanel] : [initialPanel, requestedPanel];
 
-  const [panels, setPanels] = useState<P[]>(() => (isOpen ? [initialPanel] : []));
+  const [panels, setPanels] = useState<P[]>(() => {
+    if (!isOpen) return [];
+    return initialPanels;
+  });
+  const [previousIsOpen, setPreviousIsOpen] = useState(isOpen);
   const wasOpenRef = useRef(isOpen);
+
+  // A location change can open an already mounted host whose local stack is still empty (or
+  // left over from a prior visit). Synchronize during render so the first committed panel is the
+  // requested one; the effect below continues to own the state for later push/pop operations.
+  if (isOpen !== previousIsOpen) {
+    setPreviousIsOpen(isOpen);
+    if (isOpen) {
+      setPanels(initialPanels);
+    }
+  }
 
   // Whenever the sheet transitions from closed to open - including a fresh mount that lands
   // already open - the stack starts over at the root panel. A cold load must never resume a
@@ -58,21 +75,24 @@ export const useSheet = <P,>(sheetId: string, initialPanel: P): UseSheetResult<P
   // reopen should not show wherever a previous visit left off either.
   useEffect(() => {
     if (isOpen && !wasOpenRef.current) {
-      setPanels([initialPanel]);
+      setPanels(initialPanels);
     }
     wasOpenRef.current = isOpen;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  const open = useCallback(() => {
+  const open = useCallback((initialPanel?: P) => {
     const nextParams = new URLSearchParams(location.search);
     nextParams.set('sheet', sheetId);
-    const state: SheetLocationState = { sheetDismissDepth: 1 };
+    const state: SheetLocationState<P> = {
+      sheetDismissDepth: 1,
+      sheetInitialPanel: initialPanel,
+    };
     navigate({ pathname: location.pathname, search: `?${nextParams.toString()}` }, { state });
   }, [location.pathname, location.search, navigate, sheetId]);
 
   const dismiss = useCallback(() => {
-    const depth = (location.state as SheetLocationState | null)?.sheetDismissDepth ?? 0;
+    const depth = (location.state as SheetLocationState<P> | null)?.sheetDismissDepth ?? 0;
     if (depth > 0) {
       navigate(-depth);
       return;

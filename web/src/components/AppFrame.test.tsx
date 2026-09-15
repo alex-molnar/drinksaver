@@ -5,6 +5,9 @@ import { useLocation } from 'react-router-dom';
 import { renderWithProviders } from '../test/test-utils';
 import AppFrame from './AppFrame';
 import { useDrinksForDate } from '../drink/useDrinksForDate';
+import { useSheet } from '../hooks/useSheet';
+import { ADD_SHEET_ID } from '../drink/draftReducer';
+import { MENU_PANEL, type AddSheetPanel } from './AddSheet';
 
 vi.mock('../drink/useDrinksForDate');
 const mockUseDrinksForDate = vi.mocked(useDrinksForDate);
@@ -22,6 +25,12 @@ const RouteProbe = () => {
       <span data-testid="search">{location.search}</span>
     </>
   );
+};
+
+const AddSheetPanelProbe = () => {
+  const { panels } = useSheet<AddSheetPanel>(ADD_SHEET_ID, MENU_PANEL);
+
+  return <output data-testid="add-sheet-panels">{JSON.stringify(panels)}</output>;
 };
 
 describe('AppFrame', () => {
@@ -116,16 +125,81 @@ describe('AppFrame', () => {
     expect(screen.getByText('3 so far')).toBeInTheDocument();
   });
 
-  it('signs out when the header icon button is tapped', async () => {
+  it('opens the header action menu with actions in product order', async () => {
     renderWithProviders(
       <AppFrame>
         <div />
       </AppFrame>
     );
 
-    await userEvent.click(screen.getByRole('button', { name: /sign out/i }));
+    const menuButton = screen.getByRole('button', { name: 'Open menu' });
+
+    expect(menuButton).toHaveAttribute('aria-haspopup', 'menu');
+    expect(menuButton).toHaveAttribute('aria-expanded', 'false');
+
+    await userEvent.click(menuButton);
+
+    expect(menuButton).toHaveAttribute('aria-expanded', 'true');
+    expect(menuButton).toHaveAttribute('aria-controls', 'header-action-menu');
+    expect(document.getElementById('header-action-menu')).toBeInTheDocument();
+    expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
+      'Settings',
+      'Recommendations',
+      'Add new type',
+      'Logout',
+    ]);
+  });
+
+  it.each(['Settings', 'Recommendations'])('%s is exposed as disabled and leaves the current location unchanged', async (label) => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <AppFrame>
+        <RouteProbe />
+      </AppFrame>,
+      { route: '/history' }
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Open menu' }));
+    const action = screen.getByRole('menuitem', { name: label });
+
+    expect(action).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+    expect(screen.getByTestId('pathname')).toHaveTextContent('/history');
+    expect(screen.getByTestId('search')).toHaveTextContent(/^$/);
+  });
+
+  it('opens the add sheet directly on the alcohol-type creation panel', async () => {
+    renderWithProviders(
+      <AppFrame>
+        <RouteProbe />
+        <AddSheetPanelProbe />
+      </AppFrame>,
+      { route: '/history' }
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Add new type' }));
+
+    expect(screen.getByTestId('pathname')).toHaveTextContent('/history');
+    expect(screen.getByTestId('search')).toHaveTextContent('?sheet=add');
+    expect(screen.getByTestId('add-sheet-panels')).toHaveTextContent(
+      '[{"kind":"menu"},{"kind":"create","field":"alcoholType"}]'
+    );
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('signs out after the Logout menu action is activated', async () => {
+    renderWithProviders(
+      <AppFrame>
+        <div />
+      </AppFrame>
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Logout' }));
 
     expect(logout).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   describe('bottom navigation', () => {

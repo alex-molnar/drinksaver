@@ -4,7 +4,10 @@ import { MemoryRouter, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useSheet } from './useSheet';
 
-type Panel = { kind: 'menu' } | { kind: 'option'; field: string };
+type Panel =
+  | { kind: 'menu' }
+  | { kind: 'option'; field: string }
+  | { kind: 'create'; field: string };
 
 const MENU: Panel = { kind: 'menu' };
 
@@ -50,6 +53,17 @@ describe('useSheet', () => {
     const params = new URLSearchParams(result.current.location.search);
     expect(params.get('range')).toBe('week');
     expect(params.get('sheet')).toBe('add');
+  });
+
+  it('open(initialPanel) starts the sheet with the requested panel above the root', () => {
+    const { result } = renderHook(() => useHarness(), { wrapper: wrapperFrom(['/history']) });
+
+    act(() => result.current.sheet.open({ kind: 'create', field: 'alcoholType' }));
+
+    expect(result.current.sheet.panels).toEqual([
+      { kind: 'menu' },
+      { kind: 'create', field: 'alcoholType' },
+    ]);
   });
 
   /**
