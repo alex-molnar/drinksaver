@@ -138,9 +138,7 @@ const DesignSelector: React.FC<DesignSelectorProps> = ({
             id="add-sheet-color-palette"
             value={colorPaletteId ?? ''}
             required={!paletteHasInheritedDefault}
-            aria-describedby={
-              paletteUnavailable || !paletteHasInheritedDefault ? paletteHelpId : undefined
-            }
+            aria-describedby={paletteUnavailable ? paletteHelpId : undefined}
             disabled={paletteUnavailable}
             onChange={(event) => onColorPaletteIdChange(idForChange(event.target.value, design.palettes))}
           >
@@ -157,8 +155,6 @@ const DesignSelector: React.FC<DesignSelectorProps> = ({
             <Help id={paletteHelpId} role="status" aria-live="polite">
               Color palette choices are unavailable. Try again shortly.
             </Help>
-          ) : !paletteHasInheritedDefault ? (
-            <Help id={paletteHelpId}>Choose a color palette before continuing.</Help>
           ) : null}
         </div>
         <PalettePreview aria-hidden="true" data-testid="palette-preview" style={{ background: palette.field }} />
@@ -171,9 +167,7 @@ const DesignSelector: React.FC<DesignSelectorProps> = ({
               id="add-sheet-glassware"
               value={glasswareId ?? ''}
               required={!glasswareHasInheritedDefault}
-              aria-describedby={
-                glasswareUnavailable || !glasswareHasInheritedDefault ? glasswareHelpId : undefined
-              }
+              aria-describedby={glasswareUnavailable ? glasswareHelpId : undefined}
               disabled={glasswareUnavailable}
               onChange={(event) => onGlasswareIdChange(idForChange(event.target.value, design.glassware))}
             >
@@ -190,8 +184,6 @@ const DesignSelector: React.FC<DesignSelectorProps> = ({
               <Help id={glasswareHelpId} role="status" aria-live="polite">
                 Glassware choices are unavailable. Try again shortly.
               </Help>
-            ) : !glasswareHasInheritedDefault ? (
-              <Help id={glasswareHelpId}>Choose glassware before continuing.</Help>
             ) : null}
           </div>
           <GlassPreview aria-hidden="true">

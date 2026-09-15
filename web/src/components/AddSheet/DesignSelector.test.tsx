@@ -45,8 +45,6 @@ describe('DesignSelector', () => {
     const glassware = screen.getByLabelText('Glassware');
     expect(palette).toBeRequired();
     expect(glassware).toBeRequired();
-    expect(palette).toHaveAccessibleDescription('Choose a color palette before continuing.');
-    expect(glassware).toHaveAccessibleDescription('Choose glassware before continuing.');
     expect(screen.getByRole('option', { name: 'Choose a color palette' })).toBeDisabled();
     expect(screen.getByRole('option', { name: 'Choose glassware' })).toBeDisabled();
     expect(screen.queryByRole('option', { name: 'Use inherited default' })).not.toBeInTheDocument();
