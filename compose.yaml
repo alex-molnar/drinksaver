@@ -90,6 +90,7 @@ services:
       BEER_REPOSITORY: postgres
       DRINK_REPOSITORY: postgres
       RECOMMENDATION_REPOSITORY: postgres
+      DESIGN_REPOSITORY: postgres
       POSTGRES_DATASOURCE_URL: jdbc:postgresql://postgres:5432/drinksaver
       POSTGRES_USERNAME: drinksaver
       POSTGRES_PASSWORD: drinksaver

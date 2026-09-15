@@ -10,6 +10,7 @@ public record RepositoryConfiguration(
     String beer,
     String drink,
     String recommendation,
+    String design,
     List<UUID> adminUserList,
     Integer beerId,
     Integer maxPersonalRecommendations,

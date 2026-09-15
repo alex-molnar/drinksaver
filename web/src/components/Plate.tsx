@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import { drinkIdentity } from '../drink/identity';
 import { Glass } from '../drink/glassware';
+import { useDesign } from '../drink/useDesign';
 
 /**
  * 'saving' dims the plate and marks it `aria-busy`; 'done' raises the stamp. Both are transient:
@@ -24,8 +24,9 @@ interface DrinkPlateProps extends BasePlateProps {
   /** The drink's display name. Also the accessible name: nothing else in the button renders
    *  visible text of its own besides an optional caption, which is plain content, not a label. */
   name: string;
-  /** The second rung of `drinkIdentity`'s lookup - see `drink/identity.ts`. */
-  alcoholTypeId?: number;
+  /** Backend design IDs, resolved independently of the display name. */
+  colorPaletteId?: number | null;
+  glasswareId?: number | null;
   /** Optional serving detail ("0.5 L draft"). Renders at full ink opacity: see the design doc's
    *  drink identity table, which was gated against exactly the caption's own opacity being 1. */
   caption?: string;
@@ -231,14 +232,14 @@ const AddButton = styled.button`
  * The enamel sign, or its dashed "add" sibling. A real `<button>` either way, never a `div` with
  * a click handler, so it is focusable and has an accessible name for free.
  *
- * Field colour and ink always come from `drinkIdentity`, never from a literal here: this
- * component only ever reads `identity.field` / `identity.inkDark` / `identity.chroma` /
- * `identity.glass`, all resolved by `drinkIdentity`, and passes the two colours through as CSS
+ * Field colour, ink and SVG paths come from the design endpoints, never from literals here. This
+ * component resolves the two design IDs independently and passes the colours through as CSS
  * custom properties (`--fld`, plus the inherited `color`) rather than as styled-component props,
  * so nothing needs filtering before it reaches the DOM.
  */
 const Plate: React.FC<PlateProps> = (props) => {
   const { rotation, onClick, disabled = false } = props;
+  const design = useDesign();
   const style = { '--rot': `${rotation}deg` } as React.CSSProperties;
 
   if (props.variant === 'add') {
@@ -252,8 +253,9 @@ const Plate: React.FC<PlateProps> = (props) => {
     );
   }
 
-  const { name, alcoholTypeId, caption, status = 'idle' } = props;
-  const identity = drinkIdentity(name, alcoholTypeId);
+  const { name, colorPaletteId, glasswareId, caption, status = 'idle' } = props;
+  const palette = design.paletteForId(colorPaletteId);
+  const glassware = design.glasswareForId(glasswareId);
   const isSaving = status === 'saving';
   const isDone = status === 'done';
 
@@ -264,10 +266,10 @@ const Plate: React.FC<PlateProps> = (props) => {
       disabled={disabled || isSaving}
       aria-busy={isSaving || undefined}
       data-done={isDone ? '' : undefined}
-      style={{ ...style, '--fld': identity.field, color: identity.inkDark } as React.CSSProperties}
+      style={{ ...style, '--fld': palette.field, color: palette.inkDark } as React.CSSProperties}
     >
       <span className="glass">
-        <Glass kind={identity.glass} chroma={identity.chroma} tone="ink" />
+        <Glass glassware={glassware} chroma={palette.field} tone="ink" />
       </span>
       <span className="name">{name}</span>
       {caption ? <span className="caption">{caption}</span> : null}

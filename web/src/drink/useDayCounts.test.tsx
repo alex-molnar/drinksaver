@@ -7,6 +7,8 @@ import { SaveQueueContext, type SaveQueueContextType } from './SaveQueueContext'
 import { getSavedDrinksByDate } from '../api/endpoints';
 import { EMPTY_QUEUE, type SaveQueueEntry, type SaveQueueState } from './saveQueueReducer';
 import { drinkIdentity } from './identity';
+import { TEST_DESIGN } from '../test/designFixtures';
+import { TestDesignProvider } from '../test/TestDesignProvider';
 import type { EditableDrink } from '../types/api';
 
 vi.mock('../api/endpoints');
@@ -27,7 +29,9 @@ const wrapperWithQueue = (queue: SaveQueueState) => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>
-      <SaveQueueContext.Provider value={stubSaveQueue(queue)}>{children}</SaveQueueContext.Provider>
+      <TestDesignProvider>
+        <SaveQueueContext.Provider value={stubSaveQueue(queue)}>{children}</SaveQueueContext.Provider>
+      </TestDesignProvider>
     </QueryClientProvider>
   );
   return Wrapper;
@@ -122,7 +126,7 @@ describe('useDayCounts', () => {
       date: '2026-09-08',
       drinkIds: [42],
       alcoholTypeId: 4,
-      payload: { alcoholTypeId: 4, alcoholVolumeId: 10 },
+      payload: { alcoholTypeId: 4, alcoholVolumeId: 10, colorPaletteId: 3, glasswareId: 2 },
       undoUntil: 9000,
       error: null,
       seq: 1,
@@ -131,6 +135,46 @@ describe('useDayCounts', () => {
 
     const { result } = renderHook(() => useDayCounts(['2026-09-08']), {
       wrapper: wrapperWithQueue({ entries: [saveEntry] }),
+    });
+
+    await waitFor(() => expect(result.current[0].status).toBe('ready'));
+    expect(result.current[0]).toMatchObject({ status: 'ready', count: 1 });
+  });
+
+  it('does not count a saved-in-session row after that same id is crossed off', async () => {
+    mockGetSavedDrinksByDate.mockResolvedValue([
+      { id: 1, name: 'Heineken pint', alcoholTypeId: 4 },
+      { id: 2, name: 'Red Wine', alcoholTypeId: 30 },
+    ]);
+    const saveEntry: SaveQueueEntry = {
+      id: 's1',
+      kind: 'save',
+      status: 'committed',
+      label: 'Old optimistic Heineken name',
+      date: '2026-09-08',
+      drinkIds: [1],
+      alcoholTypeId: 4,
+      payload: { alcoholTypeId: 4, alcoholVolumeId: 10, colorPaletteId: 3, glasswareId: 2 },
+      undoUntil: 9000,
+      error: null,
+      seq: 1,
+      createdAt: 1000,
+    };
+    const deleteEntry: SaveQueueEntry = {
+      id: 'd1',
+      kind: 'delete',
+      status: 'undoable',
+      label: 'Heineken pint',
+      date: '2026-09-08',
+      drinkIds: [1],
+      undoUntil: 10_000,
+      error: null,
+      seq: 2,
+      createdAt: 2000,
+    };
+
+    const { result } = renderHook(() => useDayCounts(['2026-09-08']), {
+      wrapper: wrapperWithQueue({ entries: [saveEntry, deleteEntry] }),
     });
 
     await waitFor(() => expect(result.current[0].status).toBe('ready'));
@@ -147,7 +191,10 @@ describe('useDayCounts', () => {
 
     await waitFor(() => expect(result.current[0].status).toBe('ready'));
     expect(result.current[0]).toMatchObject({
-      swatches: [drinkIdentity('Heineken pint', 4).field, drinkIdentity('Glass of red', 30).field],
+      swatches: [
+        drinkIdentity('Heineken pint', 4, TEST_DESIGN).field,
+        drinkIdentity('Glass of red', 30, TEST_DESIGN).field,
+      ],
     });
   });
 

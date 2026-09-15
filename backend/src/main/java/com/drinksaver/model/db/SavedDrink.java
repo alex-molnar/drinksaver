@@ -27,9 +27,11 @@ public class SavedDrink {
     private Integer brandId;
     private Integer beerFlavourId;
     private Integer consumptionTypeId;
+    private Integer colorPaletteId;
+    private Integer glasswareId;
     private String comments;
 
-    public SavedDrink(UUID userId, String date, Integer alcoholTypeId, Integer alcoholSubtypeId, Integer alcoholVolumeId, Integer brandId, Integer beerFlavourId, Integer consumptionTypeId, String comments) {
+    public SavedDrink(UUID userId, String date, Integer alcoholTypeId, Integer alcoholSubtypeId, Integer alcoholVolumeId, Integer brandId, Integer beerFlavourId, Integer consumptionTypeId, Integer colorPaletteId, Integer glasswareId, String comments) {
         this.userId = userId;
         this.date = date;
         this.alcoholTypeId = alcoholTypeId;
@@ -38,6 +40,8 @@ public class SavedDrink {
         this.brandId = brandId;
         this.beerFlavourId = beerFlavourId;
         this.consumptionTypeId = consumptionTypeId;
+        this.colorPaletteId = colorPaletteId;
+        this.glasswareId = glasswareId;
         this.comments = comments;
     }
 
@@ -51,6 +55,8 @@ public class SavedDrink {
                 drink.brandId(),
                 drink.beerFlavourId(),
                 drink.consumptionTypeId(),
+                drink.colorPaletteId(),
+                drink.glasswareId(),
                 drink.comments()
         );
     }

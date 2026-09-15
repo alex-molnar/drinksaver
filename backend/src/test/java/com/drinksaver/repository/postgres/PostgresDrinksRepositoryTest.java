@@ -37,10 +37,10 @@ class PostgresDrinksRepositoryTest {
     @Test
     void saveDrinkWithNullQuantitySavesSingle() {
         SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
-        SavedDrink saved = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null);
+        SavedDrink saved = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
         when(savedTable.save(any())).thenReturn(saved);
 
-        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, null, null);
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, null, null, null, null);
 
         PostgresDrinksRepository repo = new PostgresDrinksRepository(
                 savedTable,
@@ -54,10 +54,10 @@ class PostgresDrinksRepositoryTest {
     @Test
     void saveDrinkWithQuantityMultiplier() {
         SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
-        SavedDrink saved = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null);
+        SavedDrink saved = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
         when(savedTable.saveAll(any())).thenReturn(List.of(saved, saved, saved));
 
-        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, 3, null, null, null);
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, 3, null, null, null);
 
         PostgresDrinksRepository repo = new PostgresDrinksRepository(
                 savedTable,
@@ -78,12 +78,12 @@ class PostgresDrinksRepositoryTest {
     @Test
     void saveDrinkWithQuantityReturnsEveryRowItWrote() {
         SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
-        SavedDrink first = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null);
-        SavedDrink second = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null);
-        SavedDrink third = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null);
+        SavedDrink first = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
+        SavedDrink second = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
+        SavedDrink third = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
         when(savedTable.saveAll(any())).thenReturn(List.of(first, second, third));
 
-        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, 3, null, null, null);
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, 3, null, null, null);
 
         PostgresDrinksRepository repo = new PostgresDrinksRepository(
                 savedTable,
@@ -96,12 +96,13 @@ class PostgresDrinksRepositoryTest {
     @Test
     void saveDrinkSavesRecommendationWhenShouldAdd() {
         SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
-        SavedDrink saved = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null);
+        SavedDrink saved = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
         when(savedTable.save(any())).thenReturn(saved);
 
         RecommendationsTable recTable = mock(RecommendationsTable.class);
+        when(recTable.findNonTemporaryByUserId(USER)).thenReturn(List.of(4));
 
-        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, true, null, null);
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, 6, 2, null, null, true, null, null);
 
         PostgresDrinksRepository repo = new PostgresDrinksRepository(savedTable, recTable);
         repo.saveDrink(drink);
@@ -112,12 +113,12 @@ class PostgresDrinksRepositoryTest {
     @Test
     void saveDrinkDoesNotSaveRecommendationWhenShouldNotAdd() {
         SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
-        SavedDrink saved = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null);
+        SavedDrink saved = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
         when(savedTable.save(any())).thenReturn(saved);
 
         RecommendationsTable recTable = mock(RecommendationsTable.class);
 
-        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, false, null, null);
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, null, false, null, null);
 
         PostgresDrinksRepository repo = new PostgresDrinksRepository(savedTable, recTable);
         repo.saveDrink(drink);
@@ -127,7 +128,7 @@ class PostgresDrinksRepositoryTest {
 
     @Test
     void getSavedDrinksQueriesTable() {
-        SavedDrink drink = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null);
+        SavedDrink drink = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
         SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
         when(savedTable.findByUserIdAndDate(USER, "2026-09-08")).thenReturn(List.of(drink));
 

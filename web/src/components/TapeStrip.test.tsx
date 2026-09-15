@@ -32,7 +32,7 @@ const saveEntry: SaveQueueEntry = {
   date: '2026-09-10',
   drinkIds: [42],
   alcoholTypeId: 4,
-  payload: { alcoholTypeId: 4, alcoholVolumeId: 10 },
+  payload: { alcoholTypeId: 4, alcoholVolumeId: 10, colorPaletteId: 3, glasswareId: 2 },
   undoUntil: 7000,
   error: null,
   seq: 1,

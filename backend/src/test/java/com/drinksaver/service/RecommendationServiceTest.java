@@ -2,109 +2,112 @@ package com.drinksaver.service;
 
 import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.db.Recommendation;
-import com.drinksaver.service.model.DrinkKey;
-import com.drinksaver.service.namecollector.AlcoholNameCollector;
-import com.drinksaver.service.namecollector.BeerNameCollector;
 import com.drinksaver.service.recommendations.api.RecommendationSource;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-/**
- * The consequence-level counterpart to DrinkKeyTest. The same drink arrives
- * from two sources in different name states, and these tests pin that the user
- * sees it once.
- */
 class RecommendationServiceTest {
 
     private static final UUID USER = UUID.randomUUID();
 
-    private static final DrinkKey NAMED_BEER =
-            new DrinkKey(4, null, 6, 1, 1, 3, Optional.of("Heineken pint"));
-    private static final DrinkKey NAMELESS_BEER =
-            new DrinkKey(4, null, 6, 1, 1, 3, Optional.empty());
-    private static final DrinkKey NAMELESS_GIN =
-            new DrinkKey(1, 1, 2, null, null, null, Optional.empty());
+    @Test
+    void retainsTheNamedPersistentRecommendationWhenADynamicDuplicateFollows() {
+        Recommendation namedPersistent = recommendation("Heineken pint", 4);
+        Recommendation namelessDynamicDuplicate = recommendation(null, 4);
 
-    private RecommendationService serviceWith(Map<String, RecommendationSource> sources) {
-        BeerNameCollector beerNames = mock(BeerNameCollector.class);
-        when(beerNames.collectBeerName(any())).thenAnswer(i -> i.getArgument(0, DrinkKey.class).withName("A beer"));
+        List<Recommendation> result = serviceWith(10, sources(
+                source(0, List.of(namedPersistent)),
+                source(1, List.of(namelessDynamicDuplicate))
+        )).getRecommendations(USER);
 
-        AlcoholNameCollector alcoholNames = mock(AlcoholNameCollector.class);
-        when(alcoholNames.collectAlcoholName(any())).thenAnswer(i -> i.getArgument(0, DrinkKey.class).withName("A drink"));
+        assertThat(result).containsExactly(namedPersistent);
+    }
 
+    @Test
+    void processesSourcesInTheirDeclaredOrder() {
+        Recommendation persistent = recommendation("Persistent", 1);
+        Recommendation dynamic = recommendation("Dynamic", 2);
+        Recommendation defaultRecommendation = recommendation("Default", 3);
+
+        List<Recommendation> result = serviceWith(10, sources(
+                source(2, List.of(defaultRecommendation)),
+                source(0, List.of(persistent)),
+                source(1, List.of(dynamic))
+        )).getRecommendations(USER);
+
+        assertThat(result).containsExactly(persistent, dynamic, defaultRecommendation);
+    }
+
+    @Test
+    void stopsAfterTheMaximumNumberOfRecommendations() {
+        Recommendation first = recommendation("First", 1);
+        Recommendation second = recommendation("Second", 2);
+        Recommendation later = recommendation("Later", 3);
+
+        List<Recommendation> result = serviceWith(2, sources(
+                source(0, List.of(first, second)),
+                source(1, List.of(later))
+        )).getRecommendations(USER);
+
+        assertThat(result).containsExactly(first, second);
+    }
+
+    @Test
+    void canBuildRecommendationsAgainAfterTheCacheIsInvalidated() {
+        Recommendation persistent = recommendation("Persistent", 1);
+        Recommendation dynamic = recommendation("Dynamic", 2);
+        RecommendationService service = serviceWith(10, sources(
+                source(0, List.of(persistent)),
+                source(1, List.of(dynamic))
+        ));
+
+        assertThat(service.getRecommendations(USER)).containsExactly(persistent, dynamic);
+        assertThat(service.getRecommendations(USER)).containsExactly(persistent, dynamic);
+    }
+
+    private RecommendationService serviceWith(int maximum, Map<String, RecommendationSource> sources) {
         RepositoryConfiguration configuration = new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres",
-                List.of(UUID.randomUUID()), 4, 10, 0.97
+                "postgres", "postgres", "postgres", "postgres", "postgres",
+                List.of(UUID.randomUUID()), 4, maximum, 0.97
         );
-        return new RecommendationService(configuration, sources, beerNames, alcoholNames);
+        return new RecommendationService(configuration, sources);
     }
 
-    private Map<String, RecommendationSource> sources(Map<DrinkKey, Double> first, Map<DrinkKey, Double> second) {
-        Map<String, RecommendationSource> sources = new LinkedHashMap<>();
-        sources.put("default", userId -> first);
-        sources.put("personal", userId -> second);
-        return sources;
+    private Map<String, RecommendationSource> sources(RecommendationSource... sources) {
+        Map<String, RecommendationSource> result = new LinkedHashMap<>();
+        for (int index = 0; index < sources.length; index++) {
+            result.put("source" + index, sources[index]);
+        }
+        return result;
     }
 
-    @Test
-    void theSameDrinkFromTwoSourcesIsRecommendedOnce() {
-        List<Recommendation> result = serviceWith(sources(
-                Map.of(NAMED_BEER, 0.0),
-                Map.of(NAMELESS_BEER, 0.9)
-        )).getRecommendations(USER);
+    private RecommendationSource source(int orderId, List<Recommendation> recommendations) {
+        return new RecommendationSource() {
+            @Override
+            public Stream<Recommendation> buildRecommendation(UUID userId, Stream<Recommendation> processed) {
+                return Stream.concat(processed, recommendations.stream()).distinct();
+            }
 
-        assertThat(result).hasSize(1);
-        assertThat(result).extracting(Recommendation::getName).containsExactly("Heineken pint");
+            @Override
+            public Integer orderId() {
+                return orderId;
+            }
+        };
     }
 
-    @Test
-    void theMergeKeepsTheHigherScore() {
-        List<Recommendation> result = serviceWith(sources(
-                Map.of(NAMED_BEER, 0.0, NAMELESS_GIN, 0.1),
-                Map.of(NAMELESS_BEER, 0.9)
-        )).getRecommendations(USER);
-
-        // Beer merges to 0.9, gin stays 0.1, so beer sorts first.
-        assertThat(result).extracting(Recommendation::getName).containsExactly("Heineken pint", "A drink");
-    }
-
-    @Test
-    void genuinelyDifferentDrinksAreBothRecommended() {
-        List<Recommendation> result = serviceWith(sources(
-                Map.of(NAMED_BEER, 0.5),
-                Map.of(NAMELESS_GIN, 0.4)
-        )).getRecommendations(USER);
-
-        assertThat(result).hasSize(2);
-    }
-
-    @Test
-    void namelessDrinksGetANameFromTheCollectors() {
-        List<Recommendation> result = serviceWith(sources(
-                Map.of(NAMELESS_BEER, 0.5),
-                Map.of()
-        )).getRecommendations(USER);
-
-        assertThat(result).extracting(Recommendation::getName).containsExactly("A beer");
-    }
-
-    @Test
-    void everyRecommendationIsAttributedToTheCallingUser() {
-        List<Recommendation> result = serviceWith(sources(
-                Map.of(NAMED_BEER, 0.5),
-                Map.of()
-        )).getRecommendations(USER);
-
-        assertThat(result).extracting(Recommendation::getUserId).containsOnly(USER);
+    private Recommendation recommendation(String name, int alcoholTypeId) {
+        Recommendation recommendation = new Recommendation();
+        recommendation.setUserId(USER);
+        recommendation.setName(name);
+        recommendation.setAlcoholTypeId(alcoholTypeId);
+        recommendation.setAlcoholVolumeId(3);
+        return recommendation;
     }
 }

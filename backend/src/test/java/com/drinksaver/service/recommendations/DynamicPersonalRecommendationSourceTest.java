@@ -1,159 +1,125 @@
 package com.drinksaver.service.recommendations;
 
 import com.drinksaver.config.RepositoryConfiguration;
+import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.model.db.SavedDrink;
 import com.drinksaver.repository.postgres.schema.SavedDrinksTable;
 import com.drinksaver.service.model.DrinkKey;
+import com.drinksaver.service.namecollector.AlcoholNameCollector;
+import com.drinksaver.service.namecollector.BeerNameCollector;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class DynamicPersonalRecommendationSourceTest {
 
     private static final UUID USER = UUID.randomUUID();
-
-    /**
-     * A pinned clock. Both this test and the class under test would otherwise
-     * call LocalDate.now() independently, so a run straddling midnight would
-     * see a one-day difference and the decay assertions would fail.
-     */
     private static final Clock CLOCK =
             Clock.fixed(LocalDate.of(2026, 3, 15).atStartOfDay(ZoneOffset.UTC).toInstant(), ZoneOffset.UTC);
     private static final LocalDate TODAY = LocalDate.now(CLOCK);
 
-    private RepositoryConfiguration configWithDecay(double decayFactor) {
-        return new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres",
+    private DynamicPersonalRecommendationSource sourceWith(double decayFactor, SavedDrinksTable table) {
+        RepositoryConfiguration configuration = new RepositoryConfiguration(
+                "postgres", "postgres", "postgres", "postgres", "postgres",
                 List.of(), 4, 10, decayFactor
         );
+        BeerNameCollector beerNames = mock(BeerNameCollector.class);
+        when(beerNames.collectBeerName(any(DrinkKey.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0, DrinkKey.class).withName("A beer"));
+        AlcoholNameCollector alcoholNames = mock(AlcoholNameCollector.class);
+        when(alcoholNames.collectAlcoholName(any(DrinkKey.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0, DrinkKey.class).withName("A drink"));
+        return new DynamicPersonalRecommendationSource(configuration, table, beerNames, alcoholNames, CLOCK);
     }
 
-    private SavedDrink drinkOn(String date) {
-        return new SavedDrink(USER, date, 1, 2, 3, null, null, null, null);
-    }
-
-    private DynamicPersonalRecommendationSource sourceWith(
-            RepositoryConfiguration configuration, SavedDrinksTable table) {
-        return new DynamicPersonalRecommendationSource(configuration, table, CLOCK);
-    }
-
-    private double onlyScore(Map<DrinkKey, Double> result) {
-        assertThat(result).hasSize(1);
-        return result.values().iterator().next();
+    private SavedDrink drinkOn(String date, int alcoholTypeId) {
+        return new SavedDrink(USER, date, alcoholTypeId, null, 3, null, null, null, null, null, null);
     }
 
     @Test
-    void todaysDrinkScoresOne() {
+    void convertsSavedDrinksToRecommendationsForTheCallingUser() {
         SavedDrinksTable table = mock(SavedDrinksTable.class);
-        when(table.findByUserId(USER)).thenReturn(List.of(drinkOn(TODAY.toString())));
+        when(table.findByUserId(USER)).thenReturn(List.of(drinkOn(TODAY.toString(), 1)));
 
-        Map<DrinkKey, Double> result =
-                sourceWith(configWithDecay(0.97), table).buildRecommendation(USER);
+        List<Recommendation> result = sourceWith(0.97, table)
+                .buildRecommendation(USER, Stream.empty())
+                .toList();
 
-        assertThat(onlyScore(result)).isCloseTo(1.0, within(1e-9));
+        assertThat(result).singleElement().satisfies(recommendation -> {
+            assertThat(recommendation.getUserId()).isEqualTo(USER);
+            assertThat(recommendation.getAlcoholTypeId()).isEqualTo(1);
+            assertThat(recommendation.getAlcoholVolumeId()).isEqualTo(3);
+        });
     }
 
     @Test
-    void olderDrinkDecaysByFactorPerDay() {
+    void retainsProcessedRecommendationsBeforeDynamicOnes() {
+        Recommendation processed = new Recommendation();
+        processed.setName("Pinned");
+        processed.setAlcoholTypeId(2);
+        processed.setAlcoholVolumeId(3);
         SavedDrinksTable table = mock(SavedDrinksTable.class);
-        when(table.findByUserId(USER))
-                .thenReturn(List.of(drinkOn(TODAY.minusDays(10).toString())));
+        when(table.findByUserId(USER)).thenReturn(List.of(drinkOn(TODAY.toString(), 1)));
 
-        Map<DrinkKey, Double> result =
-                sourceWith(configWithDecay(0.5), table).buildRecommendation(USER);
-
-        assertThat(onlyScore(result)).isCloseTo(Math.pow(0.5, 10), within(1e-9));
-    }
-
-    @Test
-    void unparseableDateFallsBackToThirtyDays() {
-        SavedDrinksTable table = mock(SavedDrinksTable.class);
-        when(table.findByUserId(USER)).thenReturn(List.of(drinkOn("not-a-date")));
-
-        Map<DrinkKey, Double> result =
-                sourceWith(configWithDecay(0.5), table).buildRecommendation(USER);
-
-        assertThat(onlyScore(result)).isCloseTo(Math.pow(0.5, 30), within(1e-9));
-    }
-
-    @Test
-    void blankDateFallsBackToThirtyDays() {
-        SavedDrinksTable table = mock(SavedDrinksTable.class);
-        when(table.findByUserId(USER)).thenReturn(List.of(drinkOn("  ")));
-
-        Map<DrinkKey, Double> result =
-                sourceWith(configWithDecay(0.5), table).buildRecommendation(USER);
-
-        assertThat(onlyScore(result)).isCloseTo(Math.pow(0.5, 30), within(1e-9));
-    }
-
-    @Test
-    void nullDateFallsBackToThirtyDays() {
-        SavedDrinksTable table = mock(SavedDrinksTable.class);
-        when(table.findByUserId(USER)).thenReturn(List.of(drinkOn(null)));
-
-        Map<DrinkKey, Double> result =
-                sourceWith(configWithDecay(0.5), table).buildRecommendation(USER);
-
-        assertThat(onlyScore(result)).isCloseTo(Math.pow(0.5, 30), within(1e-9));
-    }
-
-    @Test
-    void futureDateIsClampedToZeroDays() {
-        SavedDrinksTable table = mock(SavedDrinksTable.class);
-        when(table.findByUserId(USER))
-                .thenReturn(List.of(drinkOn(TODAY.plusDays(5).toString())));
-
-        Map<DrinkKey, Double> result =
-                sourceWith(configWithDecay(0.5), table).buildRecommendation(USER);
-
-        assertThat(onlyScore(result)).isCloseTo(1.0, within(1e-9));
-    }
-
-    @Test
-    void repeatedDrinksAccumulate() {
-        SavedDrinksTable table = mock(SavedDrinksTable.class);
-        String today = TODAY.toString();
-        when(table.findByUserId(USER)).thenReturn(List.of(drinkOn(today), drinkOn(today)));
-
-        Map<DrinkKey, Double> result =
-                sourceWith(configWithDecay(0.97), table).buildRecommendation(USER);
-
-        assertThat(onlyScore(result)).isCloseTo(2.0, within(1e-9));
-    }
-
-    @Test
-    void distinctDrinksStayDistinct() {
-        SavedDrinksTable table = mock(SavedDrinksTable.class);
-        SavedDrink beer = new SavedDrink(USER, TODAY.toString(), 4, null, 6, 1, 1, 3, null);
-        SavedDrink gin = new SavedDrink(USER, TODAY.toString(), 1, 1, 2, null, null, null, null);
-        when(table.findByUserId(USER)).thenReturn(List.of(beer, gin));
-
-        Map<DrinkKey, Double> result =
-                sourceWith(configWithDecay(0.97), table).buildRecommendation(USER);
+        List<Recommendation> result = sourceWith(0.97, table)
+                .buildRecommendation(USER, Stream.of(processed))
+                .toList();
 
         assertThat(result).hasSize(2);
-        assertThat(result.values()).allSatisfy(score -> assertThat(score).isCloseTo(1.0, within(1e-9)));
+        assertThat(result.getFirst()).isSameAs(processed);
+        assertThat(result.getLast().getAlcoholTypeId()).isEqualTo(1);
     }
 
     @Test
-    void noDrinksProducesNoRecommendations() {
+    void collapsesRepeatedDrinksIntoOneRecommendation() {
         SavedDrinksTable table = mock(SavedDrinksTable.class);
-        when(table.findByUserId(USER)).thenReturn(List.of());
+        SavedDrink drink = drinkOn(TODAY.toString(), 1);
+        when(table.findByUserId(USER)).thenReturn(List.of(drink, drink));
 
-        Map<DrinkKey, Double> result =
-                sourceWith(configWithDecay(0.97), table).buildRecommendation(USER);
+        List<Recommendation> result = sourceWith(0.97, table)
+                .buildRecommendation(USER, Stream.empty())
+                .toList();
 
-        assertThat(result).isEmpty();
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void keepsDifferentDrinksDistinct() {
+        SavedDrinksTable table = mock(SavedDrinksTable.class);
+        when(table.findByUserId(USER)).thenReturn(List.of(
+                drinkOn(TODAY.toString(), 1),
+                drinkOn(TODAY.minusDays(10).toString(), 2)
+        ));
+
+        List<Recommendation> result = sourceWith(0.5, table)
+                .buildRecommendation(USER, Stream.empty())
+                .toList();
+
+        assertThat(result).extracting(Recommendation::getAlcoholTypeId).containsExactly(2, 1);
+    }
+
+    @Test
+    void invalidAndMissingDatesStillProduceRecommendations() {
+        SavedDrinksTable table = mock(SavedDrinksTable.class);
+        when(table.findByUserId(USER)).thenReturn(List.of(
+                drinkOn("not-a-date", 1),
+                drinkOn(null, 2)
+        ));
+
+        List<Recommendation> result = sourceWith(0.5, table)
+                .buildRecommendation(USER, Stream.empty())
+                .toList();
+
+        assertThat(result).extracting(Recommendation::getAlcoholTypeId).containsExactly(1, 2);
     }
 }

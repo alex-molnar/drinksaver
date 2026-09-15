@@ -293,12 +293,6 @@ const REFLECTS_IN_VIEW: ReadonlySet<SaveQueueEntryStatus> = new Set([
   'committed',
 ]);
 
-/** The queue's optimistic rows for `date`: real ids the server already returned, not a client-side guess. */
-export const pendingInsertsForDate = (state: SaveQueueState, date: string): EditableDrink[] =>
-  state.entries
-    .filter((e): e is SaveEntry => e.kind === 'save' && e.date === date && REFLECTS_IN_VIEW.has(e.status))
-    .flatMap((e) => e.drinkIds.map((id) => ({ id, name: e.label, alcoholTypeId: e.alcoholTypeId })));
-
 /** The ids `date`'s server rows must hide because a delete for them is pending or already sent. */
 export const suppressedIdsForDate = (state: SaveQueueState, date: string): ReadonlySet<number> => {
   const ids = new Set<number>();
@@ -310,6 +304,20 @@ export const suppressedIdsForDate = (state: SaveQueueState, date: string): Reado
     }
   }
   return ids;
+};
+
+/**
+ * The queue's optimistic rows for `date`: real ids the server already returned, not a
+ * client-side guess. A later delete for the same id wins over an earlier save entry. Otherwise
+ * crossing off a drink saved during this session removes the server row only to append that
+ * stale optimistic row again at the bottom of History.
+ */
+export const pendingInsertsForDate = (state: SaveQueueState, date: string): EditableDrink[] => {
+  const suppressed = suppressedIdsForDate(state, date);
+  return state.entries
+    .filter((e): e is SaveEntry => e.kind === 'save' && e.date === date && REFLECTS_IN_VIEW.has(e.status))
+    .flatMap((e) => e.drinkIds.map((id) => ({ id, name: e.label, alcoholTypeId: e.alcoholTypeId })))
+    .filter((row) => !suppressed.has(row.id));
 };
 
 /**

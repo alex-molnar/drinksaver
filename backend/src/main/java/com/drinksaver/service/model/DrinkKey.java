@@ -14,6 +14,8 @@ public record DrinkKey(
         Integer brandId,
         Integer beerFlavourId,
         Integer consumptionTypeId,
+        Integer colorPaletteId,
+        Integer glasswareId,
         Optional<String> name
 ) {
     /**
@@ -64,6 +66,8 @@ public record DrinkKey(
         recommendation.setBrandId(brandId);
         recommendation.setBeerFlavourId(beerFlavourId);
         recommendation.setConsumptionTypeId(consumptionTypeId);
+        recommendation.setColorPaletteId(colorPaletteId);
+        recommendation.setGlasswareId(glasswareId);
         return recommendation;
     }
 
@@ -75,6 +79,8 @@ public record DrinkKey(
                 brandId,
                 beerFlavourId,
                 consumptionTypeId,
+                colorPaletteId,
+                glasswareId,
                 Optional.of(name)
         );
     }
@@ -87,19 +93,9 @@ public record DrinkKey(
                 drink.getBrandId(),
                 drink.getBeerFlavourId(),
                 drink.getConsumptionTypeId(),
+                drink.getColorPaletteId(),
+                drink.getGlasswareId(),
                 Optional.empty()
-        );
-    }
-
-    public static DrinkKey of(Recommendation recommendation) {
-        return new DrinkKey(
-                recommendation.getAlcoholTypeId(),
-                recommendation.getAlcoholSubtypeId(),
-                recommendation.getAlcoholVolumeId(),
-                recommendation.getBrandId(),
-                recommendation.getBeerFlavourId(),
-                recommendation.getConsumptionTypeId(),
-                Optional.ofNullable(recommendation.getName())
         );
     }
 }

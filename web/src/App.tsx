@@ -7,6 +7,7 @@ import { SaveQueueProvider } from './drink/SaveQueueProvider';
 import { DraftProvider } from './drink/DraftProvider';
 import SheetHost from './components/AddSheet';
 import { SheetPortalContext } from './components/AddSheet/SheetPortalContext';
+import { DesignProvider } from './drink/DesignProvider';
 
 /**
  * Routes are loaded on demand. Every page pulls in MUI, so a single eager bundle
@@ -37,7 +38,8 @@ function App() {
   return (
     <KeycloakProvider>
       <ProtectedRoute>
-        <SheetPortalContext.Provider value={{ container: stripContainer, setContainer: setStripContainer }}>
+        <DesignProvider>
+          <SheetPortalContext.Provider value={{ container: stripContainer, setContainer: setStripContainer }}>
           {/*
             Above the error boundary and Routes, deliberately: AppErrorBoundary remounts on every
             navigation (it is keyed on the pathname, to clear a stuck error), and the queue and its
@@ -82,7 +84,8 @@ function App() {
               </AppErrorBoundary>
             </DraftProvider>
           </SaveQueueProvider>
-        </SheetPortalContext.Provider>
+          </SheetPortalContext.Provider>
+        </DesignProvider>
       </ProtectedRoute>
     </KeycloakProvider>
   );

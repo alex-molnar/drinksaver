@@ -92,7 +92,7 @@ describe('useDrinksForDate', () => {
       date: '2026-09-10',
       drinkIds: [42],
       alcoholTypeId: 4,
-      payload: { alcoholTypeId: 4, alcoholVolumeId: 10 },
+      payload: { alcoholTypeId: 4, alcoholVolumeId: 10, colorPaletteId: 3, glasswareId: 2 },
       undoUntil: 9000,
       error: null,
       seq: 1,
@@ -119,7 +119,7 @@ describe('useDrinksForDate', () => {
       date: '2026-09-10',
       drinkIds: [1], // already present in serverRows
       alcoholTypeId: 4,
-      payload: { alcoholTypeId: 4, alcoholVolumeId: 10 },
+      payload: { alcoholTypeId: 4, alcoholVolumeId: 10, colorPaletteId: 3, glasswareId: 2 },
       undoUntil: 9000,
       error: null,
       seq: 1,
@@ -129,6 +129,44 @@ describe('useDrinksForDate', () => {
       wrapper: wrapperWithQueue({ entries: [saveEntry] }),
     });
     await waitFor(() => expect(result.current).toEqual({ status: 'ready', rows: serverRows }));
+  });
+
+  it('does not reinsert a saved-in-session row after that same id is crossed off', async () => {
+    mockGetSavedDrinksByDate.mockResolvedValue(serverRows);
+    const saveEntry: SaveQueueEntry = {
+      id: 's1',
+      kind: 'save',
+      status: 'committed',
+      label: 'Old optimistic Heineken name',
+      date: '2026-09-10',
+      drinkIds: [1],
+      alcoholTypeId: 4,
+      payload: { alcoholTypeId: 4, alcoholVolumeId: 10, colorPaletteId: 3, glasswareId: 2 },
+      undoUntil: 9000,
+      error: null,
+      seq: 1,
+      createdAt: 1000,
+    };
+    const deleteEntry: SaveQueueEntry = {
+      id: 'd1',
+      kind: 'delete',
+      status: 'undoable',
+      label: 'Heineken (Draft/Tap - 0.50l)',
+      date: '2026-09-10',
+      drinkIds: [1],
+      undoUntil: 10_000,
+      error: null,
+      seq: 2,
+      createdAt: 2000,
+    };
+
+    const { result } = renderHook(() => useDrinksForDate('2026-09-10'), {
+      wrapper: wrapperWithQueue({ entries: [saveEntry, deleteEntry] }),
+    });
+
+    await waitFor(() =>
+      expect(result.current).toEqual({ status: 'ready', rows: [{ id: 2, name: 'Red Wine', alcoholTypeId: 30 }] })
+    );
   });
 
   it('ignores queue entries for a different date', async () => {
@@ -141,7 +179,7 @@ describe('useDrinksForDate', () => {
       date: '2026-09-09',
       drinkIds: [42],
       alcoholTypeId: 4,
-      payload: { alcoholTypeId: 4, alcoholVolumeId: 10 },
+      payload: { alcoholTypeId: 4, alcoholVolumeId: 10, colorPaletteId: 3, glasswareId: 2 },
       undoUntil: 9000,
       error: null,
       seq: 1,

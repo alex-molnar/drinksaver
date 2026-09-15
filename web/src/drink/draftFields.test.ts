@@ -7,12 +7,12 @@ const YESTERDAY = '2026-09-09';
 
 const CATALOGUE: DraftFieldsCatalogue = {
   alcoholTypes: [
-    { id: 1, name: 'Beer', volumeIds: [] },
-    { id: 2, name: 'Wine', volumeIds: [] },
+    { id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 3, glasswareId: 1 },
+    { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6, glasswareId: 3 },
   ],
   volumes: [{ id: 10, name: 'Pint', volume: 0.5 }],
   subtypes: [{ id: 30, name: 'Red', alcoholTypeId: 2 }],
-  consumptionTypes: [{ id: 40, name: 'Draft' }],
+  consumptionTypes: [{ id: 40, name: 'Draft', glasswareId: 1 }],
   brands: [{ id: 50, name: 'Heineken' }],
   beerFlavours: [{ id: 60, name: 'Lager', brandId: 50 }],
 };

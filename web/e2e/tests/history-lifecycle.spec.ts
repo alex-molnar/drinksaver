@@ -29,7 +29,7 @@ async function recordExit(row: Locator) {
   await row.evaluate((original) => {
     const host = window as unknown as { exitFrames: Frame[]; exitDone: boolean };
     const parent = original.parentElement!;
-    const next = original.nextElementSibling!;
+    const next = original.nextElementSibling;
     const selector = `[data-history-row="${original.getAttribute('data-history-row')}"]`;
     host.exitFrames = [];
     host.exitDone = false;
@@ -42,7 +42,7 @@ async function recordExit(row: Locator) {
       host.exitFrames.push({ present: !!current, sameNode: current === original,
         scale: value && value !== 'none' ? new DOMMatrix(value).a : 0,
         opacity: Number(getComputedStyle(original).opacity), top: rect.top, height: rect.height,
-        nextTop: next.getBoundingClientRect().top,
+        nextTop: next?.getBoundingClientRect().top ?? rect.bottom,
         order: [...parent.querySelectorAll(':scope > [role="button"]')].map((row) => row.getAttribute('aria-label')!),
       });
       if (performance.now() - start < 1000) requestAnimationFrame(sample);
@@ -200,6 +200,69 @@ test('reduced motion removes rows immediately and leaves Undo available', async 
   }).length)).toBe(0);
   await page.getByRole('button', { name: 'Undo', exact: true }).click();
   await expect(page.getByRole('button', { name: drinks[1].name, exact: true })).toHaveCount(1);
+});
+
+test('a drink saved in this session still strikes off instead of returning as an optimistic row', async ({ page }, info) => {
+  await page.clock.setFixedTime(new Date(2026, 8, 11, 12));
+  const recommendation: Recommendation = {
+    id: 83_001,
+    userId: '423c91e4-491f-4f82-aba6-3c982857e0e4',
+    name: 'Optimistic recommendation name',
+    alcoholTypeId: 4,
+    alcoholVolumeId: 6,
+    brandId: 2,
+    beerFlavourId: 3,
+    consumptionTypeId: 3,
+    colorPaletteId: 3,
+    glasswareId: 1,
+  };
+  const saved: SavedDrink = {
+    ...recommendation,
+    id: 83_002,
+    date: TODAY,
+    name: 'Server-composed saved name',
+  };
+  let savedOnServer = false;
+
+  await page.route('**/v1/design/color-palettes', (route) => route.fulfill({ json: [
+    { id: 3, name: 'cream', field: '#E8D8B8', inkDark: '#24150F', inkLight: null },
+  ] }));
+  await page.route('**/v1/design/glassware', (route) => route.fulfill({ json: [
+    { id: 1, name: 'pint', g: 'M8 4h20l-2 40H10Z', l: 'M11 12h14l-1 28H12Z', f: 'M10 8h16v5H10Z' },
+  ] }));
+  await page.route('**/v1/recommendations/list', (route) => route.fulfill({ json: [recommendation] }));
+  await page.route('**/v1/drinks/new', (route) => {
+    savedOnServer = true;
+    return route.fulfill({ json: [saved] });
+  });
+  await page.route('**/v1/drinks/date/*', (route) => route.fulfill({
+    json: savedOnServer && route.request().url().endsWith(TODAY)
+      ? [{ id: saved.id, name: saved.name, alcoholTypeId: saved.alcoholTypeId }]
+      : [],
+  }));
+  await page.route('**/v1/drinks/byIds?*', (route) => route.fulfill({ json: 1 }));
+
+  await page.goto('/');
+  await page.getByRole('button', { name: recommendation.name, exact: true }).click();
+  await expect(page.getByRole('status')).toContainText(recommendation.name);
+  await expect(page.getByText('1 so far', { exact: true })).toBeVisible();
+
+  // Use the in-app nav so SaveQueueProvider retains the committed optimistic save entry.
+  await page.getByRole('button', { name: 'History', exact: true }).click();
+  const row = page.getByRole('button', { name: saved.name!, exact: true });
+  await expect(row).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  await recordExit(row);
+  await page.getByRole('button', { name: `Cross off ${saved.name}`, exact: true }).click();
+
+  await expect(page.getByText('nothing', { exact: true })).toBeVisible();
+  const frames = await exitFrames(page);
+  await attachFrames(info, 'saved-session-strike-frames.json', frames);
+  expect(frames.some((frame) => frame.sameNode && frame.scale > 0.1 && frame.scale < 0.95)).toBe(true);
+  await expect(page.locator(`[data-history-row="${saved.id}"]`)).toHaveCount(0);
+  await expect(page.getByRole('button', { name: recommendation.name, exact: true })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
 });
 
 test('a real saved batch draws in place, closes the bulk gap and survives Undo and reload', async ({ page }, info) => {

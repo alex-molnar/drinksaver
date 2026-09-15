@@ -6,7 +6,8 @@ import PlateGrid, { type PlateGridItem } from './PlateGrid';
 const item = (overrides: Partial<PlateGridItem> = {}): PlateGridItem => ({
   key: 'k1',
   name: 'Heineken pint',
-  alcoholTypeId: 4,
+  colorPaletteId: 1,
+  glasswareId: 1,
   onSave: vi.fn(),
   ...overrides,
 });
@@ -66,8 +67,8 @@ describe('PlateGrid', () => {
    */
   describe('two items with different composite keys but the same underlying id', () => {
     const twoNullIdItems = [
-      item({ key: 'null-4-10-50', name: 'Heineken pint', alcoholTypeId: 4 }),
-      item({ key: 'null-4-10-51', name: 'Guinness pint', alcoholTypeId: 4 }),
+      item({ key: 'null-4-10-50', name: 'Heineken pint' }),
+      item({ key: 'null-4-10-51', name: 'Guinness pint', colorPaletteId: 2 }),
     ];
 
     it('render as two distinct, independently named plates', () => {

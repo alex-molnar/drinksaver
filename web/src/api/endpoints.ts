@@ -20,6 +20,8 @@ import type {
   BeerFlavour,
   NewBeerBrand,
   EditableDrink,
+  ColorPalette,
+  Glassware,
 } from '../types/api';
 
 // Drinks endpoints
@@ -32,7 +34,13 @@ import type {
  * backend pod do not cut over together, so for about a minute after a release a new bundle can
  * reach an old backend. Remove it in 4.1.0, once no 3.x backend is running anywhere.
  */
-export const saveDrink = async (drink: Omit<Drink, 'userId' | 'date'> & { date?: string }): Promise<SavedDrink[]> => {
+export type SaveDrinkRequest = Omit<Drink, 'userId' | 'date' | 'colorPaletteId' | 'glasswareId'> & {
+  date?: string;
+  colorPaletteId: number;
+  glasswareId: number;
+};
+
+export const saveDrink = async (drink: SaveDrinkRequest): Promise<SavedDrink[]> => {
   const payload: Omit<Drink, 'userId'> = {
     ...drink,
     date: drink.date || drinkingDay(new Date()),
@@ -124,6 +132,17 @@ export const createBeerFlavour = async (brandId: number, name: string): Promise<
     `/v1/beer/brands/${brandId}/flavours`,
     { name }
   );
+  return response.data;
+};
+
+// Design endpoints
+export const getColorPalettes = async (): Promise<ColorPalette[]> => {
+  const response = await apiClient.get<ColorPalette[]>('/v1/design/color-palettes');
+  return response.data;
+};
+
+export const getGlassware = async (): Promise<Glassware[]> => {
+  const response = await apiClient.get<Glassware[]>('/v1/design/glassware');
   return response.data;
 };
 

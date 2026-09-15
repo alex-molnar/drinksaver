@@ -11,7 +11,7 @@ import {
   type SaveQueueEntry,
 } from './saveQueueReducer';
 
-const PAYLOAD = { alcoholTypeId: 4, alcoholVolumeId: 10 };
+const PAYLOAD = { alcoholTypeId: 4, alcoholVolumeId: 10, colorPaletteId: 3, glasswareId: 1 };
 
 describe('save/started', () => {
   it('appends a new entry in status saving, with no ids and no undo window yet', () => {
@@ -716,6 +716,42 @@ describe('pendingInsertsForDate', () => {
       createdAt: 1000,
     };
     expect(pendingInsertsForDate({ entries: [del] }, '2026-09-10')).toEqual([]);
+  });
+
+  it('does not reinsert ids that a later delete suppresses', () => {
+    const del: SaveQueueEntry = {
+      id: 'd1',
+      kind: 'delete',
+      status: 'undoable',
+      label: 'Duvel bottle',
+      date: '2026-09-10',
+      drinkIds: [42],
+      undoUntil: 9000,
+      error: null,
+      seq: 2,
+      createdAt: 2000,
+    };
+
+    expect(pendingInsertsForDate({ entries: [{ ...base, status: 'committed' }, del] }, '2026-09-10')).toEqual([
+      { id: 43, name: 'Duvel bottle', alcoholTypeId: 4 },
+    ]);
+  });
+
+  it('does not reinsert any ids from a saved batch when they are crossed off together', () => {
+    const del: SaveQueueEntry = {
+      id: 'd1',
+      kind: 'delete',
+      status: 'undoable',
+      label: '2 drinks',
+      date: '2026-09-10',
+      drinkIds: [42, 43],
+      undoUntil: 9000,
+      error: null,
+      seq: 2,
+      createdAt: 2000,
+    };
+
+    expect(pendingInsertsForDate({ entries: [{ ...base, status: 'committed' }, del] }, '2026-09-10')).toEqual([]);
   });
 });
 

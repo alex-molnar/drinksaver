@@ -13,6 +13,8 @@ import java.util.UUID;
 @Repository
 public interface RecommendationsTable extends JpaRepository<Recommendation, Integer> {
     List<Recommendation> findByUserIdIn(List<UUID> userIds);
-    @Query("SELECT t FROM Recommendation t WHERE t.userId = :userId AND (t.endDate IS NULL OR t.endDate > :dateTime)")
+    @Query("SELECT t FROM Recommendation t WHERE t.userId = :userId AND (t.endDate IS NULL OR t.endDate > :dateTime) ORDER BY t.orderNumber")
     List<Recommendation> findValidByUserId(@Param("userId") UUID userId, @Param("dateTime") LocalDateTime dateTime);
+    @Query("SELECT MAX(t.orderNumber) FROM Recommendation t WHERE t.userId = :userId AND t.endDate IS NULL")
+    List<Integer> findNonTemporaryByUserId(@Param("userId") UUID userId);
 }

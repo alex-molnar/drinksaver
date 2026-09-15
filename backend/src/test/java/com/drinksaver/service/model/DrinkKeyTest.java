@@ -25,11 +25,11 @@ class DrinkKeyTest {
     private static final UUID USER = UUID.randomUUID();
 
     private DrinkKey namelessBeer() {
-        return new DrinkKey(4, null, 6, 1, 1, 3, Optional.empty());
+        return new DrinkKey(4, null, 6, 1, 1, 3, null, null, Optional.empty());
     }
 
     private DrinkKey namedBeer(String name) {
-        return new DrinkKey(4, null, 6, 1, 1, 3, Optional.of(name));
+        return new DrinkKey(4, null, 6, 1, 1, 3, null, null, Optional.of(name));
     }
 
     @Test
@@ -64,38 +64,13 @@ class DrinkKeyTest {
 
     @Test
     void genuinelyDifferentDrinksStayDistinct() {
-        DrinkKey gin = new DrinkKey(1, 1, 2, null, null, null, Optional.empty());
+        DrinkKey gin = new DrinkKey(1, 1, 2, null, null, null, null, null, Optional.empty());
 
         assertThat(gin).isNotEqualTo(namelessBeer());
         Map<DrinkKey, Double> scores = new HashMap<>();
         scores.put(namelessBeer(), 1.0);
         scores.put(gin, 1.0);
         assertThat(scores).hasSize(2);
-    }
-
-    @Test
-    void keysBuiltFromADrinkAndFromARecommendationMeet() {
-        SavedDrink drink = new SavedDrink(USER, "2026-03-15", 4, null, 6, 1, 1, 3, null);
-
-        Recommendation recommendation = new Recommendation();
-        recommendation.setUserId(USER);
-        recommendation.setName("Heineken pint");
-        recommendation.setAlcoholTypeId(4);
-        recommendation.setAlcoholVolumeId(6);
-        recommendation.setBrandId(1);
-        recommendation.setBeerFlavourId(1);
-        recommendation.setConsumptionTypeId(3);
-
-        DrinkKey fromDrink = DrinkKey.of(drink);
-        DrinkKey fromRecommendation = DrinkKey.of(recommendation);
-
-        assertThat(fromDrink).isEqualTo(fromRecommendation);
-        assertThat(fromDrink).hasSameHashCodeAs(fromRecommendation);
-
-        Map<DrinkKey, Double> merged = new HashMap<>();
-        merged.merge(fromRecommendation, 0.0, Math::max);
-        merged.merge(fromDrink, 0.9, Math::max);
-        assertThat(merged).hasSize(1);
     }
 
     @Test

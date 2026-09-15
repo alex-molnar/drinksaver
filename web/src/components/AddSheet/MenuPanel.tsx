@@ -6,7 +6,9 @@ import { useSaveQueue } from '../../drink/useSaveQueue';
 import { menuFields, isDraftReady, type DraftFieldsCatalogue, type MenuRow } from '../../drink/draftFields';
 import { QUANTITY_MAX, QUANTITY_MIN } from '../../drink/draftReducer';
 import { drinkingDay } from '../../drink/day';
+import { resolveBrandColorPaletteId, resolveDraftDesign } from '../../drink/designSelection';
 import type { AddSheetPanel } from './panels';
+import PaletteSwatch from './PaletteSwatch';
 
 export interface MenuPanelProps {
   onPushPanel: (panel: AddSheetPanel) => void;
@@ -78,13 +80,23 @@ const Lead = styled.span`
   min-width: 18px;
 `;
 
+const ValueGroup = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: none;
+  min-width: 0;
+  max-width: 52%;
+`;
+
 const Value = styled.span<{ $placeholder: boolean }>`
   font-size: 15px;
   color: ${(p) => (p.$placeholder ? 'var(--ds-ink-tertiary)' : 'var(--ds-accent-active)')};
-  flex: none;
-  max-width: 52%;
+  min-width: 0;
   text-align: right;
   line-height: 1.25;
+  overflow-wrap: anywhere;
 `;
 
 const QuantityRow = styled.div`
@@ -221,6 +233,23 @@ const UNSET = 'Choose';
 
 const rowAccessibleName = (row: MenuRow): string => `${row.label}, ${row.value ?? UNSET}`;
 
+const paletteIdForRow = (
+  row: MenuRow,
+  catalogue: DraftFieldsCatalogue,
+  draft: { alcoholTypeId: number | null; brandId: number | null },
+): number | null | undefined => {
+  if (row.key === 'alcoholType') {
+    return catalogue.alcoholTypes?.find((item) => item.id === draft.alcoholTypeId)?.colorPaletteId;
+  }
+  if (row.key === 'brand' && draft.brandId !== null) {
+    return resolveBrandColorPaletteId(
+      catalogue.brands?.find((item) => item.id === draft.brandId)?.colorPaletteId,
+      catalogue.alcoholTypes?.find((item) => item.id === draft.alcoholTypeId)?.colorPaletteId,
+    );
+  }
+  return undefined;
+};
+
 /**
  * The sheet's root panel: the bar menu. One row per field from `menuFields`, a quantity stepper
  * and the save control. Every row push and the quantity stepper are the only interaction this
@@ -254,6 +283,7 @@ const MenuPanel: React.FC<MenuPanelProps> = ({ onPushPanel, onDismiss }) => {
   // never actually fires this handler in that state. Guarding it a second time here would be
   // defensive code with no path that could ever exercise it.
   const handleSave = () => {
+    const design = resolveDraftDesign(draft, draftCatalogue, catalogue.isBeer);
     save({
       label: provisionalLabel(draftCatalogue, draft, catalogue.isBeer),
       date: draft.date,
@@ -265,6 +295,7 @@ const MenuPanel: React.FC<MenuPanelProps> = ({ onPushPanel, onDismiss }) => {
         brandId: draft.brandId ?? undefined,
         beerFlavourId: draft.beerFlavourId ?? undefined,
         consumptionTypeId: draft.consumptionTypeId ?? undefined,
+        ...design,
         comments: draft.comments.trim() ? draft.comments : undefined,
         quantity: draft.quantity > 1 ? draft.quantity : undefined,
         addToRecommendations: draft.addToRecommendations || undefined,
@@ -286,7 +317,12 @@ const MenuPanel: React.FC<MenuPanelProps> = ({ onPushPanel, onDismiss }) => {
           <Row key={row.key} type="button" aria-label={rowAccessibleName(row)} onClick={() => onPushPanel({ kind: 'option', field: row.key })}>
             <Label>{row.label}</Label>
             <Lead aria-hidden="true" />
-            <Value $placeholder={row.value === null}>{row.value ?? UNSET}</Value>
+            <ValueGroup>
+              {(row.key === 'alcoholType' || row.key === 'brand') && row.value !== null ? (
+                <PaletteSwatch colorPaletteId={paletteIdForRow(row, draftCatalogue, draft)} />
+              ) : null}
+              <Value $placeholder={row.value === null}>{row.value ?? UNSET}</Value>
+            </ValueGroup>
           </Row>
         ))}
       </Rows>

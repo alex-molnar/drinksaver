@@ -23,8 +23,8 @@ class SavedDrinksTableIntegrationTest extends AbstractPostgresIntegrationTest {
     @Test
     void findByUserIdReturnsOnlyUserDrinks() {
         savedDrinksTable.saveAll(List.of(
-                new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null),
-                new SavedDrink(OTHER, "2026-09-08", 1, 2, 3, null, null, null, null)
+                new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null),
+                new SavedDrink(OTHER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null)
         ));
 
         List<SavedDrink> result = savedDrinksTable.findByUserId(USER);
@@ -36,9 +36,9 @@ class SavedDrinksTableIntegrationTest extends AbstractPostgresIntegrationTest {
     @Test
     void findByUserIdAndDateReturnsOnlyMatchingDate() {
         savedDrinksTable.saveAll(List.of(
-                new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null),
-                new SavedDrink(USER, "2026-09-07", 1, 2, 3, null, null, null, null),
-                new SavedDrink(OTHER, "2026-09-08", 1, 2, 3, null, null, null, null)
+                new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null),
+                new SavedDrink(USER, "2026-09-07", 1, 2, 3, null, null, null, null, null, null),
+                new SavedDrink(OTHER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null)
         ));
 
         List<SavedDrink> result = savedDrinksTable.findByUserIdAndDate(USER, "2026-09-08");
@@ -50,9 +50,9 @@ class SavedDrinksTableIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void deleteAndCountByIdsReturnsDeletedCount() {
-        SavedDrink drink1 = savedDrinksTable.save(new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null));
-        SavedDrink drink2 = savedDrinksTable.save(new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null));
-        SavedDrink drink3 = savedDrinksTable.save(new SavedDrink(OTHER, "2026-09-08", 1, 2, 3, null, null, null, null));
+        SavedDrink drink1 = savedDrinksTable.save(new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null));
+        SavedDrink drink2 = savedDrinksTable.save(new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null));
+        SavedDrink drink3 = savedDrinksTable.save(new SavedDrink(OTHER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null));
 
         int deleted = savedDrinksTable.deleteAndCountByIds(List.of(drink1.getId(), drink2.getId()));
 

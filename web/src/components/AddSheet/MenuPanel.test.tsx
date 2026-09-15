@@ -8,6 +8,8 @@ import { useDraft } from '../../drink/useDraft';
 import { useCatalogue } from '../../drink/useCatalogue';
 import { useSaveQueue } from '../../drink/useSaveQueue';
 import { initialDraftState, type DraftState } from '../../drink/draftReducer';
+import { TEST_PALETTE_BY_NAME } from '../../test/designFixtures';
+import { TestDesignProvider } from '../../test/TestDesignProvider';
 
 vi.mock('../../drink/useDraft');
 vi.mock('../../drink/useCatalogue');
@@ -25,12 +27,12 @@ const save = vi.fn().mockReturnValue('save-1');
 /** A catalogue where every query has already resolved, so a test only has to override the one
  *  field it cares about. */
 const READY_CATALOGUE = {
-  alcoholTypes: { data: [{ id: 1, name: 'Beer', volumeIds: [] }, { id: 2, name: 'Wine', volumeIds: [] }], isLoading: false },
+  alcoholTypes: { data: [{ id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 1, glasswareId: 1 }, { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6, glasswareId: 3 }], isLoading: false },
   volumes: { data: [{ id: 10, name: 'Pint', volume: 0.5 }], isLoading: false },
-  subtypes: { data: [{ id: 30, name: 'Red', alcoholTypeId: 2 }], isLoading: false },
-  consumptionTypes: { data: [{ id: 40, name: 'Draft' }], isLoading: false },
-  brands: { data: [{ id: 50, name: 'Heineken' }], isLoading: false },
-  beerFlavours: { data: [{ id: 60, name: 'Lager', brandId: 50 }], isLoading: false },
+  subtypes: { data: [{ id: 30, name: 'Red', alcoholTypeId: 2, colorPaletteId: 4, glasswareId: 8 }], isLoading: false },
+  consumptionTypes: { data: [{ id: 40, name: 'Draft', glasswareId: 5 }], isLoading: false },
+  brands: { data: [{ id: 50, name: 'Heineken', colorPaletteId: 1 }], isLoading: false },
+  beerFlavours: { data: [{ id: 60, name: 'Lager', brandId: 50, colorPaletteId: 7 }], isLoading: false },
   isBeer: false,
 } as unknown as ReturnType<typeof useCatalogue>;
 
@@ -44,7 +46,9 @@ const setDraft = (overrides: Partial<DraftState> = {}, isBeer = false) => {
 const renderMenuPanel = (onPushPanel = vi.fn(), onDismiss = vi.fn()) => {
   render(
     <ThemeProvider theme={muiTheme}>
-      <MenuPanel onPushPanel={onPushPanel} onDismiss={onDismiss} />
+      <TestDesignProvider>
+        <MenuPanel onPushPanel={onPushPanel} onDismiss={onDismiss} />
+      </TestDesignProvider>
     </ThemeProvider>
   );
   return { onPushPanel, onDismiss };
@@ -87,7 +91,37 @@ describe('MenuPanel', () => {
   it('shows the chosen drink type in the Drink row', () => {
     setDraft({ alcoholTypeId: 2 });
     renderMenuPanel();
-    expect(screen.getByRole('button', { name: /^Drink,/ })).toHaveAccessibleName(/wine/i);
+    const drinkRow = screen.getByRole('button', { name: /^Drink,/ });
+    expect(drinkRow).toHaveAccessibleName(/wine/i);
+    expect(drinkRow.querySelector('[data-color-palette-id="6"]')).toHaveStyle({
+      '--palette-swatch-field': TEST_PALETTE_BY_NAME.plum.field,
+    });
+  });
+
+  it('shows the selected beer brand palette without replacing its readable value', () => {
+    setDraft({ alcoholTypeId: 1, brandId: 50 }, true);
+    renderMenuPanel();
+
+    const brandRow = screen.getByRole('button', { name: /^Brand, Heineken$/ });
+    expect(brandRow.querySelector('[data-color-palette-id="1"]')).toHaveStyle({
+      '--palette-swatch-field': TEST_PALETTE_BY_NAME.green.field,
+    });
+    expect(brandRow.querySelector('[data-color-palette-id="1"]')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('falls back to the selected beer palette when the selected brand has none', () => {
+    setDraft({ alcoholTypeId: 1, brandId: 50 }, true);
+    mockUseCatalogue.mockReturnValue({
+      ...READY_CATALOGUE,
+      brands: { data: [{ id: 50, name: 'House lager', colorPaletteId: null }], isLoading: false },
+      isBeer: true,
+    } as unknown as ReturnType<typeof useCatalogue>);
+    renderMenuPanel();
+
+    const brandRow = screen.getByRole('button', { name: /^Brand, House lager$/ });
+    expect(brandRow.querySelector('[data-color-palette-id="1"]')).toHaveStyle({
+      '--palette-swatch-field': TEST_PALETTE_BY_NAME.green.field,
+    });
   });
 
   it('pushes an option panel for the tapped row', async () => {
@@ -133,6 +167,8 @@ describe('MenuPanel', () => {
         alcoholTypeId: 2,
         alcoholVolumeId: 10,
         alcoholSubtypeId: 30,
+        colorPaletteId: 4,
+        glasswareId: 8,
         comments: 'A lovely evening',
       },
     });
@@ -148,6 +184,7 @@ describe('MenuPanel', () => {
     await userEvent.click(screen.getByRole('button', { name: /save drink/i }));
 
     expect(save.mock.calls[0][0].label).toBe('Beer (Heineken)');
+    expect(save.mock.calls[0][0].payload).toMatchObject({ colorPaletteId: 1, glasswareId: 5 });
   });
 
   it('omits quantity from the payload for a single drink, and includes it above one', async () => {

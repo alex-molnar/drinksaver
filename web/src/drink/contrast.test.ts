@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { contrastRatio, relativeLuminance } from './contrast';
-import { DRINK_IDENTITIES, drinkIdentity } from './identity';
+import { FALLBACK_PALETTE } from './designCatalogue';
+import { TEST_PALETTES } from '../test/designFixtures';
 
 // Known values first, so a bug in the maths cannot make the gate below pass vacuously: if
 // black-on-white were not 21:1, or a colour against itself were not 1:1, nothing computed from
@@ -35,17 +36,14 @@ describe('contrastRatio', () => {
   });
 });
 
-// This is the gate the design doc describes: it is what caught two failing colours during
-// design (Heineken's green and Chouffe's red both measured under 4.5:1 before they moved 2.4%
-// darker), and it is what keeps this table correct rather than merely intended. A new drink is
-// added to `identity.ts` only once this passes for it too.
-describe('the drink identity table clears WCAG AA', () => {
-  it.each(Object.entries(DRINK_IDENTITIES))('%s: field/inkDark >= 4.5:1', (_name, identity) => {
-    expect(contrastRatio(identity.field, identity.inkDark)).toBeGreaterThanOrEqual(4.5);
+// The production definitions are runtime data and should be validated by the backend. Keep the
+// frontend fixtures and degraded-mode fallback honest so tests do not mask a contrast regression.
+describe('the test and fallback palettes clear WCAG AA', () => {
+  it.each(TEST_PALETTES)('$name: field/inkDark >= 4.5:1', (palette) => {
+    expect(contrastRatio(palette.field, palette.inkDark)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it('the fallback identity for an unrecognised drink also clears it', () => {
-    const fallback = drinkIdentity('a drink this table has never heard of');
-    expect(contrastRatio(fallback.field, fallback.inkDark)).toBeGreaterThanOrEqual(4.5);
+  it('the degraded-mode palette also clears it', () => {
+    expect(contrastRatio(FALLBACK_PALETTE.field, FALLBACK_PALETTE.inkDark)).toBeGreaterThanOrEqual(4.5);
   });
 });

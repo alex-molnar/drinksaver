@@ -25,7 +25,7 @@ class InjectorServiceTest {
         when(alcohol.is("postgres")).thenReturn(true);
 
         RepositoryConfiguration config = new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres",
+                "postgres", "postgres", "postgres", "postgres", "postgres",
                 List.of(ADMIN), 4, 10, 0.97
         );
 
@@ -33,6 +33,7 @@ class InjectorServiceTest {
                 Map.of("alcohol", alcohol),
                 Map.of("beer", mock(BeerRepository.class)),
                 Map.of("drinks", mock(DrinksRepository.class)),
+                Map.of(),
                 config
         );
 
@@ -47,7 +48,7 @@ class InjectorServiceTest {
         when(beer.is("postgres")).thenReturn(true);
 
         RepositoryConfiguration config = new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres",
+                "postgres", "postgres", "postgres", "postgres", "postgres",
                 List.of(ADMIN), 4, 10, 0.97
         );
 
@@ -55,6 +56,7 @@ class InjectorServiceTest {
                 Map.of("alcohol", mock(AlcoholRepository.class)),
                 Map.of("beer", beer),
                 Map.of("drinks", mock(DrinksRepository.class)),
+                Map.of(),
                 config
         );
 
@@ -69,7 +71,7 @@ class InjectorServiceTest {
         when(drinks.is("postgres")).thenReturn(true);
 
         RepositoryConfiguration config = new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres",
+                "postgres", "postgres", "postgres", "postgres", "postgres",
                 List.of(ADMIN), 4, 10, 0.97
         );
 
@@ -77,6 +79,7 @@ class InjectorServiceTest {
                 Map.of("alcohol", mock(AlcoholRepository.class)),
                 Map.of("beer", mock(BeerRepository.class)),
                 Map.of("drinks", drinks),
+                Map.of(),
                 config
         );
 
@@ -91,7 +94,7 @@ class InjectorServiceTest {
         when(alcohol.is("mysql")).thenReturn(false);
 
         RepositoryConfiguration config = new RepositoryConfiguration(
-                "mysql", "mysql", "mysql", "mysql",
+                "mysql", "mysql", "mysql", "mysql", "mysql",
                 List.of(ADMIN), 4, 10, 0.97
         );
 
@@ -99,6 +102,7 @@ class InjectorServiceTest {
                 Map.of("alcohol", alcohol),
                 Map.of("beer", mock(BeerRepository.class)),
                 Map.of("drinks", mock(DrinksRepository.class)),
+                Map.of(),
                 config
         );
 
@@ -113,7 +117,7 @@ class InjectorServiceTest {
         when(beer.is("mysql")).thenReturn(false);
 
         RepositoryConfiguration config = new RepositoryConfiguration(
-                "postgres", "mysql", "postgres", "postgres",
+                "postgres", "mysql", "postgres", "postgres", "postgres",
                 List.of(ADMIN), 4, 10, 0.97
         );
 
@@ -121,6 +125,7 @@ class InjectorServiceTest {
                 Map.of("alcohol", mock(AlcoholRepository.class)),
                 Map.of("beer", beer),
                 Map.of("drinks", mock(DrinksRepository.class)),
+                Map.of(),
                 config
         );
 
@@ -135,7 +140,7 @@ class InjectorServiceTest {
         when(drinks.is("mysql")).thenReturn(false);
 
         RepositoryConfiguration config = new RepositoryConfiguration(
-                "postgres", "postgres", "mysql", "postgres",
+                "postgres", "postgres", "mysql", "postgres", "postgres",
                 List.of(ADMIN), 4, 10, 0.97
         );
 
@@ -143,6 +148,7 @@ class InjectorServiceTest {
                 Map.of("alcohol", mock(AlcoholRepository.class)),
                 Map.of("beer", mock(BeerRepository.class)),
                 Map.of("drinks", drinks),
+                Map.of(),
                 config
         );
 

@@ -22,6 +22,8 @@ public class AlcoholSubtype {
     private Integer alcoholTypeId;
     private UUID userId;
     private String name;
+    private Integer colorPaletteId;  // TODO: temporary, set this properly
+    private Integer glasswareId;  // TODO: temporary, set this properly
 
     public AlcoholSubtype(Integer alcoholTypeId, UUID userId, String name) {
         this.alcoholTypeId = alcoholTypeId;

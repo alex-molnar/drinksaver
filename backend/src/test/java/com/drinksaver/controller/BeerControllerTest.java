@@ -64,12 +64,13 @@ class BeerControllerTest {
         InjectorService injectorService(BeerRepository beerRepository) {
             when(beerRepository.is(any())).thenReturn(true);
             RepositoryConfiguration config = new RepositoryConfiguration(
-                "mock", "mock", "mock", "mock", List.of(), 4, 10, 0.97
+                "mock", "mock", "mock", "mock", "mock", List.of(), 4, 10, 0.97
             );
             return new InjectorService(
                 Map.of("alcohol", org.mockito.Mockito.mock(AlcoholRepository.class)),
                 Map.of("beer", beerRepository),
                 Map.of("drinks", org.mockito.Mockito.mock(DrinksRepository.class)),
+                Map.of(),
                 config
             );
         }

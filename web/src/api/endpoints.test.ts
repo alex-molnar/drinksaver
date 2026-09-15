@@ -27,11 +27,15 @@ describe('api/endpoints', () => {
       const result = await endpoints.saveDrink({
         alcoholTypeId: 1,
         alcoholVolumeId: 10,
+        colorPaletteId: 6,
+        glasswareId: 3,
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith('/v1/drinks/new', {
         alcoholTypeId: 1,
         alcoholVolumeId: 10,
+        colorPaletteId: 6,
+        glasswareId: 3,
         date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       });
       expect(result).toEqual([expect.objectContaining({ id: 1 })]);
@@ -42,7 +46,13 @@ describe('api/endpoints', () => {
         data: [{ id: 1 }, { id: 2 }, { id: 3 }],
       });
 
-      const result = await endpoints.saveDrink({ alcoholTypeId: 1, alcoholVolumeId: 10, quantity: 3 });
+      const result = await endpoints.saveDrink({
+        alcoholTypeId: 1,
+        alcoholVolumeId: 10,
+        colorPaletteId: 6,
+        glasswareId: 3,
+        quantity: 3,
+      });
 
       expect(result.map((d) => d.id)).toEqual([1, 2, 3]);
     });
@@ -54,7 +64,12 @@ describe('api/endpoints', () => {
     it('wraps a bare object from a pre-4.0.0 backend', async () => {
       mockApiClient.post.mockResolvedValue({ data: { id: 7 } });
 
-      const result = await endpoints.saveDrink({ alcoholTypeId: 1, alcoholVolumeId: 10 });
+      const result = await endpoints.saveDrink({
+        alcoholTypeId: 1,
+        alcoholVolumeId: 10,
+        colorPaletteId: 6,
+        glasswareId: 3,
+      });
 
       expect(result).toEqual([{ id: 7 }]);
     });
@@ -62,11 +77,19 @@ describe('api/endpoints', () => {
     it('keeps an explicit date rather than defaulting it', async () => {
       mockApiClient.post.mockResolvedValue({ data: { id: 2 } });
 
-      await endpoints.saveDrink({ alcoholTypeId: 1, alcoholVolumeId: 10, date: '2026-03-04' });
+      await endpoints.saveDrink({
+        alcoholTypeId: 1,
+        alcoholVolumeId: 10,
+        colorPaletteId: 6,
+        glasswareId: 3,
+        date: '2026-03-04',
+      });
 
       expect(mockApiClient.post).toHaveBeenCalledWith('/v1/drinks/new', {
         alcoholTypeId: 1,
         alcoholVolumeId: 10,
+        colorPaletteId: 6,
+        glasswareId: 3,
         date: '2026-03-04',
       });
     });
@@ -224,6 +247,26 @@ describe('api/endpoints', () => {
         '/v1/beer/brands/50/flavours',
         { name: 'Lager' }
       );
+    });
+  });
+
+  describe('design catalogue', () => {
+    it('gets color palettes from /v1/design/color-palettes', async () => {
+      mockApiClient.get.mockResolvedValue({ data: [{ id: 1, name: 'green' }] });
+
+      const result = await endpoints.getColorPalettes();
+
+      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/design/color-palettes');
+      expect(result).toEqual([{ id: 1, name: 'green' }]);
+    });
+
+    it('gets SVG definitions from /v1/design/glassware', async () => {
+      mockApiClient.get.mockResolvedValue({ data: [{ id: 1, name: 'pint', g: 'g', l: 'l', f: null }] });
+
+      const result = await endpoints.getGlassware();
+
+      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/design/glassware');
+      expect(result).toEqual([{ id: 1, name: 'pint', g: 'g', l: 'l', f: null }]);
     });
   });
 

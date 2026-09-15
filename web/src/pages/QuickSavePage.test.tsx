@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../test/test-utils';
 import QuickSavePage from './QuickSavePage';
@@ -10,6 +10,7 @@ import { useDrinksForDate } from '../drink/useDrinksForDate';
 import type { Recommendation } from '../types/api';
 import type { SaveQueueContextType } from '../drink/SaveQueueContext';
 import type { SaveQueueEntry } from '../drink/saveQueueReducer';
+import { TEST_PALETTE_BY_NAME } from '../test/designFixtures';
 
 vi.mock('../api/endpoints');
 vi.mock('../hooks/useSheet');
@@ -59,8 +60,8 @@ beforeEach(() => {
 /** Two recommendations whose id is null - the common case, since `DrinkKey.toRecommendation`
  *  never sets one - distinguished only by their other fields. */
 const nullIdRecommendations: Recommendation[] = [
-  { id: null as unknown as number, userId: 'user-1', name: 'Heineken pint', alcoholTypeId: 4, alcoholVolumeId: 10, brandId: 50 },
-  { id: null as unknown as number, userId: 'user-1', name: 'Guinness pint', alcoholTypeId: 4, alcoholVolumeId: 10, brandId: 51 },
+  { id: null as unknown as number, userId: 'user-1', name: 'Heineken pint', alcoholTypeId: 4, alcoholVolumeId: 10, brandId: 50, colorPaletteId: 1, glasswareId: 1 },
+  { id: null as unknown as number, userId: 'user-1', name: 'Guinness pint', alcoholTypeId: 4, alcoholVolumeId: 10, brandId: 51, colorPaletteId: 2, glasswareId: 1 },
 ];
 
 const savingEntry = (label: string): SaveQueueEntry => ({
@@ -71,7 +72,7 @@ const savingEntry = (label: string): SaveQueueEntry => ({
   date: '2026-09-10',
   drinkIds: [],
   alcoholTypeId: 4,
-  payload: { alcoholTypeId: 4, alcoholVolumeId: 10 },
+  payload: { alcoholTypeId: 4, alcoholVolumeId: 10, colorPaletteId: 1, glasswareId: 1 },
   undoUntil: null,
   error: null,
   seq: 1,
@@ -79,6 +80,74 @@ const savingEntry = (label: string): SaveQueueEntry => ({
 });
 
 describe('QuickSavePage', () => {
+  it.each([
+    { colorPaletteId: 1, glasswareId: 9, palette: TEST_PALETTE_BY_NAME.green, glass: 'palinka' },
+    { colorPaletteId: 2, glasswareId: 1, palette: TEST_PALETTE_BY_NAME.brown, glass: 'pint' },
+    { colorPaletteId: 3, glasswareId: 2, palette: TEST_PALETTE_BY_NAME.cream, glass: 'tulip' },
+    { colorPaletteId: 4, glasswareId: 7, palette: TEST_PALETTE_BY_NAME.red, glass: 'coupe' },
+    { colorPaletteId: 5, glasswareId: 4, palette: TEST_PALETTE_BY_NAME.blue, glass: 'highball' },
+    { colorPaletteId: 6, glasswareId: 3, palette: TEST_PALETTE_BY_NAME.plum, glass: 'wine' },
+    { colorPaletteId: 7, glasswareId: 5, palette: TEST_PALETTE_BY_NAME.amber, glass: 'rocks' },
+    { colorPaletteId: 8, glasswareId: 8, palette: TEST_PALETTE_BY_NAME.rose, glass: 'flute' },
+    { colorPaletteId: 7, glasswareId: 6, palette: TEST_PALETTE_BY_NAME.amber, glass: 'shot' },
+    { colorPaletteId: 7, glasswareId: 10, palette: TEST_PALETTE_BY_NAME.amber, glass: 'beercan' },
+    { colorPaletteId: 2, glasswareId: 11, palette: TEST_PALETTE_BY_NAME.brown, glass: 'beerbottle' },
+    { colorPaletteId: 3, glasswareId: 12, palette: TEST_PALETTE_BY_NAME.cream, glass: 'beerjug' },
+  ])('renders API palette $colorPaletteId and glassware $glasswareId on a recommendation tile', async ({ colorPaletteId, glasswareId, palette, glass }) => {
+    const recommendation = {
+      ...nullIdRecommendations[0],
+      name: 'Custom pálinka (Small glass - 0.05l)',
+      colorPaletteId,
+      glasswareId,
+    };
+    mockGetRecommendations.mockResolvedValue([recommendation]);
+
+    renderWithProviders(<QuickSavePage />);
+
+    const tile = await screen.findByRole('button', { name: recommendation.name });
+    expect(tile.style.getPropertyValue('--fld')).toBe(palette.field);
+    expect(tile).toHaveStyle({ color: palette.inkDark });
+    expect(within(tile).getByTestId(`glass-${glass}`)).toBeInTheDocument();
+  });
+
+  it.each([
+    { colorPaletteId: undefined, glasswareId: undefined, palette: TEST_PALETTE_BY_NAME.cream, glass: 'highball' },
+    { colorPaletteId: null, glasswareId: null, palette: TEST_PALETTE_BY_NAME.cream, glass: 'highball' },
+    { colorPaletteId: 999, glasswareId: 999, palette: TEST_PALETTE_BY_NAME.cream, glass: 'highball' },
+    { colorPaletteId: 0, glasswareId: 0, palette: TEST_PALETTE_BY_NAME.cream, glass: 'highball' },
+    { colorPaletteId: 999, glasswareId: 9, palette: TEST_PALETTE_BY_NAME.cream, glass: 'palinka' },
+    { colorPaletteId: 7, glasswareId: 999, palette: TEST_PALETTE_BY_NAME.amber, glass: 'highball' },
+  ])('falls back independently for palette $colorPaletteId and glassware $glasswareId', async ({ colorPaletteId, glasswareId, palette, glass }) => {
+    mockGetRecommendations.mockResolvedValue([{ ...nullIdRecommendations[0], colorPaletteId, glasswareId }]);
+
+    renderWithProviders(<QuickSavePage />);
+
+    const tile = await screen.findByRole('button', { name: 'Heineken pint' });
+    expect(tile.style.getPropertyValue('--fld')).toBe(palette.field);
+    expect(tile).toHaveStyle({ color: palette.inkDark });
+    expect(within(tile).getByTestId(`glass-${glass}`)).toBeInTheDocument();
+  });
+
+  it('keeps appearance when the label changes and updates the same tile when design IDs change', async () => {
+    mockGetRecommendations.mockResolvedValue([nullIdRecommendations[0]]);
+    const { client } = renderWithProviders(<QuickSavePage />);
+    const tile = await screen.findByRole('button', { name: 'Heineken pint' });
+    const renamed = { ...nullIdRecommendations[0], name: 'My usual (Draft/Tap - 0.50l)' };
+
+    act(() => client.setQueryData(['recommendations'], [renamed]));
+
+    expect(await screen.findByRole('button', { name: renamed.name })).toBe(tile);
+    expect(tile.style.getPropertyValue('--fld')).toBe(TEST_PALETTE_BY_NAME.green.field);
+    expect(within(tile).getByTestId('glass-pint')).toBeInTheDocument();
+
+    act(() => client.setQueryData(['recommendations'], [{ ...renamed, colorPaletteId: 8, glasswareId: 9 }]));
+
+    await waitFor(() => expect(tile.style.getPropertyValue('--fld')).toBe(TEST_PALETTE_BY_NAME.rose.field));
+    expect(screen.getByRole('button', { name: renamed.name })).toBe(tile);
+    expect(tile).toHaveStyle({ color: TEST_PALETTE_BY_NAME.rose.inkDark });
+    expect(within(tile).getByTestId('glass-palinka')).toBeInTheDocument();
+  });
+
   /**
    * The regression this PR exists to fix. `IndexPage.tsx:118` keyed React's reconciliation on
    * `rec.id` alone, which is null for both of these, while the save state already keyed on the
@@ -172,6 +241,8 @@ describe('QuickSavePage', () => {
         brandId: 50,
         beerFlavourId: undefined,
         consumptionTypeId: undefined,
+        colorPaletteId: 1,
+        glasswareId: 1,
       },
     });
     // Logging never navigates, and never opens the sheet either.

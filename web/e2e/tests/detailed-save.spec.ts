@@ -10,6 +10,18 @@ const waitForHistoryLoaded = async (page: Page) => {
 const menuRow = (page: Page, label: string) => page.getByRole('button', { name: new RegExp(`^${label},`) });
 
 test('a beer added through the add sheet appears in history', async ({ page }) => {
+  // The checked-in local seed predates the non-null design metadata contract. Supply the
+  // current endpoint shapes here while keeping the POST and history round trip real.
+  await page.route('**/v1/alcohol/types', (route) => route.fulfill({
+    json: [{ id: 4, name: 'Beer', volumeIds: [5, 6], colorPaletteId: 3, glasswareId: 1 }],
+  }));
+  await page.route('**/v1/beer/consumption-types?*', (route) => route.fulfill({
+    json: [{ id: 3, name: 'Draft/Tap', glasswareId: 1 }],
+  }));
+  await page.route('**/v1/beer/brands', (route) => route.fulfill({
+    json: [{ id: 2, name: 'Guinness', colorPaletteId: 2 }],
+  }));
+
   await page.goto('/history');
   await waitForHistoryLoaded(page);
   const before = await page.getByText(/Guinness/).count();

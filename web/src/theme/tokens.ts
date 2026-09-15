@@ -201,10 +201,3 @@ export const darkTokens: ThemeTokens = {
     easing: motionEasings,
   },
 };
-
-/**
- * Re-exported so a future `identity/` module can reach the raw enamel hues through the theme
- * barrel rather than importing `primitives.ts` directly. Not part of `ThemeTokens`: it is not a
- * role, and nothing here assigns it one.
- */
-export { enamelHues } from './primitives';

@@ -6,7 +6,13 @@ import { previousIsoDate, type MenuRowKey } from '../../drink/draftFields';
 import { drinkingDay } from '../../drink/day';
 import type { DraftFieldKey, DraftState } from '../../drink/draftReducer';
 import type { CreatableCatalogueField } from '../../drink/useCreateCatalogueEntry';
+import {
+  resolveAlcoholColorPaletteId,
+  resolveBeerColorPaletteId,
+  resolveBrandColorPaletteId,
+} from '../../drink/designSelection';
 import type { AddSheetPanel } from './panels';
+import PaletteSwatch from './PaletteSwatch';
 
 export interface OptionPanelProps {
   field: MenuRowKey;
@@ -156,20 +162,35 @@ interface OptionListSpec {
   title: string;
   createLabel?: string;
   isLoading: boolean;
-  options: { id: number; label: string }[];
+  options: { id: number; label: string; colorPaletteId?: number | null }[];
+  showPalette?: boolean;
 }
 
 /** Every catalogue-backed field's list, and how to label its options. `volume` is the only field
  *  needing a bespoke label rather than a plain name - see `menuFields`'s own `volumeLabel`, which
  *  this mirrors for a list of candidates rather than a single chosen one. */
-const buildOptionList = (field: DraftFieldKey, catalogue: UseCatalogueResult): OptionListSpec => {
+const buildOptionList = (
+  field: DraftFieldKey,
+  catalogue: UseCatalogueResult,
+  draft: DraftState,
+): OptionListSpec => {
+  const alcoholTypeColorPaletteId = catalogue.alcoholTypes.data
+    ?.find((type) => type.id === draft.alcoholTypeId)?.colorPaletteId;
+  const brandColorPaletteId = catalogue.brands.data
+    ?.find((brand) => brand.id === draft.brandId)?.colorPaletteId;
+
   switch (field) {
     case 'alcoholType':
       return {
         title: 'What are you drinking?',
         createLabel: 'drink type',
         isLoading: catalogue.alcoholTypes.isLoading,
-        options: (catalogue.alcoholTypes.data ?? []).map((t) => ({ id: t.id, label: t.name })),
+        options: (catalogue.alcoholTypes.data ?? []).map((t) => ({
+          id: t.id,
+          label: t.name,
+          colorPaletteId: t.colorPaletteId,
+        })),
+        showPalette: true,
       };
     case 'volume':
       return {
@@ -183,7 +204,15 @@ const buildOptionList = (field: DraftFieldKey, catalogue: UseCatalogueResult): O
         title: 'Which kind?',
         createLabel: 'subtype',
         isLoading: catalogue.subtypes.isLoading,
-        options: (catalogue.subtypes.data ?? []).map((s) => ({ id: s.id, label: s.name })),
+        options: (catalogue.subtypes.data ?? []).map((s) => ({
+          id: s.id,
+          label: s.name,
+          colorPaletteId: resolveAlcoholColorPaletteId(
+            s.colorPaletteId,
+            alcoholTypeColorPaletteId,
+          ),
+        })),
+        showPalette: true,
       };
     case 'consumptionType':
       return {
@@ -196,14 +225,31 @@ const buildOptionList = (field: DraftFieldKey, catalogue: UseCatalogueResult): O
         title: 'Which brand?',
         createLabel: 'brand',
         isLoading: catalogue.brands.isLoading,
-        options: (catalogue.brands.data ?? []).map((b) => ({ id: b.id, label: b.name })),
+        options: (catalogue.brands.data ?? []).map((b) => ({
+          id: b.id,
+          label: b.name,
+          colorPaletteId: resolveBrandColorPaletteId(
+            b.colorPaletteId,
+            alcoholTypeColorPaletteId,
+          ),
+        })),
+        showPalette: true,
       };
     case 'beerFlavour':
       return {
         title: 'Which flavour?',
         createLabel: 'flavour',
         isLoading: catalogue.beerFlavours.isLoading,
-        options: (catalogue.beerFlavours.data ?? []).map((f) => ({ id: f.id, label: f.name })),
+        options: (catalogue.beerFlavours.data ?? []).map((f) => ({
+          id: f.id,
+          label: f.name,
+          colorPaletteId: resolveBeerColorPaletteId(
+            f.colorPaletteId,
+            brandColorPaletteId,
+            alcoholTypeColorPaletteId,
+          ),
+        })),
+        showPalette: true,
       };
   }
 };
@@ -237,7 +283,7 @@ const CatalogueField: React.FC<{
 }> = ({ field, headingRef, onPushPanel, onPopPanel }) => {
   const { draft, dispatch } = useDraft();
   const catalogue = useCatalogue(draft);
-  const spec = buildOptionList(field, catalogue);
+  const spec = buildOptionList(field, catalogue, draft);
   const selectedId = selectedIdFor(field, draft);
 
   return (
@@ -259,6 +305,7 @@ const CatalogueField: React.FC<{
                 onPopPanel();
               }}
             >
+              {spec.showPalette ? <PaletteSwatch colorPaletteId={option.colorPaletteId} /> : null}
               <OptionName>{option.label}</OptionName>
               {option.id === selectedId ? <Selected aria-hidden="true">✓</Selected> : null}
             </OptionRow>

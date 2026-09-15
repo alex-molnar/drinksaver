@@ -5,6 +5,7 @@ import { useHistoryLayoutMotion } from './useHistoryLayoutMotion';
 import styled from '@emotion/styled';
 import { Glass } from '../drink/glassware';
 import { drinkIdentity } from '../drink/identity';
+import { useDesign } from '../drink/useDesign';
 import type { EditableDrink } from '../types/api';
 
 export type PaperTabStatus = 'loading' | 'error' | 'ready';
@@ -223,6 +224,7 @@ const HistoryRow: React.FC<{
   onDeleteOne: PaperTabProps['onDeleteOne'];
   onExitComplete: PaperTabProps['onExitComplete'];
 }> = ({ row: { drink, selected, gone, detail, token }, reduced, onToggleSelect, onDeleteOne, onExitComplete }) => {
+  const design = useDesign();
   const rowRef = useRef<HTMLDivElement>(null);
   const strokeRef = useRef<HTMLSpanElement>(null);
   const finish = useCallback(() => {
@@ -231,7 +233,7 @@ const HistoryRow: React.FC<{
   useLayoutEffect(() => {
     if (gone) return strikeOff(rowRef.current!, strokeRef.current!, finish, reduced);
   }, [gone, reduced, finish]);
-  const identity = drinkIdentity(drink.name, drink.alcoholTypeId);
+  const identity = drinkIdentity(drink.name, drink.alcoholTypeId, design);
 
   return (
     <Row
@@ -252,7 +254,7 @@ const HistoryRow: React.FC<{
     >
       <Strike ref={strokeRef} data-history-strike aria-hidden="true" />
       <CheckTile type="checkbox" checked={selected} readOnly tabIndex={-1} aria-label={drink.name} />
-      <RowGlass aria-hidden="true"><Glass kind={identity.glass} chroma={identity.chroma} tone="ink" /></RowGlass>
+      <RowGlass aria-hidden="true"><Glass glassware={identity.glassware} chroma={identity.chroma} tone="ink" /></RowGlass>
       <Name>{drink.name}</Name>
       <Lead aria-hidden="true" />
       {detail ? <Detail>{detail}</Detail> : null}

@@ -25,6 +25,8 @@ public record Drink(
         Integer brandId,
         Integer beerFlavourId,
         Integer consumptionTypeId,
+        Integer colorPaletteId,
+        Integer glasswareId,
         /**
          * ddl-auto derives varchar(255) from this field, so anything longer was a
          * DataIntegrityViolationException and a 500: the same "500 for a plainly bad
@@ -55,9 +57,9 @@ public record Drink(
 
     public Drink withUserId(UUID userId) {
         return new Drink(
-            userId, date, alcoholTypeId, alcoholSubtypeId, alcoholVolumeId, brandId,
-            beerFlavourId, consumptionTypeId, comments, quantity, addToRecommendations,
-            onlyTemporarily, name
+                userId, date, alcoholTypeId, alcoholSubtypeId, alcoholVolumeId, brandId,
+                beerFlavourId, consumptionTypeId, colorPaletteId, glasswareId, comments,
+                quantity, addToRecommendations, onlyTemporarily, name
         );
     }
 }
