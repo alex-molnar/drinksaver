@@ -55,8 +55,8 @@ public class PostgresBeerRepository implements BeerRepository {
     }
 
     @Override
-    public Brand saveBrand(UUID userId, String name, List<String> flavours) {
-        Brand result = brandsTable.save(new Brand(userId, name));
+    public Brand saveBrand(UUID userId, String name, List<String> flavours, Integer colorPaletteId) {
+        Brand result = brandsTable.save(new Brand(userId, name, colorPaletteId));
         if(flavours != null && !flavours.isEmpty()) {
             beerFlavoursTable.saveAll(
                     flavours
@@ -77,7 +77,7 @@ public class PostgresBeerRepository implements BeerRepository {
     }
 
     @Override
-    public BeerFlavour saveBeerFlavour(Integer brandId, UUID userId, String name) {
-        return beerFlavoursTable.save(new BeerFlavour(brandId, userId, name));
+    public BeerFlavour saveBeerFlavour(Integer brandId, UUID userId, String name, Integer colorPaletteId) {
+        return beerFlavoursTable.save(new BeerFlavour(brandId, userId, name, colorPaletteId));
     }
 }

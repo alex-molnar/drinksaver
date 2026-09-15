@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.net.Inet4Address;
 import java.util.UUID;
 
 @Entity
@@ -22,12 +23,20 @@ public class AlcoholSubtype {
     private Integer alcoholTypeId;
     private UUID userId;
     private String name;
-    private Integer colorPaletteId;  // TODO: temporary, set this properly
-    private Integer glasswareId;  // TODO: temporary, set this properly
+    private Integer colorPaletteId;
+    private Integer glasswareId;
 
     public AlcoholSubtype(Integer alcoholTypeId, UUID userId, String name) {
         this.alcoholTypeId = alcoholTypeId;
         this.userId = userId;
         this.name = name;
+    }
+
+    public AlcoholSubtype(Integer alcoholTypeId, UUID userId, String name, Integer colorPaletteId, Integer glasswareId) {
+        this.alcoholTypeId = alcoholTypeId;
+        this.userId = userId;
+        this.name = name;
+        this.colorPaletteId = colorPaletteId;
+        this.glasswareId = glasswareId;
     }
 }

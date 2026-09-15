@@ -23,9 +23,11 @@ public record NewAlcoholEntry(
          * a handful of concurrent requests exhausts the pool and stops the only replica.
          */
         @Size(max = 50) List<NewVolumeEntry> volumes,
-        @Size(max = 50) List<String> alcoholSubtypes
+        @Size(max = 50) List<String> alcoholSubtypes,
+        Integer colorPaletteId,
+        Integer glasswareId
 ) {
     public NewAlcoholEntry withUserId(UUID userId) {
-        return new NewAlcoholEntry(userId, name, volumes, alcoholSubtypes);
+        return new NewAlcoholEntry(userId, name, volumes, alcoholSubtypes, colorPaletteId, glasswareId);
     }
 }

@@ -14,9 +14,11 @@ import java.util.UUID;
 public record NewAlcoholSubtype(
         Integer alcoholTypeId,
         @JsonProperty(access = JsonProperty.Access.READ_ONLY) UUID userId,
-        String name
+        String name,
+        Integer colorPaletteId,
+        Integer glasswareId
 ) {
     public NewAlcoholSubtype withUserId(UUID userId) {
-        return new NewAlcoholSubtype(alcoholTypeId, userId, name);
+        return new NewAlcoholSubtype(alcoholTypeId, userId, name, colorPaletteId, glasswareId);
     }
 }

@@ -27,9 +27,11 @@ public class AlcoholType {
     private Integer colorPaletteId;
     private Integer glasswareId;
 
-    public AlcoholType(UUID userId, String name, List<Integer> volumeIds) {
+    public AlcoholType(UUID userId, String name, List<Integer> volumeIds, Integer colorPaletteId, Integer glasswareId) {
         this.userId = userId;
         this.name = name;
         this.volumeIds = volumeIds;
+        this.colorPaletteId = colorPaletteId;
+        this.glasswareId = glasswareId;
     }
 }
