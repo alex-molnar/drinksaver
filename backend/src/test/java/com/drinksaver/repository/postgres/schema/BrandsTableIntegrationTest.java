@@ -25,10 +25,10 @@ class BrandsTableIntegrationTest extends AbstractPostgresIntegrationTest {
     @Test
     void findAllByUserIdInReturnsOnlyTheRequestedUsersOrderedByName() {
         brandsTable.saveAll(List.of(
-                new Brand(USER, "Zywiec"),
-                new Brand(ADMIN, "Asahi"),
-                new Brand(USER, "Meantime"),
-                new Brand(OTHER, "Peroni")
+                new Brand(USER, "Zywiec", null),
+                new Brand(ADMIN, "Asahi", null),
+                new Brand(USER, "Meantime", null),
+                new Brand(OTHER, "Peroni", null)
         ));
 
         List<Brand> result = brandsTable.findAllByUserIdInOrderByName(List.of(ADMIN, USER));
@@ -39,7 +39,7 @@ class BrandsTableIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void findAllByUserIdInReturnsEmptyForAnUnknownUser() {
-        brandsTable.saveAll(List.of(new Brand(ADMIN, "Asahi")));
+        brandsTable.saveAll(List.of(new Brand(ADMIN, "Asahi", null)));
 
         assertThat(brandsTable.findAllByUserIdInOrderByName(List.of(OTHER))).isEmpty();
     }

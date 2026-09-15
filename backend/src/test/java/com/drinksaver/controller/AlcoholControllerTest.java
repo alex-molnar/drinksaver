@@ -97,7 +97,7 @@ class AlcoholControllerTest {
     @Test
     void getAlcoholTypesReturnsOkWithExpectedShape() throws Exception {
         UUID userId = UUID.randomUUID();
-        AlcoholType type = new AlcoholType(userId, "Beer", List.of(1, 2));
+        AlcoholType type = new AlcoholType(userId, "Beer", List.of(1, 2), null, null);
         type.setId(4);
 
         when(alcoholRepository.getAlcoholTypes(userId)).thenReturn(List.of(type));
@@ -182,7 +182,7 @@ class AlcoholControllerTest {
         UUID spoofedUserId = UUID.randomUUID();
 
         when(alcoholRepository.createAlcoholType(any()))
-            .thenReturn(new AlcoholType(authenticatedUserId, "Beer", List.of()));
+            .thenReturn(new AlcoholType(authenticatedUserId, "Beer", List.of(), null, null));
 
         mockMvc.perform(post("/v1/alcohol/types")
                 .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
@@ -269,7 +269,7 @@ class AlcoholControllerTest {
             .collect(java.util.stream.Collectors.joining(","));
         UUID userId = UUID.randomUUID();
         when(alcoholRepository.createAlcoholType(any()))
-            .thenReturn(new AlcoholType(userId, "Gin", List.of()));
+            .thenReturn(new AlcoholType(userId, "Gin", List.of(), null, null));
 
         // A UUID subject, not the bare jwt() default of "user": this endpoint derives the
         // owner from the subject, so a non-UUID one is a 500 rather than a validation error.

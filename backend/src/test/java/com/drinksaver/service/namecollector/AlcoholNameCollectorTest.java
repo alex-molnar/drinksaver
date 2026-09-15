@@ -24,7 +24,7 @@ class AlcoholNameCollectorTest {
 
     @Test
     void collectsAlcoholTypeAndVolumeName() {
-        AlcoholType type = new AlcoholType(USER, "Vodka", null);
+        AlcoholType type = new AlcoholType(USER, "Vodka", null, null, null);
         AlcoholVolume volume = new AlcoholVolume(1, "Shot", 0.05f);
 
         AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
@@ -72,7 +72,7 @@ class AlcoholNameCollectorTest {
 
     @Test
     void fallsBackToTypeNameWhenSubtypeNotFound() {
-        AlcoholType type = new AlcoholType(USER, "Vodka", null);
+        AlcoholType type = new AlcoholType(USER, "Vodka", null, null, null);
         AlcoholVolume volume = new AlcoholVolume(1, "Shot", 0.05f);
 
         AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
@@ -142,7 +142,7 @@ class AlcoholNameCollectorTest {
 
     @Test
     void usesUnknownVolumeWhenVolumeNotFound() {
-        AlcoholType type = new AlcoholType(USER, "Vodka", null);
+        AlcoholType type = new AlcoholType(USER, "Vodka", null, null, null);
 
         AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
         when(typesTable.findById(1)).thenReturn(Optional.of(type));
@@ -165,7 +165,7 @@ class AlcoholNameCollectorTest {
 
     @Test
     void usesUnknownVolumeWhenVolumeIdIsNull() {
-        AlcoholType type = new AlcoholType(USER, "Vodka", null);
+        AlcoholType type = new AlcoholType(USER, "Vodka", null, null, null);
 
         AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
         when(typesTable.findById(1)).thenReturn(Optional.of(type));
@@ -196,7 +196,7 @@ class AlcoholNameCollectorTest {
         Locale original = Locale.getDefault();
         Locale.setDefault(Locale.GERMANY);
         try {
-            AlcoholType type = new AlcoholType(USER, "Vodka", null);
+            AlcoholType type = new AlcoholType(USER, "Vodka", null, null, null);
             AlcoholVolume volume = new AlcoholVolume(1, "Half litre", 0.5f);
 
             AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);

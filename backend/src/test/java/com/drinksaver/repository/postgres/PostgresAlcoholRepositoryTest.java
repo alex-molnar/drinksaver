@@ -74,7 +74,7 @@ class PostgresAlcoholRepositoryTest {
 
     @Test
     void getAlcoholTypesReturnsTableResults() {
-        AlcoholType type = new AlcoholType(ADMIN, "Beer", List.of());
+        AlcoholType type = new AlcoholType(ADMIN, "Beer", List.of(), null, null);
         AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
         when(typesTable.findAllByUserIdInOrderByNameAsc(any())).thenReturn(List.of(type));
 
@@ -123,7 +123,7 @@ class PostgresAlcoholRepositoryTest {
                 configWithAdmins(List.of())
         );
 
-        AlcoholSubtype result = repo.saveSubtypeForAlcoholType(1, new NewAlcoholSubtype(1, USER, "Pale Ale"));
+        AlcoholSubtype result = repo.saveSubtypeForAlcoholType(1, new NewAlcoholSubtype(1, USER, "Pale Ale", null, null));
 
         assertThat(result).isEqualTo(saved);
         ArgumentCaptor<AlcoholSubtype> captor = ArgumentCaptor.forClass(AlcoholSubtype.class);
@@ -153,7 +153,7 @@ class PostgresAlcoholRepositoryTest {
     @Test
     void getVolumesByAlcoholTypeReturnsVolumesForExistingType() {
         AlcoholVolume volume = new AlcoholVolume(1, "Pint", 0.568f);
-        AlcoholType type = new AlcoholType(ADMIN, "Beer", List.of(1));
+        AlcoholType type = new AlcoholType(ADMIN, "Beer", List.of(1), null, null);
         AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
         when(typesTable.findById(1)).thenReturn(Optional.of(type));
 
@@ -199,7 +199,7 @@ class PostgresAlcoholRepositoryTest {
 
     @Test
     void saveVolumeForAlcoholTypeAttachesTheNewVolumeToTheType() {
-        AlcoholType type = new AlcoholType(ADMIN, "Vodka", new java.util.ArrayList<>(List.of(7)));
+        AlcoholType type = new AlcoholType(ADMIN, "Vodka", new java.util.ArrayList<>(List.of(7)), null, null);
         AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
         when(typesTable.findById(1)).thenReturn(Optional.of(type));
 
@@ -225,7 +225,7 @@ class PostgresAlcoholRepositoryTest {
 
     @Test
     void createAlcoholTypeWithNoVolumesOrSubtypesWritesJustTheType() {
-        AlcoholType saved = new AlcoholType(USER, "Gin", List.of());
+        AlcoholType saved = new AlcoholType(USER, "Gin", List.of(), null, null);
         AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
         when(typesTable.save(any())).thenReturn(saved);
 
@@ -239,7 +239,7 @@ class PostgresAlcoholRepositoryTest {
                 configWithAdmins(List.of())
         );
 
-        AlcoholType result = repo.createAlcoholType(new NewAlcoholEntry(USER, "Gin", null, null));
+        AlcoholType result = repo.createAlcoholType(new NewAlcoholEntry(USER, "Gin", null, null, null, null));
 
         assertThat(result).isEqualTo(saved);
         verifyNoInteractions(volumeTable, subtypesTable);
