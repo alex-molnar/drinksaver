@@ -1,60 +1,58 @@
 import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
 import { Glass } from './glassware';
+import type { Glassware } from '../types/api';
+
+const shape = (overrides: Partial<Glassware> = {}): Glassware => ({
+  id: 42,
+  name: 'server-shape',
+  g: 'M1 1h10v10H1Z',
+  l: 'M2 2h8v8H2Z',
+  f: null,
+  ...overrides,
+});
 
 describe('Glass', () => {
-  it.each([
-    'pint',
-    'tulip',
-    'wine',
-    'highball',
-    'rocks',
-    'shot',
-    'coupe',
-    'flute',
-    'palinka',
-    'beercan',
-    'beerbottle',
-    'beerjug',
-  ] as const)('renders %s as an aria-hidden svg', (kind) => {
-    const { container } = render(<Glass kind={kind} chroma="#123456" />);
-    const svg = container.querySelector('svg');
-    expect(svg).not.toBeNull();
-    expect(svg).toHaveAttribute('aria-hidden', 'true');
+  it('renders the backend name, id and paths as an aria-hidden svg', () => {
+    const glassware = shape();
+    const { container, getByTestId } = render(<Glass glassware={glassware} chroma="#123456" />);
+
+    expect(getByTestId('glass-server-shape')).toHaveAttribute('aria-hidden', 'true');
+    expect(getByTestId('glass-server-shape')).toHaveAttribute('data-glassware-id', '42');
+    expect(container.querySelectorAll('path')[0]).toHaveAttribute('d', glassware.l);
+    expect(container.querySelectorAll('path')[1]).toHaveAttribute('d', glassware.g);
   });
 
   it('fills the liquid path with chroma', () => {
-    const { container } = render(<Glass kind="pint" chroma="#E0A828" />);
+    const { container } = render(<Glass glassware={shape()} chroma="#E0A828" />);
     expect(container.querySelectorAll('path')[0]).toHaveAttribute('fill', '#E0A828');
   });
 
-  it('draws foam only when the glass kind has a foam path and a foam colour is given', () => {
-    const withFoam = render(<Glass kind="pint" chroma="#123456" foam="#EBDCC0" />);
+  it('draws backend-provided foam when a foam colour is given', () => {
+    const withFoam = render(
+      <Glass glassware={shape({ f: 'M1 1h10v2H1Z' })} chroma="#123456" foam="#EBDCC0" />,
+    );
     expect(withFoam.container.querySelectorAll('path')).toHaveLength(3);
     expect(withFoam.container.querySelectorAll('path')[1]).toHaveAttribute('fill', '#EBDCC0');
   });
 
-  it('draws no foam path when no foam colour is given, even for a kind that has one', () => {
-    const { container } = render(<Glass kind="pint" chroma="#123456" />);
+  it('draws no foam path in chroma mode when no foam colour is given', () => {
+    const { container } = render(
+      <Glass glassware={shape({ f: 'M1 1h10v2H1Z' })} chroma="#123456" />,
+    );
     expect(container.querySelectorAll('path')).toHaveLength(2);
   });
 
-  it('draws no foam path for wine or highball, even when a foam colour is given', () => {
-    const wine = render(<Glass kind="wine" chroma="#123456" foam="#EBDCC0" />);
-    expect(wine.container.querySelectorAll('path')).toHaveLength(2);
-
-    const highball = render(<Glass kind="highball" chroma="#123456" foam="#EBDCC0" />);
-    expect(highball.container.querySelectorAll('path')).toHaveLength(2);
-  });
-
-  it('draws a foam crown for the beer jug', () => {
-    const jug = render(<Glass kind="beerjug" chroma="#E0A828" foam="#EBDCC0" />);
-    expect(jug.container.querySelectorAll('path')).toHaveLength(3);
-    expect(jug.container.querySelectorAll('path')[1]).toHaveAttribute('fill', '#EBDCC0');
+  it('draws configured foam as flat ink in ink mode', () => {
+    const { container } = render(
+      <Glass glassware={shape({ f: 'M1 1h10v2H1Z' })} chroma="#123456" tone="ink" />,
+    );
+    expect(container.querySelectorAll('path')).toHaveLength(3);
+    expect(container.querySelectorAll('path')[1]).toHaveAttribute('fill', 'currentColor');
   });
 
   it('leaves the outline path explicitly unfilled', () => {
-    const { container } = render(<Glass kind="highball" chroma="#123456" />);
+    const { container } = render(<Glass glassware={shape()} chroma="#123456" />);
     const paths = container.querySelectorAll('path');
     expect(paths[paths.length - 1]).toHaveAttribute('fill', 'none');
   });

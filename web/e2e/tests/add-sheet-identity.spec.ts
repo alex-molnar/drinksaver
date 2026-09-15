@@ -1,5 +1,22 @@
 import { test, expect, type Page } from '@playwright/test';
-import { PALETTES } from '../../src/drink/identity';
+
+const PALETTES = {
+  green: { field: '#135E4A', inkDark: '#FFF1D6' },
+  brown: { field: '#32170F', inkDark: '#F7E2BD' },
+  cream: { field: '#E8D8B8', inkDark: '#24150F' },
+  red: { field: '#A93327', inkDark: '#FFF0D8' },
+  blue: { field: '#234E78', inkDark: '#F9EBD0' },
+  plum: { field: '#713153', inkDark: '#F9E8D4' },
+  amber: { field: '#D69A24', inkDark: '#26160E' },
+  rose: { field: '#D99AA5', inkDark: '#25140F' },
+} as const;
+
+const paletteResponse = Object.entries(PALETTES).map(([name, palette], index) => ({
+  id: index + 1,
+  name,
+  ...palette,
+  inkLight: null,
+}));
 
 const rgb = (hex: string) => `rgb(${[1, 3, 5].map((start) => parseInt(hex.slice(start, start + 2), 16)).join(', ')})`;
 const menuRow = (page: Page, label: string) => page.getByRole('button', { name: new RegExp(`^${label},`) });
@@ -10,6 +27,8 @@ for (const viewport of [
 ]) {
   test(`catalogue palettes follow API IDs and fallbacks in the ${viewport.name} add sheet`, async ({ page }) => {
     await page.setViewportSize(viewport);
+    await page.route('**/v1/design/color-palettes', (route) => route.fulfill({ json: paletteResponse }));
+    await page.route('**/v1/design/glassware', (route) => route.fulfill({ json: [] }));
     await page.route('**/v1/alcohol/types', (route) => route.fulfill({
       json: [
         { id: 1, name: 'Beer', volumeIds: [10], colorPaletteId: 7, glasswareId: 4 },

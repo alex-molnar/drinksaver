@@ -250,6 +250,26 @@ describe('api/endpoints', () => {
     });
   });
 
+  describe('design catalogue', () => {
+    it('gets color palettes from /v1/design/color-palettes', async () => {
+      mockApiClient.get.mockResolvedValue({ data: [{ id: 1, name: 'green' }] });
+
+      const result = await endpoints.getColorPalettes();
+
+      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/design/color-palettes');
+      expect(result).toEqual([{ id: 1, name: 'green' }]);
+    });
+
+    it('gets SVG definitions from /v1/design/glassware', async () => {
+      mockApiClient.get.mockResolvedValue({ data: [{ id: 1, name: 'pint', g: 'g', l: 'l', f: null }] });
+
+      const result = await endpoints.getGlassware();
+
+      expect(mockApiClient.get).toHaveBeenCalledWith('/v1/design/glassware');
+      expect(result).toEqual([{ id: 1, name: 'pint', g: 'g', l: 'l', f: null }]);
+    });
+  });
+
   describe('getSavedDrinksByDate', () => {
     it('gets /v1/drinks/date/{date}', async () => {
       mockApiClient.get.mockResolvedValue({ data: [] });

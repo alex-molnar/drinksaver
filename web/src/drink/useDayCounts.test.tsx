@@ -7,6 +7,8 @@ import { SaveQueueContext, type SaveQueueContextType } from './SaveQueueContext'
 import { getSavedDrinksByDate } from '../api/endpoints';
 import { EMPTY_QUEUE, type SaveQueueEntry, type SaveQueueState } from './saveQueueReducer';
 import { drinkIdentity } from './identity';
+import { TEST_DESIGN } from '../test/designFixtures';
+import { TestDesignProvider } from '../test/TestDesignProvider';
 import type { EditableDrink } from '../types/api';
 
 vi.mock('../api/endpoints');
@@ -27,7 +29,9 @@ const wrapperWithQueue = (queue: SaveQueueState) => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>
-      <SaveQueueContext.Provider value={stubSaveQueue(queue)}>{children}</SaveQueueContext.Provider>
+      <TestDesignProvider>
+        <SaveQueueContext.Provider value={stubSaveQueue(queue)}>{children}</SaveQueueContext.Provider>
+      </TestDesignProvider>
     </QueryClientProvider>
   );
   return Wrapper;
@@ -147,7 +151,10 @@ describe('useDayCounts', () => {
 
     await waitFor(() => expect(result.current[0].status).toBe('ready'));
     expect(result.current[0]).toMatchObject({
-      swatches: [drinkIdentity('Heineken pint', 4).field, drinkIdentity('Glass of red', 30).field],
+      swatches: [
+        drinkIdentity('Heineken pint', 4, TEST_DESIGN).field,
+        drinkIdentity('Glass of red', 30, TEST_DESIGN).field,
+      ],
     });
   });
 

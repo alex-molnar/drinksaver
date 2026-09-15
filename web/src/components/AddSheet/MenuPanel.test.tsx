@@ -8,7 +8,8 @@ import { useDraft } from '../../drink/useDraft';
 import { useCatalogue } from '../../drink/useCatalogue';
 import { useSaveQueue } from '../../drink/useSaveQueue';
 import { initialDraftState, type DraftState } from '../../drink/draftReducer';
-import { PALETTES } from '../../drink/identity';
+import { TEST_PALETTE_BY_NAME } from '../../test/designFixtures';
+import { TestDesignProvider } from '../../test/TestDesignProvider';
 
 vi.mock('../../drink/useDraft');
 vi.mock('../../drink/useCatalogue');
@@ -45,7 +46,9 @@ const setDraft = (overrides: Partial<DraftState> = {}, isBeer = false) => {
 const renderMenuPanel = (onPushPanel = vi.fn(), onDismiss = vi.fn()) => {
   render(
     <ThemeProvider theme={muiTheme}>
-      <MenuPanel onPushPanel={onPushPanel} onDismiss={onDismiss} />
+      <TestDesignProvider>
+        <MenuPanel onPushPanel={onPushPanel} onDismiss={onDismiss} />
+      </TestDesignProvider>
     </ThemeProvider>
   );
   return { onPushPanel, onDismiss };
@@ -91,7 +94,7 @@ describe('MenuPanel', () => {
     const drinkRow = screen.getByRole('button', { name: /^Drink,/ });
     expect(drinkRow).toHaveAccessibleName(/wine/i);
     expect(drinkRow.querySelector('[data-color-palette-id="6"]')).toHaveStyle({
-      '--palette-swatch-field': PALETTES.plum.field,
+      '--palette-swatch-field': TEST_PALETTE_BY_NAME.plum.field,
     });
   });
 
@@ -101,7 +104,7 @@ describe('MenuPanel', () => {
 
     const brandRow = screen.getByRole('button', { name: /^Brand, Heineken$/ });
     expect(brandRow.querySelector('[data-color-palette-id="1"]')).toHaveStyle({
-      '--palette-swatch-field': PALETTES.green.field,
+      '--palette-swatch-field': TEST_PALETTE_BY_NAME.green.field,
     });
     expect(brandRow.querySelector('[data-color-palette-id="1"]')).toHaveAttribute('aria-hidden', 'true');
   });
@@ -117,7 +120,7 @@ describe('MenuPanel', () => {
 
     const brandRow = screen.getByRole('button', { name: /^Brand, House lager$/ });
     expect(brandRow.querySelector('[data-color-palette-id="1"]')).toHaveStyle({
-      '--palette-swatch-field': PALETTES.green.field,
+      '--palette-swatch-field': TEST_PALETTE_BY_NAME.green.field,
     });
   });
 

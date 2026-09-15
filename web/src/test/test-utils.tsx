@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { render, type RenderOptions } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import { muiTheme } from '../theme/muiTheme';
+import { TestDesignProvider } from './TestDesignProvider';
 
 /**
  * A fresh QueryClient per render, with retries off. Retries make a failing
@@ -27,7 +28,9 @@ export const renderWithProviders = (ui: ReactElement, { route = '/', state, ...o
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <ThemeProvider theme={muiTheme}>
       <QueryClientProvider client={client}>
-        <MemoryRouter initialEntries={[{ pathname: route, state }]}>{children}</MemoryRouter>
+        <TestDesignProvider>
+          <MemoryRouter initialEntries={[{ pathname: route, state }]}>{children}</MemoryRouter>
+        </TestDesignProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

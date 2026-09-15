@@ -80,6 +80,22 @@ export interface ConsumptionType {
   glasswareId: number;
 }
 
+export interface ColorPalette {
+  id: number;
+  name: string;
+  field: string;
+  inkLight: string | null;
+  inkDark: string;
+}
+
+export interface Glassware {
+  id: number;
+  name: string;
+  g: string;
+  l: string;
+  f: string | null;
+}
+
 // Alcohol subtype types
 export interface AlcoholSubtype {
   id: number;

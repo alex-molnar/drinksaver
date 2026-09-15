@@ -10,7 +10,7 @@ import { useDrinksForDate } from '../drink/useDrinksForDate';
 import type { Recommendation } from '../types/api';
 import type { SaveQueueContextType } from '../drink/SaveQueueContext';
 import type { SaveQueueEntry } from '../drink/saveQueueReducer';
-import { PALETTES } from '../drink/identity';
+import { TEST_PALETTE_BY_NAME } from '../test/designFixtures';
 
 vi.mock('../api/endpoints');
 vi.mock('../hooks/useSheet');
@@ -81,18 +81,18 @@ const savingEntry = (label: string): SaveQueueEntry => ({
 
 describe('QuickSavePage', () => {
   it.each([
-    { colorPaletteId: 1, glasswareId: 9, palette: PALETTES.green, glass: 'palinka' },
-    { colorPaletteId: 2, glasswareId: 1, palette: PALETTES.brown, glass: 'pint' },
-    { colorPaletteId: 3, glasswareId: 2, palette: PALETTES.cream, glass: 'tulip' },
-    { colorPaletteId: 4, glasswareId: 7, palette: PALETTES.red, glass: 'coupe' },
-    { colorPaletteId: 5, glasswareId: 4, palette: PALETTES.blue, glass: 'highball' },
-    { colorPaletteId: 6, glasswareId: 3, palette: PALETTES.plum, glass: 'wine' },
-    { colorPaletteId: 7, glasswareId: 5, palette: PALETTES.amber, glass: 'rocks' },
-    { colorPaletteId: 8, glasswareId: 8, palette: PALETTES.rose, glass: 'flute' },
-    { colorPaletteId: 7, glasswareId: 6, palette: PALETTES.amber, glass: 'shot' },
-    { colorPaletteId: 7, glasswareId: 10, palette: PALETTES.amber, glass: 'beercan' },
-    { colorPaletteId: 2, glasswareId: 11, palette: PALETTES.brown, glass: 'beerbottle' },
-    { colorPaletteId: 3, glasswareId: 12, palette: PALETTES.cream, glass: 'beerjug' },
+    { colorPaletteId: 1, glasswareId: 9, palette: TEST_PALETTE_BY_NAME.green, glass: 'palinka' },
+    { colorPaletteId: 2, glasswareId: 1, palette: TEST_PALETTE_BY_NAME.brown, glass: 'pint' },
+    { colorPaletteId: 3, glasswareId: 2, palette: TEST_PALETTE_BY_NAME.cream, glass: 'tulip' },
+    { colorPaletteId: 4, glasswareId: 7, palette: TEST_PALETTE_BY_NAME.red, glass: 'coupe' },
+    { colorPaletteId: 5, glasswareId: 4, palette: TEST_PALETTE_BY_NAME.blue, glass: 'highball' },
+    { colorPaletteId: 6, glasswareId: 3, palette: TEST_PALETTE_BY_NAME.plum, glass: 'wine' },
+    { colorPaletteId: 7, glasswareId: 5, palette: TEST_PALETTE_BY_NAME.amber, glass: 'rocks' },
+    { colorPaletteId: 8, glasswareId: 8, palette: TEST_PALETTE_BY_NAME.rose, glass: 'flute' },
+    { colorPaletteId: 7, glasswareId: 6, palette: TEST_PALETTE_BY_NAME.amber, glass: 'shot' },
+    { colorPaletteId: 7, glasswareId: 10, palette: TEST_PALETTE_BY_NAME.amber, glass: 'beercan' },
+    { colorPaletteId: 2, glasswareId: 11, palette: TEST_PALETTE_BY_NAME.brown, glass: 'beerbottle' },
+    { colorPaletteId: 3, glasswareId: 12, palette: TEST_PALETTE_BY_NAME.cream, glass: 'beerjug' },
   ])('renders API palette $colorPaletteId and glassware $glasswareId on a recommendation tile', async ({ colorPaletteId, glasswareId, palette, glass }) => {
     const recommendation = {
       ...nullIdRecommendations[0],
@@ -111,12 +111,12 @@ describe('QuickSavePage', () => {
   });
 
   it.each([
-    { colorPaletteId: undefined, glasswareId: undefined, palette: PALETTES.cream, glass: 'highball' },
-    { colorPaletteId: null, glasswareId: null, palette: PALETTES.cream, glass: 'highball' },
-    { colorPaletteId: 999, glasswareId: 999, palette: PALETTES.cream, glass: 'highball' },
-    { colorPaletteId: 0, glasswareId: 0, palette: PALETTES.cream, glass: 'highball' },
-    { colorPaletteId: 999, glasswareId: 9, palette: PALETTES.cream, glass: 'palinka' },
-    { colorPaletteId: 7, glasswareId: 999, palette: PALETTES.amber, glass: 'highball' },
+    { colorPaletteId: undefined, glasswareId: undefined, palette: TEST_PALETTE_BY_NAME.cream, glass: 'highball' },
+    { colorPaletteId: null, glasswareId: null, palette: TEST_PALETTE_BY_NAME.cream, glass: 'highball' },
+    { colorPaletteId: 999, glasswareId: 999, palette: TEST_PALETTE_BY_NAME.cream, glass: 'highball' },
+    { colorPaletteId: 0, glasswareId: 0, palette: TEST_PALETTE_BY_NAME.cream, glass: 'highball' },
+    { colorPaletteId: 999, glasswareId: 9, palette: TEST_PALETTE_BY_NAME.cream, glass: 'palinka' },
+    { colorPaletteId: 7, glasswareId: 999, palette: TEST_PALETTE_BY_NAME.amber, glass: 'highball' },
   ])('falls back independently for palette $colorPaletteId and glassware $glasswareId', async ({ colorPaletteId, glasswareId, palette, glass }) => {
     mockGetRecommendations.mockResolvedValue([{ ...nullIdRecommendations[0], colorPaletteId, glasswareId }]);
 
@@ -137,14 +137,14 @@ describe('QuickSavePage', () => {
     act(() => client.setQueryData(['recommendations'], [renamed]));
 
     expect(await screen.findByRole('button', { name: renamed.name })).toBe(tile);
-    expect(tile.style.getPropertyValue('--fld')).toBe(PALETTES.green.field);
+    expect(tile.style.getPropertyValue('--fld')).toBe(TEST_PALETTE_BY_NAME.green.field);
     expect(within(tile).getByTestId('glass-pint')).toBeInTheDocument();
 
     act(() => client.setQueryData(['recommendations'], [{ ...renamed, colorPaletteId: 8, glasswareId: 9 }]));
 
-    await waitFor(() => expect(tile.style.getPropertyValue('--fld')).toBe(PALETTES.rose.field));
+    await waitFor(() => expect(tile.style.getPropertyValue('--fld')).toBe(TEST_PALETTE_BY_NAME.rose.field));
     expect(screen.getByRole('button', { name: renamed.name })).toBe(tile);
-    expect(tile).toHaveStyle({ color: PALETTES.rose.inkDark });
+    expect(tile).toHaveStyle({ color: TEST_PALETTE_BY_NAME.rose.inkDark });
     expect(within(tile).getByTestId('glass-palinka')).toBeInTheDocument();
   });
 

@@ -3,6 +3,8 @@ import { getSavedDrinksByDate } from '../api/endpoints';
 import { useSaveQueue } from './useSaveQueue';
 import { pendingInsertsForDate, suppressedIdsForDate, type SaveQueueState } from './saveQueueReducer';
 import { drinkIdentity } from './identity';
+import { useDesign } from './useDesign';
+import type { DesignCatalogue } from './designCatalogue';
 import type { EditableDrink } from '../types/api';
 
 /**
@@ -37,7 +39,12 @@ export type DayCount =
  * strip agreeing with the paper tab's row count the instant a save or delete is queued, rather
  * than only once a refetch lands.
  */
-const readDay = (date: string, result: UseQueryResult<EditableDrink[], Error>, queue: SaveQueueState): DayCount => {
+const readDay = (
+  date: string,
+  result: UseQueryResult<EditableDrink[], Error>,
+  queue: SaveQueueState,
+  design: DesignCatalogue,
+): DayCount => {
   if (result.isPending) {
     return { status: 'loading' };
   }
@@ -52,7 +59,9 @@ const readDay = (date: string, result: UseQueryResult<EditableDrink[], Error>, q
   const pending = pendingInsertsForDate(queue, date).filter((row) => !keptIds.has(row.id));
 
   const rows = [...kept, ...pending];
-  const swatches = rows.slice(0, MAX_SWATCHES).map((row) => drinkIdentity(row.name, row.alcoholTypeId).field);
+  const swatches = rows
+    .slice(0, MAX_SWATCHES)
+    .map((row) => drinkIdentity(row.name, row.alcoholTypeId, design).field);
 
   return { status: 'ready', count: rows.length, swatches };
 };
@@ -72,6 +81,7 @@ const DAY_COUNT_STALE_TIME_MS = 5 * 60 * 1000;
 
 export const useDayCounts = (dates: readonly string[]): readonly DayCount[] => {
   const { queue } = useSaveQueue();
+  const design = useDesign();
 
   const results = useQueries({
     queries: dates.map((date) => ({
@@ -81,7 +91,7 @@ export const useDayCounts = (dates: readonly string[]): readonly DayCount[] => {
     })),
   });
 
-  return results.map((result, i) => readDay(dates[i], result, queue));
+  return results.map((result, i) => readDay(dates[i], result, queue, design));
 };
 
 export default useDayCounts;

@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import { recommendationIdentity } from '../drink/identity';
 import { Glass } from '../drink/glassware';
+import { useDesign } from '../drink/useDesign';
 
 /**
  * 'saving' dims the plate and marks it `aria-busy`; 'done' raises the stamp. Both are transient:
@@ -232,14 +232,14 @@ const AddButton = styled.button`
  * The enamel sign, or its dashed "add" sibling. A real `<button>` either way, never a `div` with
  * a click handler, so it is focusable and has an accessible name for free.
  *
- * Field colour and ink always come from `recommendationIdentity`, never from a literal here: this
- * component only ever reads `identity.field` / `identity.inkDark` / `identity.chroma` /
- * `identity.glass`, all resolved from design IDs, and passes the two colours through as CSS
+ * Field colour, ink and SVG paths come from the design endpoints, never from literals here. This
+ * component resolves the two design IDs independently and passes the colours through as CSS
  * custom properties (`--fld`, plus the inherited `color`) rather than as styled-component props,
  * so nothing needs filtering before it reaches the DOM.
  */
 const Plate: React.FC<PlateProps> = (props) => {
   const { rotation, onClick, disabled = false } = props;
+  const design = useDesign();
   const style = { '--rot': `${rotation}deg` } as React.CSSProperties;
 
   if (props.variant === 'add') {
@@ -254,7 +254,8 @@ const Plate: React.FC<PlateProps> = (props) => {
   }
 
   const { name, colorPaletteId, glasswareId, caption, status = 'idle' } = props;
-  const identity = recommendationIdentity(colorPaletteId, glasswareId);
+  const palette = design.paletteForId(colorPaletteId);
+  const glassware = design.glasswareForId(glasswareId);
   const isSaving = status === 'saving';
   const isDone = status === 'done';
 
@@ -265,10 +266,10 @@ const Plate: React.FC<PlateProps> = (props) => {
       disabled={disabled || isSaving}
       aria-busy={isSaving || undefined}
       data-done={isDone ? '' : undefined}
-      style={{ ...style, '--fld': identity.field, color: identity.inkDark } as React.CSSProperties}
+      style={{ ...style, '--fld': palette.field, color: palette.inkDark } as React.CSSProperties}
     >
       <span className="glass">
-        <Glass kind={identity.glass} chroma={identity.chroma} tone="ink" />
+        <Glass glassware={glassware} chroma={palette.field} tone="ink" />
       </span>
       <span className="name">{name}</span>
       {caption ? <span className="caption">{caption}</span> : null}

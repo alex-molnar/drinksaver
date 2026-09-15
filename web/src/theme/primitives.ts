@@ -64,21 +64,6 @@ export const accent = {
 } as const;
 
 /**
- * Enamel field hues, seeded here from the design doc's drink identity table so the module that
- * actually owns them (`feat/drink-identity`, later in the stack) has real values to start from
- * rather than placeholders. Nothing in this theme layer reads this constant: it is inert until
- * the identity module imports it.
- */
-export const enamelHues = [
-  '#2B7454', // Heineken pint
-  '#2B1A13', // Guinness pint
-  '#DFD1B0', // Duvel bottle
-  '#BA422C', // Chouffe bottle
-  '#2C4B6E', // Gin and tonic
-  '#6B3350', // Glass of red
-] as const;
-
-/**
  * A spacing scale in `rem`, so it follows the user's font-size preference the way the rest of
  * the app's spacing already does (see the `1rem` / `2rem` gaps in `AppErrorBoundary.tsx`).
  */

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PaperTab, { type PaperTabRow } from './PaperTab';
+import { TestDesignProvider } from '../test/TestDesignProvider';
 import type { EditableDrink } from '../types/api';
 
 const heineken: EditableDrink = { id: 1, name: 'Heineken pint', alcoholTypeId: 4 };
@@ -254,16 +255,18 @@ describe('PaperTab', () => {
    */
   it('uses the alcohol type id to draw the right glass when the composed name is unrecognised', () => {
     render(
-      <PaperTab
-        label="Today"
-        status="ready"
-        rows={[
-          rowFor({ ...heineken, name: 'Heineken Original (Draft/Tap - 0.50l)' }),
-          rowFor({ ...redWine, name: 'Red (Large glass - 0.30l)' }),
-        ]}
-        onToggleSelect={vi.fn()}
-        onDeleteOne={vi.fn()}
-      />
+      <TestDesignProvider>
+        <PaperTab
+          label="Today"
+          status="ready"
+          rows={[
+            rowFor({ ...heineken, name: 'Heineken Original (Draft/Tap - 0.50l)' }),
+            rowFor({ ...redWine, name: 'Red (Large glass - 0.30l)' }),
+          ]}
+          onToggleSelect={vi.fn()}
+          onDeleteOne={vi.fn()}
+        />
+      </TestDesignProvider>
     );
 
     expect(screen.getByTestId('glass-pint')).toBeInTheDocument();

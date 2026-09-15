@@ -9,7 +9,8 @@ import { useCatalogue } from '../../drink/useCatalogue';
 import { initialDraftState, type DraftState } from '../../drink/draftReducer';
 import { previousIsoDate } from '../../drink/draftFields';
 import { drinkingDay } from '../../drink/day';
-import { PALETTES } from '../../drink/identity';
+import { TEST_PALETTE_BY_NAME } from '../../test/designFixtures';
+import { TestDesignProvider } from '../../test/TestDesignProvider';
 import type { MenuRowKey } from '../../drink/draftFields';
 
 vi.mock('../../drink/useDraft');
@@ -52,7 +53,9 @@ const setDraft = (overrides: Partial<DraftState> = {}, catalogueOverrides: Parti
 const renderOptionPanel = (field: MenuRowKey, onPushPanel = vi.fn(), onPopPanel = vi.fn()) => {
   render(
     <ThemeProvider theme={muiTheme}>
-      <OptionPanel field={field} onPushPanel={onPushPanel} onPopPanel={onPopPanel} />
+      <TestDesignProvider>
+        <OptionPanel field={field} onPushPanel={onPushPanel} onPopPanel={onPopPanel} />
+      </TestDesignProvider>
     </ThemeProvider>
   );
   return { onPushPanel, onPopPanel };
@@ -106,18 +109,18 @@ describe('OptionPanel', () => {
       const beerSwatch = screen.getByRole('button', { name: 'Beer' }).querySelector('[data-color-palette-id="3"]');
       const wineSwatch = screen.getByRole('button', { name: 'Wine' }).querySelector('[data-color-palette-id="6"]');
 
-      expect(beerSwatch).toHaveStyle({ '--palette-swatch-field': PALETTES.cream.field });
-      expect(wineSwatch).toHaveStyle({ '--palette-swatch-field': PALETTES.plum.field });
+      expect(beerSwatch).toHaveStyle({ '--palette-swatch-field': TEST_PALETTE_BY_NAME.cream.field });
+      expect(wineSwatch).toHaveStyle({ '--palette-swatch-field': TEST_PALETTE_BY_NAME.plum.field });
       expect(document.querySelectorAll('[data-color-palette-id]')).toHaveLength(2);
 
       cleanup();
       setDraft({ alcoholTypeId: 1 });
       renderOptionPanel('brand');
       expect(screen.getByRole('button', { name: 'Heineken' }).querySelector('[data-color-palette-id="1"]')).toHaveStyle({
-        '--palette-swatch-field': PALETTES.green.field,
+        '--palette-swatch-field': TEST_PALETTE_BY_NAME.green.field,
       });
       expect(screen.getByRole('button', { name: 'House lager' }).querySelector('[data-color-palette-id="3"]')).toHaveStyle({
-        '--palette-swatch-field': PALETTES.cream.field,
+        '--palette-swatch-field': TEST_PALETTE_BY_NAME.cream.field,
       });
     });
 
@@ -126,10 +129,10 @@ describe('OptionPanel', () => {
       renderOptionPanel('subtype');
 
       expect(screen.getByRole('button', { name: 'Red' }).querySelector('[data-color-palette-id="4"]')).toHaveStyle({
-        '--palette-swatch-field': PALETTES.red.field,
+        '--palette-swatch-field': TEST_PALETTE_BY_NAME.red.field,
       });
       expect(screen.getByRole('button', { name: 'White' }).querySelector('[data-color-palette-id="6"]')).toHaveStyle({
-        '--palette-swatch-field': PALETTES.plum.field,
+        '--palette-swatch-field': TEST_PALETTE_BY_NAME.plum.field,
       });
     });
 
@@ -138,10 +141,10 @@ describe('OptionPanel', () => {
       renderOptionPanel('beerFlavour');
 
       expect(screen.getByRole('button', { name: 'Lager' }).querySelector('[data-color-palette-id="7"]')).toHaveStyle({
-        '--palette-swatch-field': PALETTES.amber.field,
+        '--palette-swatch-field': TEST_PALETTE_BY_NAME.amber.field,
       });
       expect(screen.getByRole('button', { name: 'Pils' }).querySelector('[data-color-palette-id="1"]')).toHaveStyle({
-        '--palette-swatch-field': PALETTES.green.field,
+        '--palette-swatch-field': TEST_PALETTE_BY_NAME.green.field,
       });
 
       cleanup();
@@ -151,7 +154,7 @@ describe('OptionPanel', () => {
       );
       renderOptionPanel('beerFlavour');
       expect(screen.getByRole('button', { name: 'Pils' }).querySelector('[data-color-palette-id="3"]')).toHaveStyle({
-        '--palette-swatch-field': PALETTES.cream.field,
+        '--palette-swatch-field': TEST_PALETTE_BY_NAME.cream.field,
       });
     });
 

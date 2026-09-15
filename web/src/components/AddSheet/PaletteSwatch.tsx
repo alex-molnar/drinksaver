@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import { paletteForId } from '../../drink/identity';
+import { useDesign } from '../../drink/useDesign';
 
 const Swatch = styled.span`
   display: inline-block;
@@ -18,7 +18,7 @@ interface PaletteSwatchProps {
 
 /** A restrained, decorative echo of a drink plate's backend-selected field colour. */
 const PaletteSwatch: React.FC<PaletteSwatchProps> = ({ colorPaletteId }) => {
-  const palette = paletteForId(colorPaletteId);
+  const palette = useDesign().paletteForId(colorPaletteId);
 
   return (
     <Swatch

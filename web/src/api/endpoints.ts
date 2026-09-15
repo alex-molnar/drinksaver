@@ -20,6 +20,8 @@ import type {
   BeerFlavour,
   NewBeerBrand,
   EditableDrink,
+  ColorPalette,
+  Glassware,
 } from '../types/api';
 
 // Drinks endpoints
@@ -130,6 +132,17 @@ export const createBeerFlavour = async (brandId: number, name: string): Promise<
     `/v1/beer/brands/${brandId}/flavours`,
     { name }
   );
+  return response.data;
+};
+
+// Design endpoints
+export const getColorPalettes = async (): Promise<ColorPalette[]> => {
+  const response = await apiClient.get<ColorPalette[]>('/v1/design/color-palettes');
+  return response.data;
+};
+
+export const getGlassware = async (): Promise<Glassware[]> => {
+  const response = await apiClient.get<Glassware[]>('/v1/design/glassware');
   return response.data;
 };
 
