@@ -76,6 +76,16 @@ export interface Recommendation {
   glasswareId?: number | null;
 }
 
+/**
+ * One entry of the `PATCH /v1/recommendations/edit` body. The array's order is the order the
+ * rows should end up in, so position carries meaning and the array must not be reordered in
+ * transit. The name is always sent, changed or not, so the server never has to diff.
+ */
+export interface RecommendationEdit {
+  id: number;
+  name: string;
+}
+
 export interface ConsumptionType {
   id: number;
   name: string;
