@@ -33,6 +33,12 @@ const Heading = styled.h2`
   }
 `;
 
+const TopBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
 const BackButton = styled.button`
   display: inline-flex;
   align-items: center;
@@ -51,6 +57,32 @@ const BackButton = styled.button`
   &:hover {
     color: var(--ds-ink-primary);
     background: color-mix(in srgb, var(--ds-ink-primary) 6%, transparent);
+  }
+`;
+
+const AddButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 12px 0;
+  width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: var(--ds-radius-sm);
+  background: none;
+  color: var(--ds-ink-secondary);
+  font: inherit;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--ds-ink-primary);
+    background: color-mix(in srgb, var(--ds-ink-primary) 6%, transparent);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--ds-ink-secondary);
+    outline-offset: -3px;
   }
 `;
 
@@ -275,6 +307,17 @@ const selectedIdFor = (field: DraftFieldKey, draft: DraftState): number | null =
  *  `MenuRowKey`/`DraftFieldKey` this excludes: see `useCreateCatalogueEntry.ts`'s module doc. */
 const isCreatable = (field: DraftFieldKey): field is CreatableCatalogueField => field !== 'consumptionType';
 
+/** Mirrors `buildOptionList`'s `createLabel` strings, for the top bar's "+" button aria-label -
+ *  see `OptionPanel`'s header, which needs a name for the field before the catalogue query the
+ *  list itself depends on has necessarily resolved. */
+const CREATE_LABELS: Record<CreatableCatalogueField, string> = {
+  alcoholType: 'drink type',
+  volume: 'size',
+  subtype: 'subtype',
+  brand: 'brand',
+  beerFlavour: 'flavour',
+};
+
 const CatalogueField: React.FC<{
   field: DraftFieldKey;
   headingRef: React.Ref<HTMLHeadingElement>;
@@ -455,15 +498,28 @@ const OptionPanel: React.FC<OptionPanelProps> = ({ field, onPushPanel, onPopPane
     headingRef.current?.focus();
   }, []);
 
+  const isCatalogueField = field !== 'notes' && field !== 'recommend' && field !== 'date';
+
   return (
     <div>
-      <BackButton type="button" onClick={onPopPanel}>
-        Back
-      </BackButton>
+      <TopBar>
+        <BackButton type="button" onClick={onPopPanel}>
+          Back
+        </BackButton>
+        {isCatalogueField && isCreatable(field) ? (
+          <AddButton
+            type="button"
+            aria-label={`Add ${CREATE_LABELS[field]}`}
+            onClick={() => onPushPanel({ kind: 'create', field })}
+          >
+            +
+          </AddButton>
+        ) : null}
+      </TopBar>
       {field === 'notes' && <NotesField headingRef={headingRef} />}
       {field === 'recommend' && <RecommendField headingRef={headingRef} />}
       {field === 'date' && <WhenField headingRef={headingRef} onPopPanel={onPopPanel} />}
-      {field !== 'notes' && field !== 'recommend' && field !== 'date' && (
+      {isCatalogueField && (
         <CatalogueField field={field} headingRef={headingRef} onPushPanel={onPushPanel} onPopPanel={onPopPanel} />
       )}
     </div>
