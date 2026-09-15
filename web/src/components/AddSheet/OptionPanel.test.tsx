@@ -6,6 +6,7 @@ import { muiTheme } from '../../theme/muiTheme';
 import OptionPanel from './OptionPanel';
 import { useDraft } from '../../drink/useDraft';
 import { useCatalogue } from '../../drink/useCatalogue';
+import { useSaveQueue } from '../../drink/useSaveQueue';
 import { initialDraftState, type DraftState } from '../../drink/draftReducer';
 import { previousIsoDate } from '../../drink/draftFields';
 import { drinkingDay } from '../../drink/day';
@@ -15,9 +16,12 @@ import type { MenuRowKey } from '../../drink/draftFields';
 
 vi.mock('../../drink/useDraft');
 vi.mock('../../drink/useCatalogue');
+vi.mock('../../drink/useSaveQueue');
 
 const mockUseDraft = vi.mocked(useDraft);
 const mockUseCatalogue = vi.mocked(useCatalogue);
+const mockUseSaveQueue = vi.mocked(useSaveQueue);
+const save = vi.fn().mockReturnValue('save-1');
 
 const TODAY = drinkingDay(new Date());
 const YESTERDAY = previousIsoDate(TODAY);
@@ -50,19 +54,29 @@ const setDraft = (overrides: Partial<DraftState> = {}, catalogueOverrides: Parti
   return draft;
 };
 
-const renderOptionPanel = (field: MenuRowKey, onPushPanel = vi.fn(), onPopPanel = vi.fn()) => {
+const renderOptionPanel = (field: MenuRowKey, onPushPanel = vi.fn(), onPopPanel = vi.fn(), onDismiss = vi.fn()) => {
   render(
     <ThemeProvider theme={muiTheme}>
       <TestDesignProvider>
-        <OptionPanel field={field} onPushPanel={onPushPanel} onPopPanel={onPopPanel} />
+        <OptionPanel field={field} onPushPanel={onPushPanel} onPopPanel={onPopPanel} onDismiss={onDismiss} />
       </TestDesignProvider>
     </ThemeProvider>
   );
-  return { onPushPanel, onPopPanel };
+  return { onPushPanel, onPopPanel, onDismiss };
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  save.mockReturnValue('save-1');
+  mockUseSaveQueue.mockReturnValue({
+    queue: { entries: [] },
+    current: null,
+    save,
+    remove: vi.fn(),
+    undo: vi.fn(),
+    retry: vi.fn(),
+    stripHandlers: { onPointerEnter: vi.fn(), onPointerLeave: vi.fn(), onFocus: vi.fn(), onBlur: vi.fn() },
+  });
   setDraft();
 });
 

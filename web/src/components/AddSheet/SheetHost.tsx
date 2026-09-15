@@ -69,7 +69,7 @@ const SheetHost: React.FC = () => {
       <Suspense fallback={<PanelFallback role="status">Loading…</PanelFallback>}>
         {top.kind === 'menu' && <MenuPanel onPushPanel={sheet.pushPanel} onDismiss={sheet.dismiss} />}
         {top.kind === 'option' && (
-          <OptionPanel field={top.field} onPushPanel={sheet.pushPanel} onPopPanel={sheet.popPanel} />
+          <OptionPanel field={top.field} onPushPanel={sheet.pushPanel} onPopPanel={sheet.popPanel} onDismiss={sheet.dismiss} />
         )}
         {top.kind === 'create' && <CreatePanel field={top.field} onPopPanel={sheet.popPanel} />}
       </Suspense>

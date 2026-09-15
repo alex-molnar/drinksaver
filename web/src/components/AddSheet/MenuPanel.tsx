@@ -2,13 +2,12 @@ import React, { useRef, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useDraft } from '../../drink/useDraft';
 import { useCatalogue } from '../../drink/useCatalogue';
-import { useSaveQueue } from '../../drink/useSaveQueue';
-import { menuFields, isDraftReady, type DraftFieldsCatalogue, type MenuRow } from '../../drink/draftFields';
-import { QUANTITY_MAX, QUANTITY_MIN } from '../../drink/draftReducer';
+import { menuFields, type DraftFieldsCatalogue, type MenuRow } from '../../drink/draftFields';
 import { drinkingDay } from '../../drink/day';
-import { resolveBrandColorPaletteId, resolveDraftDesign } from '../../drink/designSelection';
+import { resolveBrandColorPaletteId } from '../../drink/designSelection';
 import type { AddSheetPanel } from './panels';
 import PaletteSwatch from './PaletteSwatch';
+import SaveControls from './SaveControls';
 
 export interface MenuPanelProps {
   onPushPanel: (panel: AddSheetPanel) => void;
@@ -99,130 +98,6 @@ const Value = styled.span<{ $placeholder: boolean }>`
   overflow-wrap: anywhere;
 `;
 
-const QuantityRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  padding: 14px var(--ds-space-lg) 2px;
-  border-top: 1px solid var(--ds-line-hairline);
-`;
-
-const StepButton = styled.button`
-  width: 52px;
-  height: 52px;
-  border-radius: var(--ds-radius-sm);
-  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 30%, transparent);
-  background: color-mix(in srgb, var(--ds-ink-primary) 5%, transparent);
-  color: var(--ds-ink-primary);
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: transform var(--ds-motion-duration-fast) var(--ds-motion-easing-standard);
-
-  &:active:not(:disabled) {
-    transform: scale(0.93);
-  }
-  &:disabled {
-    opacity: 0.28;
-    cursor: default;
-  }
-  &:focus-visible {
-    outline: 2px solid var(--ds-ink-primary);
-    outline-offset: 2px;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-    &:active:not(:disabled) {
-      transform: none;
-    }
-  }
-`;
-
-const QuantityNumber = styled.span`
-  font-family: var(--ds-type-numeral-font-family);
-  font-weight: var(--ds-type-numeral-font-weight);
-  font-variant-numeric: tabular-nums;
-  font-size: var(--ds-type-numeral-font-size);
-  min-width: 58px;
-  text-align: center;
-  line-height: 1;
-`;
-
-const QuantityCaption = styled.p`
-  margin: 0;
-  text-align: center;
-  font-family: var(--ds-type-caption-font-family);
-  font-size: var(--ds-type-caption-font-size);
-  color: var(--ds-ink-tertiary);
-  padding-bottom: 6px;
-`;
-
-const Cta = styled.button`
-  position: relative;
-  margin: 10px 16px calc(16px + env(safe-area-inset-bottom));
-  height: 58px;
-  width: calc(100% - 32px);
-  min-height: 44px;
-  border-radius: var(--ds-radius-sm);
-  border: 0;
-  flex: none;
-  background: var(--ds-accent-primary);
-  color: var(--ds-ink-primary);
-  font-family: var(--ds-type-display-m-font-family);
-  font-weight: var(--ds-type-display-m-font-weight);
-  font-size: 21px;
-  letter-spacing: 0.005em;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  box-shadow: var(--ds-elevation-raised);
-  transition:
-    transform var(--ds-motion-duration-fast) var(--ds-motion-easing-standard),
-    box-shadow var(--ds-motion-duration-fast) var(--ds-motion-easing-standard);
-
-  &:active:not(:disabled) {
-    transform: translateY(1px);
-  }
-  &:disabled {
-    background: color-mix(in srgb, var(--ds-ink-primary) 8%, transparent);
-    color: var(--ds-ink-tertiary);
-    box-shadow: none;
-    cursor: default;
-  }
-  &:focus-visible {
-    outline: 2px solid var(--ds-ink-primary);
-    outline-offset: 3px;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-    &:active:not(:disabled) {
-      transform: none;
-    }
-  }
-`;
-
-/**
- * A provisional display name for the row the queue and the strip show until the server's
- * composed name replaces it on the next refetch - see the design doc's known gap on this. Not a
- * verbatim port of anything in `DetailedPage`, which never needed one: it built the save payload
- * directly and let `/success`'s message stand in for a name. `useSaveQueue` needs a `label` up
- * front instead, since the strip has no page transition left to carry that message across.
- */
-const provisionalLabel = (catalogue: DraftFieldsCatalogue, draft: { alcoholTypeId: number | null; brandId: number | null; subtypeId: number | null }, isBeer: boolean): string => {
-  const typeName = catalogue.alcoholTypes?.find((t) => t.id === draft.alcoholTypeId)?.name ?? 'Drink';
-  const detail = isBeer
-    ? catalogue.brands?.find((b) => b.id === draft.brandId)?.name
-    : catalogue.subtypes?.find((s) => s.id === draft.subtypeId)?.name;
-  return detail ? `${typeName} (${detail})` : typeName;
-};
-
 /**
  * The placeholder a row shows when nothing is chosen. Shared between the accessible name and the
  * rendered value on purpose: WCAG 2.5.3 (Label in Name) wants the accessible name to contain the
@@ -256,9 +131,8 @@ const paletteIdForRow = (
  * panel offers directly; every field's own value is chosen one level down, in `OptionPanel`.
  */
 const MenuPanel: React.FC<MenuPanelProps> = ({ onPushPanel, onDismiss }) => {
-  const { draft, dispatch } = useDraft();
+  const { draft } = useDraft();
   const catalogue = useCatalogue(draft);
-  const { save } = useSaveQueue();
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -276,35 +150,6 @@ const MenuPanel: React.FC<MenuPanelProps> = ({ onPushPanel, onDismiss }) => {
 
   const today = drinkingDay(new Date());
   const rows = menuFields(draft, draftCatalogue, catalogue.isBeer, today);
-  const ready = isDraftReady(draft, catalogue.isBeer);
-
-  // No `!ready` guard here: the only caller is the Cta button below, and it is `disabled`
-  // whenever `ready` is false, so a browser (and `userEvent.click`, which respects `disabled`)
-  // never actually fires this handler in that state. Guarding it a second time here would be
-  // defensive code with no path that could ever exercise it.
-  const handleSave = () => {
-    const design = resolveDraftDesign(draft, draftCatalogue, catalogue.isBeer);
-    save({
-      label: provisionalLabel(draftCatalogue, draft, catalogue.isBeer),
-      date: draft.date,
-      alcoholTypeId: draft.alcoholTypeId as number,
-      payload: {
-        alcoholTypeId: draft.alcoholTypeId as number,
-        alcoholSubtypeId: draft.subtypeId ?? undefined,
-        alcoholVolumeId: draft.volumeId as number,
-        brandId: draft.brandId ?? undefined,
-        beerFlavourId: draft.beerFlavourId ?? undefined,
-        consumptionTypeId: draft.consumptionTypeId ?? undefined,
-        ...design,
-        comments: draft.comments.trim() ? draft.comments : undefined,
-        quantity: draft.quantity > 1 ? draft.quantity : undefined,
-        addToRecommendations: draft.addToRecommendations || undefined,
-        onlyTemporarily: draft.addToRecommendations && draft.onlyTemporarily ? true : undefined,
-        name: draft.addToRecommendations && draft.recommendationName ? draft.recommendationName : undefined,
-      },
-    });
-    onDismiss();
-  };
 
   return (
     <div>
@@ -326,29 +171,7 @@ const MenuPanel: React.FC<MenuPanelProps> = ({ onPushPanel, onDismiss }) => {
           </Row>
         ))}
       </Rows>
-      <QuantityRow>
-        <StepButton
-          type="button"
-          aria-label="One fewer"
-          disabled={draft.quantity <= QUANTITY_MIN}
-          onClick={() => dispatch({ type: 'setQuantity', quantity: draft.quantity - 1 })}
-        >
-          &minus;
-        </StepButton>
-        <QuantityNumber>{draft.quantity}</QuantityNumber>
-        <StepButton
-          type="button"
-          aria-label="One more"
-          disabled={draft.quantity >= QUANTITY_MAX}
-          onClick={() => dispatch({ type: 'setQuantity', quantity: draft.quantity + 1 })}
-        >
-          +
-        </StepButton>
-      </QuantityRow>
-      <QuantityCaption>{draft.quantity > 1 ? `Saves ${draft.quantity} identical drinks` : 'How many of these?'}</QuantityCaption>
-      <Cta type="button" disabled={!ready} onClick={handleSave}>
-        {draft.quantity > 1 ? `Save ${draft.quantity} drinks` : 'Save drink'}
-      </Cta>
+      <SaveControls onSaved={onDismiss} />
     </div>
   );
 };
