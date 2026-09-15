@@ -225,8 +225,18 @@ describe('CreatePanel', () => {
     expect(mutate).toHaveBeenCalledWith({ field: 'beerFlavour', name: 'Radler', brandId: 50 });
   });
 
-  it('requires a flavour palette without a selected structural beer parent, even when its brand has a palette', async () => {
+  it('inherits a selected brand palette for flavour creation without a structural beer parent', async () => {
     setDraft({ alcoholTypeId: 1, brandId: 50 });
+    renderCreatePanel('beerFlavour');
+    await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Radler');
+
+    expect(screen.getByRole('button', { name: /add and use it/i })).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
+    expect(mutate).toHaveBeenCalledWith({ field: 'beerFlavour', name: 'Radler', brandId: 50 });
+  });
+
+  it('requires a flavour palette when neither its selected brand nor a structural beer parent has one', async () => {
+    setDraft({ alcoholTypeId: 1, brandId: 51 });
     renderCreatePanel('beerFlavour');
     await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Radler');
 

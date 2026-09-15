@@ -170,7 +170,7 @@ const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
       : field === 'brand'
         ? structuralBeerParent?.colorPaletteId
         : field === 'beerFlavour'
-          ? (structuralBeerParent ? (parentBrand?.colorPaletteId ?? structuralBeerParent.colorPaletteId) : undefined)
+          ? (parentBrand?.colorPaletteId ?? structuralBeerParent?.colorPaletteId)
           : undefined;
   const inheritedGlasswareId = field === 'subtype' ? parentAlcoholType?.glasswareId : undefined;
   const supportsPalette = field !== 'volume';
