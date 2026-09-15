@@ -147,8 +147,8 @@ export const createBeerFlavour = async (
 };
 
 const withoutUndefinedDesignOverrides = <T extends {
-  colorPaletteId?: number | null;
-  glasswareId?: number | null;
+  colorPaletteId?: number;
+  glasswareId?: number;
 }>(entry: T) => {
   const { colorPaletteId, glasswareId, ...payload } = entry;
   return {

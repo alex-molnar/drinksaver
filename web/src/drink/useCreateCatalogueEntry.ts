@@ -21,10 +21,10 @@ export interface CreateCatalogueEntryInput {
   alcoholTypeId?: number;
   /** The brand the new entry belongs to. Required for 'beerFlavour'. */
   brandId?: number;
-  /** A selected design palette, or null to clear an inherited choice. */
-  colorPaletteId?: number | null;
-  /** A selected glass silhouette, or null to clear an inherited choice. */
-  glasswareId?: number | null;
+  /** A selected design palette; omission inherits the parent choice. */
+  colorPaletteId?: number;
+  /** A selected glass silhouette; omission inherits the parent choice. */
+  glasswareId?: number;
 }
 
 interface CreatedCatalogueEntry {

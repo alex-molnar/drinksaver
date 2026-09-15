@@ -1,11 +1,47 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import * as endpoints from './endpoints';
 import apiClient from './client';
+import type { NewAlcoholEntry, NewAlcoholSubtype, NewBeerBrand, NewBeerFlavour } from '../types/api';
+import type { CreateCatalogueEntryInput } from '../drink/useCreateCatalogueEntry';
 
 vi.mock('./client');
 vi.mock('../auth/keycloak');
 
 const mockApiClient = vi.mocked(apiClient);
+
+describe('creation request types', () => {
+  it('rejects null design metadata so omission remains the inheritance signal', () => {
+    const alcoholType: NewAlcoholEntry = {
+      name: 'Whiskey',
+      // @ts-expect-error Creation palette IDs are integer-only.
+      colorPaletteId: null,
+    };
+    const subtype: NewAlcoholSubtype = {
+      alcoholTypeId: 1,
+      name: 'Single Malt',
+      // @ts-expect-error Creation glassware IDs are integer-only.
+      glasswareId: null,
+    };
+    const brand: NewBeerBrand = {
+      name: 'Distillery',
+      // @ts-expect-error Creation palette IDs are integer-only.
+      colorPaletteId: null,
+    };
+    const flavour: NewBeerFlavour = {
+      name: 'Oak',
+      // @ts-expect-error Creation palette IDs are integer-only.
+      colorPaletteId: null,
+    };
+    const input: CreateCatalogueEntryInput = {
+      field: 'alcoholType',
+      name: 'Whiskey',
+      // @ts-expect-error Creation glassware IDs are integer-only.
+      glasswareId: null,
+    };
+
+    expect([alcoholType, subtype, brand, flavour, input]).toHaveLength(5);
+  });
+});
 
 /**
  * These assertions are the contract with the backend, so they say what is sent AND, for
