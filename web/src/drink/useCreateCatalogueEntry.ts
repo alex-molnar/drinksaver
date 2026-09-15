@@ -21,6 +21,10 @@ export interface CreateCatalogueEntryInput {
   alcoholTypeId?: number;
   /** The brand the new entry belongs to. Required for 'beerFlavour'. */
   brandId?: number;
+  /** A selected design palette, or null to clear an inherited choice. */
+  colorPaletteId?: number | null;
+  /** A selected glass silhouette, or null to clear an inherited choice. */
+  glasswareId?: number | null;
 }
 
 interface CreatedCatalogueEntry {
@@ -31,7 +35,7 @@ interface CreatedCatalogueEntry {
 const create = async (input: CreateCatalogueEntryInput): Promise<CreatedCatalogueEntry> => {
   switch (input.field) {
     case 'alcoholType': {
-      const created = await createAlcoholType({ name: input.name });
+      const created = await createAlcoholType({ name: input.name, ...designOverrides(input) });
       return { field: input.field, id: created.id };
     }
     case 'volume': {
@@ -48,22 +52,38 @@ const create = async (input: CreateCatalogueEntryInput): Promise<CreatedCatalogu
       if (input.alcoholTypeId === undefined) {
         throw new Error('Creating a subtype requires alcoholTypeId');
       }
-      const created = await createSubtypeForAlcoholType(input.alcoholTypeId, input.name);
+      const created = await createSubtypeForAlcoholType(input.alcoholTypeId, {
+        alcoholTypeId: input.alcoholTypeId,
+        name: input.name,
+        ...designOverrides(input),
+      });
       return { field: input.field, id: created.id };
     }
     case 'brand': {
-      const created = await createBrand({ name: input.name });
+      const created = await createBrand({ name: input.name, ...colorPaletteOverride(input) });
       return { field: input.field, id: created.id };
     }
     case 'beerFlavour': {
       if (input.brandId === undefined) {
         throw new Error('Creating a beer flavour requires brandId');
       }
-      const created = await createBeerFlavour(input.brandId, input.name);
+      const created = await createBeerFlavour(input.brandId, {
+        name: input.name,
+        ...colorPaletteOverride(input),
+      });
       return { field: input.field, id: created.id };
     }
   }
 };
+
+const designOverrides = (input: CreateCatalogueEntryInput) => ({
+  ...colorPaletteOverride(input),
+  ...(input.glasswareId !== undefined ? { glasswareId: input.glasswareId } : {}),
+});
+
+const colorPaletteOverride = (input: CreateCatalogueEntryInput) => (
+  input.colorPaletteId !== undefined ? { colorPaletteId: input.colorPaletteId } : {}
+);
 
 const queryKeyFor = (field: CreatableCatalogueField, input: CreateCatalogueEntryInput): QueryKey => {
   switch (field) {

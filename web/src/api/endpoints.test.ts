@@ -121,14 +121,18 @@ describe('api/endpoints', () => {
   });
 
   describe('createAlcoholType', () => {
-    it('posts to /v1/alcohol/types with the entry alone', async () => {
+    it('posts selected palette and glassware metadata with an alcohol type', async () => {
       mockApiClient.post.mockResolvedValue({
         data: { id: 1, name: 'Beer', userId: 'user-123' },
       });
 
-      await endpoints.createAlcoholType({ name: 'Beer' });
+      await endpoints.createAlcoholType({ name: 'Whiskey', colorPaletteId: 3, glasswareId: 4 });
 
-      expect(mockApiClient.post).toHaveBeenCalledWith('/v1/alcohol/types', { name: 'Beer' });
+      expect(mockApiClient.post).toHaveBeenCalledWith('/v1/alcohol/types', {
+        name: 'Whiskey',
+        colorPaletteId: 3,
+        glasswareId: 4,
+      });
     });
   });
 
@@ -166,12 +170,35 @@ describe('api/endpoints', () => {
   });
 
   describe('createSubtypeForAlcoholType', () => {
-    it('posts to /v1/alcohol/types/{id}/subtypes with the type id and name only', async () => {
+    it('posts selected palette and glassware metadata with a subtype', async () => {
       mockApiClient.post.mockResolvedValue({
         data: { id: 30, name: 'Single Malt', alcoholTypeId: 7 },
       });
 
-      await endpoints.createSubtypeForAlcoholType(7, 'Single Malt');
+      await endpoints.createSubtypeForAlcoholType(7, {
+        alcoholTypeId: 7,
+        name: 'Single Malt',
+        colorPaletteId: 3,
+        glasswareId: 4,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        '/v1/alcohol/types/7/subtypes',
+        { alcoholTypeId: 7, name: 'Single Malt', colorPaletteId: 3, glasswareId: 4 }
+      );
+    });
+
+    it('omits undefined inherited design overrides from the JSON payload', async () => {
+      mockApiClient.post.mockResolvedValue({
+        data: { id: 30, name: 'Single Malt', alcoholTypeId: 7 },
+      });
+
+      await endpoints.createSubtypeForAlcoholType(7, {
+        alcoholTypeId: 7,
+        name: 'Single Malt',
+        colorPaletteId: undefined,
+        glasswareId: undefined,
+      });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         '/v1/alcohol/types/7/subtypes',
@@ -213,14 +240,14 @@ describe('api/endpoints', () => {
   });
 
   describe('createBrand', () => {
-    it('posts to /v1/beer/brands with brand data', async () => {
+    it('posts selected palette metadata with a brand', async () => {
       mockApiClient.post.mockResolvedValue({ data: { id: 50, name: 'Heineken' } });
 
-      await endpoints.createBrand({ name: 'Heineken' });
+      await endpoints.createBrand({ name: 'Heineken', colorPaletteId: 3 });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         '/v1/beer/brands',
-        { name: 'Heineken' }
+        { name: 'Heineken', colorPaletteId: 3 }
       );
     });
   });
@@ -236,16 +263,16 @@ describe('api/endpoints', () => {
   });
 
   describe('createBeerFlavour', () => {
-    it('posts to /v1/beer/brands/{id}/flavours with the name only', async () => {
+    it('posts selected palette metadata with a beer flavour', async () => {
       mockApiClient.post.mockResolvedValue({
         data: { id: 60, name: 'Lager', brandId: 50 },
       });
 
-      await endpoints.createBeerFlavour(50, 'Lager');
+      await endpoints.createBeerFlavour(50, { name: 'Lager', colorPaletteId: 3 });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         '/v1/beer/brands/50/flavours',
-        { name: 'Lager' }
+        { name: 'Lager', colorPaletteId: 3 }
       );
     });
   });

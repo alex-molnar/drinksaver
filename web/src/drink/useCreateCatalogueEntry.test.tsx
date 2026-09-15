@@ -55,11 +55,20 @@ describe('useCreateCatalogueEntry', () => {
     const invalidate = vi.spyOn(client, 'invalidateQueries');
 
     act(() => {
-      result.current.mutation.mutate({ field: 'alcoholType', name: 'Whiskey' });
+      result.current.mutation.mutate({
+        field: 'alcoholType',
+        name: 'Whiskey',
+        colorPaletteId: 3,
+        glasswareId: 4,
+      });
     });
 
     await waitFor(() => expect(result.current.draft.draft.alcoholTypeId).toBe(101));
-    expect(createAlcoholType).toHaveBeenCalledWith({ name: 'Whiskey' });
+    expect(createAlcoholType).toHaveBeenCalledWith({
+      name: 'Whiskey',
+      colorPaletteId: 3,
+      glasswareId: 4,
+    });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['alcoholTypes'] });
     expect(onAdopted).toHaveBeenCalled();
   });
@@ -81,11 +90,22 @@ describe('useCreateCatalogueEntry', () => {
     const { result } = renderHook(() => useHarness(), { wrapper });
 
     act(() => {
-      result.current.mutation.mutate({ field: 'subtype', name: 'Single Malt', alcoholTypeId: 2 });
+      result.current.mutation.mutate({
+        field: 'subtype',
+        name: 'Single Malt',
+        alcoholTypeId: 2,
+        colorPaletteId: 3,
+        glasswareId: 4,
+      });
     });
 
     await waitFor(() => expect(result.current.draft.draft.subtypeId).toBe(103));
-    expect(createSubtypeForAlcoholType).toHaveBeenCalledWith(2, 'Single Malt');
+    expect(createSubtypeForAlcoholType).toHaveBeenCalledWith(2, {
+      alcoholTypeId: 2,
+      name: 'Single Malt',
+      colorPaletteId: 3,
+      glasswareId: 4,
+    });
   });
 
   it('creates a brand and adopts it, clearing any previously chosen flavour', async () => {
@@ -95,22 +115,37 @@ describe('useCreateCatalogueEntry', () => {
       result.current.draft.dispatch({ type: 'select', field: 'beerFlavour', id: 999 });
     });
     act(() => {
-      result.current.mutation.mutate({ field: 'brand', name: 'Corona' });
+      result.current.mutation.mutate({ field: 'brand', name: 'Corona', colorPaletteId: 3 });
     });
 
     await waitFor(() => expect(result.current.draft.draft.brandId).toBe(104));
     expect(result.current.draft.draft.beerFlavourId).toBeNull();
+    expect(createBrand).toHaveBeenCalledWith({ name: 'Corona', colorPaletteId: 3 });
   });
 
   it('creates a beer flavour for the given brand and adopts it', async () => {
     const { result } = renderHook(() => useHarness(), { wrapper });
 
     act(() => {
-      result.current.mutation.mutate({ field: 'beerFlavour', name: 'Radler', brandId: 50 });
+      result.current.mutation.mutate({ field: 'beerFlavour', name: 'Radler', brandId: 50, colorPaletteId: 3 });
     });
 
     await waitFor(() => expect(result.current.draft.draft.beerFlavourId).toBe(105));
-    expect(createBeerFlavour).toHaveBeenCalledWith(50, 'Radler');
+    expect(createBeerFlavour).toHaveBeenCalledWith(50, { name: 'Radler', colorPaletteId: 3 });
+  });
+
+  it('omits undefined inherited design overrides from a subtype request', async () => {
+    const { result } = renderHook(() => useHarness(), { wrapper });
+
+    act(() => {
+      result.current.mutation.mutate({ field: 'subtype', name: 'Single Malt', alcoholTypeId: 2 });
+    });
+
+    await waitFor(() => expect(result.current.draft.draft.subtypeId).toBe(103));
+    expect(createSubtypeForAlcoholType).toHaveBeenCalledWith(2, {
+      alcoholTypeId: 2,
+      name: 'Single Malt',
+    });
   });
 
   it('rejects a volume creation missing its alcohol type context rather than silently misfiling it', async () => {

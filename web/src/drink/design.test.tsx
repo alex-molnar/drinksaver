@@ -25,6 +25,8 @@ describe('createDesignCatalogue', () => {
 
     expect(design.paletteForId(7).name).toBe('amber');
     expect(design.glasswareForId(11).name).toBe('beerbottle');
+    expect(design.palettes).toEqual(TEST_PALETTES);
+    expect(design.glassware).toEqual(TEST_GLASSWARE);
   });
 
   it('uses fetched cream and highball definitions as independent unknown-ID fallbacks', () => {
