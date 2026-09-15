@@ -29,6 +29,16 @@ updates:
           - "@eslint/*"
           - "eslint-plugin-*"
           - "typescript-eslint"
+    ignore:
+      # Held on the 6.x line. typescript-eslint caps its peer at
+      # typescript ">=4.8.4 <6.1.0", and no published release lifts that, not
+      # even the canary, so a major bump makes "npm ci" fail to resolve and
+      # takes the web lint, build and test jobs down with it. Patch and minor
+      # updates inside 6.x still come through as normal.
+      #
+      # Remove this once typescript-eslint declares support for TypeScript 7.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: maven
     directory: /backend
