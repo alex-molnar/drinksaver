@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import styled from '@emotion/styled';
 import { useDraft } from '../../drink/useDraft';
 import { useCatalogue, type UseCatalogueResult } from '../../drink/useCatalogue';
-import { isDraftReady, previousIsoDate, type DraftFieldsCatalogue, type MenuRowKey } from '../../drink/draftFields';
+import { previousIsoDate, type DraftFieldsCatalogue, type MenuRowKey } from '../../drink/draftFields';
 import { drinkingDay } from '../../drink/day';
 import type { DraftFieldKey, DraftState } from '../../drink/draftReducer';
 import type { CreatableCatalogueField } from '../../drink/useCreateCatalogueEntry';
@@ -10,7 +10,7 @@ import {
   resolveAlcoholColorPaletteId,
   resolveBeerColorPaletteId,
   resolveBrandColorPaletteId,
-  resolveDraftDesign,
+  resolveDraftPreviewDesign,
 } from '../../drink/designSelection';
 import type { AddSheetPanel } from './panels';
 import PaletteSwatch from './PaletteSwatch';
@@ -456,9 +456,7 @@ const RecommendField: React.FC<{ headingRef: React.Ref<HTMLHeadingElement>; onDi
     brands: catalogue.brands.data,
     beerFlavours: catalogue.beerFlavours.data,
   };
-  const inheritedDesign = isDraftReady(draft, catalogue.isBeer)
-    ? resolveDraftDesign(draft, draftCatalogue, catalogue.isBeer)
-    : undefined;
+  const inheritedDesign = resolveDraftPreviewDesign(draft, draftCatalogue, catalogue.isBeer);
 
   return (
     <>

@@ -27,7 +27,14 @@ const mutate = vi.fn();
 /** A catalogue where every query has already resolved, so a test only has to override the one
  *  field it cares about. */
 const READY_CATALOGUE = {
-  alcoholTypes: { data: [{ id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 1, glasswareId: 1 }, { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6, glasswareId: 3 }], isLoading: false },
+  alcoholTypes: {
+    data: [
+      { id: 1, name: 'Beer', volumeIds: [], colorPaletteId: 1, glasswareId: 1 },
+      { id: 2, name: 'Wine', volumeIds: [], colorPaletteId: 6, glasswareId: 3 },
+      { id: 4, name: 'Beer', volumeIds: [], colorPaletteId: 7, glasswareId: 2 },
+    ],
+    isLoading: false,
+  },
   volumes: { data: [], isLoading: false },
   subtypes: { data: [], isLoading: false },
   consumptionTypes: { data: [], isLoading: false },
@@ -148,8 +155,15 @@ describe('CreatePanel', () => {
     expect(mutate).toHaveBeenCalledWith({ field: 'brand', name: 'Corona', colorPaletteId: 3 });
   });
 
-  it('keeps a beer brand palette-only and inherits its selected beer type palette', async () => {
-    setDraft({ alcoholTypeId: 1 }, { isBeer: true });
+  it('requires a palette for a non-structural type even when it is named Beer', async () => {
+    setDraft({ alcoholTypeId: 1 });
+    renderCreatePanel('brand');
+    await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Corona');
+    expect(screen.getByRole('button', { name: /add and use it/i })).toBeDisabled();
+  });
+
+  it('keeps a structural beer brand palette-only and inherits ID 4\'s palette', async () => {
+    setDraft({ alcoholTypeId: 4 });
     renderCreatePanel('brand');
     expect(screen.getByLabelText('Color palette')).toHaveValue('');
     expect(screen.queryByLabelText('Glassware')).not.toBeInTheDocument();
@@ -203,12 +217,20 @@ describe('CreatePanel', () => {
   });
 
   it('passes the current brand when creating a beer flavour', async () => {
-    setDraft({ brandId: 50 });
+    setDraft({ alcoholTypeId: 4, brandId: 50 });
     renderCreatePanel('beerFlavour');
     await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Radler');
     await userEvent.click(screen.getByRole('button', { name: /add and use it/i }));
 
     expect(mutate).toHaveBeenCalledWith({ field: 'beerFlavour', name: 'Radler', brandId: 50 });
+  });
+
+  it('requires a flavour palette without a selected structural beer parent, even when its brand has a palette', async () => {
+    setDraft({ alcoholTypeId: 1, brandId: 50 });
+    renderCreatePanel('beerFlavour');
+    await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'Radler');
+
+    expect(screen.getByRole('button', { name: /add and use it/i })).toBeDisabled();
   });
 
   it('uses a palette-only selector for beer flavour overrides', async () => {

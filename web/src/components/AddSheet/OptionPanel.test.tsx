@@ -329,5 +329,15 @@ describe('OptionPanel', () => {
         }),
       }));
     });
+
+    it('previews a selected wine design before its size is selected', () => {
+      setDraft({ alcoholTypeId: 2, addToRecommendations: true });
+      renderOptionPanel('recommend');
+
+      expect(screen.getByLabelText('Color palette')).toHaveValue('');
+      expect(screen.getByLabelText('Glassware')).toHaveValue('');
+      expect(screen.getByTestId('palette-preview')).toHaveStyle({ background: TEST_PALETTE_BY_NAME.plum.field });
+      expect(screen.getByTestId('glass-wine')).toHaveAttribute('data-glassware-id', '3');
+    });
   });
 });

@@ -7,6 +7,12 @@ export interface DraftDesign {
   glasswareId: number;
 }
 
+/** A non-throwing subset for previews while a draft is still incomplete. */
+export interface DraftDesignPreview {
+  colorPaletteId?: number;
+  glasswareId?: number;
+}
+
 const requiredDesignId = (value: number | null | undefined, source: string): number => {
   if (value == null) {
     throw new Error(`Missing required ${source} design ID`);
@@ -55,6 +61,34 @@ export const resolveRecommendationSaveDesign = (
   colorPaletteId: overrides.colorPaletteId ?? design.colorPaletteId,
   glasswareId: overrides.glasswareId ?? design.glasswareId,
 });
+
+/**
+ * Resolves every design property that is already knowable without requiring a save-ready draft.
+ * Beer glassware intentionally has no type fallback: its source is the selected serving type.
+ */
+export const resolveDraftPreviewDesign = (
+  draft: DraftState,
+  catalogue: DraftFieldsCatalogue,
+  isBeer: boolean,
+): DraftDesignPreview => {
+  const alcoholType = catalogue.alcoholTypes?.find((item) => item.id === draft.alcoholTypeId);
+
+  if (isBeer) {
+    const brand = catalogue.brands?.find((item) => item.id === draft.brandId);
+    const flavour = catalogue.beerFlavours?.find((item) => item.id === draft.beerFlavourId);
+    const consumptionType = catalogue.consumptionTypes?.find((item) => item.id === draft.consumptionTypeId);
+    return {
+      colorPaletteId: flavour?.colorPaletteId ?? brand?.colorPaletteId ?? alcoholType?.colorPaletteId ?? undefined,
+      glasswareId: consumptionType?.glasswareId,
+    };
+  }
+
+  const subtype = catalogue.subtypes?.find((item) => item.id === draft.subtypeId);
+  return {
+    colorPaletteId: subtype?.colorPaletteId ?? alcoholType?.colorPaletteId ?? undefined,
+    glasswareId: subtype?.glasswareId ?? alcoholType?.glasswareId ?? undefined,
+  };
+};
 
 /**
  * Resolves the design metadata accumulated by the manual add flow. Each property has its own

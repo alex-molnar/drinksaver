@@ -120,6 +120,9 @@ const CREATE_TITLES: Record<CreatableCatalogueField, string> = {
   beerFlavour: 'flavour',
 };
 
+/** Matches the deployed `repository.beer-id` contract; creation inheritance must not inspect names. */
+const BEER_ALCOHOL_TYPE_ID = 4;
+
 /**
  * The sheet's create panel: one small form behind any "New ..." row in `OptionPanel`. Adopts the
  * created entry into the draft and returns to the menu on success - see `useCreateCatalogueEntry`,
@@ -150,6 +153,7 @@ const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
   // fallback chain through a sibling that has not been chosen here.
   const parentAlcoholType = catalogue.alcoholTypes.data?.find((t) => t.id === draft.alcoholTypeId);
   const parentBrand = catalogue.brands.data?.find((b) => b.id === draft.brandId);
+  const structuralBeerParent = draft.alcoholTypeId === BEER_ALCOHOL_TYPE_ID ? parentAlcoholType : undefined;
 
   const contextName = field === 'subtype' ? parentAlcoholType?.name : field === 'beerFlavour' ? parentBrand?.name : undefined;
 
@@ -164,9 +168,9 @@ const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
     field === 'subtype'
       ? parentAlcoholType?.colorPaletteId
       : field === 'brand'
-        ? (catalogue.isBeer ? parentAlcoholType?.colorPaletteId : undefined)
+        ? structuralBeerParent?.colorPaletteId
         : field === 'beerFlavour'
-          ? (parentBrand?.colorPaletteId ?? (catalogue.isBeer ? parentAlcoholType?.colorPaletteId : undefined))
+          ? (structuralBeerParent ? (parentBrand?.colorPaletteId ?? structuralBeerParent.colorPaletteId) : undefined)
           : undefined;
   const inheritedGlasswareId = field === 'subtype' ? parentAlcoholType?.glasswareId : undefined;
   const supportsPalette = field !== 'volume';
