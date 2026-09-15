@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styled from '@emotion/styled';
 import { useDraft } from '../../drink/useDraft';
 import { useCatalogue } from '../../drink/useCatalogue';
+import { useDesign } from '../../drink/useDesign';
 import { useCreateCatalogueEntry, type CreatableCatalogueField } from '../../drink/useCreateCatalogueEntry';
 
 export interface CreatePanelProps {
@@ -27,6 +28,12 @@ const Hint = styled.p`
   font-family: var(--ds-type-caption-font-family);
   font-size: var(--ds-type-caption-font-size);
   color: var(--ds-ink-tertiary);
+`;
+
+/** Colours only the parent's name within the heading (e.g. "New subtype for Wine"), matching the
+ *  identity colour its own swatch shows elsewhere in the sheet - see `PaletteSwatch`. */
+const ContextName = styled.span<{ $color: string }>`
+  color: ${(p) => p.$color};
 `;
 
 const BackButton = styled.button`
@@ -121,6 +128,7 @@ const CREATE_TITLES: Record<CreatableCatalogueField, string> = {
 const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
   const { draft } = useDraft();
   const catalogue = useCatalogue(draft);
+  const design = useDesign();
   const [name, setName] = useState('');
   const [volume, setVolume] = useState('');
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -135,12 +143,18 @@ const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
   // Only these two fields nest under another catalogue choice already on the draft - see
   // `handleSubmit` below, which is what actually needs the parent id. This just names it back to
   // the user, the way the pre-sheet `NewSubtypePage`/`NewBeerFlavourPage` did with their own
-  // "Adding a new ... for ..." banner.
-  const contextName =
+  // "Adding a new ... for ..." banner - coloured to match, per the parent's own colour, not a
+  // fallback chain through a sibling that has not been chosen here.
+  const parentAlcoholType = catalogue.alcoholTypes.data?.find((t) => t.id === draft.alcoholTypeId);
+  const parentBrand = catalogue.brands.data?.find((b) => b.id === draft.brandId);
+
+  const contextName = field === 'subtype' ? parentAlcoholType?.name : field === 'beerFlavour' ? parentBrand?.name : undefined;
+
+  const contextColorPaletteId =
     field === 'subtype'
-      ? catalogue.alcoholTypes.data?.find((t) => t.id === draft.alcoholTypeId)?.name
+      ? parentAlcoholType?.colorPaletteId
       : field === 'beerFlavour'
-        ? catalogue.brands.data?.find((b) => b.id === draft.brandId)?.name
+        ? (parentBrand?.colorPaletteId ?? parentAlcoholType?.colorPaletteId)
         : undefined;
 
   const trimmedName = name.trim();
@@ -177,7 +191,13 @@ const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
         Back
       </BackButton>
       <Heading id="add-sheet-heading" tabIndex={-1} ref={headingRef}>
-        New {CREATE_TITLES[field]}{contextName ? ` for ${contextName}` : ''}
+        New {CREATE_TITLES[field]}
+        {contextName ? (
+          <>
+            {' for '}
+            <ContextName $color={design.paletteForId(contextColorPaletteId).field}>{contextName}</ContextName>
+          </>
+        ) : null}
       </Heading>
       <Hint>It is saved and picked for you. You stay right here.</Hint>
       <Form onSubmit={handleSubmit}>

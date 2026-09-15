@@ -9,6 +9,8 @@ import { useCatalogue } from '../../drink/useCatalogue';
 import { useCreateCatalogueEntry } from '../../drink/useCreateCatalogueEntry';
 import { initialDraftState, type DraftState } from '../../drink/draftReducer';
 import type { CreatableCatalogueField } from '../../drink/useCreateCatalogueEntry';
+import { TEST_PALETTE_BY_NAME } from '../../test/designFixtures';
+import { TestDesignProvider } from '../../test/TestDesignProvider';
 
 vi.mock('../../drink/useDraft');
 vi.mock('../../drink/useCatalogue');
@@ -29,7 +31,13 @@ const READY_CATALOGUE = {
   volumes: { data: [], isLoading: false },
   subtypes: { data: [], isLoading: false },
   consumptionTypes: { data: [], isLoading: false },
-  brands: { data: [{ id: 50, name: 'Heineken', colorPaletteId: 1 }], isLoading: false },
+  brands: {
+    data: [
+      { id: 50, name: 'Heineken', colorPaletteId: 1 },
+      { id: 51, name: 'House lager', colorPaletteId: null },
+    ],
+    isLoading: false,
+  },
   beerFlavours: { data: [], isLoading: false },
   isBeer: false,
 } as unknown as ReturnType<typeof useCatalogue>;
@@ -58,7 +66,9 @@ const setMutationState = (overrides: Partial<ReturnType<typeof useCreateCatalogu
 const renderCreatePanel = (field: CreatableCatalogueField, onPopPanel = vi.fn()) => {
   render(
     <ThemeProvider theme={muiTheme}>
-      <CreatePanel field={field} onPopPanel={onPopPanel} />
+      <TestDesignProvider>
+        <CreatePanel field={field} onPopPanel={onPopPanel} />
+      </TestDesignProvider>
     </ThemeProvider>
   );
   return { onPopPanel };
@@ -139,6 +149,12 @@ describe('CreatePanel', () => {
     expect(screen.getByRole('heading', { name: 'New subtype for Wine' })).toBeInTheDocument();
   });
 
+  it('colours the alcohol type name to match its own identity swatch, not the rest of the heading', () => {
+    setDraft({ alcoholTypeId: 2 });
+    renderCreatePanel('subtype');
+    expect(screen.getByText('Wine')).toHaveStyle({ color: TEST_PALETTE_BY_NAME.plum.field });
+  });
+
   it('passes the current brand when creating a beer flavour', async () => {
     setDraft({ brandId: 50 });
     renderCreatePanel('beerFlavour');
@@ -152,6 +168,18 @@ describe('CreatePanel', () => {
     setDraft({ brandId: 50 });
     renderCreatePanel('beerFlavour');
     expect(screen.getByRole('heading', { name: 'New flavour for Heineken' })).toBeInTheDocument();
+  });
+
+  it("colours the brand name to match its own identity swatch when it has one", () => {
+    setDraft({ alcoholTypeId: 1, brandId: 50 });
+    renderCreatePanel('beerFlavour');
+    expect(screen.getByText('Heineken')).toHaveStyle({ color: TEST_PALETTE_BY_NAME.green.field });
+  });
+
+  it("falls back to the alcohol type's colour for a brand with none of its own", () => {
+    setDraft({ alcoholTypeId: 2, brandId: 51 });
+    renderCreatePanel('beerFlavour');
+    expect(screen.getByText('House lager')).toHaveStyle({ color: TEST_PALETTE_BY_NAME.plum.field });
   });
 
   it('shows no parent context for a field with none, such as brand', () => {
