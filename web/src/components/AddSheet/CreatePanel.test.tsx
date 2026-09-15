@@ -133,10 +133,10 @@ describe('CreatePanel', () => {
     expect(mutate).toHaveBeenCalledWith({ field: 'subtype', name: 'Single Malt', alcoholTypeId: 2 });
   });
 
-  it('names the alcohol type a new subtype is being added for', () => {
+  it('names the alcohol type a new subtype is being added for, in the heading', () => {
     setDraft({ alcoholTypeId: 2 });
     renderCreatePanel('subtype');
-    expect(screen.getByText(/for wine\./i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'New subtype for Wine' })).toBeInTheDocument();
   });
 
   it('passes the current brand when creating a beer flavour', async () => {
@@ -148,15 +148,15 @@ describe('CreatePanel', () => {
     expect(mutate).toHaveBeenCalledWith({ field: 'beerFlavour', name: 'Radler', brandId: 50 });
   });
 
-  it('names the brand a new beer flavour is being added for', () => {
+  it('names the brand a new beer flavour is being added for, in the heading', () => {
     setDraft({ brandId: 50 });
     renderCreatePanel('beerFlavour');
-    expect(screen.getByText(/for heineken\./i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'New flavour for Heineken' })).toBeInTheDocument();
   });
 
   it('shows no parent context for a field with none, such as brand', () => {
     renderCreatePanel('brand');
-    expect(screen.queryByText(/^for /i)).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'New brand' })).toBeInTheDocument();
   });
 
   describe('creating a volume', () => {

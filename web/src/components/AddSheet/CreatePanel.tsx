@@ -177,12 +177,9 @@ const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
         Back
       </BackButton>
       <Heading id="add-sheet-heading" tabIndex={-1} ref={headingRef}>
-        New {CREATE_TITLES[field]}
+        New {CREATE_TITLES[field]}{contextName ? ` for ${contextName}` : ''}
       </Heading>
-      <Hint>
-        {contextName ? `For ${contextName}. ` : ''}
-        It is saved and picked for you. You stay right here.
-      </Hint>
+      <Hint>It is saved and picked for you. You stay right here.</Hint>
       <Form onSubmit={handleSubmit}>
         <div>
           <FieldLabel htmlFor="add-sheet-create-name">Name</FieldLabel>
