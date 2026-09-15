@@ -13,11 +13,13 @@ import {
 } from '../../drink/designSelection';
 import type { AddSheetPanel } from './panels';
 import PaletteSwatch from './PaletteSwatch';
+import SaveControls from './SaveControls';
 
 export interface OptionPanelProps {
   field: MenuRowKey;
   onPushPanel: (panel: AddSheetPanel) => void;
   onPopPanel: () => void;
+  onDismiss: () => void;
 }
 
 const Heading = styled.h2`
@@ -438,7 +440,10 @@ const NotesField: React.FC<{ headingRef: React.Ref<HTMLHeadingElement> }> = ({ h
   );
 };
 
-const RecommendField: React.FC<{ headingRef: React.Ref<HTMLHeadingElement> }> = ({ headingRef }) => {
+const RecommendField: React.FC<{ headingRef: React.Ref<HTMLHeadingElement>; onDismiss: () => void }> = ({
+  headingRef,
+  onDismiss,
+}) => {
   const { draft, dispatch } = useDraft();
 
   return (
@@ -480,6 +485,7 @@ const RecommendField: React.FC<{ headingRef: React.Ref<HTMLHeadingElement> }> = 
           </>
         ) : null}
       </FieldPanel>
+      {draft.addToRecommendations ? <SaveControls onSaved={onDismiss} /> : null}
     </>
   );
 };
@@ -491,7 +497,7 @@ const RecommendField: React.FC<{ headingRef: React.Ref<HTMLHeadingElement> }> = 
  * over once those are factored out - see the design doc's file list for the add sheet, which
  * budgets one option panel, not six.
  */
-const OptionPanel: React.FC<OptionPanelProps> = ({ field, onPushPanel, onPopPanel }) => {
+const OptionPanel: React.FC<OptionPanelProps> = ({ field, onPushPanel, onPopPanel, onDismiss }) => {
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -517,7 +523,7 @@ const OptionPanel: React.FC<OptionPanelProps> = ({ field, onPushPanel, onPopPane
         ) : null}
       </TopBar>
       {field === 'notes' && <NotesField headingRef={headingRef} />}
-      {field === 'recommend' && <RecommendField headingRef={headingRef} />}
+      {field === 'recommend' && <RecommendField headingRef={headingRef} onDismiss={onDismiss} />}
       {field === 'date' && <WhenField headingRef={headingRef} onPopPanel={onPopPanel} />}
       {isCatalogueField && (
         <CatalogueField field={field} headingRef={headingRef} onPushPanel={onPushPanel} onPopPanel={onPopPanel} />
