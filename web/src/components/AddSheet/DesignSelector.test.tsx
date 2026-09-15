@@ -33,8 +33,23 @@ describe('DesignSelector', () => {
 
     expect(screen.getByLabelText('Color palette')).toHaveValue('');
     expect(screen.getByLabelText('Glassware')).toHaveValue('');
+    expect(screen.getAllByRole('option', { name: 'Use inherited default' })).toHaveLength(2);
     expect(screen.getByTestId('palette-preview')).toHaveStyle({ background: '#C9973B' });
     expect(screen.getByTestId('glass-highball')).toHaveAttribute('data-glassware-id', '4');
+  });
+
+  it('requires real design choices when no inherited defaults exist', () => {
+    renderSelector({ inheritedColorPaletteId: undefined, inheritedGlasswareId: undefined });
+
+    const palette = screen.getByLabelText('Color palette');
+    const glassware = screen.getByLabelText('Glassware');
+    expect(palette).toBeRequired();
+    expect(glassware).toBeRequired();
+    expect(palette).toHaveAccessibleDescription('Choose a color palette before continuing.');
+    expect(glassware).toHaveAccessibleDescription('Choose glassware before continuing.');
+    expect(screen.getByRole('option', { name: 'Choose a color palette' })).toBeDisabled();
+    expect(screen.getByRole('option', { name: 'Choose glassware' })).toBeDisabled();
+    expect(screen.queryByRole('option', { name: 'Use inherited default' })).not.toBeInTheDocument();
   });
 
   it('emits the selected positive backend IDs', async () => {
@@ -73,5 +88,7 @@ describe('DesignSelector', () => {
     expect(glassware).toBeDisabled();
     expect(screen.queryByRole('option', { name: /cream|highball/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('option', { name: '0' })).not.toBeInTheDocument();
+    expect(screen.getByText('Color palette choices are unavailable. Try again shortly.')).toHaveAttribute('role', 'status');
+    expect(screen.getByText('Glassware choices are unavailable. Try again shortly.')).toHaveAttribute('role', 'status');
   });
 });

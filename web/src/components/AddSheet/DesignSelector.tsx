@@ -75,6 +75,13 @@ const GlassPreview = styled.span`
   }
 `;
 
+const Help = styled.p`
+  margin: 5px 0 0;
+  font-family: var(--ds-type-caption-font-family);
+  font-size: var(--ds-type-caption-font-size);
+  color: var(--ds-ink-tertiary);
+`;
+
 const idForChange = <T extends { id: number }>(value: string, entries: readonly T[]): number | null => {
   if (value === '') {
     return null;
@@ -90,6 +97,8 @@ const selectionPreview = <T extends { id: number }>(
   fallback: T,
 ): T => entries.find((entry) => entry.id === (selectedId ?? inheritedId)) ?? fallback;
 
+const hasInheritedDefault = (id: number | null | undefined): id is number => id !== null && id !== undefined && id > 0;
+
 const DesignSelector: React.FC<DesignSelectorProps> = ({
   colorPaletteId,
   inheritedColorPaletteId,
@@ -99,6 +108,13 @@ const DesignSelector: React.FC<DesignSelectorProps> = ({
   onGlasswareIdChange,
 }) => {
   const design = useDesign();
+  const selectorId = React.useId();
+  const paletteHasInheritedDefault = hasInheritedDefault(inheritedColorPaletteId);
+  const glasswareHasInheritedDefault = hasInheritedDefault(inheritedGlasswareId);
+  const paletteUnavailable = design.palettes.length === 0;
+  const glasswareUnavailable = design.glassware.length === 0;
+  const paletteHelpId = `${selectorId}-color-palette-help`;
+  const glasswareHelpId = `${selectorId}-glassware-help`;
   const palette = selectionPreview(
     colorPaletteId,
     inheritedColorPaletteId,
@@ -121,16 +137,29 @@ const DesignSelector: React.FC<DesignSelectorProps> = ({
           <Select
             id="add-sheet-color-palette"
             value={colorPaletteId ?? ''}
-            disabled={design.palettes.length === 0}
+            required={!paletteHasInheritedDefault}
+            aria-describedby={
+              paletteUnavailable || !paletteHasInheritedDefault ? paletteHelpId : undefined
+            }
+            disabled={paletteUnavailable}
             onChange={(event) => onColorPaletteIdChange(idForChange(event.target.value, design.palettes))}
           >
-            <option value="">Use inherited default</option>
+            <option value="" disabled={!paletteHasInheritedDefault}>
+              {paletteHasInheritedDefault ? 'Use inherited default' : 'Choose a color palette'}
+            </option>
             {design.palettes.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
               </option>
             ))}
           </Select>
+          {paletteUnavailable ? (
+            <Help id={paletteHelpId} role="status" aria-live="polite">
+              Color palette choices are unavailable. Try again shortly.
+            </Help>
+          ) : !paletteHasInheritedDefault ? (
+            <Help id={paletteHelpId}>Choose a color palette before continuing.</Help>
+          ) : null}
         </div>
         <PalettePreview aria-hidden="true" data-testid="palette-preview" style={{ background: palette.field }} />
       </Field>
@@ -141,16 +170,29 @@ const DesignSelector: React.FC<DesignSelectorProps> = ({
             <Select
               id="add-sheet-glassware"
               value={glasswareId ?? ''}
-              disabled={design.glassware.length === 0}
+              required={!glasswareHasInheritedDefault}
+              aria-describedby={
+                glasswareUnavailable || !glasswareHasInheritedDefault ? glasswareHelpId : undefined
+              }
+              disabled={glasswareUnavailable}
               onChange={(event) => onGlasswareIdChange(idForChange(event.target.value, design.glassware))}
             >
-              <option value="">Use inherited default</option>
+              <option value="" disabled={!glasswareHasInheritedDefault}>
+                {glasswareHasInheritedDefault ? 'Use inherited default' : 'Choose glassware'}
+              </option>
               {design.glassware.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
               ))}
             </Select>
+            {glasswareUnavailable ? (
+              <Help id={glasswareHelpId} role="status" aria-live="polite">
+                Glassware choices are unavailable. Try again shortly.
+              </Help>
+            ) : !glasswareHasInheritedDefault ? (
+              <Help id={glasswareHelpId}>Choose glassware before continuing.</Help>
+            ) : null}
           </div>
           <GlassPreview aria-hidden="true">
             <Glass glassware={glassware} chroma={palette.field} tone="ink" />
