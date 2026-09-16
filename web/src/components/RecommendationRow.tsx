@@ -178,12 +178,21 @@ const RecommendationRow: React.FC<RecommendationRowProps> = ({
     if (gone) return strikeOff(rowRef.current!, strokeRef.current!, finish, reduced);
   }, [gone, reduced, finish]);
 
+  // A stable callback, not a fresh arrow function per render: dnd-kit re-registers the
+  // draggable/droppable node whenever this ref detaches and reattaches, and a new function
+  // identity on every render (e.g. from a re-render mid keyboard drag) was doing exactly that,
+  // losing the in-progress drag.
+  const setRefs = useCallback(
+    (node: HTMLDivElement | null) => {
+      rowRef.current = node;
+      setNodeRef(node);
+    },
+    [setNodeRef],
+  );
+
   return (
     <Row
-      ref={(node) => {
-        rowRef.current = node;
-        setNodeRef(node);
-      }}
+      ref={setRefs}
       style={{ transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 1 : undefined }}
       {...attributes}
       inert={gone}
