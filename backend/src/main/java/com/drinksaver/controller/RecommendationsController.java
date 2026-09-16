@@ -4,7 +4,6 @@ import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.model.dto.RecommendationUpdate;
 import com.drinksaver.security.AuthenticatedUser;
 import com.drinksaver.service.RecommendationService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -36,6 +35,7 @@ public class RecommendationsController {
         List<Integer> userOwnedRecommendations = recommendationService.getRecommendations(userID)
                 .stream()
                 .filter(recommendation ->
+                    recommendation.getUserId() != null &&
                     recommendation.getUserId().equals(userID) &&
                     recommendation.getId() != null
                 )
