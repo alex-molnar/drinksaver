@@ -124,12 +124,16 @@ describe('RecommendationsPage', () => {
     await rename('HJ pint', 'Home pint');
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(await screen.findByText('Changes saved.')).toBeInTheDocument();
-    await waitFor(() =>
-      expect(editRecommendations).toHaveBeenCalledWith([
-        { id: 7, name: 'Home pint' },
-        { id: 3, name: 'Office Chouffe' },
-      ]),
+    // Generous timeouts: this is a real ~30ms setTimeout racing real CI scheduling, not a fake
+    // clock, so a contended runner can occasionally overshoot the default 1000ms budget.
+    expect(await screen.findByText('Changes saved.', {}, { timeout: 5000 })).toBeInTheDocument();
+    await waitFor(
+      () =>
+        expect(editRecommendations).toHaveBeenCalledWith([
+          { id: 7, name: 'Home pint' },
+          { id: 3, name: 'Office Chouffe' },
+        ]),
+      { timeout: 5000 },
     );
   });
 
