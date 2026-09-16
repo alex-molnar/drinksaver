@@ -17,6 +17,7 @@ import type {
   NewVolumeEntry,
   NewAlcoholSubtype,
   Recommendation,
+  RecommendationEdit,
   ConsumptionType,
   BeerFlavour,
   NewBeerBrand,
@@ -55,6 +56,23 @@ export const saveDrink = async (drink: SaveDrinkRequest): Promise<SavedDrink[]> 
 export const getRecommendations = async (): Promise<Recommendation[]> => {
   const response = await apiClient.get<Recommendation[]>('/v1/recommendations/list');
   return response.data;
+};
+
+/**
+ * Rewrites the caller's recommendation list: every surviving row's name, in the order they
+ * should be shown. Deleted rows are simply absent, so the caller must flush its pending deletes
+ * before calling this (see `useRecommendationQueue`), or the server would be told an order that
+ * omits a row the user can still bring back.
+ *
+ * No userId in the payload: like every other endpoint here, the server derives identity from
+ * the JWT the request interceptor attaches. See this module's header.
+ */
+export const editRecommendations = async (edits: readonly RecommendationEdit[]): Promise<void> => {
+  await apiClient.patch('/v1/recommendations/edit', edits);
+};
+
+export const deleteRecommendation = async (id: number): Promise<void> => {
+  await apiClient.delete(`/v1/recommendations/${id}`);
 };
 
 // Alcohol endpoints

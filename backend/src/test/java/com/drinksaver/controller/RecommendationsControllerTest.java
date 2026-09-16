@@ -2,6 +2,8 @@ package com.drinksaver.controller;
 
 import com.drinksaver.config.SecurityConfig;
 import com.drinksaver.model.db.Recommendation;
+import com.drinksaver.model.dto.RecommendationUpdate;
+import com.drinksaver.service.RecommendationCacheService;
 import com.drinksaver.service.RecommendationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,17 +13,25 @@ import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilte
 import org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -53,6 +63,9 @@ class RecommendationsControllerTest {
 
     @MockitoBean
     private RecommendationService recommendationService;
+
+    @MockitoBean
+    private RecommendationCacheService recommendationCacheService;
 
     @Test
     void getRecommendationsListReturnsOkWithExpectedShape() throws Exception {
@@ -101,5 +114,68 @@ class RecommendationsControllerTest {
             .andExpect(status().isOk());
 
         org.mockito.Mockito.verify(recommendationService).getRecommendations(authenticatedUserId);
+    }
+
+    @Test
+    void reorderRecommendationsReturnsCountAndForwardsOnlyOwnedUpdates() throws Exception {
+        UUID userId = UUID.randomUUID();
+        Recommendation owned = recommendation(25, userId, "Owned");
+        Recommendation otherUser = recommendation(27, UUID.randomUUID(), "Other");
+        when(recommendationService.getRecommendations(userId)).thenReturn(List.of(owned, otherUser));
+        when(recommendationService.updateRecommendationsOrder(eq(userId), any())).thenReturn(1);
+
+        mockMvc.perform(patch("/v1/recommendations/edit")
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
+                .contentType(APPLICATION_JSON)
+                .content("[{\"id\":25,\"name\":\"Renamed\"},{\"id\":27,\"name\":\"Ignored\"}]"))
+            .andExpect(status().isOk())
+            .andExpect(content().string("1"));
+
+        verify(recommendationService).updateRecommendationsOrder(
+                userId,
+                List.of(new RecommendationUpdate(25, "Renamed"))
+        );
+    }
+
+    @Test
+    void reorderRecommendationsWithoutTokenReturnsUnauthorized() throws Exception {
+        mockMvc.perform(patch("/v1/recommendations/edit")
+                .with(csrf())
+                .contentType(APPLICATION_JSON)
+                .content("[]"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void deleteRecommendationDeletesAnOwnedRecommendation() throws Exception {
+        UUID userId = UUID.randomUUID();
+        when(recommendationService.isRecommendationOwnedByUser(25, userId)).thenReturn(true);
+
+        mockMvc.perform(delete("/v1/recommendations/25")
+                .with(jwt().jwt(token -> token.subject(userId.toString()))))
+            .andExpect(status().isOk());
+
+        verify(recommendationService).deleteRecommendation(25);
+    }
+
+    @Test
+    void deleteRecommendationRejectsAnUnownedRecommendation() {
+        UUID userId = UUID.randomUUID();
+        when(recommendationService.isRecommendationOwnedByUser(25, userId)).thenReturn(false);
+        Jwt token = Jwt.withTokenValue("token").subject(userId.toString()).header("alg", "none").build();
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new RecommendationsController(recommendationService, recommendationCacheService)
+                .deleteRecommendation(token, 25))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("That recommendation is not owned by the authenticated user");
+        org.mockito.Mockito.verify(recommendationService, never()).deleteRecommendation(25);
+    }
+
+    private Recommendation recommendation(Integer id, UUID userId, String name) {
+        Recommendation recommendation = new Recommendation();
+        recommendation.setId(id);
+        recommendation.setUserId(userId);
+        recommendation.setName(name);
+        return recommendation;
     }
 }

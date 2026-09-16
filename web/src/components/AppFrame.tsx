@@ -243,7 +243,14 @@ const AppFrame: React.FC<AppFrameProps> = ({ children, title, subtitle }) => {
         </IconButton>
         <Menu id="header-action-menu" anchorEl={menuAnchor} open={isMenuOpen} onClose={closeMenu} sx={menuSx}>
           <MenuItem disabled>Settings</MenuItem>
-          <MenuItem disabled>Recommendations</MenuItem>
+          <MenuItem
+            onClick={() => {
+              navigate('/recommendations');
+              closeMenu();
+            }}
+          >
+            Recommendations
+          </MenuItem>
           <MenuItem
             onClick={() => {
               openAddSheet({ kind: 'create', field: 'alcoholType' });

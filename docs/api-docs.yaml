@@ -246,6 +246,42 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Recommendation"
+  /v1/recommendations/edit:
+    patch:
+      tags:
+      - recommendations-controller
+      operationId: reorderRecommendations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/RecommendationUpdate"
+        required: true
+      responses:
+        "200":
+          description: Number of recommendations updated
+          content:
+            '*/*':
+              schema:
+                type: integer
+                format: int32
+  /v1/recommendations/{id}:
+    delete:
+      tags:
+      - recommendations-controller
+      operationId: deleteRecommendation
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Recommendation deleted
   /v1/drinks/date/{date}:
     get:
       tags:
@@ -633,6 +669,17 @@ components:
         glasswareId:
           type: integer
           format: int32
+        orderNumber:
+          type: integer
+          format: int32
+    RecommendationUpdate:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
     EditableDrink:
       type: object
       properties:

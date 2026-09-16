@@ -80,7 +80,7 @@ public class DynamicPersonalRecommendationSource implements RecommendationSource
                 .entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByValue())
-                .map(e -> withName(e.getKey()).toRecommendation(userId))
+                .map(e -> withName(e.getKey()).toRecommendation())
         )
         .distinct();
     }

@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -70,6 +72,39 @@ class RecommendationsTableIntegrationTest extends AbstractPostgresIntegrationTes
         List<Recommendation> result = recommendationsTable.findValidByUserId(OTHER, LocalDateTime.now());
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void updateOrderAssignsPositionsFromRecommendationIds() {
+        Recommendation first = createRecommendation(USER, "First");
+        Recommendation second = createRecommendation(USER, "Second");
+        Recommendation third = createRecommendation(USER, "Third");
+        recommendationsTable.saveAllAndFlush(List.of(first, second, third));
+
+        int updated = recommendationsTable.updateRecommendationsOrderArray(
+                new Integer[]{third.getId(), third.getId(), 999_999, first.getId()},
+                new String[]{"Renamed third", "Ignored duplicate", "Ignored unknown", "Renamed first"}
+        );
+
+        assertThat(updated).isEqualTo(2);
+        Map<Integer, Recommendation> recommendationById = recommendationsTable.findAllById(
+                List.of(first.getId(), second.getId(), third.getId())
+        ).stream().collect(Collectors.toMap(Recommendation::getId, recommendation -> recommendation));
+        assertThat(recommendationById.get(third.getId()).getOrderNumber()).isEqualTo(1);
+        assertThat(recommendationById.get(third.getId()).getName()).isEqualTo("Renamed third");
+        assertThat(recommendationById.get(first.getId()).getOrderNumber()).isEqualTo(2);
+        assertThat(recommendationById.get(first.getId()).getName()).isEqualTo("Renamed first");
+        assertThat(recommendationById.get(second.getId()).getOrderNumber()).isNull();
+    }
+
+    @Test
+    void updateOrderWithEmptyListDoesNothing() {
+        Recommendation recommendation = createRecommendation(USER, "Beer");
+        recommendationsTable.saveAndFlush(recommendation);
+
+        assertThat(recommendationsTable.updateRecommendationsOrderArray(new Integer[]{}, new String[]{})).isZero();
+        assertThat(recommendationsTable.findById(recommendation.getId()).orElseThrow()
+                .getOrderNumber()).isNull();
     }
 
     private Recommendation createRecommendation(UUID userId, String name) {
