@@ -163,4 +163,16 @@ describe('recommendationDraftReducer', () => {
 
     expect(isDirty(state, new Set([3]))).toBe(false);
   });
+
+  it('edit/commit with no open editor is a no-op', () => {
+    const state = synced();
+
+    expect(reduce(state, { type: 'edit/commit' })).toBe(state);
+  });
+
+  it('an unrecognised action leaves the state unchanged', () => {
+    const state = synced();
+
+    expect(reduce(state, { type: 'not-a-real-action' } as never)).toBe(state);
+  });
 });

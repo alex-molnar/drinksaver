@@ -138,4 +138,10 @@ describe('recQueueReducer', () => {
     expect(currentRecEntry(state)).toBeNull();
     expect(hiddenRecommendationIds(state).has(7)).toBe(true);
   });
+
+  it('an unrecognised action leaves the state unchanged', () => {
+    const state = withDelete();
+
+    expect(reduce(state, { type: 'not-a-real-action' } as never)).toBe(state);
+  });
 });

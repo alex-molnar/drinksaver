@@ -96,7 +96,6 @@ const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ undoWindowMs 
 
   useEffect(() => {
     if (data) dispatch({ type: 'sync', rows });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, rows]);
 
   const onUndoSave = useCallback(
@@ -178,7 +177,7 @@ const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ undoWindowMs 
       sawCommitRef.current = false;
       queryClient.invalidateQueries({ queryKey: ['recommendations'] });
     }
-  }, [queue.current, queryClient]);
+  }, [queue, queryClient]);
 
   return (
     <AppFrame title="Recommendations" subtitle={`${visible.length} saved`}>

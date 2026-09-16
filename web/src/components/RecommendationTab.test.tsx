@@ -85,6 +85,18 @@ describe('RecommendationTab', () => {
     expect(s.onReorder).toHaveBeenCalledWith([3, 7, 9]);
   });
 
+  it('cancels a keyboard reorder on Escape without calling onReorder', async () => {
+    const s = renderTab();
+    const user = userEvent.setup();
+
+    screen.getByRole('button', { name: 'Reorder HJ pint' }).focus();
+    await user.keyboard('{ }');          // pick up
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{Escape}');     // cancel
+
+    expect(s.onReorder).not.toHaveBeenCalled();
+  });
+
   it('passes the open editor down to the right row only', () => {
     renderTab({ editingId: 3, editingValue: 'Chouffe' });
 

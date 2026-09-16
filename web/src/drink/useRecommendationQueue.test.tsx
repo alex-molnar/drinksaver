@@ -137,4 +137,48 @@ describe('useRecommendationQueue', () => {
 
     await waitFor(() => expect(mockDelete).toHaveBeenCalledTimes(2));
   });
+
+  it('undo with nothing undoable is a no-op', async () => {
+    render(<Probe windowMs={10_000} />);
+
+    await userEvent.click(screen.getByText('undo'));
+
+    expect(screen.getByTestId('status')).toHaveTextContent('idle');
+    expect(mockDelete).not.toHaveBeenCalled();
+    expect(mockEdit).not.toHaveBeenCalled();
+  });
+
+  it('retry with nothing failed is a no-op', async () => {
+    render(<Probe windowMs={10_000} />);
+
+    await userEvent.click(screen.getByText('retry'));
+
+    expect(screen.getByTestId('status')).toHaveTextContent('idle');
+    expect(mockDelete).not.toHaveBeenCalled();
+  });
+
+  it('finalizes every open window when the page is hidden, so a backgrounded tab still sends', async () => {
+    render(<Probe windowMs={10_000} />);
+
+    await userEvent.click(screen.getByText('del'));
+    expect(mockDelete).not.toHaveBeenCalled();
+
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(7));
+
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+  });
+
+  it('re-sweeps against the real clock when the page becomes visible again', async () => {
+    render(<Probe windowMs={10} />);
+
+    await userEvent.click(screen.getByText('del'));
+
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(7));
+  });
 });

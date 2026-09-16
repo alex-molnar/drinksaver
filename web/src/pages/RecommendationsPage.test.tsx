@@ -169,6 +169,31 @@ describe('RecommendationsPage', () => {
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });
 
+  it('reorders with the keyboard and shows Save and Cancel', async () => {
+    renderWithProviders(<RecommendationsPage />);
+    await screen.findByText('HJ pint');
+
+    const user = userEvent.setup();
+    screen.getByRole('button', { name: 'Reorder HJ pint' }).focus();
+    await user.keyboard('{ }');
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{ }');
+
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+  });
+
+  it('reverts an in-progress rename on Escape without committing', async () => {
+    renderWithProviders(<RecommendationsPage />);
+    await screen.findByText('HJ pint');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Rename HJ pint' }));
+    await userEvent.clear(screen.getByRole('textbox'));
+    await userEvent.type(screen.getByRole('textbox'), 'Home pint{Escape}');
+
+    expect(screen.getByText('HJ pint')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+  });
+
   it('reports a failed list read rather than showing an empty list', async () => {
     vi.mocked(getRecommendations).mockRejectedValue(new Error('boom'));
     renderWithProviders(<RecommendationsPage />);
