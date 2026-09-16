@@ -94,7 +94,11 @@ describe('useRecommendationQueue', () => {
 
     await userEvent.click(screen.getByText('save'));
 
-    await waitFor(() => expect(mockEdit).toHaveBeenCalledWith([{ id: 3, name: 'Office Chouffe' }]));
+    // A generous timeout: this is a real 20ms setTimeout racing real CI scheduling, not a fake
+    // clock, so a contended runner can occasionally overshoot the default 1000ms budget.
+    await waitFor(() => expect(mockEdit).toHaveBeenCalledWith([{ id: 3, name: 'Office Chouffe' }]), {
+      timeout: 5000,
+    });
   });
 
   it('undoing a save hands the snapshot back and sends no PATCH', async () => {
