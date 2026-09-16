@@ -150,7 +150,7 @@ describe('AppFrame', () => {
     ]);
   });
 
-  it.each(['Settings', 'Recommendations'])('%s is exposed as disabled and leaves the current location unchanged', async (label) => {
+  it.each(['Settings'])('%s is exposed as disabled and leaves the current location unchanged', async (label) => {
     const user = userEvent.setup();
     renderWithProviders(
       <AppFrame>
@@ -166,6 +166,24 @@ describe('AppFrame', () => {
     expect(screen.getByRole('menu')).toBeInTheDocument();
     expect(screen.getByTestId('pathname')).toHaveTextContent('/history');
     expect(screen.getByTestId('search')).toHaveTextContent(/^$/);
+  });
+
+  it('navigates to the recommendations screen from the menu', async () => {
+    renderWithProviders(
+      <AppFrame>
+        <RouteProbe />
+      </AppFrame>,
+      { route: '/history' }
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    const action = screen.getByRole('menuitem', { name: 'Recommendations' });
+
+    expect(action).not.toHaveAttribute('aria-disabled');
+    await userEvent.click(action);
+
+    expect(screen.getByTestId('pathname')).toHaveTextContent('/recommendations');
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   it('opens the add sheet directly on the alcohol-type creation panel', async () => {
