@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
- * The undo window. 2.5s rather than the prototype's 4.8: Undo popup felt way too dubious
+ * The undo window. 1.5s rather than the prototype's 4.8: Undo popup felt way too dubious
  */
-export const UNDO_WINDOW_MS = 2_500;
+export const UNDO_WINDOW_MS = 1_500;
 
 export interface UseUndoTimerOptions {
   /** Wall clock ms the window ends at, or null while nothing is undoable. A timestamp, not a

@@ -13,7 +13,7 @@ afterEach(() => {
 
 describe('UNDO_WINDOW_MS', () => {
   it('is 2.5 seconds', () => {
-    expect(UNDO_WINDOW_MS).toBe(2_500);
+    expect(UNDO_WINDOW_MS).toBe(1_500);
   });
 });
 
@@ -21,9 +21,9 @@ describe('useUndoTimer', () => {
   it('calls onExpire when undoUntil elapses', () => {
     const onExpire = vi.fn();
     const onExtend = vi.fn();
-    renderHook(() => useUndoTimer({ undoUntil: 2_500, onExpire, onExtend }));
+    renderHook(() => useUndoTimer({ undoUntil: 1_500, onExpire, onExtend }));
 
-    act(() => vi.advanceTimersByTime(2_499));
+    act(() => vi.advanceTimersByTime(1_499));
     expect(onExpire).not.toHaveBeenCalled();
 
     act(() => vi.advanceTimersByTime(1));
@@ -43,12 +43,12 @@ describe('useUndoTimer', () => {
     const onExpire = vi.fn();
     const onExtend = vi.fn();
     const { rerender } = renderHook(({ undoUntil }) => useUndoTimer({ undoUntil, onExpire, onExtend }), {
-      initialProps: { undoUntil: 2_500 as number | null },
+      initialProps: { undoUntil: 1_500 as number | null },
     });
 
     act(() => vi.advanceTimersByTime(1_000));
-    rerender({ undoUntil: 1_000 + 2_500 });
-    act(() => vi.advanceTimersByTime(2_499));
+    rerender({ undoUntil: 1_000 + 1_500 });
+    act(() => vi.advanceTimersByTime(1_499));
     expect(onExpire).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(1));
     expect(onExpire).toHaveBeenCalledTimes(1);
@@ -57,7 +57,7 @@ describe('useUndoTimer', () => {
   it('cancels the pending timer on unmount', () => {
     const onExpire = vi.fn();
     const onExtend = vi.fn();
-    const { unmount } = renderHook(() => useUndoTimer({ undoUntil: 2_500, onExpire, onExtend }));
+    const { unmount } = renderHook(() => useUndoTimer({ undoUntil: 1_500, onExpire, onExtend }));
 
     unmount();
     act(() => vi.advanceTimersByTime(10_000));
@@ -69,7 +69,7 @@ describe('useUndoTimer', () => {
     it('prevents onExpire while the pointer is inside the strip', () => {
       const onExpire = vi.fn();
       const onExtend = vi.fn();
-      const { result } = renderHook(() => useUndoTimer({ undoUntil: 2_500, onExpire, onExtend }));
+      const { result } = renderHook(() => useUndoTimer({ undoUntil: 1_500, onExpire, onExtend }));
 
       act(() => result.current.handlers.onPointerEnter());
       expect(result.current.isPaused).toBe(true);
@@ -81,14 +81,14 @@ describe('useUndoTimer', () => {
     it('extends the window by exactly the paused duration on resume', () => {
       const onExpire = vi.fn();
       const onExtend = vi.fn();
-      const { result } = renderHook(() => useUndoTimer({ undoUntil: 2_500, onExpire, onExtend }));
+      const { result } = renderHook(() => useUndoTimer({ undoUntil: 1_500, onExpire, onExtend }));
 
       act(() => vi.advanceTimersByTime(1_000));
       act(() => result.current.handlers.onPointerEnter());
       act(() => vi.advanceTimersByTime(4_000)); // paused for 4s while at t=1000
       act(() => result.current.handlers.onPointerLeave());
 
-      expect(onExtend).toHaveBeenCalledWith(2_500 + 4_000);
+      expect(onExtend).toHaveBeenCalledWith(1_500 + 4_000);
     });
 
     it('resuming reschedules against the extended deadline once the caller feeds it back', () => {
@@ -96,7 +96,7 @@ describe('useUndoTimer', () => {
       const onExtend = vi.fn();
       const { result, rerender } = renderHook(
         ({ undoUntil }) => useUndoTimer({ undoUntil, onExpire, onExtend }),
-        { initialProps: { undoUntil: 2_500 as number | null } }
+        { initialProps: { undoUntil: 1_500 as number | null } }
       );
 
       act(() => vi.advanceTimersByTime(1_000));
@@ -120,7 +120,7 @@ describe('useUndoTimer', () => {
     it('treats focus the same as hover', () => {
       const onExpire = vi.fn();
       const onExtend = vi.fn();
-      const { result } = renderHook(() => useUndoTimer({ undoUntil: 2_500, onExpire, onExtend }));
+      const { result } = renderHook(() => useUndoTimer({ undoUntil: 1_500, onExpire, onExtend }));
 
       act(() => result.current.handlers.onFocus());
       act(() => vi.advanceTimersByTime(20_000));
@@ -133,7 +133,7 @@ describe('useUndoTimer', () => {
     it('only resumes once both hover and focus have released', () => {
       const onExpire = vi.fn();
       const onExtend = vi.fn();
-      const { result } = renderHook(() => useUndoTimer({ undoUntil: 2_500, onExpire, onExtend }));
+      const { result } = renderHook(() => useUndoTimer({ undoUntil: 1_500, onExpire, onExtend }));
 
       act(() => result.current.handlers.onPointerEnter());
       act(() => result.current.handlers.onFocus());
@@ -150,7 +150,7 @@ describe('useUndoTimer', () => {
     it('does not extend when the pause was effectively instantaneous', () => {
       const onExpire = vi.fn();
       const onExtend = vi.fn();
-      const { result } = renderHook(() => useUndoTimer({ undoUntil: 2_500, onExpire, onExtend }));
+      const { result } = renderHook(() => useUndoTimer({ undoUntil: 1_500, onExpire, onExtend }));
 
       act(() => {
         result.current.handlers.onPointerEnter();
@@ -158,7 +158,7 @@ describe('useUndoTimer', () => {
       });
 
       expect(onExtend).not.toHaveBeenCalled();
-      act(() => vi.advanceTimersByTime(2_500));
+      act(() => vi.advanceTimersByTime(1_500));
       expect(onExpire).toHaveBeenCalledTimes(1);
     });
   });
