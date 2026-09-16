@@ -23,7 +23,7 @@ describe('useUndoTimer', () => {
     const onExtend = vi.fn();
     renderHook(() => useUndoTimer({ undoUntil: 2_500, onExpire, onExtend }));
 
-    act(() => vi.advanceTimersByTime(6_499));
+    act(() => vi.advanceTimersByTime(2_499));
     expect(onExpire).not.toHaveBeenCalled();
 
     act(() => vi.advanceTimersByTime(1));
@@ -46,8 +46,8 @@ describe('useUndoTimer', () => {
       initialProps: { undoUntil: 2_500 as number | null },
     });
 
-    act(() => vi.advanceTimersByTime(3_000));
-    rerender({ undoUntil: 3_000 + 2_500 });
+    act(() => vi.advanceTimersByTime(1_000));
+    rerender({ undoUntil: 1_000 + 2_500 });
     act(() => vi.advanceTimersByTime(2_499));
     expect(onExpire).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(1));
