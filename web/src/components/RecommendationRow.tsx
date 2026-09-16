@@ -233,7 +233,17 @@ const RecommendationRow: React.FC<RecommendationRowProps> = ({
       )}
 
       {editing ? (
-        <IconButton type="button" aria-label={`Save name for ${row.name}`} onClick={onEditCommit}>
+        <IconButton
+          type="button"
+          aria-label={`Save name for ${row.name}`}
+          // A mousedown on this button would otherwise blur the input first, committing through
+          // `onBlur` and re-rendering this exact DOM slot from the checkmark to the pencil before
+          // the click itself fires - so the click would land on the pencil's `onEditStart` instead
+          // of this button's own `onEditCommit`. Preventing the default focus change here keeps
+          // the input focused until the click's own commit runs, which is the only dispatch.
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={onEditCommit}
+        >
           <CheckIcon />
         </IconButton>
       ) : (
