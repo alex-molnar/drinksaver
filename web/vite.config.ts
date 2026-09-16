@@ -13,6 +13,11 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // A handful of tests race a real (small) setTimeout against CI's heavily loaded jsdom
+    // scheduler rather than a fake clock. The default 5000ms per-test budget is occasionally
+    // not enough room for those `waitFor`s to resolve under contention; this raises the ceiling
+    // without slowing any test that already finishes well inside it.
+    testTimeout: 15_000,
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'lcov'],

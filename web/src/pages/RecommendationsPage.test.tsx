@@ -17,6 +17,12 @@ vi.mock('../drink/useDrinksForDate', () => ({ useDrinksForDate: () => ({ status:
 const rec = (over: Partial<Recommendation>) =>
   ({ id: 1, userId: ME, name: 'x', alcoholTypeId: 1, alcoholVolumeId: 1, ...over }) as Recommendation;
 
+/** Some tests race a real, short undo-window setTimeout against CI's scheduler rather than a
+ *  fake clock, so assertions need more room than the 1000ms default under a contended runner.
+ *  Comfortably under vite.config.ts's 15000ms per-test ceiling, so it can never itself time out
+ *  the test. */
+const WAIT_OPTS = { timeout: 10_000 };
+
 const LIST = [
   rec({ id: 7, name: 'HJ pint' }),
   rec({ id: 3, name: 'Office Chouffe' }),
@@ -125,14 +131,14 @@ describe('RecommendationsPage', () => {
 
     // Generous timeouts: this is a real ~30ms setTimeout racing real CI scheduling, not a fake
     // clock, so a contended runner can occasionally overshoot the default 1000ms budget.
-    expect(await screen.findByText('Changes saved.', {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(await screen.findByText('Changes saved.', {}, WAIT_OPTS)).toBeInTheDocument();
     await waitFor(
       () =>
         expect(editRecommendations).toHaveBeenCalledWith([
           { id: 7, name: 'Home pint' },
           { id: 3, name: 'Office Chouffe' },
         ]),
-      { timeout: 5000 },
+      WAIT_OPTS,
     );
   });
 
@@ -156,7 +162,7 @@ describe('RecommendationsPage', () => {
     await rename('Office Chouffe', 'Chouffe');
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() => expect(editRecommendations).toHaveBeenCalledWith([{ id: 3, name: 'Chouffe' }]));
+    await waitFor(() => expect(editRecommendations).toHaveBeenCalledWith([{ id: 3, name: 'Chouffe' }]), WAIT_OPTS);
     expect(deleteRecommendation).toHaveBeenCalledWith(7);
   });
 
@@ -168,7 +174,7 @@ describe('RecommendationsPage', () => {
     await rename('HJ pint', 'Home pint');
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent("Couldn't save your changes.");
+    expect(await screen.findByRole('alert', {}, WAIT_OPTS)).toHaveTextContent("Couldn't save your changes.");
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
   });
 

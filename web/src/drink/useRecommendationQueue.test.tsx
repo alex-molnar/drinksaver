@@ -17,6 +17,11 @@ const SNAPSHOT: DraftSnapshot = {
 };
 const onUndoSave = vi.fn();
 
+/** These tests race a real, short setTimeout against CI's scheduler rather than a fake clock, so
+ *  `waitFor` needs more room than jsdom's 1000ms default under a contended runner. Comfortably
+ *  under vite.config.ts's 15000ms per-test ceiling, so it can never itself time out the test. */
+const WAIT_OPTS = { timeout: 10_000 };
+
 /** A thunk, so the payload is read at commit time and not when the save was raised. */
 const payload = () => [{ id: 3, name: 'Office Chouffe' }];
 
@@ -55,7 +60,7 @@ describe('useRecommendationQueue', () => {
 
     await userEvent.click(screen.getByText('del'));
 
-    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(7));
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(7), WAIT_OPTS);
   });
 
   it('undo inside the window restores the row and never sends', async () => {
@@ -74,7 +79,7 @@ describe('useRecommendationQueue', () => {
     await userEvent.click(screen.getByText('del'));
     await userEvent.click(screen.getByText('save'));
 
-    await waitFor(() => expect(mockEdit).toHaveBeenCalled());
+    await waitFor(() => expect(mockEdit).toHaveBeenCalled(), WAIT_OPTS);
     expect(mockDelete).toHaveBeenCalledWith(7);
     expect(mockDelete.mock.invocationCallOrder[0]).toBeLessThan(mockEdit.mock.invocationCallOrder[0]);
   });
@@ -85,7 +90,7 @@ describe('useRecommendationQueue', () => {
     await userEvent.click(screen.getByText('del'));
     await userEvent.click(screen.getByText('save'));
 
-    await waitFor(() => expect(mockEdit).toHaveBeenCalled());
+    await waitFor(() => expect(mockEdit).toHaveBeenCalled(), WAIT_OPTS);
     expect(mockDelete).toHaveBeenCalledTimes(1);
   });
 
@@ -94,11 +99,7 @@ describe('useRecommendationQueue', () => {
 
     await userEvent.click(screen.getByText('save'));
 
-    // A generous timeout: this is a real 20ms setTimeout racing real CI scheduling, not a fake
-    // clock, so a contended runner can occasionally overshoot the default 1000ms budget.
-    await waitFor(() => expect(mockEdit).toHaveBeenCalledWith([{ id: 3, name: 'Office Chouffe' }]), {
-      timeout: 5000,
-    });
+    await waitFor(() => expect(mockEdit).toHaveBeenCalledWith([{ id: 3, name: 'Office Chouffe' }]), WAIT_OPTS);
   });
 
   it('undoing a save hands the snapshot back and sends no PATCH', async () => {
@@ -117,7 +118,7 @@ describe('useRecommendationQueue', () => {
 
     await userEvent.click(screen.getByText('del'));
 
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('failed'));
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('failed'), WAIT_OPTS);
     expect(screen.getByTestId('hidden')).toHaveTextContent('');
   });
 
@@ -127,7 +128,7 @@ describe('useRecommendationQueue', () => {
 
     await userEvent.click(screen.getByText('save'));
 
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('failed'));
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('failed'), WAIT_OPTS);
   });
 
   it('retry sends the failed request again', async () => {
@@ -135,11 +136,11 @@ describe('useRecommendationQueue', () => {
     render(<Probe windowMs={20} />);
 
     await userEvent.click(screen.getByText('del'));
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('failed'));
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('failed'), WAIT_OPTS);
 
     await userEvent.click(screen.getByText('retry'));
 
-    await waitFor(() => expect(mockDelete).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledTimes(2), WAIT_OPTS);
   });
 
   it('undo with nothing undoable is a no-op', async () => {
@@ -170,7 +171,7 @@ describe('useRecommendationQueue', () => {
     Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
     document.dispatchEvent(new Event('visibilitychange'));
 
-    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(7));
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(7), WAIT_OPTS);
 
     Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
   });
@@ -183,6 +184,6 @@ describe('useRecommendationQueue', () => {
     Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
     document.dispatchEvent(new Event('visibilitychange'));
 
-    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(7));
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(7), WAIT_OPTS);
   });
 });
