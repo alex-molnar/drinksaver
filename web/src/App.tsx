@@ -16,6 +16,7 @@ import { DesignProvider } from './drink/DesignProvider';
  */
 const QuickSavePage = lazy(() => import('./pages/QuickSavePage'));
 const HistoryPage = lazy(() => import('./pages/HistoryPage'));
+const RecommendationsPage = lazy(() => import('./pages/RecommendationsPage'));
 
 const RouteFallback = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
@@ -61,6 +62,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<QuickSavePage />} />
                     <Route path="/history" element={<HistoryPage />} />
+                    <Route path="/recommendations" element={<RecommendationsPage />} />
                     {/* Retired routes. No bookmark or stale tab should land on a blank page. */}
                     <Route path="/detailed" element={<Navigate to="/?sheet=add" replace />} />
                     <Route path="/success" element={<Navigate to="/" replace />} />
