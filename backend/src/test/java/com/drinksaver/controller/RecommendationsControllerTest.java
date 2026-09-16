@@ -3,6 +3,7 @@ package com.drinksaver.controller;
 import com.drinksaver.config.SecurityConfig;
 import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.model.dto.RecommendationUpdate;
+import com.drinksaver.service.RecommendationCacheService;
 import com.drinksaver.service.RecommendationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +63,9 @@ class RecommendationsControllerTest {
 
     @MockitoBean
     private RecommendationService recommendationService;
+
+    @MockitoBean
+    private RecommendationCacheService recommendationCacheService;
 
     @Test
     void getRecommendationsListReturnsOkWithExpectedShape() throws Exception {
@@ -160,7 +164,7 @@ class RecommendationsControllerTest {
         when(recommendationService.isRecommendationOwnedByUser(25, userId)).thenReturn(false);
         Jwt token = Jwt.withTokenValue("token").subject(userId.toString()).header("alg", "none").build();
 
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new RecommendationsController(recommendationService)
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new RecommendationsController(recommendationService, recommendationCacheService)
                 .deleteRecommendation(token, 25))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("That recommendation is not owned by the authenticated user");
