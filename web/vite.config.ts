@@ -37,10 +37,14 @@ export default defineConfig({
       //
       // Raised 2026-09-11, from 97/92/94/98, after the History lifecycle regressions.
       // Measured 98.38 / 93.48 / 96.92 / 98.67 across presence, cancellation and layout paths.
+      //
+      // Raised 2026-09-16, functions from 96 to 97, after the recommendations page: two
+      // reducers, the deferred write queue hook, the row, tab, strip and page components,
+      // and the route/menu wiring. Measured 98.44 / 93.15 / 97.81 / 98.68.
       thresholds: {
         statements: 98,
         branches: 93,
-        functions: 96,
+        functions: 97,
         lines: 98,
       },
     },
