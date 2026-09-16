@@ -47,7 +47,7 @@ class DynamicPersonalRecommendationSourceTest {
     }
 
     @Test
-    void convertsSavedDrinksToRecommendationsForTheCallingUser() {
+    void convertsSavedDrinksToRecommendationsWithoutPersistedOwnership() {
         SavedDrinksTable table = mock(SavedDrinksTable.class);
         when(table.findByUserId(USER)).thenReturn(List.of(drinkOn(TODAY.toString(), 1)));
 
@@ -56,7 +56,7 @@ class DynamicPersonalRecommendationSourceTest {
                 .toList();
 
         assertThat(result).singleElement().satisfies(recommendation -> {
-            assertThat(recommendation.getUserId()).isEqualTo(USER);
+            assertThat(recommendation.getUserId()).isNull();
             assertThat(recommendation.getAlcoholTypeId()).isEqualTo(1);
             assertThat(recommendation.getAlcoholVolumeId()).isEqualTo(3);
         });
