@@ -1,7 +1,6 @@
 import React from 'react';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { useRecommendationQueue } from './useRecommendationQueue';
 import { deleteRecommendation, editRecommendations } from '../api/endpoints';
 import type { DraftSnapshot } from './recommendationDraft';
@@ -16,11 +15,6 @@ const SNAPSHOT: DraftSnapshot = {
   names: new Map([[7, 'HJ pint'], [3, 'Office Chouffe']]),
 };
 const onUndoSave = vi.fn();
-
-/** These tests race a real, short setTimeout against CI's scheduler rather than a fake clock, so
- *  `waitFor` needs more room than jsdom's 1000ms default under a contended runner. Comfortably
- *  under vite.config.ts's 15000ms per-test ceiling, so it can never itself time out the test. */
-const WAIT_OPTS = { timeout: 10_000 };
 
 /** A thunk, so the payload is read at commit time and not when the save was raised. */
 const payload = () => [{ id: 3, name: 'Office Chouffe' }];
@@ -39,17 +33,30 @@ const Probe: React.FC<{ windowMs: number }> = ({ windowMs }) => {
   );
 };
 
+/** A fake clock, not a real setTimeout, is what keeps these tests deterministic: the undo
+ *  window's expiry is exercised by advancing the clock explicitly rather than by racing a real
+ *  timer against whatever the test runner's scheduler is doing. See `useUndoTimer.test.ts`,
+ *  which this follows. Clicks use `fireEvent` rather than `userEvent`: `userEvent`'s own
+ *  internal delay scheduling fights the fake clock and hangs, whereas `fireEvent` dispatches
+ *  synchronously with no timer of its own.
+ */
+
 beforeEach(() => {
+  vi.useFakeTimers();
   vi.clearAllMocks();
   mockEdit.mockResolvedValue(undefined);
   mockDelete.mockResolvedValue(undefined);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe('useRecommendationQueue', () => {
   it('hides the row immediately and sends nothing until the window closes', async () => {
     render(<Probe windowMs={10_000} />);
 
-    await userEvent.click(screen.getByText('del'));
+    fireEvent.click(screen.getByText('del'));
 
     expect(screen.getByTestId('hidden')).toHaveTextContent('7');
     expect(mockDelete).not.toHaveBeenCalled();
@@ -58,16 +65,17 @@ describe('useRecommendationQueue', () => {
   it('sends the DELETE once the window closes', async () => {
     render(<Probe windowMs={20} />);
 
-    await userEvent.click(screen.getByText('del'));
+    fireEvent.click(screen.getByText('del'));
+    await act(() => vi.advanceTimersByTimeAsync(20));
 
-    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(7), WAIT_OPTS);
+    expect(mockDelete).toHaveBeenCalledWith(7);
   });
 
   it('undo inside the window restores the row and never sends', async () => {
     render(<Probe windowMs={10_000} />);
 
-    await userEvent.click(screen.getByText('del'));
-    await userEvent.click(screen.getByText('undo'));
+    fireEvent.click(screen.getByText('del'));
+    fireEvent.click(screen.getByText('undo'));
 
     expect(screen.getByTestId('hidden')).toHaveTextContent('');
     expect(mockDelete).not.toHaveBeenCalled();
@@ -76,10 +84,11 @@ describe('useRecommendationQueue', () => {
   it('flushes an open delete before the PATCH, so the order it sends is never a lie', async () => {
     render(<Probe windowMs={30} />);
 
-    await userEvent.click(screen.getByText('del'));
-    await userEvent.click(screen.getByText('save'));
+    fireEvent.click(screen.getByText('del'));
+    fireEvent.click(screen.getByText('save'));
+    await act(() => vi.advanceTimersByTimeAsync(30));
 
-    await waitFor(() => expect(mockEdit).toHaveBeenCalled(), WAIT_OPTS);
+    expect(mockEdit).toHaveBeenCalled();
     expect(mockDelete).toHaveBeenCalledWith(7);
     expect(mockDelete.mock.invocationCallOrder[0]).toBeLessThan(mockEdit.mock.invocationCallOrder[0]);
   });
@@ -87,26 +96,28 @@ describe('useRecommendationQueue', () => {
   it('sends the DELETE exactly once even though the save also waits on it', async () => {
     render(<Probe windowMs={30} />);
 
-    await userEvent.click(screen.getByText('del'));
-    await userEvent.click(screen.getByText('save'));
+    fireEvent.click(screen.getByText('del'));
+    fireEvent.click(screen.getByText('save'));
+    await act(() => vi.advanceTimersByTimeAsync(30));
 
-    await waitFor(() => expect(mockEdit).toHaveBeenCalled(), WAIT_OPTS);
+    expect(mockEdit).toHaveBeenCalled();
     expect(mockDelete).toHaveBeenCalledTimes(1);
   });
 
   it('reads the payload at commit time, not when the save was raised', async () => {
     render(<Probe windowMs={20} />);
 
-    await userEvent.click(screen.getByText('save'));
+    fireEvent.click(screen.getByText('save'));
+    await act(() => vi.advanceTimersByTimeAsync(20));
 
-    await waitFor(() => expect(mockEdit).toHaveBeenCalledWith([{ id: 3, name: 'Office Chouffe' }]), WAIT_OPTS);
+    expect(mockEdit).toHaveBeenCalledWith([{ id: 3, name: 'Office Chouffe' }]);
   });
 
   it('undoing a save hands the snapshot back and sends no PATCH', async () => {
     render(<Probe windowMs={10_000} />);
 
-    await userEvent.click(screen.getByText('save'));
-    await userEvent.click(screen.getByText('undo'));
+    fireEvent.click(screen.getByText('save'));
+    fireEvent.click(screen.getByText('undo'));
 
     expect(onUndoSave).toHaveBeenCalledWith(SNAPSHOT);
     expect(mockEdit).not.toHaveBeenCalled();
@@ -116,9 +127,10 @@ describe('useRecommendationQueue', () => {
     mockDelete.mockRejectedValue(new Error('boom'));
     render(<Probe windowMs={20} />);
 
-    await userEvent.click(screen.getByText('del'));
+    fireEvent.click(screen.getByText('del'));
+    await act(() => vi.advanceTimersByTimeAsync(20));
 
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('failed'), WAIT_OPTS);
+    expect(screen.getByTestId('status')).toHaveTextContent('failed');
     expect(screen.getByTestId('hidden')).toHaveTextContent('');
   });
 
@@ -126,27 +138,30 @@ describe('useRecommendationQueue', () => {
     mockEdit.mockRejectedValue(new Error('boom'));
     render(<Probe windowMs={20} />);
 
-    await userEvent.click(screen.getByText('save'));
+    fireEvent.click(screen.getByText('save'));
+    await act(() => vi.advanceTimersByTimeAsync(20));
 
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('failed'), WAIT_OPTS);
+    expect(screen.getByTestId('status')).toHaveTextContent('failed');
   });
 
   it('retry sends the failed request again', async () => {
     mockDelete.mockRejectedValueOnce(new Error('boom')).mockResolvedValue(undefined);
     render(<Probe windowMs={20} />);
 
-    await userEvent.click(screen.getByText('del'));
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('failed'), WAIT_OPTS);
+    fireEvent.click(screen.getByText('del'));
+    await act(() => vi.advanceTimersByTimeAsync(20));
+    expect(screen.getByTestId('status')).toHaveTextContent('failed');
 
-    await userEvent.click(screen.getByText('retry'));
+    fireEvent.click(screen.getByText('retry'));
+    await act(() => vi.advanceTimersByTimeAsync(0));
 
-    await waitFor(() => expect(mockDelete).toHaveBeenCalledTimes(2), WAIT_OPTS);
+    expect(mockDelete).toHaveBeenCalledTimes(2);
   });
 
   it('undo with nothing undoable is a no-op', async () => {
     render(<Probe windowMs={10_000} />);
 
-    await userEvent.click(screen.getByText('undo'));
+    fireEvent.click(screen.getByText('undo'));
 
     expect(screen.getByTestId('status')).toHaveTextContent('idle');
     expect(mockDelete).not.toHaveBeenCalled();
@@ -156,7 +171,7 @@ describe('useRecommendationQueue', () => {
   it('retry with nothing failed is a no-op', async () => {
     render(<Probe windowMs={10_000} />);
 
-    await userEvent.click(screen.getByText('retry'));
+    fireEvent.click(screen.getByText('retry'));
 
     expect(screen.getByTestId('status')).toHaveTextContent('idle');
     expect(mockDelete).not.toHaveBeenCalled();
@@ -165,13 +180,16 @@ describe('useRecommendationQueue', () => {
   it('finalizes every open window when the page is hidden, so a backgrounded tab still sends', async () => {
     render(<Probe windowMs={10_000} />);
 
-    await userEvent.click(screen.getByText('del'));
+    fireEvent.click(screen.getByText('del'));
     expect(mockDelete).not.toHaveBeenCalled();
 
     Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+      await vi.advanceTimersByTimeAsync(0);
+    });
 
-    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(7), WAIT_OPTS);
+    expect(mockDelete).toHaveBeenCalledWith(7);
 
     Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
   });
@@ -179,11 +197,17 @@ describe('useRecommendationQueue', () => {
   it('re-sweeps against the real clock when the page becomes visible again', async () => {
     render(<Probe windowMs={10} />);
 
-    await userEvent.click(screen.getByText('del'));
+    fireEvent.click(screen.getByText('del'));
+    // The window (10ms) has not yet elapsed by wall time, but the sweep on becoming visible
+    // reads the clock itself, so advancing past it first is what makes the resweep find it open.
+    await act(() => vi.advanceTimersByTimeAsync(10));
 
     Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+      await vi.advanceTimersByTimeAsync(0);
+    });
 
-    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(7), WAIT_OPTS);
+    expect(mockDelete).toHaveBeenCalledWith(7);
   });
 });

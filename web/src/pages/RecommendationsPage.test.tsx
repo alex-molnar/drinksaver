@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../test/test-utils';
 import RecommendationsPage from './RecommendationsPage';
@@ -17,11 +17,23 @@ vi.mock('../drink/useDrinksForDate', () => ({ useDrinksForDate: () => ({ status:
 const rec = (over: Partial<Recommendation>) =>
   ({ id: 1, userId: ME, name: 'x', alcoholTypeId: 1, alcoholVolumeId: 1, ...over }) as Recommendation;
 
-/** Some tests race a real, short undo-window setTimeout against CI's scheduler rather than a
- *  fake clock, so assertions need more room than the 1000ms default under a contended runner.
- *  Comfortably under vite.config.ts's 15000ms per-test ceiling, so it can never itself time out
- *  the test. */
-const WAIT_OPTS = { timeout: 10_000 };
+/** These 3 tests race the undo window's real setTimeout against the CI runner's scheduler when
+ *  run against real timers, and no fixed `waitFor` budget is reliably safe (see git history: a
+ *  10s budget still wasn't enough on a contended runner). A fake clock, advanced explicitly,
+ *  removes the race entirely. They drive the DOM with `fireEvent` rather than `userEvent`:
+ *  `userEvent` schedules its own real timers internally to simulate a human pointer/keyboard,
+ *  which hangs forever once the global clock is faked. `fireEvent` dispatches synchronously
+ *  with no timer of its own, so it stays compatible with `vi.useFakeTimers()`. Only `setTimeout`
+ *  and `Date` are faked (not `queueMicrotask`/`setImmediate`), so React's own scheduling and the
+ *  mocked API promises still flush normally between fake-timer advances. */
+const withFakeTimers = async (run: () => Promise<void>) => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+  try {
+    await run();
+  } finally {
+    vi.useRealTimers();
+  }
+};
 
 const LIST = [
   rec({ id: 7, name: 'HJ pint' }),
@@ -36,6 +48,13 @@ const rename = async (from: string, to: string) => {
   await userEvent.clear(screen.getByRole('textbox'));
   await userEvent.type(screen.getByRole('textbox'), to);
   await userEvent.click(screen.getByRole('button', { name: `Save name for ${from}` }));
+};
+
+/** The `fireEvent` equivalent of `rename`, for use inside a fake-timer block. */
+const renameSync = (from: string, to: string) => {
+  fireEvent.click(screen.getByRole('button', { name: `Rename ${from}` }));
+  fireEvent.change(screen.getByRole('textbox'), { target: { value: to } });
+  fireEvent.click(screen.getByRole('button', { name: `Save name for ${from}` }));
 };
 
 beforeEach(() => {
@@ -123,23 +142,21 @@ describe('RecommendationsPage', () => {
   });
 
   it('Save offers undo first and sends the PATCH only when the window closes', async () => {
-    renderWithProviders(<RecommendationsPage undoWindowMs={30} />);
-    await screen.findByText('HJ pint');
+    await withFakeTimers(async () => {
+      renderWithProviders(<RecommendationsPage undoWindowMs={30} />);
+      await act(() => vi.advanceTimersByTimeAsync(0));
+      expect(screen.getByText('HJ pint')).toBeInTheDocument();
 
-    await rename('HJ pint', 'Home pint');
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+      renameSync('HJ pint', 'Home pint');
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      await act(() => vi.advanceTimersByTimeAsync(30));
 
-    // Generous timeouts: this is a real ~30ms setTimeout racing real CI scheduling, not a fake
-    // clock, so a contended runner can occasionally overshoot the default 1000ms budget.
-    expect(await screen.findByText('Changes saved.', {}, WAIT_OPTS)).toBeInTheDocument();
-    await waitFor(
-      () =>
-        expect(editRecommendations).toHaveBeenCalledWith([
-          { id: 7, name: 'Home pint' },
-          { id: 3, name: 'Office Chouffe' },
-        ]),
-      WAIT_OPTS,
-    );
+      expect(screen.getByText('Changes saved.')).toBeInTheDocument();
+      expect(editRecommendations).toHaveBeenCalledWith([
+        { id: 7, name: 'Home pint' },
+        { id: 3, name: 'Office Chouffe' },
+      ]);
+    });
   });
 
   it('undoing a Save puts the list back and sends nothing', async () => {
@@ -155,27 +172,35 @@ describe('RecommendationsPage', () => {
   });
 
   it('a PATCH never carries a row the user deleted, and the DELETE goes first', async () => {
-    renderWithProviders(<RecommendationsPage undoWindowMs={30} />);
-    await screen.findByText('HJ pint');
+    await withFakeTimers(async () => {
+      renderWithProviders(<RecommendationsPage undoWindowMs={30} />);
+      await act(() => vi.advanceTimersByTimeAsync(0));
+      expect(screen.getByText('HJ pint')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Delete HJ pint' }));
-    await rename('Office Chouffe', 'Chouffe');
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Delete HJ pint' }));
+      renameSync('Office Chouffe', 'Chouffe');
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      await act(() => vi.advanceTimersByTimeAsync(30));
 
-    await waitFor(() => expect(editRecommendations).toHaveBeenCalledWith([{ id: 3, name: 'Chouffe' }]), WAIT_OPTS);
-    expect(deleteRecommendation).toHaveBeenCalledWith(7);
+      expect(editRecommendations).toHaveBeenCalledWith([{ id: 3, name: 'Chouffe' }]);
+      expect(deleteRecommendation).toHaveBeenCalledWith(7);
+    });
   });
 
   it('surfaces a failed save with a retry rather than pretending it landed', async () => {
     vi.mocked(editRecommendations).mockRejectedValue(new Error('boom'));
-    renderWithProviders(<RecommendationsPage undoWindowMs={20} />);
-    await screen.findByText('HJ pint');
+    await withFakeTimers(async () => {
+      renderWithProviders(<RecommendationsPage undoWindowMs={20} />);
+      await act(() => vi.advanceTimersByTimeAsync(0));
+      expect(screen.getByText('HJ pint')).toBeInTheDocument();
 
-    await rename('HJ pint', 'Home pint');
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+      renameSync('HJ pint', 'Home pint');
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      await act(() => vi.advanceTimersByTimeAsync(20));
 
-    expect(await screen.findByRole('alert', {}, WAIT_OPTS)).toHaveTextContent("Couldn't save your changes.");
-    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toHaveTextContent("Couldn't save your changes.");
+      expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    });
   });
 
   it('reorders with the keyboard and shows Save and Cancel', async () => {
