@@ -28,7 +28,7 @@ cors:
   # Comma-separated list of allowed origins (e.g., "https://frontend.example.com,https://app.example.com")
   # Use "*" to allow all origins (not recommended for production with credentials)
   allowedOrigins: "https://app.drinksaver.kak.im"
-  allowedMethods: "GET,POST,PUT,DELETE,OPTIONS"
+  allowedMethods: "GET,POST,PATCH,PUT,DELETE,OPTIONS"
   allowedHeaders: "*"
   allowCredentials: "true"
   maxAge: "3600"
