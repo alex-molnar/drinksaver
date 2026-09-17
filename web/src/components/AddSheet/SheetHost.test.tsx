@@ -145,4 +145,32 @@ describe('SheetHost', () => {
     await screen.findByText('menu-panel');
     expect(document.querySelector('[role="presentation"][aria-labelledby="add-sheet-heading"]')).toBeInTheDocument();
   });
+
+  /**
+   * A native `<input type="date">`'s picker chrome lives outside this document entirely. With the
+   * focus trap enforced, MUI sees focus "leave" the Drawer the instant that chrome takes it and
+   * yanks focus back in - which blurs the native input mid-pick on iOS and commits/closes it
+   * immediately (issue: When -> Another day closing itself right after opening). This asserts the
+   * trap is off, the same way MUI's own docs fix this class of bug for a portal-rendered popup.
+   */
+  it('does not force focus back into the sheet once it has moved elsewhere', async () => {
+    render(
+      <ThemeProvider theme={muiTheme}>
+        <MemoryRouter initialEntries={['/?sheet=add']}>
+          <SheetPortalContext.Provider value={{ container: null, setContainer: vi.fn() }}>
+            <button>outside</button>
+            <SheetHost />
+          </SheetPortalContext.Provider>
+        </MemoryRouter>
+      </ThemeProvider>
+    );
+    await screen.findByText('menu-panel');
+
+    const outside = screen.getByText('outside');
+    outside.focus();
+    // MUI's FocusTrap re-grabs on a focusin listener, which fires synchronously - if it were
+    // going to steal focus back, it would have by the next tick.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(document.activeElement).toBe(outside);
+  });
 });
