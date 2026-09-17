@@ -1,8 +1,9 @@
 import React, { useCallback, useState } from 'react';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import AppFrame from '../components/AppFrame';
 import PlateGrid, { type PlateGridItem } from '../components/PlateGrid';
+import PlateGridSkeleton from '../components/PlateGridSkeleton';
 import { MENU_PANEL } from '../components/AddSheet';
 import { useSheet } from '../hooks/useSheet';
 import { useSaveQueue } from '../drink/useSaveQueue';
@@ -25,22 +26,6 @@ import type { Recommendation } from '../types/api';
  */
 const getRecommendationKey = (rec: Recommendation): string =>
   `${rec.id ?? 'null'}-${rec.alcoholTypeId}-${rec.alcoholVolumeId}-${rec.brandId ?? 'null'}`;
-
-const CenteredMessage: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Box
-    sx={{
-      flex: 1,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 2,
-      p: 2,
-    }}
-  >
-    {children}
-  </Box>
-);
 
 /**
  * The Quick Save screen: two columns of enamel plates in a painted-board frame. Logging never
@@ -106,9 +91,7 @@ const QuickSavePage: React.FC = () => {
   if (isLoading) {
     return (
       <AppFrame>
-        <CenteredMessage>
-          <CircularProgress color="primary" />
-        </CenteredMessage>
+        <PlateGridSkeleton />
       </AppFrame>
     );
   }

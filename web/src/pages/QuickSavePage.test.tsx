@@ -175,12 +175,13 @@ describe('QuickSavePage', () => {
     expect(screen.getByRole('button', { name: 'Heineken pint' })).not.toHaveAttribute('aria-busy');
   });
 
-  it('renders a spinner while the recommendations query is loading', () => {
+  it('renders skeleton placeholder tiles while the recommendations query is loading', () => {
     mockGetRecommendations.mockImplementation(() => new Promise(() => {})); // Never resolves
 
     renderWithProviders(<QuickSavePage />);
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(screen.getAllByTestId('plate-skeleton')).toHaveLength(6);
   });
 
   it('still leaves "Something else" reachable when the query rejects, since it is the fallback for the automatic path', async () => {
