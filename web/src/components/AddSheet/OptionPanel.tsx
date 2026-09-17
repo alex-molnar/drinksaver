@@ -153,6 +153,13 @@ const FieldPanel = styled.div`
      width on iOS, so without this the field ignores its 100% width and overflows. */
   & > div {
     min-width: 0;
+    /* Confirmed on-device (iOS Safari): once the date input has a value, WebKit renders
+       it wider than this box regardless of the input's own max-width: 100%. SheetHost's
+       overflow-x: hidden stops that reaching the screen edge, but only clips at the
+       Drawer's boundary, ~20px further out than this field's own right edge - which is
+       why it looked flush with no margin instead of properly inset. Clipping here, at
+       the field's real boundary, is what actually restores the margin. */
+    overflow: hidden;
   }
 `;
 
