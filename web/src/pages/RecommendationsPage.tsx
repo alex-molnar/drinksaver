@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AppFrame from '../components/AppFrame';
@@ -17,6 +18,7 @@ import {
 } from '../drink/recommendationDraft';
 import { useRecommendationQueue } from '../drink/useRecommendationQueue';
 import { useSetPageFeedbackContainer } from '../components/PageFeedbackContext';
+import type { RecSaveEntry } from '../drink/recommendationQueue';
 
 const Scroll = styled.section`
   flex: 1;
@@ -178,6 +180,32 @@ const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ undoWindowMs 
       queryClient.invalidateQueries({ queryKey: ['recommendations'] });
     }
   }, [queue, queryClient]);
+
+  // Navigate to home page after a save is committed, but only if user hasn't navigated away
+  const navigate = useNavigate();
+  const mountedRef = useRef(true);
+  const lastCommittedSaveRef = useRef<string | null>(null);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    // Find the most recent save entry that was just committed
+    const committedSave = [...queue.entries]
+      .reverse()
+      .find(
+        (e): e is RecSaveEntry =>
+          e.kind === 'save' && e.status === 'committed' && e.id !== lastCommittedSaveRef.current,
+      );
+
+    if (committedSave && mountedRef.current) {
+      lastCommittedSaveRef.current = committedSave.id;
+      navigate('/', { replace: true });
+    }
+  }, [queue.entries, navigate]);
 
   return (
     <AppFrame title="Recommendations" subtitle={`${visible.length} saved`}>
