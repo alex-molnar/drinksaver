@@ -19,6 +19,11 @@ const StyledDrawer = styled(Drawer)`
        board in the same room as the plates and the nav, which is the whole visual conceit. */
     border-top: 3px solid var(--ds-accent-active);
     max-height: 88vh;
+    /* iOS renders the native date input wider than its CSS width (WebKit intrinsic-content
+       floor). Without this, it visually escapes the sheet and, on a narrow phone, the
+       viewport itself - which drags the whole page into a scroll-into-view/mis-tap chain
+       that dismisses the sheet. Clip it here so nothing in any panel can do that. */
+    overflow-x: hidden;
   }
 `;
 
@@ -64,7 +69,17 @@ const SheetHost: React.FC = () => {
   const top = sheet.panels[sheet.panels.length - 1] ?? MENU_PANEL;
 
   return (
-    <StyledDrawer anchor="bottom" open={sheet.isOpen} onClose={sheet.dismiss} aria-labelledby="add-sheet-heading">
+    <StyledDrawer
+      anchor="bottom"
+      open={sheet.isOpen}
+      onClose={sheet.dismiss}
+      aria-labelledby="add-sheet-heading"
+      // The native date input under the When field opens iOS's own picker chrome, which isn't
+      // part of this document. MUI's focus trap sees focus leave the Drawer and yanks it back in,
+      // which blurs the native input mid-pick and commits/closes it immediately - the field
+      // "opens for a second then the sheet closes". This is MUI's own documented fix.
+      ModalProps={{ disableEnforceFocus: true }}
+    >
       <Grab aria-hidden="true" />
       <Suspense fallback={<PanelFallback role="status">Loading…</PanelFallback>}>
         {top.kind === 'menu' && <MenuPanel onPushPanel={sheet.pushPanel} onDismiss={sheet.dismiss} />}

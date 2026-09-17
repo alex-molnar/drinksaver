@@ -147,6 +147,13 @@ const FieldPanel = styled.div`
   display: flex;
   flex-direction: column;
   gap: 14px;
+
+  /* Flex items default to min-width: auto, i.e. never narrower than their content's
+     intrinsic minimum. A native date input's intrinsic minimum can exceed the panel
+     width on iOS, so without this the field ignores its 100% width and overflows. */
+  & > div {
+    min-width: 0;
+  }
 `;
 
 const FieldLabel = styled.label`
@@ -157,13 +164,66 @@ const FieldLabel = styled.label`
   margin-bottom: 6px;
 `;
 
+const SetDateButton = styled.button`
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-accent-primary);
+  color: var(--ds-ink-primary);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    background: color-mix(in srgb, var(--ds-ink-primary) 8%, transparent);
+    color: var(--ds-ink-tertiary);
+    cursor: default;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--ds-ink-primary);
+    outline-offset: 2px;
+  }
+`;
+
 const TextInput = styled.input`
   width: 100%;
+  max-width: 100%;
   min-height: 44px;
   padding: 0 14px;
   border-radius: var(--ds-radius-sm);
   border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 22%, transparent);
   background: color-mix(in srgb, var(--ds-ink-primary) 5%, transparent);
+  color: var(--ds-ink-primary);
+  font: inherit;
+  font-size: 16px;
+`;
+
+/**
+ * A native date input's own border can't be trusted on iOS: confirmed on-device, WebKit renders
+ * the control itself wider than any width/max-width we give it once it has a value, so a border
+ * drawn by the input runs off the clipped edge instead of closing the box. Giving the visible box
+ * (border, background, radius) to this ordinary div instead - an element WebKit sizes correctly -
+ * and leaving the input itself borderless and transparent inside it means there is no border left
+ * for that overflow to cut through, whatever width WebKit decides to render.
+ */
+const DateInputBox = styled.div`
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--ds-radius-sm);
+  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 22%, transparent);
+  background: color-mix(in srgb, var(--ds-ink-primary) 5%, transparent);
+`;
+
+const DateInput = styled.input`
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  background: none;
   color: var(--ds-ink-primary);
   font: inherit;
   font-size: 16px;
@@ -373,6 +433,8 @@ const WhenField: React.FC<{ headingRef: React.Ref<HTMLHeadingElement>; onPopPane
   const [showCustom, setShowCustom] = useState(false);
   const today = drinkingDay(new Date());
   const yesterday = previousIsoDate(today);
+  const initialCustomDate = draft.date !== today && draft.date !== yesterday ? draft.date : '';
+  const [customDate, setCustomDate] = useState(initialCustomDate);
 
   const pick = (date: string) => {
     dispatch({ type: 'setDate', date });
@@ -395,18 +457,24 @@ const WhenField: React.FC<{ headingRef: React.Ref<HTMLHeadingElement>; onPopPane
           <FieldPanel>
             <div>
               <FieldLabel htmlFor="add-sheet-custom-date">Choose a date</FieldLabel>
-              <TextInput
-                id="add-sheet-custom-date"
-                type="date"
-                max={today}
-                defaultValue={draft.date !== today && draft.date !== yesterday ? draft.date : undefined}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    pick(e.target.value);
-                  }
-                }}
-              />
+              <DateInputBox>
+                <DateInput
+                  id="add-sheet-custom-date"
+                  type="date"
+                  max={today}
+                  defaultValue={initialCustomDate || undefined}
+                  // iOS's native date picker can commit a value (defaulting to today) and fire this
+                  // event well before the user has actually finished choosing - Safari and Chrome on
+                  // iOS share the same WebKit engine, so both do it. Only recording the value here,
+                  // and requiring the explicit "Set date" tap below to leave the panel, means that
+                  // early/spurious event can never navigate away on its own.
+                  onChange={(e) => setCustomDate(e.target.value)}
+                />
+              </DateInputBox>
             </div>
+            <SetDateButton type="button" disabled={!customDate} onClick={() => pick(customDate)}>
+              Set date
+            </SetDateButton>
           </FieldPanel>
         ) : (
           <OptionRow type="button" onClick={() => setShowCustom(true)}>
