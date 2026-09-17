@@ -82,16 +82,14 @@ class RecommendationServiceTest {
     @Test
     void updateRecommendationsOrderForwardsIdsAndNamesInInputOrder() {
         RecommendationsTable recommendationsTable = mock(RecommendationsTable.class);
-        when(recommendationsTable.updateRecommendationsOrderArray(any(Integer[].class), any(String[].class)))
-                .thenReturn(2);
         RecommendationService service = serviceWith(10, Map.of(), recommendationsTable);
 
-        int updated = service.updateRecommendationsOrder(USER, List.of(
+        List<Recommendation> result = service.updateRecommendationsOrder(USER, List.of(
                 new RecommendationUpdate(25, "First name"),
                 new RecommendationUpdate(27, "Second name")
         ));
 
-        assertThat(updated).isEqualTo(2);
+        assertThat(result).isEmpty();
         verify(recommendationsTable).updateRecommendationsOrderArray(
                 new Integer[]{25, 27},
                 new String[]{"First name", "Second name"}
@@ -103,7 +101,7 @@ class RecommendationServiceTest {
         RecommendationsTable recommendationsTable = mock(RecommendationsTable.class);
         RecommendationService service = serviceWith(10, Map.of(), recommendationsTable);
 
-        assertThat(service.updateRecommendationsOrder(USER, List.of())).isZero();
+        assertThat(service.updateRecommendationsOrder(USER, List.of())).isEmpty();
 
         verify(recommendationsTable, org.mockito.Mockito.never())
                 .updateRecommendationsOrderArray(any(Integer[].class), any(String[].class));
