@@ -246,17 +246,41 @@ describe('OptionPanel', () => {
       expect(onPopPanel).toHaveBeenCalledTimes(1);
     });
 
-    it('Another day reveals a native date input capped at today, which dispatches on change', async () => {
+    it('Another day reveals a native date input capped at today, with a Set date button disabled until it has a value', async () => {
       const { onPopPanel } = renderOptionPanel('date');
       await userEvent.click(screen.getByRole('button', { name: 'Another day' }));
 
       const dateInput = screen.getByLabelText(/choose a date/i);
       expect(dateInput).toHaveAttribute('type', 'date');
       expect(dateInput).toHaveAttribute('max', TODAY);
+      const setDate = screen.getByRole('button', { name: 'Set date' });
+      expect(setDate).toBeDisabled();
 
       fireEvent.change(dateInput, { target: { value: '2026-01-05' } });
+      expect(dispatch).not.toHaveBeenCalled();
+      expect(onPopPanel).not.toHaveBeenCalled();
+      expect(setDate).toBeEnabled();
+
+      await userEvent.click(setDate);
       expect(dispatch).toHaveBeenCalledWith({ type: 'setDate', date: '2026-01-05' });
       expect(onPopPanel).toHaveBeenCalledTimes(1);
+    });
+
+    /**
+     * The exact defect this whole flow exists to prevent: iOS can fire the input's change event
+     * with a value before the user has deliberately finished choosing one (Safari and Chrome on
+     * iOS share WebKit). Recording the value must never be enough to leave the panel on its own -
+     * only the explicit "Set date" tap may do that.
+     */
+    it('never dispatches or pops from the change event alone, no matter how many times it fires', async () => {
+      const { onPopPanel } = renderOptionPanel('date');
+      await userEvent.click(screen.getByRole('button', { name: 'Another day' }));
+      const dateInput = screen.getByLabelText(/choose a date/i);
+
+      fireEvent.change(dateInput, { target: { value: TODAY } });
+      fireEvent.change(dateInput, { target: { value: '2026-01-05' } });
+      expect(dispatch).not.toHaveBeenCalled();
+      expect(onPopPanel).not.toHaveBeenCalled();
     });
   });
 

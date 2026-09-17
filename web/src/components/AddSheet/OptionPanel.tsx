@@ -164,6 +164,29 @@ const FieldLabel = styled.label`
   margin-bottom: 6px;
 `;
 
+const SetDateButton = styled.button`
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-accent-primary);
+  color: var(--ds-ink-primary);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    background: color-mix(in srgb, var(--ds-ink-primary) 8%, transparent);
+    color: var(--ds-ink-tertiary);
+    cursor: default;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--ds-ink-primary);
+    outline-offset: 2px;
+  }
+`;
+
 const TextInput = styled.input`
   width: 100%;
   max-width: 100%;
@@ -381,6 +404,8 @@ const WhenField: React.FC<{ headingRef: React.Ref<HTMLHeadingElement>; onPopPane
   const [showCustom, setShowCustom] = useState(false);
   const today = drinkingDay(new Date());
   const yesterday = previousIsoDate(today);
+  const initialCustomDate = draft.date !== today && draft.date !== yesterday ? draft.date : '';
+  const [customDate, setCustomDate] = useState(initialCustomDate);
 
   const pick = (date: string) => {
     dispatch({ type: 'setDate', date });
@@ -407,14 +432,18 @@ const WhenField: React.FC<{ headingRef: React.Ref<HTMLHeadingElement>; onPopPane
                 id="add-sheet-custom-date"
                 type="date"
                 max={today}
-                defaultValue={draft.date !== today && draft.date !== yesterday ? draft.date : undefined}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    pick(e.target.value);
-                  }
-                }}
+                defaultValue={initialCustomDate || undefined}
+                // iOS's native date picker can commit a value (defaulting to today) and fire this
+                // event well before the user has actually finished choosing - Safari and Chrome on
+                // iOS share the same WebKit engine, so both do it. Only recording the value here,
+                // and requiring the explicit "Set date" tap below to leave the panel, means that
+                // early/spurious event can never navigate away on its own.
+                onChange={(e) => setCustomDate(e.target.value)}
               />
             </div>
+            <SetDateButton type="button" disabled={!customDate} onClick={() => pick(customDate)}>
+              Set date
+            </SetDateButton>
           </FieldPanel>
         ) : (
           <OptionRow type="button" onClick={() => setShowCustom(true)}>

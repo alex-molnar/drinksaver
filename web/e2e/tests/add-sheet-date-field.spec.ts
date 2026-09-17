@@ -29,3 +29,33 @@ test('the custom date field stays inside the sheet on a narrow phone', async ({ 
   // panel is what the CSS fix protects against.
   await expect(page.getByRole('heading', { name: 'When was it?' })).toBeVisible();
 });
+
+/**
+ * Regression for the actual reported symptom: iOS (Safari and Chrome, same WebKit engine) can
+ * commit the native date input's value and fire its change event before the user has deliberately
+ * finished choosing one. Setting the value alone must never leave the panel - only the explicit
+ * "Set date" tap may. Chromium doesn't reproduce iOS's early-fire timing, but this proves our own
+ * code no longer treats the change event as authoritative, which is what makes that timing safe
+ * regardless of when WebKit actually fires it.
+ */
+test('choosing a custom date requires an explicit Set date tap, not just a change event', async ({ page }) => {
+  await page.goto('/');
+
+  const add = page.getByRole('button', { name: 'Something else', exact: true });
+  await add.scrollIntoViewIfNeeded();
+  await add.click();
+
+  await page.getByRole('button', { name: /^When,/ }).click();
+  await page.getByRole('button', { name: 'Another day' }).click();
+
+  const dateInput = page.getByLabel(/choose a date/i);
+  const setDate = page.getByRole('button', { name: 'Set date' });
+  await expect(setDate).toBeDisabled();
+
+  await dateInput.fill('2026-01-05');
+  await expect(page.getByRole('heading', { name: 'When was it?' })).toBeVisible();
+  await expect(setDate).toBeEnabled();
+
+  await setDate.click();
+  await expect(page.getByRole('button', { name: /^When, 5 Jan/ })).toBeVisible();
+});
