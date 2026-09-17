@@ -15,6 +15,15 @@ A mobile-first web application for tracking alcohol consumption. Built with Reac
 - **Docker Ready**: Multi-stage Dockerfile with Nginx serving
 - **Kubernetes Ready**: Helm chart included for easy deployment
 
+### Header menu
+
+`AppFrame` exposes four actions in the header menu:
+
+- **Settings**: intentionally disabled until its route is available
+- **Recommendations**: intentionally disabled until its route is available
+- **Add new type**: opens the existing alcohol-type create panel over the current page; it is not a new route or form
+- **Logout**: delegates to the existing Keycloak auth
+
 ## Tech Stack
 
 - **Frontend**: React 19 + TypeScript + Vite 8

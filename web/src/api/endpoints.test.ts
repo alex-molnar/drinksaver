@@ -367,4 +367,28 @@ describe('api/endpoints', () => {
       expect(call[1]?.paramsSerializer).toEqual({ indexes: null });
     });
   });
+
+  describe('recommendation writes', () => {
+    it('sends the edits as an ordered array to the edit endpoint', async () => {
+      mockApiClient.patch.mockResolvedValue({ data: undefined });
+
+      await endpoints.editRecommendations([
+        { id: 7, name: 'HJ pint' },
+        { id: 3, name: 'Office Chouffe' },
+      ]);
+
+      expect(mockApiClient.patch).toHaveBeenCalledWith('/v1/recommendations/edit', [
+        { id: 7, name: 'HJ pint' },
+        { id: 3, name: 'Office Chouffe' },
+      ]);
+    });
+
+    it('addresses a delete by id in the path', async () => {
+      mockApiClient.delete.mockResolvedValue({ data: undefined });
+
+      await endpoints.deleteRecommendation(7);
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith('/v1/recommendations/7');
+    });
+  });
 });

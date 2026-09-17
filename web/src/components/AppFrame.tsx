@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
+import { Menu, MenuItem } from '@mui/material';
 import { useAuth } from '../auth';
 import { useDrinksForDate } from '../drink/useDrinksForDate';
 import { useSheet } from '../hooks/useSheet';
@@ -162,9 +163,9 @@ const ClockIcon: React.FC = () => (
   </svg>
 );
 
-const SignOutIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h11" />
+const MenuIcon: React.FC = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" aria-hidden="true">
+    <path d="M4 7h16M4 12h16M4 17h16" />
   </svg>
 );
 
@@ -187,6 +188,7 @@ const AppFrame: React.FC<AppFrameProps> = ({ children, title, subtitle }) => {
   const { logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [menuAnchor, setMenuAnchor] = React.useState<HTMLButtonElement | null>(null);
 
   const { open: openAddSheet, isOpen: addSheetOpen } = useSheet<AddSheetPanel>(ADD_SHEET_ID, MENU_PANEL);
 
@@ -200,15 +202,71 @@ const AppFrame: React.FC<AppFrameProps> = ({ children, title, subtitle }) => {
   const drinksToday = useDrinksForDate(today);
   const count = drinksToday.status === 'ready' ? drinksToday.rows.length : null;
   const countText = count === null ? '' : count > 0 ? `${count} so far` : 'Nothing yet';
+  const closeMenu = () => setMenuAnchor(null);
+  const isMenuOpen = Boolean(menuAnchor);
+
+  const menuSx = {
+    '& .MuiPaper-root': {
+      backgroundColor: 'var(--ds-surface-raised)',
+      color: 'var(--ds-ink-primary)',
+      border: '1px solid color-mix(in srgb, var(--ds-ink-primary) 13%, transparent)',
+      borderRadius: 'var(--ds-radius-md)',
+      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.32)',
+    },
+    '& .MuiMenuItem-root': {
+      minHeight: 44,
+      fontFamily: 'var(--ds-type-caption-font-family)',
+      fontSize: 'var(--ds-type-caption-font-size)',
+      '&:hover': {
+        backgroundColor: 'color-mix(in srgb, var(--ds-ink-primary) 7%, transparent)',
+      },
+      '&.Mui-disabled': {
+        color: 'var(--ds-ink-tertiary)',
+      },
+    },
+  };
 
   return (
     <Frame>
       <Header>
         <Heading>{heading}</Heading>
         <Sub>{subtitle ?? countText}</Sub>
-        <IconButton type="button" onClick={logout} aria-label="Sign out">
-          <SignOutIcon />
+        <IconButton
+          type="button"
+          onClick={(event) => setMenuAnchor(event.currentTarget)}
+          aria-label="Open menu"
+          aria-haspopup="menu"
+          aria-expanded={isMenuOpen}
+          aria-controls={isMenuOpen ? 'header-action-menu' : undefined}
+        >
+          <MenuIcon />
         </IconButton>
+        <Menu id="header-action-menu" anchorEl={menuAnchor} open={isMenuOpen} onClose={closeMenu} sx={menuSx}>
+          <MenuItem
+            onClick={() => {
+              navigate('/recommendations');
+              closeMenu();
+            }}
+          >
+            Recommendations
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              openAddSheet({ kind: 'create', field: 'alcoholType' });
+              closeMenu();
+            }}
+          >
+            Add new type
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              logout();
+              closeMenu();
+            }}
+          >
+            Logout
+          </MenuItem>
+        </Menu>
       </Header>
       <Main>{children}</Main>
       <Nav>
@@ -228,7 +286,7 @@ const AppFrame: React.FC<AppFrameProps> = ({ children, title, subtitle }) => {
           dismissing afterwards walks back to / instead of to wherever the tab was tapped from.
           Opened from History, that means the sheet drops you on Quick Save on the way out.
         */}
-        <NavButton type="button" onClick={openAddSheet} aria-current={addSheetOpen ? 'page' : undefined}>
+        <NavButton type="button" onClick={() => openAddSheet()} aria-current={addSheetOpen ? 'page' : undefined}>
           <PlusIcon />
           <span>Add</span>
         </NavButton>

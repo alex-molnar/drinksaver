@@ -138,7 +138,7 @@ const QuickSavePage: React.FC = () => {
         savingKey={savingKey}
         doneKey={doneKey}
         saveInFlight={savingKey !== null}
-        onAddCustom={openAddSheet}
+        onAddCustom={() => openAddSheet()}
       />
     </AppFrame>
   );

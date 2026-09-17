@@ -47,6 +47,11 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: 'History' })).toBeInTheDocument();
   });
 
+  it('loads the Recommendations screen at /recommendations', async () => {
+    renderWithProviders(<App />, { route: '/recommendations' });
+    expect(await screen.findByRole('heading', { name: 'Recommendations' })).toBeInTheDocument();
+  });
+
   /**
    * `/detailed` no longer has a page of its own: it redirects to the Quick Save screen with the
    * add sheet already open, so a bookmark or a link from an old session still lands somewhere

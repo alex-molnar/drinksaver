@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class RecommendationCacheService {
 
-    private static final int INVALIDATE_AFTER_SAVES = 5;
+    private static final int INVALIDATE_AFTER_SAVES = 5; // TODO: this can also be configured on user level
 
     private final CacheManager cacheManager;
 

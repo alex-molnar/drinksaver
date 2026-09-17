@@ -56,9 +56,8 @@ public record DrinkKey(
         );
     }
 
-    public Recommendation toRecommendation(UUID userId) {
+    public Recommendation toRecommendation() {
         Recommendation recommendation = new Recommendation();
-        recommendation.setUserId(userId);
         recommendation.setName(name.orElse("Couldn't generate name"));
         recommendation.setAlcoholTypeId(alcoholTypeId);
         recommendation.setAlcoholSubtypeId(alcoholSubtypeId);

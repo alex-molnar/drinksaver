@@ -56,10 +56,13 @@ const LocationSearch = () => {
   return <div data-testid="location-search">{location.search}</div>;
 };
 
-const renderSheetHost = (route: string, setContainer = vi.fn()) => {
+const renderSheetHost = (
+  initialEntry: NonNullable<Parameters<typeof MemoryRouter>[0]['initialEntries']>[number],
+  setContainer = vi.fn()
+) => {
   render(
     <ThemeProvider theme={muiTheme}>
-      <MemoryRouter initialEntries={[route]}>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <SheetPortalContext.Provider value={{ container: null, setContainer }}>
           <SheetHost />
           <LocationSearch />
@@ -79,6 +82,17 @@ describe('SheetHost', () => {
   it('shows the menu panel once ?sheet=add is present', async () => {
     renderSheetHost('/?sheet=add');
     expect(await screen.findByText('menu-panel')).toBeInTheDocument();
+  });
+
+  it('renders a requested alcohol-type create panel without rendering the root menu', async () => {
+    renderSheetHost({
+      pathname: '/',
+      search: '?sheet=add',
+      state: { sheetInitialPanel: { kind: 'create', field: 'alcoholType' } },
+    });
+
+    expect(await screen.findByText('create-panel:alcoholType')).toBeInTheDocument();
+    expect(screen.queryByText('menu-panel')).not.toBeInTheDocument();
   });
 
   it('swaps to the option panel for the field pushed, then back to the menu on pop', async () => {
