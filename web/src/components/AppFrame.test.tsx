@@ -143,29 +143,10 @@ describe('AppFrame', () => {
     expect(menuButton).toHaveAttribute('aria-controls', 'header-action-menu');
     expect(document.getElementById('header-action-menu')).toBeInTheDocument();
     expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
-      'Settings',
       'Recommendations',
       'Add new type',
       'Logout',
     ]);
-  });
-
-  it.each(['Settings'])('%s is exposed as disabled and leaves the current location unchanged', async (label) => {
-    const user = userEvent.setup();
-    renderWithProviders(
-      <AppFrame>
-        <RouteProbe />
-      </AppFrame>,
-      { route: '/history' }
-    );
-
-    await user.click(screen.getByRole('button', { name: 'Open menu' }));
-    const action = screen.getByRole('menuitem', { name: label });
-
-    expect(action).toHaveAttribute('aria-disabled', 'true');
-    expect(screen.getByRole('menu')).toBeInTheDocument();
-    expect(screen.getByTestId('pathname')).toHaveTextContent('/history');
-    expect(screen.getByTestId('search')).toHaveTextContent(/^$/);
   });
 
   it('navigates to the recommendations screen from the menu', async () => {

@@ -242,7 +242,6 @@ const AppFrame: React.FC<AppFrameProps> = ({ children, title, subtitle }) => {
           <MenuIcon />
         </IconButton>
         <Menu id="header-action-menu" anchorEl={menuAnchor} open={isMenuOpen} onClose={closeMenu} sx={menuSx}>
-          <MenuItem disabled>Settings</MenuItem>
           <MenuItem
             onClick={() => {
               navigate('/recommendations');
