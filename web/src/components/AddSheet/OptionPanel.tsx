@@ -147,6 +147,13 @@ const FieldPanel = styled.div`
   display: flex;
   flex-direction: column;
   gap: 14px;
+
+  /* Flex items default to min-width: auto, i.e. never narrower than their content's
+     intrinsic minimum. A native date input's intrinsic minimum can exceed the panel
+     width on iOS, so without this the field ignores its 100% width and overflows. */
+  & > div {
+    min-width: 0;
+  }
 `;
 
 const FieldLabel = styled.label`
@@ -159,6 +166,7 @@ const FieldLabel = styled.label`
 
 const TextInput = styled.input`
   width: 100%;
+  max-width: 100%;
   min-height: 44px;
   padding: 0 14px;
   border-radius: var(--ds-radius-sm);

@@ -19,6 +19,11 @@ const StyledDrawer = styled(Drawer)`
        board in the same room as the plates and the nav, which is the whole visual conceit. */
     border-top: 3px solid var(--ds-accent-active);
     max-height: 88vh;
+    /* iOS renders the native date input wider than its CSS width (WebKit intrinsic-content
+       floor). Without this, it visually escapes the sheet and, on a narrow phone, the
+       viewport itself - which drags the whole page into a scroll-into-view/mis-tap chain
+       that dismisses the sheet. Clip it here so nothing in any panel can do that. */
+    overflow-x: hidden;
   }
 `;
 
