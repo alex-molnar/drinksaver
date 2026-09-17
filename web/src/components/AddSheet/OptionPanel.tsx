@@ -153,13 +153,6 @@ const FieldPanel = styled.div`
      width on iOS, so without this the field ignores its 100% width and overflows. */
   & > div {
     min-width: 0;
-    /* Confirmed on-device (iOS Safari): once the date input has a value, WebKit renders
-       it wider than this box regardless of the input's own max-width: 100%. SheetHost's
-       overflow-x: hidden stops that reaching the screen edge, but only clips at the
-       Drawer's boundary, ~20px further out than this field's own right edge - which is
-       why it looked flush with no margin instead of properly inset. Clipping here, at
-       the field's real boundary, is what actually restores the margin. */
-    overflow: hidden;
   }
 `;
 
@@ -202,6 +195,35 @@ const TextInput = styled.input`
   border-radius: var(--ds-radius-sm);
   border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 22%, transparent);
   background: color-mix(in srgb, var(--ds-ink-primary) 5%, transparent);
+  color: var(--ds-ink-primary);
+  font: inherit;
+  font-size: 16px;
+`;
+
+/**
+ * A native date input's own border can't be trusted on iOS: confirmed on-device, WebKit renders
+ * the control itself wider than any width/max-width we give it once it has a value, so a border
+ * drawn by the input runs off the clipped edge instead of closing the box. Giving the visible box
+ * (border, background, radius) to this ordinary div instead - an element WebKit sizes correctly -
+ * and leaving the input itself borderless and transparent inside it means there is no border left
+ * for that overflow to cut through, whatever width WebKit decides to render.
+ */
+const DateInputBox = styled.div`
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--ds-radius-sm);
+  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 22%, transparent);
+  background: color-mix(in srgb, var(--ds-ink-primary) 5%, transparent);
+`;
+
+const DateInput = styled.input`
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  background: none;
   color: var(--ds-ink-primary);
   font: inherit;
   font-size: 16px;
@@ -435,18 +457,20 @@ const WhenField: React.FC<{ headingRef: React.Ref<HTMLHeadingElement>; onPopPane
           <FieldPanel>
             <div>
               <FieldLabel htmlFor="add-sheet-custom-date">Choose a date</FieldLabel>
-              <TextInput
-                id="add-sheet-custom-date"
-                type="date"
-                max={today}
-                defaultValue={initialCustomDate || undefined}
-                // iOS's native date picker can commit a value (defaulting to today) and fire this
-                // event well before the user has actually finished choosing - Safari and Chrome on
-                // iOS share the same WebKit engine, so both do it. Only recording the value here,
-                // and requiring the explicit "Set date" tap below to leave the panel, means that
-                // early/spurious event can never navigate away on its own.
-                onChange={(e) => setCustomDate(e.target.value)}
-              />
+              <DateInputBox>
+                <DateInput
+                  id="add-sheet-custom-date"
+                  type="date"
+                  max={today}
+                  defaultValue={initialCustomDate || undefined}
+                  // iOS's native date picker can commit a value (defaulting to today) and fire this
+                  // event well before the user has actually finished choosing - Safari and Chrome on
+                  // iOS share the same WebKit engine, so both do it. Only recording the value here,
+                  // and requiring the explicit "Set date" tap below to leave the panel, means that
+                  // early/spurious event can never navigate away on its own.
+                  onChange={(e) => setCustomDate(e.target.value)}
+                />
+              </DateInputBox>
             </div>
             <SetDateButton type="button" disabled={!customDate} onClick={() => pick(customDate)}>
               Set date
