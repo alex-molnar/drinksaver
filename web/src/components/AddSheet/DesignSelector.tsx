@@ -343,6 +343,7 @@ const DesignPicker: React.FC<DesignPickerProps> = ({
         ref={triggerRef}
         type="button"
         id={id}
+        data-value={value}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listboxId}

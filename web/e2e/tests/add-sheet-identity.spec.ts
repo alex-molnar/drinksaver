@@ -137,9 +137,16 @@ const postTo = (page: Page, pathname: string) => page.waitForRequest((request) =
   request.method() === 'POST' && new URL(request.url()).pathname === pathname
 ));
 
-const chooseDesignId = (page: Page, label: string, id: number) => (
-  page.getByLabel(label).selectOption(String(id))
-);
+const catalogueForLabel = (label: string) => (label === 'Glassware' ? glasswareResponse : paletteResponse);
+
+const chooseDesignId = async (page: Page, label: string, id: number) => {
+  const entry = catalogueForLabel(label).find((item) => item.id === id);
+  if (!entry) {
+    throw new Error(`No ${label} option with id ${id}`);
+  }
+  await page.getByLabel(label).click();
+  await page.getByRole('option', { name: entry.name, exact: true }).click();
+};
 
 for (const viewport of [
   { name: 'narrow portrait', width: 375, height: 812 },
@@ -216,11 +223,12 @@ for (const viewport of [
     await menuRow(page, 'Drink').click();
     await page.getByRole('button', { name: 'New drink type', exact: true }).click();
     await page.getByLabel('Name').fill('Cider');
-    await expect(page.getByLabel('Glassware').getByRole('option', { name: 'beerjug', exact: true })).toHaveCount(1);
+    await page.getByLabel('Glassware').click();
+    await expect(page.getByRole('option', { name: 'beerjug', exact: true })).toHaveCount(1);
+    await page.getByRole('option', { name: 'beerjug', exact: true }).click();
     await chooseDesignId(page, 'Color palette', 8);
-    await chooseDesignId(page, 'Glassware', 12);
-    await expect(page.getByLabel('Color palette')).toHaveValue('8');
-    await expect(page.getByLabel('Glassware')).toHaveValue('12');
+    await expect(page.getByLabel('Color palette')).toHaveAttribute('data-value', '8');
+    await expect(page.getByLabel('Glassware')).toHaveAttribute('data-value', '12');
     const newTypeRequest = postTo(page, '/v1/alcohol/types');
     await page.getByRole('button', { name: 'Add and use it', exact: true }).click();
     expect((await newTypeRequest).postDataJSON()).toEqual({ name: 'Cider', colorPaletteId: 8, glasswareId: 12 });
@@ -238,12 +246,11 @@ for (const viewport of [
     await menuRow(page, 'Subtype').click();
     await page.getByRole('button', { name: 'New subtype', exact: true }).click();
     await page.getByLabel('Name').fill('Dry');
-    await expect(page.getByLabel('Color palette')).toHaveValue('');
+    await expect(page.getByLabel('Color palette')).toHaveAttribute('data-value', '');
     const subtypeGlassware = page.getByLabel('Glassware');
-    await subtypeGlassware.focus();
-    await expect(subtypeGlassware).toBeFocused();
-    await subtypeGlassware.press('t');
-    await expect(subtypeGlassware).toHaveValue('2');
+    await subtypeGlassware.click();
+    await page.getByRole('option', { name: 'tulip', exact: true }).click();
+    await expect(subtypeGlassware).toHaveAttribute('data-value', '2');
     const newSubtypeRequest = postTo(page, '/v1/alcohol/types/100/subtypes');
     await page.getByRole('button', { name: 'Add and use it', exact: true }).click();
     expect((await newSubtypeRequest).postDataJSON()).toEqual({
@@ -258,7 +265,7 @@ for (const viewport of [
     await menuRow(page, 'Brand').click();
     await page.getByRole('button', { name: 'New brand', exact: true }).click();
     await page.getByLabel('Name').fill('Hops House');
-    await expect(page.getByLabel('Color palette')).toHaveValue('');
+    await expect(page.getByLabel('Color palette')).toHaveAttribute('data-value', '');
     const newBrandRequest = postTo(page, '/v1/beer/brands');
     await page.getByRole('button', { name: 'Add and use it', exact: true }).click();
     expect((await newBrandRequest).postDataJSON()).toEqual({ name: 'Hops House' });
@@ -267,7 +274,7 @@ for (const viewport of [
     await menuRow(page, 'Flavour').click();
     await page.getByRole('button', { name: 'New flavour', exact: true }).click();
     await page.getByLabel('Name').fill('Crisp');
-    await expect(page.getByLabel('Color palette')).toHaveValue('');
+    await expect(page.getByLabel('Color palette')).toHaveAttribute('data-value', '');
     const newFlavourRequest = postTo(page, '/v1/beer/brands/103/flavours');
     await page.getByRole('button', { name: 'Add and use it', exact: true }).click();
     expect((await newFlavourRequest).postDataJSON()).toEqual({ name: 'Crisp' });
