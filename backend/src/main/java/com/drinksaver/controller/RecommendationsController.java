@@ -32,7 +32,7 @@ public class RecommendationsController {
     }
 
     @PatchMapping("/edit")
-    public int reorderRecommendations(@AuthenticationPrincipal Jwt jwt, @RequestBody List<RecommendationUpdate> recommendationUpdates) {
+    public List<Recommendation> reorderRecommendations(@AuthenticationPrincipal Jwt jwt, @RequestBody List<RecommendationUpdate> recommendationUpdates) {
         UUID userId = AuthenticatedUser.id(jwt);
         List<Integer> userOwnedRecommendations = recommendationService.getRecommendations(userId)
                 .stream()

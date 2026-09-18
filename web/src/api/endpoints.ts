@@ -67,8 +67,9 @@ export const getRecommendations = async (): Promise<Recommendation[]> => {
  * No userId in the payload: like every other endpoint here, the server derives identity from
  * the JWT the request interceptor attaches. See this module's header.
  */
-export const editRecommendations = async (edits: readonly RecommendationEdit[]): Promise<void> => {
-  await apiClient.patch('/v1/recommendations/edit', edits);
+export const editRecommendations = async (edits: readonly RecommendationEdit[]): Promise<Recommendation[]> => {
+  const response = await apiClient.patch<Recommendation[]>('/v1/recommendations/edit', edits);
+  return response.data;
 };
 
 export const deleteRecommendation = async (id: number): Promise<void> => {

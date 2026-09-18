@@ -9,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -45,13 +43,15 @@ public class RecommendationService {
         return collected;
     }
 
-    public int updateRecommendationsOrder(UUID userId, List<RecommendationUpdate> updates) {
-        if (updates.isEmpty()) return 0;
+    public List<Recommendation> updateRecommendationsOrder(UUID userId, List<RecommendationUpdate> updates) {
+        if (updates.isEmpty()) return List.of();
 
-        return recommendationsTable.updateRecommendationsOrderArray(
+        recommendationsTable.updateRecommendationsOrderArray(
                 updates.stream().map(RecommendationUpdate::id).toArray(Integer[]::new),
                 updates.stream().map(RecommendationUpdate::name).toArray(String[]::new)
         );
+
+        return getRecommendations(userId);
     }
 
     public boolean isRecommendationOwnedByUser(Integer id, UUID userId) {

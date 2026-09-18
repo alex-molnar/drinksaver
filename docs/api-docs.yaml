@@ -261,12 +261,13 @@ paths:
         required: true
       responses:
         "200":
-          description: Number of recommendations updated
+          description: Updated recommendations with new order numbers and names
           content:
             '*/*':
               schema:
-                type: integer
-                format: int32
+                type: array
+                items:
+                  $ref: "#/components/schemas/Recommendation"
   /v1/recommendations/{id}:
     delete:
       tags:

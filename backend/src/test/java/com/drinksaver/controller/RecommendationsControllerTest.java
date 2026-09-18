@@ -117,19 +117,23 @@ class RecommendationsControllerTest {
     }
 
     @Test
-    void reorderRecommendationsReturnsCountAndForwardsOnlyOwnedUpdates() throws Exception {
+    void reorderRecommendationsReturnsUpdatedListAndForwardsOnlyOwnedUpdates() throws Exception {
         UUID userId = UUID.randomUUID();
         Recommendation owned = recommendation(25, userId, "Owned");
         Recommendation otherUser = recommendation(27, UUID.randomUUID(), "Other");
         when(recommendationService.getRecommendations(userId)).thenReturn(List.of(owned, otherUser));
-        when(recommendationService.updateRecommendationsOrder(eq(userId), any())).thenReturn(1);
+
+        Recommendation updated = recommendation(25, userId, "Renamed");
+        when(recommendationService.updateRecommendationsOrder(eq(userId), any())).thenReturn(List.of(updated));
 
         mockMvc.perform(patch("/v1/recommendations/edit")
                 .with(jwt().jwt(token -> token.subject(userId.toString())))
                 .contentType(APPLICATION_JSON)
                 .content("[{\"id\":25,\"name\":\"Renamed\"},{\"id\":27,\"name\":\"Ignored\"}]"))
             .andExpect(status().isOk())
-            .andExpect(content().string("1"));
+            .andExpect(jsonPath("$", org.hamcrest.Matchers.hasSize(1)))
+            .andExpect(jsonPath("$[0].id").value(25))
+            .andExpect(jsonPath("$[0].name").value("Renamed"));
 
         verify(recommendationService).updateRecommendationsOrder(
                 userId,
