@@ -60,7 +60,7 @@ const renameSync = (from: string, to: string) => {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(getRecommendations).mockResolvedValue(LIST);
-  vi.mocked(editRecommendations).mockResolvedValue(undefined);
+  vi.mocked(editRecommendations).mockResolvedValue(LIST);
   vi.mocked(deleteRecommendation).mockResolvedValue(undefined);
 });
 
@@ -156,6 +156,7 @@ describe('RecommendationsPage', () => {
         { id: 7, name: 'Home pint' },
         { id: 3, name: 'Office Chouffe' },
       ]);
+      expect(getRecommendations).toHaveBeenCalledTimes(1);
     });
   });
 

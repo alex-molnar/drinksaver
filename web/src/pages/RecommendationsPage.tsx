@@ -7,6 +7,7 @@ import RecommendationTab from '../components/RecommendationTab';
 import RecommendationStrip from '../components/RecommendationStrip';
 import { useAuth } from '../auth';
 import { getRecommendations } from '../api/endpoints';
+import type { Recommendation } from '../types/api';
 import { savedRecommendations, type SavedRecommendation } from '../drink/savedRecommendations';
 import {
   EMPTY_DRAFT,
@@ -105,7 +106,14 @@ const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ undoWindowMs 
     [],
   );
 
-  const queue = useRecommendationQueue({ onUndoSave, undoWindowMs });
+  const onSaveCommitted = useCallback(
+    (recommendations: Recommendation[]) => {
+      queryClient.setQueryData(['recommendations'], recommendations);
+    },
+    [queryClient],
+  );
+
+  const queue = useRecommendationQueue({ onUndoSave, onSaveCommitted, undoWindowMs });
 
   const visible = useMemo(() => visibleRows(draft, queue.hidden), [draft, queue.hidden]);
   const dirty = isDirty(draft, queue.hidden);
@@ -166,20 +174,22 @@ const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ undoWindowMs 
 
   const handleCancel = useCallback(() => dispatch({ type: 'cancel' }), []);
 
-  // Refetch deletes once the strip is empty. Saves use the awaited refetch in the navigation
-  // effect below; sharing this idle invalidation path would let the list request race the edit.
-  const lastCommittedDeleteRef = useRef<string | null>(null);
+  // Refetch deletes once the strip is empty. Saves update the cache from the PATCH response, so
+  // they must not trigger a redundant list request here.
+  const sawCommitRef = useRef(false);
   useEffect(() => {
-    const committedDelete = [...queue.entries]
-      .reverse()
-      .find((entry) => entry.kind === 'delete' && entry.status === 'committed');
-    if (queue.current === null && committedDelete && committedDelete.id !== lastCommittedDeleteRef.current) {
-      lastCommittedDeleteRef.current = committedDelete.id;
+    if (queue.current && (queue.current.status === 'sending' || queue.current.status === 'undoable')) {
+      sawCommitRef.current = true;
+    }
+    const hasCommittedDelete = queue.entries.some((entry) => entry.kind === 'delete' && entry.status === 'committed');
+    if (queue.current === null && sawCommitRef.current && hasCommittedDelete) {
+      sawCommitRef.current = false;
       queryClient.invalidateQueries({ queryKey: ['recommendations'] });
     }
   }, [queue, queryClient]);
 
-  // Navigate to home page after a save is committed, but only if user hasn't navigated away
+  // Navigate to home page after a save is committed. The edit response has already replaced the
+  // recommendations cache, so redirecting must not refetch the list.
   const navigate = useNavigate();
   const mountedRef = useRef(true);
   const lastCommittedSaveRef = useRef<string | null>(null);
@@ -191,25 +201,18 @@ const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ undoWindowMs 
   }, []);
 
   useEffect(() => {
-    // Find the most recent save entry that was just committed
     const committedSave = [...queue.entries]
       .reverse()
       .find(
-        (e): e is RecSaveEntry =>
-          e.kind === 'save' && e.status === 'committed' && e.id !== lastCommittedSaveRef.current,
+        (entry): entry is RecSaveEntry =>
+          entry.kind === 'save' && entry.status === 'committed' && entry.id !== lastCommittedSaveRef.current,
       );
 
     if (committedSave && mountedRef.current) {
       lastCommittedSaveRef.current = committedSave.id;
-      void queryClient
-        .refetchQueries({ queryKey: ['recommendations'] })
-        .then(() => {
-          if (mountedRef.current) {
-            navigate('/', { replace: true });
-          }
-        });
+      navigate('/', { replace: true });
     }
-  }, [queue.entries, navigate, queryClient]);
+  }, [queue.entries, navigate]);
 
   return (
     <AppFrame title="Recommendations" subtitle={`${visible.length} saved`}>

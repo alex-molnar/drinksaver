@@ -370,9 +370,9 @@ describe('api/endpoints', () => {
 
   describe('recommendation writes', () => {
     it('sends the edits as an ordered array to the edit endpoint', async () => {
-      mockApiClient.patch.mockResolvedValue({ data: undefined });
+      mockApiClient.patch.mockResolvedValue({ data: [{ id: 7, name: 'HJ pint' }] });
 
-      await endpoints.editRecommendations([
+      const result = await endpoints.editRecommendations([
         { id: 7, name: 'HJ pint' },
         { id: 3, name: 'Office Chouffe' },
       ]);
@@ -381,6 +381,7 @@ describe('api/endpoints', () => {
         { id: 7, name: 'HJ pint' },
         { id: 3, name: 'Office Chouffe' },
       ]);
+      expect(result).toEqual([{ id: 7, name: 'HJ pint' }]);
     });
 
     it('addresses a delete by id in the path', async () => {

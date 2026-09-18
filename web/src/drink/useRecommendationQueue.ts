@@ -16,12 +16,12 @@ import {
   type RecSaveEntry,
 } from './recommendationQueue';
 import type { DraftSnapshot } from './recommendationDraft';
-import type { RecommendationEdit } from '../types/api';
+import type { Recommendation, RecommendationEdit } from '../types/api';
 
 export interface UseRecommendationQueueResult {
   /** Ids the list must not show, because a delete for them is pending or has landed. */
   hidden: ReadonlySet<number>;
-  /** All entries in the queue, for callers that need to observe lifecycle (e.g., committed saves). */
+  /** All queue entries, for observing committed deletes without refetching committed saves. */
   entries: readonly RecQueueEntry[];
   current: RecQueueEntry | null;
   stripHandlers: UseUndoTimerHandlers;
@@ -34,6 +34,8 @@ export interface UseRecommendationQueueResult {
 export interface UseRecommendationQueueOptions {
   /** Called when a save is undone, with the arrangement to put back. */
   onUndoSave: (snapshot: DraftSnapshot) => void;
+  /** Called with the server's authoritative list after an edit is committed. */
+  onSaveCommitted?: (recommendations: Recommendation[]) => void;
   /**
    * The undo window, overridable. Defaults to the real 6.5s. Injectable for the same reason
    * `SaveQueueProvider`'s is: otherwise a test races a real 6.5 second deadline against a real
@@ -49,6 +51,7 @@ export interface UseRecommendationQueueOptions {
  */
 export const useRecommendationQueue = ({
   onUndoSave,
+  onSaveCommitted,
   undoWindowMs = UNDO_WINDOW_MS,
 }: UseRecommendationQueueOptions): UseRecommendationQueueResult => {
   const [queue, setQueue] = useState<RecQueueState>(EMPTY_REC_QUEUE);
@@ -69,6 +72,10 @@ export const useRecommendationQueue = ({
   useEffect(() => {
     onUndoSaveRef.current = onUndoSave;
   });
+  const onSaveCommittedRef = useRef(onSaveCommitted);
+  useEffect(() => {
+    onSaveCommittedRef.current = onSaveCommitted;
+  }, [onSaveCommitted]);
 
   const dispatch = useCallback(
     (action: RecQueueAction) => setQueue((q) => recQueueReducer(q, action)),
@@ -115,7 +122,8 @@ export const useRecommendationQueue = ({
         // strand the user's other edits.
         await Promise.allSettled(pendingDeletes(queueRef.current).map(flushDelete));
         const build = payloadRef.current.get(entry.id);
-        await editRecommendations(build ? build() : []);
+        const recommendations = await editRecommendations(build ? build() : []);
+        onSaveCommittedRef.current?.(recommendations);
       })()
         .then(() => {
           dispatch({ type: 'commit', id: entry.id, now: Date.now() });

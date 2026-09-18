@@ -15,12 +15,13 @@ const SNAPSHOT: DraftSnapshot = {
   names: new Map([[7, 'HJ pint'], [3, 'Office Chouffe']]),
 };
 const onUndoSave = vi.fn();
+const onSaveCommitted = vi.fn();
 
 /** A thunk, so the payload is read at commit time and not when the save was raised. */
 const payload = () => [{ id: 3, name: 'Office Chouffe' }];
 
 const Probe: React.FC<{ windowMs: number }> = ({ windowMs }) => {
-  const q = useRecommendationQueue({ onUndoSave, undoWindowMs: windowMs });
+  const q = useRecommendationQueue({ onUndoSave, onSaveCommitted, undoWindowMs: windowMs });
   return (
     <>
       <button onClick={() => q.removeRecommendation({ recommendationId: 7, label: 'HJ pint' })}>del</button>
@@ -44,7 +45,7 @@ const Probe: React.FC<{ windowMs: number }> = ({ windowMs }) => {
 beforeEach(() => {
   vi.useFakeTimers();
   vi.clearAllMocks();
-  mockEdit.mockResolvedValue(undefined);
+  mockEdit.mockResolvedValue([]);
   mockDelete.mockResolvedValue(undefined);
 });
 
@@ -111,6 +112,23 @@ describe('useRecommendationQueue', () => {
     await act(() => vi.advanceTimersByTimeAsync(20));
 
     expect(mockEdit).toHaveBeenCalledWith([{ id: 3, name: 'Office Chouffe' }]);
+  });
+
+  it('passes the server-returned recommendation list to the commit callback', async () => {
+    const updated = {
+      id: 3,
+      userId: 'user-1',
+      name: 'Office Chouffe',
+      alcoholTypeId: 1,
+      alcoholVolumeId: 1,
+    };
+    mockEdit.mockResolvedValue([updated]);
+    render(<Probe windowMs={20} />);
+
+    fireEvent.click(screen.getByText('save'));
+    await act(() => vi.advanceTimersByTimeAsync(20));
+
+    expect(onSaveCommitted).toHaveBeenCalledWith([updated]);
   });
 
   it('undoing a save hands the snapshot back and sends no PATCH', async () => {
