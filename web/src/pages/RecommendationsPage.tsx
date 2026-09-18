@@ -18,6 +18,7 @@ import {
   type DraftSnapshot,
 } from '../drink/recommendationDraft';
 import { useRecommendationQueue } from '../drink/useRecommendationQueue';
+import type { RecSaveEntry } from '../drink/recommendationQueue';
 import { useSetPageFeedbackContainer } from '../components/PageFeedbackContext';
 import type { RecSaveEntry } from '../drink/recommendationQueue';
 
@@ -173,6 +174,21 @@ const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ undoWindowMs 
   }, [queue]);
 
   const handleCancel = useCallback(() => dispatch({ type: 'cancel' }), []);
+
+  const navigate = useNavigate();
+  const lastCommittedSaveRef = useRef<string | null>(null);
+  useEffect(() => {
+    const committedSave = [...queue.entries]
+      .reverse()
+      .find(
+        (entry): entry is RecSaveEntry =>
+          entry.kind === 'save' && entry.status === 'committed' && entry.id !== lastCommittedSaveRef.current,
+      );
+    if (committedSave) {
+      lastCommittedSaveRef.current = committedSave.id;
+      navigate('/', { replace: true });
+    }
+  }, [navigate, queue.entries]);
 
   // Refetch deletes once the strip is empty. Saves update the cache from the PATCH response, so
   // they must not trigger a redundant list request here.

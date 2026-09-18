@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { screen, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../test/test-utils';
+import { useLocation } from 'react-router-dom';
 import RecommendationsPage from './RecommendationsPage';
 import { getRecommendations, editRecommendations, deleteRecommendation } from '../api/endpoints';
 import type { Recommendation } from '../types/api';
@@ -56,6 +57,8 @@ const renameSync = (from: string, to: string) => {
   fireEvent.change(screen.getByRole('textbox'), { target: { value: to } });
   fireEvent.click(screen.getByRole('button', { name: `Save name for ${from}` }));
 };
+
+const LocationProbe = () => <output data-testid="location">{useLocation().pathname}</output>;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -156,6 +159,26 @@ describe('RecommendationsPage', () => {
         { id: 7, name: 'Home pint' },
         { id: 3, name: 'Office Chouffe' },
       ]);
+      expect(getRecommendations).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('redirects home after the edit response commits without refetching the list', async () => {
+    await withFakeTimers(async () => {
+      renderWithProviders(
+        <>
+          <RecommendationsPage undoWindowMs={30} />
+          <LocationProbe />
+        </>,
+        { route: '/recommendations' },
+      );
+      await act(() => vi.advanceTimersByTimeAsync(0));
+
+      renameSync('HJ pint', 'Home pint');
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      await act(() => vi.advanceTimersByTimeAsync(30));
+
+      expect(screen.getByTestId('location')).toHaveTextContent('/');
       expect(getRecommendations).toHaveBeenCalledTimes(1);
     });
   });
