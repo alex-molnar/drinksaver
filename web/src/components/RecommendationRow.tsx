@@ -12,7 +12,8 @@ import type { SavedRecommendation } from '../drink/savedRecommendations';
  *
  * States: at rest (grip, name, pencil, trashcan); editing (grip disabled, a text input replaces
  * the name, checkmark replaces the pencil); gone (inert, struck through, every control disabled,
- * removed once `onExitComplete` fires).
+ * removed once `onExitComplete` fires). The grip reserves its touch gesture and is not selectable,
+ * so a long press cannot start iOS text selection or the native callout.
  */
 export interface RecommendationRowProps {
   row: SavedRecommendation;
@@ -93,6 +94,13 @@ const DeleteButton = styled(IconButton)`
   }
 `;
 
+const DragHandle = styled(IconButton)`
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+`;
+
 const Name = styled.span`
   font-family: var(--ds-type-display-s-font-family);
   font-weight: var(--ds-type-display-s-font-weight);
@@ -166,12 +174,17 @@ const RecommendationRow: React.FC<RecommendationRowProps> = ({
   onDelete,
   onExitComplete,
 }) => {
-  // Only disable sorting for 'gone' rows. When editing, we disable the grip button instead
-  // so the row doesn't get aria-disabled (which would make the input appear disabled to AT).
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: row.id,
-    disabled: gone,
-  });
+  // Sorting is unavailable while this row is gone or being renamed. Drag semantics live on the
+  // grip itself, so disabling the sortable now describes that control without affecting the input.
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: row.id, disabled: gone || editing });
   const rowRef = useRef<HTMLDivElement>(null);
   const strokeRef = useRef<HTMLSpanElement>(null);
 
@@ -196,22 +209,22 @@ const RecommendationRow: React.FC<RecommendationRowProps> = ({
     <Row
       ref={setRefs}
       style={{ transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 1 : undefined }}
-      {...attributes}
       inert={gone}
       data-recommendation-row={row.id}
       data-recommendation-index={index}
     >
       <Strike ref={strokeRef} data-recommendation-strike aria-hidden="true" />
-      {/* Grip is disabled when gone (deleted) or editing (input focused), but the row itself
-      stays sortable-enabled so it doesn't get aria-disabled. */}
-      <IconButton
+      {/* Grip is disabled when gone (deleted) or editing (input focused). */}
+      <DragHandle
+        ref={setActivatorNodeRef}
         type="button"
         disabled={gone || editing}
         aria-label={`Reorder ${row.name}`}
+        {...attributes}
         {...listeners}
       >
         <GripIcon />
-      </IconButton>
+      </DragHandle>
 
       {editing ? (
         <NameInput

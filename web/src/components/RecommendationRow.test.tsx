@@ -44,6 +44,17 @@ describe('RecommendationRow', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 
+  it('reserves touch gestures for dragging without invoking iOS text selection', () => {
+    renderRow();
+
+    const grip = screen.getByRole('button', { name: 'Reorder HJ pint' });
+    const row = grip.closest('[data-recommendation-row]');
+
+    expect(grip).toHaveStyle({ touchAction: 'none', userSelect: 'none' });
+    expect(grip).toHaveAttribute('aria-roledescription', 'sortable');
+    expect(row).not.toHaveAttribute('role');
+  });
+
   it('raises edit/start from the pencil', async () => {
     const spies = renderRow();
 

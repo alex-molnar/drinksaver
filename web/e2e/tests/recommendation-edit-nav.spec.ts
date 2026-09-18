@@ -64,3 +64,28 @@ test('editing a recommendation and saving navigates to home page', async ({ page
 
   expect(postSaveRequests).toEqual(['edit', 'list']);
 });
+
+test('mobile drag handle owns touch gestures without disabling name selection', async ({ page }) => {
+  const recommendation = {
+    id: 7,
+    userId: '423c91e4-491f-4f82-aba6-3c982857e0e4',
+    name: 'Test Beer',
+    alcoholTypeId: 4,
+    alcoholVolumeId: 6,
+    brandId: 2,
+    beerFlavourId: 3,
+    consumptionTypeId: 3,
+    colorPaletteId: 2,
+    glasswareId: 1,
+  };
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route('**/v1/recommendations/list', (route) => route.fulfill({ json: [recommendation] }));
+
+  await page.goto('/recommendations');
+
+  const row = page.locator('[data-recommendation-row="7"]');
+  const grip = page.getByRole('button', { name: 'Reorder Test Beer', exact: true });
+  await expect(grip).toHaveCSS('touch-action', 'none');
+  await expect(grip).toHaveCSS('user-select', 'none');
+  await expect(row).toHaveCSS('user-select', 'auto');
+});
