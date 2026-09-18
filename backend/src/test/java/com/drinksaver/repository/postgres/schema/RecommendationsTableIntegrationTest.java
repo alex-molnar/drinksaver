@@ -81,12 +81,12 @@ class RecommendationsTableIntegrationTest extends AbstractPostgresIntegrationTes
         Recommendation third = createRecommendation(USER, "Third");
         recommendationsTable.saveAllAndFlush(List.of(first, second, third));
 
-        int updated = recommendationsTable.updateRecommendationsOrderArray(
+        List<Recommendation> updated = recommendationsTable.updateRecommendationsOrderArray(
                 new Integer[]{third.getId(), third.getId(), 999_999, first.getId()},
                 new String[]{"Renamed third", "Ignored duplicate", "Ignored unknown", "Renamed first"}
         );
 
-        assertThat(updated).isEqualTo(2);
+        assertThat(updated).hasSize(2);
         Map<Integer, Recommendation> recommendationById = recommendationsTable.findAllById(
                 List.of(first.getId(), second.getId(), third.getId())
         ).stream().collect(Collectors.toMap(Recommendation::getId, recommendation -> recommendation));
@@ -102,7 +102,7 @@ class RecommendationsTableIntegrationTest extends AbstractPostgresIntegrationTes
         Recommendation recommendation = createRecommendation(USER, "Beer");
         recommendationsTable.saveAndFlush(recommendation);
 
-        assertThat(recommendationsTable.updateRecommendationsOrderArray(new Integer[]{}, new String[]{})).isZero();
+        assertThat(recommendationsTable.updateRecommendationsOrderArray(new Integer[]{}, new String[]{})).isEmpty();
         assertThat(recommendationsTable.findById(recommendation.getId()).orElseThrow()
                 .getOrderNumber()).isNull();
     }
