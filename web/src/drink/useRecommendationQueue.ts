@@ -21,6 +21,8 @@ import type { RecommendationEdit } from '../types/api';
 export interface UseRecommendationQueueResult {
   /** Ids the list must not show, because a delete for them is pending or has landed. */
   hidden: ReadonlySet<number>;
+  /** All entries in the queue, for callers that need to observe lifecycle (e.g., committed saves). */
+  entries: readonly RecQueueEntry[];
   current: RecQueueEntry | null;
   stripHandlers: UseUndoTimerHandlers;
   removeRecommendation: (input: { recommendationId: number; label: string }) => void;
@@ -252,6 +254,7 @@ export const useRecommendationQueue = ({
 
   return {
     hidden: hiddenRecommendationIds(queue),
+    entries: queue.entries,
     current,
     stripHandlers,
     removeRecommendation,

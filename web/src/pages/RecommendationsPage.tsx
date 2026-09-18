@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AppFrame from '../components/AppFrame';
@@ -17,6 +18,7 @@ import {
 } from '../drink/recommendationDraft';
 import { useRecommendationQueue } from '../drink/useRecommendationQueue';
 import { useSetPageFeedbackContainer } from '../components/PageFeedbackContext';
+import type { RecSaveEntry } from '../drink/recommendationQueue';
 
 const Scroll = styled.section`
   flex: 1;
@@ -164,20 +166,50 @@ const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ undoWindowMs 
 
   const handleCancel = useCallback(() => dispatch({ type: 'cancel' }), []);
 
-  // Refetch once the strip is empty and something has actually committed since the last check.
-  // Deferring until the strip clears is the reasoning `SaveQueueProvider.tsx` already gives for
-  // its own recommendations refetch: a list that reshuffles under a finger already on its way to
-  // a tap is a wrong action taken.
-  const sawCommitRef = useRef(false);
+  // Refetch deletes once the strip is empty. Saves use the awaited refetch in the navigation
+  // effect below; sharing this idle invalidation path would let the list request race the edit.
+  const lastCommittedDeleteRef = useRef<string | null>(null);
   useEffect(() => {
-    if (queue.current && (queue.current.status === 'sending' || queue.current.status === 'undoable')) {
-      sawCommitRef.current = true;
-    }
-    if (queue.current === null && sawCommitRef.current) {
-      sawCommitRef.current = false;
+    const committedDelete = [...queue.entries]
+      .reverse()
+      .find((entry) => entry.kind === 'delete' && entry.status === 'committed');
+    if (queue.current === null && committedDelete && committedDelete.id !== lastCommittedDeleteRef.current) {
+      lastCommittedDeleteRef.current = committedDelete.id;
       queryClient.invalidateQueries({ queryKey: ['recommendations'] });
     }
   }, [queue, queryClient]);
+
+  // Navigate to home page after a save is committed, but only if user hasn't navigated away
+  const navigate = useNavigate();
+  const mountedRef = useRef(true);
+  const lastCommittedSaveRef = useRef<string | null>(null);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    // Find the most recent save entry that was just committed
+    const committedSave = [...queue.entries]
+      .reverse()
+      .find(
+        (e): e is RecSaveEntry =>
+          e.kind === 'save' && e.status === 'committed' && e.id !== lastCommittedSaveRef.current,
+      );
+
+    if (committedSave && mountedRef.current) {
+      lastCommittedSaveRef.current = committedSave.id;
+      void queryClient
+        .refetchQueries({ queryKey: ['recommendations'] })
+        .then(() => {
+          if (mountedRef.current) {
+            navigate('/', { replace: true });
+          }
+        });
+    }
+  }, [queue.entries, navigate, queryClient]);
 
   return (
     <AppFrame title="Recommendations" subtitle={`${visible.length} saved`}>
