@@ -166,9 +166,11 @@ const RecommendationRow: React.FC<RecommendationRowProps> = ({
   onDelete,
   onExitComplete,
 }) => {
+  // Only disable sorting for 'gone' rows. When editing, we disable the grip button instead
+  // so the row doesn't get aria-disabled (which would make the input appear disabled to AT).
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.id,
-    disabled: gone || editing,
+    disabled: gone,
   });
   const rowRef = useRef<HTMLDivElement>(null);
   const strokeRef = useRef<HTMLSpanElement>(null);
@@ -200,9 +202,11 @@ const RecommendationRow: React.FC<RecommendationRowProps> = ({
       data-recommendation-index={index}
     >
       <Strike ref={strokeRef} data-recommendation-strike aria-hidden="true" />
+      {/* Grip is disabled when gone (deleted) or editing (input focused), but the row itself
+      stays sortable-enabled so it doesn't get aria-disabled. */}
       <IconButton
         type="button"
-        disabled={gone}
+        disabled={gone || editing}
         aria-label={`Reorder ${row.name}`}
         {...listeners}
       >
