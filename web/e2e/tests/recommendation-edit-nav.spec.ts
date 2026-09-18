@@ -1,9 +1,13 @@
 import { test, expect } from '@playwright/test';
 
 test('editing a recommendation and saving navigates to home page', async ({ page }) => {
+  const postSaveRequests: string[] = [];
+  let saveStarted = false;
+
   // Mock the recommendations API
-  await page.route('**/v1/recommendations/list', (route) =>
-    route.fulfill({
+  await page.route('**/v1/recommendations/list', async (route) => {
+    if (saveStarted) postSaveRequests.push('list');
+    await route.fulfill({
       json: [
         {
           id: 7,
@@ -18,11 +22,14 @@ test('editing a recommendation and saving navigates to home page', async ({ page
           glasswareId: 1,
         },
       ],
-    }),
-  );
+    });
+  });
 
   // Mock the edit API
-  await page.route('**/v1/recommendations/edit', (route) => route.fulfill({ status: 200 }));
+  await page.route('**/v1/recommendations/edit', async (route) => {
+    if (saveStarted) postSaveRequests.push('edit');
+    await route.fulfill({ status: 200 });
+  });
 
   await page.goto('/recommendations');
   // The row itself has the name as accessible name, but there are multiple buttons with "Test Beer"
@@ -38,7 +45,7 @@ test('editing a recommendation and saving navigates to home page', async ({ page
 
   // Now the input should be enabled
   const input = page.getByRole('textbox');
-  
+
   // Clear and type new name
   await input.fill('Renamed Beer');
 
@@ -46,6 +53,7 @@ test('editing a recommendation and saving navigates to home page', async ({ page
   await page.getByRole('button', { name: 'Save name for Test Beer', exact: true }).click();
 
   // Click Save button in the bottom bar
+  saveStarted = true;
   await page.getByRole('button', { name: 'Save' }).click();
 
   // Move mouse away from the strip to avoid pausing the undo timer
@@ -53,4 +61,6 @@ test('editing a recommendation and saving navigates to home page', async ({ page
 
   // Wait for navigation to home page (happens after save commits)
   await expect(page).toHaveURL('/', { timeout: 15_000 });
+
+  expect(postSaveRequests).toEqual(['edit', 'list']);
 });

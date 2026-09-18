@@ -166,17 +166,15 @@ const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ undoWindowMs 
 
   const handleCancel = useCallback(() => dispatch({ type: 'cancel' }), []);
 
-  // Refetch once the strip is empty and something has actually committed since the last check.
-  // Deferring until the strip clears is the reasoning `SaveQueueProvider.tsx` already gives for
-  // its own recommendations refetch: a list that reshuffles under a finger already on its way to
-  // a tap is a wrong action taken.
-  const sawCommitRef = useRef(false);
+  // Refetch deletes once the strip is empty. Saves use the awaited refetch in the navigation
+  // effect below; sharing this idle invalidation path would let the list request race the edit.
+  const lastCommittedDeleteRef = useRef<string | null>(null);
   useEffect(() => {
-    if (queue.current && (queue.current.status === 'sending' || queue.current.status === 'undoable')) {
-      sawCommitRef.current = true;
-    }
-    if (queue.current === null && sawCommitRef.current) {
-      sawCommitRef.current = false;
+    const committedDelete = [...queue.entries]
+      .reverse()
+      .find((entry) => entry.kind === 'delete' && entry.status === 'committed');
+    if (queue.current === null && committedDelete && committedDelete.id !== lastCommittedDeleteRef.current) {
+      lastCommittedDeleteRef.current = committedDelete.id;
       queryClient.invalidateQueries({ queryKey: ['recommendations'] });
     }
   }, [queue, queryClient]);
@@ -203,9 +201,15 @@ const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ undoWindowMs 
 
     if (committedSave && mountedRef.current) {
       lastCommittedSaveRef.current = committedSave.id;
-      navigate('/', { replace: true });
+      void queryClient
+        .refetchQueries({ queryKey: ['recommendations'] })
+        .then(() => {
+          if (mountedRef.current) {
+            navigate('/', { replace: true });
+          }
+        });
     }
-  }, [queue.entries, navigate]);
+  }, [queue.entries, navigate, queryClient]);
 
   return (
     <AppFrame title="Recommendations" subtitle={`${visible.length} saved`}>
