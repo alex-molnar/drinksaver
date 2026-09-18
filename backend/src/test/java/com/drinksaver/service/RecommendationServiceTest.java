@@ -82,14 +82,6 @@ class RecommendationServiceTest {
     @Test
     void updateRecommendationsOrderForwardsIdsAndNamesInInputOrder() {
         RecommendationsTable recommendationsTable = mock(RecommendationsTable.class);
-        Recommendation updated1 = recommendation("First name", 1);
-        updated1.setId(25);
-        Recommendation updated2 = recommendation("Second name", 2);
-        updated2.setId(27);
-        when(recommendationsTable.updateRecommendationsOrderArray(
-                new Integer[]{25, 27},
-                new String[]{"First name", "Second name"}
-        )).thenReturn(List.of(updated1, updated2));
         RecommendationService service = serviceWith(10, Map.of(), recommendationsTable);
 
         List<Recommendation> result = service.updateRecommendationsOrder(USER, List.of(
@@ -97,7 +89,7 @@ class RecommendationServiceTest {
                 new RecommendationUpdate(27, "Second name")
         ));
 
-        assertThat(result).containsExactly(updated1, updated2);
+        assertThat(result).isEmpty();
         verify(recommendationsTable).updateRecommendationsOrderArray(
                 new Integer[]{25, 27},
                 new String[]{"First name", "Second name"}

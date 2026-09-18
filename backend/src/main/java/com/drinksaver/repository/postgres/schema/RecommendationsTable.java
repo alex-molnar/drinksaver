@@ -45,7 +45,6 @@ public interface RecommendationsTable extends JpaRepository<Recommendation, Inte
                 )
             ) AS ordered
             WHERE ordered.id = r.id
-            RETURNING r.id, r.user_id, r.name, r.alcohol_type_id, r.alcohol_volume_id, r.order_number, r.end_date, r.created_at, r.updated_at
             """, nativeQuery = true)
-    List<Recommendation> updateRecommendationsOrderArray(@Param("recommendationIds") Integer[] recommendationIds, @Param("recommendationNames") String[] recommendationNames);
+    int updateRecommendationsOrderArray(@Param("recommendationIds") Integer[] recommendationIds, @Param("recommendationNames") String[] recommendationNames);
 }
