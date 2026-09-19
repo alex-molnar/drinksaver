@@ -43,6 +43,11 @@ describe('the test and fallback palettes clear WCAG AA', () => {
     expect(contrastRatio(palette.field, palette.inkDark)).toBeGreaterThanOrEqual(4.5);
   });
 
+  it.each(TEST_PALETTES)('$name: field/inkLight >= 4.5:1', (palette) => {
+    expect(palette.inkLight).not.toBeNull();
+    expect(contrastRatio(palette.field, palette.inkLight!)).toBeGreaterThanOrEqual(4.5);
+  });
+
   it('the degraded-mode palette also clears it', () => {
     expect(contrastRatio(FALLBACK_PALETTE.field, FALLBACK_PALETTE.inkDark)).toBeGreaterThanOrEqual(4.5);
   });

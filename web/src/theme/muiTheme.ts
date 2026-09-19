@@ -1,5 +1,5 @@
 import { createTheme } from '@mui/material/styles';
-import { darkTokens } from './tokens';
+import { darkTokens, lightTokens, type ThemeTokens } from './tokens';
 
 /**
  * A `var(--ds-*)` reference, not a `darkTokens` value. Used only inside `components.*
@@ -7,7 +7,7 @@ import { darkTokens } from './tokens';
  * the custom property by name there, rather than inlining today's colour, is what makes this one
  * theme rather than a new one every time a token changes.
  *
- * The palette just below does the opposite, and reads `darkTokens` directly. MUI's own
+ * The palette just below does the opposite, and reads the active token set directly. MUI's own
  * components call colour maths - `alpha()`, `decomposeColor()` - on `theme.palette.*.main`
  * internally, for things like a `IconButton`'s hover overlay, and none of that code can parse a
  * `var()` reference: it throws the moment such a component renders. Every `.styleOverrides`
@@ -20,15 +20,14 @@ const v = (name: string): string => `var(--ds-${name})`;
  * This design system has no tint ramp: `light` and `dark` simply repeat `main` rather than
  * inventing shades the design doc never specified. Supplying every field explicitly, rather than
  * leaving MUI to derive the missing ones from `main`, is what keeps MUI's auto-contrast heuristic
- * from overriding a deliberate design choice - the button on `accent.active` reads with
- * `ink.primary`, not with whatever MUI's own luminance check would have picked.
+ * from overriding a deliberate design choice - filled buttons read with `ink.onAccent`, not
+ * with whatever MUI's own luminance check would have picked.
  */
 const soloColor = (main: string, contrastText: string) => ({ main, light: main, dark: main, contrastText });
 
 /**
- * The dark theme, and the only one: per the design doc ("Dark only, deliberately") there is no
- * light variant to switch to, so this uses plain `palette.mode`, not MUI's `colorSchemes`, which
- * exists for switching between two.
+ * Dark and light are two small MUI theme instances because MUI performs colour maths on palette
+ * literals. Application components still switch through the shared CSS custom properties.
  *
  * `shape.borderRadius` is a plain number, not a token reference: MUI types it that way because
  * it is used in arithmetic elsewhere in the theme (`shape.borderRadius * 2` and similar), so a
@@ -46,29 +45,29 @@ const soloColor = (main: string, contrastText: string) => ({ main, light: main, 
  * renders one; left as a callback, the function body would sit uncovered against a coverage
  * gate that has almost no slack. `muiTheme.test.ts` asserts this holds.
  */
-export const muiTheme = createTheme({
+const makeMuiTheme = (mode: 'dark' | 'light', tokens: ThemeTokens) => createTheme({
   palette: {
-    mode: 'dark',
+    mode,
     background: {
-      default: darkTokens.surface.ground,
-      paper: darkTokens.surface.panel,
+      default: tokens.surface.ground,
+      paper: tokens.surface.panel,
     },
     text: {
-      primary: darkTokens.ink.primary,
-      secondary: darkTokens.ink.secondary,
+      primary: tokens.ink.primary,
+      secondary: tokens.ink.secondary,
     },
-    divider: darkTokens.line.hairline,
+    divider: tokens.line.hairline,
     // The design doc assigns `--red` to both "Primary action" and "destructive marks", so the
     // same hue backs both `primary` and `error` here.
-    primary: soloColor(darkTokens.accent.primary, darkTokens.ink.primary),
-    error: soloColor(darkTokens.accent.danger, darkTokens.ink.primary),
-    secondary: soloColor(darkTokens.accent.active, darkTokens.ink.primary),
+    primary: soloColor(tokens.accent.primary, tokens.ink.onAccent),
+    error: soloColor(tokens.accent.danger, tokens.ink.onAccent),
+    secondary: soloColor(tokens.accent.active, tokens.ink.onAccent),
   },
   shape: {
     borderRadius: 8,
   },
   typography: {
-    fontFamily: darkTokens.type.body.fontFamily,
+    fontFamily: tokens.type.body.fontFamily,
     fontSize: 15,
     button: {
       textTransform: 'none',
@@ -161,3 +160,7 @@ export const muiTheme = createTheme({
     },
   },
 });
+
+/** Kept as the dark export for existing isolated component tests and callers. */
+export const muiTheme = makeMuiTheme('dark', darkTokens);
+export const lightMuiTheme = makeMuiTheme('light', lightTokens);

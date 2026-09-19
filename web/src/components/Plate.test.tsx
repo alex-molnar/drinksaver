@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event';
 import Plate from './Plate';
 import { TEST_PALETTE_BY_NAME } from '../test/designFixtures';
 import { TestDesignProvider } from '../test/TestDesignProvider';
+import { AppThemeProvider } from '../theme/ThemeModeProvider';
+import { FALLBACK_PALETTE } from '../drink/designCatalogue';
 
 const renderPlate = (plate: React.ReactElement) => render(<TestDesignProvider>{plate}</TestDesignProvider>);
 
@@ -33,6 +35,24 @@ describe('Plate', () => {
       const button = screen.getByRole('button', { name: 'Duvel bottle' });
       expect(button.style.getPropertyValue('--fld')).toBe(TEST_PALETTE_BY_NAME.cream.field);
       expect(button.style.color).not.toBe('');
+    });
+
+    it('uses the light-theme ink and falls back to dark ink when it is absent', () => {
+      const { rerender } = render(
+        <AppThemeProvider initialMode="light">
+          <TestDesignProvider>
+            <Plate variant="drink" name="Duvel bottle" colorPaletteId={3} rotation={0.5} onClick={vi.fn()} />
+          </TestDesignProvider>
+        </AppThemeProvider>,
+      );
+      expect(screen.getByRole('button', { name: 'Duvel bottle' })).toHaveStyle({ color: TEST_PALETTE_BY_NAME.cream.inkLight });
+
+      rerender(
+        <AppThemeProvider initialMode="light">
+          <Plate variant="drink" name="Mystery cocktail" rotation={0.5} onClick={vi.fn()} />
+        </AppThemeProvider>,
+      );
+      expect(screen.getByRole('button', { name: 'Mystery cocktail' })).toHaveStyle({ color: FALLBACK_PALETTE.inkDark });
     });
 
     it('applies the given rotation as a CSS custom property', () => {

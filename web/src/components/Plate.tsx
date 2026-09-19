@@ -1,4 +1,5 @@
 import React from 'react';
+import { useThemeMode } from '../theme/themeMode';
 import styled from '@emotion/styled';
 import { Glass } from '../drink/glassware';
 import { useDesign } from '../drink/useDesign';
@@ -240,6 +241,7 @@ const AddButton = styled.button`
 const Plate: React.FC<PlateProps> = (props) => {
   const { rotation, onClick, disabled = false } = props;
   const design = useDesign();
+  const { mode } = useThemeMode();
   const style = { '--rot': `${rotation}deg` } as React.CSSProperties;
 
   if (props.variant === 'add') {
@@ -266,7 +268,7 @@ const Plate: React.FC<PlateProps> = (props) => {
       disabled={disabled || isSaving}
       aria-busy={isSaving || undefined}
       data-done={isDone ? '' : undefined}
-      style={{ ...style, '--fld': palette.field, color: palette.inkDark } as React.CSSProperties}
+      style={{ ...style, '--fld': palette.field, color: mode === 'light' ? palette.inkLight ?? palette.inkDark : palette.inkDark } as React.CSSProperties}
     >
       <span className="glass">
         <Glass glassware={glassware} chroma={palette.field} tone="ink" />

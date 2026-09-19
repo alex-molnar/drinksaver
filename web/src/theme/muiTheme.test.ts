@@ -1,10 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import { muiTheme } from './muiTheme';
-import { darkTokens } from './tokens';
+import { lightMuiTheme, muiTheme } from './muiTheme';
+import { darkTokens, lightTokens } from './tokens';
 
 describe('muiTheme', () => {
   it('is a dark theme', () => {
     expect(muiTheme.palette.mode).toBe('dark');
+  });
+
+  it('builds a light theme from the light tokens', () => {
+    expect(lightMuiTheme.palette.mode).toBe('light');
+    expect(lightMuiTheme.palette.background.default).toBe(lightTokens.surface.ground);
+    expect(lightMuiTheme.palette.background.paper).toBe(lightTokens.surface.panel);
+    expect(lightMuiTheme.palette.text.primary).toBe(lightTokens.ink.primary);
+    expect(lightMuiTheme.palette.primary.contrastText).toBe(lightTokens.ink.onAccent);
   });
 
   /**
@@ -42,7 +50,7 @@ describe('muiTheme', () => {
       const color = muiTheme.palette[key];
       expect(color.light).toBe(color.main);
       expect(color.dark).toBe(color.main);
-      expect(color.contrastText).toBe(darkTokens.ink.primary);
+      expect(color.contrastText).toBe(darkTokens.ink.onAccent);
     }
   });
 

@@ -17,7 +17,7 @@ const StepButton = styled.button`
   width: 52px;
   height: 52px;
   border-radius: var(--ds-radius-sm);
-  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 30%, transparent);
+  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 52%, transparent);
   background: color-mix(in srgb, var(--ds-ink-primary) 5%, transparent);
   color: var(--ds-ink-primary);
   font-size: 24px;
@@ -76,7 +76,7 @@ const Cta = styled.button`
   border: 0;
   flex: none;
   background: var(--ds-accent-primary);
-  color: var(--ds-ink-primary);
+  color: var(--ds-ink-on-accent);
   font-family: var(--ds-type-display-m-font-family);
   font-weight: var(--ds-type-display-m-font-weight);
   font-size: 21px;

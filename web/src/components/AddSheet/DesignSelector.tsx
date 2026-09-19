@@ -54,7 +54,7 @@ const Trigger = styled.button`
   min-width: 0;
   min-height: 44px;
   padding: 0 12px;
-  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 22%, transparent);
+  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 52%, transparent);
   border-radius: var(--ds-radius-sm);
   background: var(--ds-surface-recess);
   color: var(--ds-ink-primary);

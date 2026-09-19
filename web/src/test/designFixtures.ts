@@ -2,14 +2,14 @@ import { createDesignCatalogue } from '../drink/designCatalogue';
 import type { ColorPalette, Glassware } from '../types/api';
 
 export const TEST_PALETTES: readonly ColorPalette[] = [
-  { id: 1, name: 'green', field: '#2B7454', inkDark: '#F4E9CE', inkLight: null },
-  { id: 2, name: 'brown', field: '#2B1A13', inkDark: '#EBD9B4', inkLight: null },
-  { id: 3, name: 'cream', field: '#DFD1B0', inkDark: '#2B1A14', inkLight: null },
-  { id: 4, name: 'red', field: '#BA422C', inkDark: '#F9EDD4', inkLight: null },
-  { id: 5, name: 'blue', field: '#2C4B6E', inkDark: '#EFE2C8', inkLight: null },
-  { id: 6, name: 'plum', field: '#6B3350', inkDark: '#F2E4CE', inkLight: null },
-  { id: 7, name: 'amber', field: '#C9973B', inkDark: '#2B1A14', inkLight: null },
-  { id: 8, name: 'rose', field: '#D4A0A7', inkDark: '#2B1A14', inkLight: null },
+  { id: 1, name: 'green', field: '#2B7454', inkDark: '#F4E9CE', inkLight: '#FFF6E3' },
+  { id: 2, name: 'brown', field: '#2B1A13', inkDark: '#EBD9B4', inkLight: '#FFF3DA' },
+  { id: 3, name: 'cream', field: '#DFD1B0', inkDark: '#2B1A14', inkLight: '#3B241B' },
+  { id: 4, name: 'red', field: '#BA422C', inkDark: '#F9EDD4', inkLight: '#FFF4DB' },
+  { id: 5, name: 'blue', field: '#2C4B6E', inkDark: '#EFE2C8', inkLight: '#FFF2D8' },
+  { id: 6, name: 'plum', field: '#6B3350', inkDark: '#F2E4CE', inkLight: '#FFF0DD' },
+  { id: 7, name: 'amber', field: '#C9973B', inkDark: '#2B1A14', inkLight: '#342016' },
+  { id: 8, name: 'rose', field: '#D4A0A7', inkDark: '#2B1A14', inkLight: '#3B211C' },
 ];
 
 const GLASSWARE_NAMES = [

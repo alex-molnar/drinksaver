@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { darkTokens } from './tokens';
+import { darkTokens, lightTokens } from './tokens';
+import { contrastRatio } from '../drink/contrast';
 
 describe('darkTokens', () => {
   it('covers every ThemeTokens category', () => {
@@ -18,9 +19,55 @@ describe('darkTokens', () => {
     expect(darkTokens.ink.secondary).toBe('rgba(242,228,206,.70)');
     expect(darkTokens.ink.tertiary).toBe('rgba(242,228,206,.52)');
     expect(darkTokens.ink.onPaper).toBe('#2B1A14');
+    expect(darkTokens.ink.onAccent).toBe('#F2E4CE');
     expect(darkTokens.line.hairline).toBe('rgba(242,228,206,.14)');
     expect(darkTokens.accent.active).toBe('#C8952B');
     expect(darkTokens.accent.danger).toBe('#C4462E');
+  });
+
+  it('defines the approved sun-baked plaster light palette', () => {
+    expect(lightTokens.surface).toEqual({
+      ground: '#F3E8D4',
+      raised: '#E9D8BA',
+      panel: '#FBF2E2',
+      recess: '#D8C1A0',
+      paper: '#E5CFA7',
+    });
+    expect(lightTokens.ink).toEqual({
+      primary: '#35231B',
+      secondary: '#5C473D',
+      tertiary: '#70574A',
+      onPaper: '#3A281E',
+      onAccent: '#FFF7E7',
+    });
+    expect(lightTokens.accent).toEqual({
+      primary: '#B74632',
+      danger: '#B74632',
+      active: '#966018',
+    });
+  });
+
+  it('keeps non-colour design roles identical across themes', () => {
+    expect(lightTokens.radius).toBe(darkTokens.radius);
+    expect(lightTokens.space).toBe(darkTokens.space);
+    expect(lightTokens.type).toBe(darkTokens.type);
+    expect(lightTokens.motion).toBe(darkTokens.motion);
+  });
+
+  it.each([
+    ['primary ink on ground', lightTokens.ink.primary, lightTokens.surface.ground],
+    ['secondary ink on ground', lightTokens.ink.secondary, lightTokens.surface.ground],
+    ['tertiary ink on ground', lightTokens.ink.tertiary, lightTokens.surface.ground],
+    ['paper ink on paper', lightTokens.ink.onPaper, lightTokens.surface.paper],
+    ['accent ink on primary', lightTokens.ink.onAccent, lightTokens.accent.primary],
+    ['accent ink on active', lightTokens.ink.onAccent, lightTokens.accent.active],
+    ['switch thumb on active', lightTokens.surface.panel, lightTokens.accent.active],
+  ])('%s clears WCAG AA', (_label, foreground, background) => {
+    expect(contrastRatio(foreground, background)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('keeps the dark switch thumb visible against its active track', () => {
+    expect(contrastRatio(darkTokens.surface.panel, darkTokens.accent.active)).toBeGreaterThanOrEqual(3);
   });
 
   /** The design doc assigns `--red` to both "Primary action" and "destructive marks". */

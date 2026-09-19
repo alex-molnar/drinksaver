@@ -47,8 +47,8 @@ interface State {
 /**
  * Colours are literals with a custom property in front of each. The stylesheet is one of the
  * things that can fail to load, and a fallback that renders bone on bone helps nobody, so the
- * literal is the floor rather than the intent. They are the dark ground and ink from the design
- * tokens, because the app is dark only.
+ * literal is the floor rather than the intent. The literals are the dark tokens so the fallback
+ * remains readable even when no theme variables are available.
  */
 const containerStyle: CSSProperties = {
   display: 'flex',
@@ -72,7 +72,7 @@ const buttonStyle: CSSProperties = {
   borderRadius: '6px',
   border: 'none',
   backgroundColor: 'var(--ds-accent-danger, #C4462E)',
-  color: 'var(--ds-ink-primary, #FCEFD8)',
+  color: 'var(--ds-ink-on-accent, #FCEFD8)',
   cursor: 'pointer',
 };
 

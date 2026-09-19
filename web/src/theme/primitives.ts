@@ -3,9 +3,8 @@
  *
  * Nothing in this file says what a colour is *for*. `--bg` versus `--surface` is a decision
  * about roles, and roles belong in `tokens.ts`, which imports from here and assigns each
- * primitive to a slot. Keeping the split this way means a future light theme, or a future
- * re-skin, changes which primitive backs a role without ever having to touch the numbers
- * themselves.
+ * primitive to a slot. Keeping the split this way lets each theme, or a future re-skin, change
+ * which primitive backs a role without ever having to touch the numbers themselves.
  *
  * No component imports this module. Reaching past `tokens.ts` for a primitive would let a
  * component depend on a raw value instead of a role, which is exactly the coupling this file

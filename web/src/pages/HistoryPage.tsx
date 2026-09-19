@@ -47,7 +47,7 @@ const BulkButton = styled.button`
   border: 0;
   border-radius: var(--ds-radius-sm);
   background: var(--ds-accent-danger);
-  color: var(--ds-ink-primary);
+  color: var(--ds-ink-on-accent);
   font-family: var(--ds-type-display-family);
   font-size: 1rem;
   cursor: pointer;

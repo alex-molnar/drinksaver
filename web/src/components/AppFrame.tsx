@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
-import { Menu, MenuItem } from '@mui/material';
+import { Divider, Menu, MenuItem } from '@mui/material';
 import { useAuth } from '../auth';
 import { useDrinksForDate } from '../drink/useDrinksForDate';
 import { useSheet } from '../hooks/useSheet';
@@ -9,6 +9,7 @@ import { MENU_PANEL } from './AddSheet';
 import type { AddSheetPanel } from './AddSheet';
 import { ADD_SHEET_ID } from '../drink/draftReducer';
 import { drinkingDay, isTonight } from '../drink/day';
+import { useThemeMode } from '../theme/themeMode';
 
 interface AppFrameProps {
   children: React.ReactNode;
@@ -35,8 +36,8 @@ const Header = styled.header`
   gap: 10px;
   padding: 13px 18px 12px;
   flex: none;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.22), transparent);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ds-ink-primary) 12%, transparent), transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--ds-ink-primary) 22%, transparent);
   box-shadow: 0 1px 0 color-mix(in srgb, var(--ds-ink-primary) 7%, transparent);
 `;
 
@@ -99,7 +100,7 @@ const Nav = styled.nav`
   display: flex;
   background: linear-gradient(180deg, var(--ds-surface-raised), var(--ds-surface-recess));
   border-top: 1.5px solid color-mix(in srgb, var(--ds-ink-primary) 13%, transparent);
-  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 -6px 18px color-mix(in srgb, var(--ds-ink-primary) 18%, transparent);
   padding-bottom: env(safe-area-inset-bottom);
 `;
 
@@ -108,7 +109,7 @@ const NavButton = styled.button`
   min-height: 44px;
   border: 0;
   background: none;
-  color: var(--ds-ink-tertiary);
+  color: var(--ds-ink-secondary);
   padding: 11px 0 13px;
   display: flex;
   flex-direction: column;
@@ -174,6 +175,33 @@ const ROUTE_ITEMS: { path: string; label: string; Icon: React.FC }[] = [
   { path: '/history', label: 'History', Icon: ClockIcon },
 ];
 
+const ThemeSwitch = styled.span<{ checked: boolean }>`
+  width: 34px;
+  height: 20px;
+  margin-left: 24px;
+  border-radius: var(--ds-radius-full);
+  background: ${({ checked }) => checked ? 'var(--ds-accent-active)' : 'var(--ds-surface-recess)'};
+  box-shadow: var(--ds-elevation-sunken);
+  position: relative;
+  flex: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    top: 3px;
+    left: ${({ checked }) => checked ? '17px' : '3px'};
+    border-radius: var(--ds-radius-full);
+    background: ${({ checked }) => checked ? 'var(--ds-surface-panel)' : 'var(--ds-ink-primary)'};
+    transition: left var(--ds-motion-duration-fast) var(--ds-motion-easing-standard);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after { transition: none; }
+  }
+`;
+
 /**
  * The painted-board header and bottom nav that frame Quick Save. Owns navigation and sign-out
  * directly, the same way `Layout` does, rather than taking them as props: there is exactly one
@@ -188,6 +216,7 @@ const AppFrame: React.FC<AppFrameProps> = ({ children, title, subtitle }) => {
   const { logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { mode, toggleTheme } = useThemeMode();
   const [menuAnchor, setMenuAnchor] = React.useState<HTMLButtonElement | null>(null);
 
   const { open: openAddSheet, isOpen: addSheetOpen } = useSheet<AddSheetPanel>(ADD_SHEET_ID, MENU_PANEL);
@@ -211,7 +240,7 @@ const AppFrame: React.FC<AppFrameProps> = ({ children, title, subtitle }) => {
       color: 'var(--ds-ink-primary)',
       border: '1px solid color-mix(in srgb, var(--ds-ink-primary) 13%, transparent)',
       borderRadius: 'var(--ds-radius-md)',
-      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.32)',
+      boxShadow: 'var(--ds-elevation-overlay)',
     },
     '& .MuiMenuItem-root': {
       minHeight: 44,
@@ -265,6 +294,11 @@ const AppFrame: React.FC<AppFrameProps> = ({ children, title, subtitle }) => {
             }}
           >
             Logout
+          </MenuItem>
+          <Divider />
+          <MenuItem role="menuitemcheckbox" aria-checked={mode === 'light'} onClick={toggleTheme}>
+            Light theme
+            <ThemeSwitch checked={mode === 'light'} aria-hidden="true" />
           </MenuItem>
         </Menu>
       </Header>

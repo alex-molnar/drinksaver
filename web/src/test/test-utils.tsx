@@ -2,9 +2,9 @@ import type { ReactElement, ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { render, type RenderOptions } from '@testing-library/react';
-import { ThemeProvider } from '@mui/material/styles';
-import { muiTheme } from '../theme/muiTheme';
 import { TestDesignProvider } from './TestDesignProvider';
+import { AppThemeProvider } from '../theme/ThemeModeProvider';
+import type { ThemeMode } from '../theme/themeMode';
 
 /**
  * A fresh QueryClient per render, with retries off. Retries make a failing
@@ -21,18 +21,19 @@ export const makeQueryClient = () =>
 interface Options extends Omit<RenderOptions, 'wrapper'> {
   route?: string;
   state?: unknown;
+  themeMode?: ThemeMode;
 }
 
-export const renderWithProviders = (ui: ReactElement, { route = '/', state, ...options }: Options = {}) => {
+export const renderWithProviders = (ui: ReactElement, { route = '/', state, themeMode = 'dark', ...options }: Options = {}) => {
   const client = makeQueryClient();
   const Wrapper = ({ children }: { children: ReactNode }) => (
-    <ThemeProvider theme={muiTheme}>
+    <AppThemeProvider initialMode={themeMode}>
       <QueryClientProvider client={client}>
         <TestDesignProvider>
           <MemoryRouter initialEntries={[{ pathname: route, state }]}>{children}</MemoryRouter>
         </TestDesignProvider>
       </QueryClientProvider>
-    </ThemeProvider>
+    </AppThemeProvider>
   );
   return { client, ...render(ui, { wrapper: Wrapper, ...options }) };
 };

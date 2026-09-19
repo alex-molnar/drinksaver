@@ -170,7 +170,7 @@ const SetDateButton = styled.button`
   border: 0;
   border-radius: var(--ds-radius-sm);
   background: var(--ds-accent-primary);
-  color: var(--ds-ink-primary);
+  color: var(--ds-ink-on-accent);
   font: inherit;
   font-size: 15px;
   font-weight: 600;
@@ -193,7 +193,7 @@ const TextInput = styled.input`
   min-height: 44px;
   padding: 0 14px;
   border-radius: var(--ds-radius-sm);
-  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 22%, transparent);
+  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 52%, transparent);
   background: color-mix(in srgb, var(--ds-ink-primary) 5%, transparent);
   color: var(--ds-ink-primary);
   font: inherit;
@@ -212,7 +212,7 @@ const DateInputBox = styled.div`
   min-width: 0;
   overflow: hidden;
   border-radius: var(--ds-radius-sm);
-  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 22%, transparent);
+  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 52%, transparent);
   background: color-mix(in srgb, var(--ds-ink-primary) 5%, transparent);
 `;
 
@@ -233,7 +233,7 @@ const TextArea = styled.textarea`
   width: 100%;
   padding: 12px 14px;
   border-radius: var(--ds-radius-sm);
-  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 22%, transparent);
+  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 52%, transparent);
   background: color-mix(in srgb, var(--ds-ink-primary) 5%, transparent);
   color: var(--ds-ink-primary);
   font: inherit;
