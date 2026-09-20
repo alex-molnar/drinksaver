@@ -2,3 +2,15 @@
 .metals/
 .bloop/
 .idea/
+
+# iOS / Xcode
+ios/DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Swift Package Manager
+.build/
+Packages/
+
+# CocoaPods
+Pods/
