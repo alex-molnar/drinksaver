@@ -1,5 +1,6 @@
 package com.drinksaver.service.namecollector;
 
+import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.repository.postgres.schema.AlcoholVolumeTable;
 import com.drinksaver.repository.postgres.schema.BeerFlavoursTable;
 import com.drinksaver.repository.postgres.schema.BrandsTable;
@@ -30,9 +31,17 @@ public class BeerNameCollector {
 
     public DrinkKey collectBeerName(DrinkKey key) {
         return key.withName(String.format(
-            "%s %s",
-            getBeerName(key.brandId(), key.beerFlavourId()),
-            getAlcoholVolumeName(key.alcoholVolumeId(), key.consumptionTypeId())
+                "%s %s",
+                getBeerName(key.brandId(), key.beerFlavourId()),
+                getAlcoholVolumeName(key.alcoholVolumeId(), key.consumptionTypeId())
+        ));
+    }
+
+    public Recommendation collectBeerName(Recommendation key) {
+        return key.withName(String.format(
+                "%s %s",
+                getBeerName(key.getBrandId(), key.getBeerFlavourId()),
+                getAlcoholVolumeName(key.getAlcoholVolumeId(), key.getConsumptionTypeId())
         ));
     }
 

@@ -71,6 +71,11 @@ public class Recommendation {
         );
     }
 
+    public Recommendation withName(String name) {
+        this.setName(name);
+        return this;
+    }
+
     public static Recommendation of(Drink drink, Integer maxOrder) {
         Recommendation recommendation = new Recommendation();
         recommendation.setUserId(drink.userId());
