@@ -2,6 +2,7 @@ package com.drinksaver.service.namecollector;
 
 import com.drinksaver.model.db.AlcoholSubtype;
 import com.drinksaver.model.db.AlcoholType;
+import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.repository.postgres.schema.AlcoholSubtypesTable;
 import com.drinksaver.repository.postgres.schema.AlcoholTypesTable;
 import com.drinksaver.repository.postgres.schema.AlcoholVolumeTable;
@@ -24,9 +25,17 @@ public class AlcoholNameCollector {
 
     public DrinkKey collectAlcoholName(DrinkKey key) {
         return key.withName(String.format(
-            "%s %s",
-            getAlcoholName(key.alcoholTypeId(), key.alcoholSubtypeId()),
-            getAlcoholVolumeName(key.alcoholVolumeId())
+                "%s %s",
+                getAlcoholName(key.alcoholTypeId(), key.alcoholSubtypeId()),
+                getAlcoholVolumeName(key.alcoholVolumeId())
+        ));
+    }
+
+    public Recommendation collectAlcoholName(Recommendation key) {
+        return key.withName(String.format(
+                "%s %s",
+                getAlcoholName(key.getAlcoholTypeId(), key.getAlcoholSubtypeId()),
+                getAlcoholVolumeName(key.getAlcoholVolumeId())
         ));
     }
 

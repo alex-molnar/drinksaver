@@ -1,10 +1,11 @@
-package com.drinksaver.repository.postgres;
+package com.drinksaver.service;
 
 import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.model.db.SavedDrink;
 import com.drinksaver.model.dto.Drink;
 import com.drinksaver.repository.postgres.schema.RecommendationsTable;
 import com.drinksaver.repository.postgres.schema.SavedDrinksTable;
+import com.drinksaver.service.namecollector.DrinkNameCollector;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -19,13 +20,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class PostgresDrinksRepositoryTest {
+class PostgresDrinksServiceTest {
 
     private static final UUID USER = UUID.randomUUID();
 
     @Test
     void isReturnsTrueForPostgres() {
-        PostgresDrinksRepository repo = new PostgresDrinksRepository(
+        PostgresDrinksService repo = new PostgresDrinksService(
+                mock(DrinkNameCollector.class),
                 mock(SavedDrinksTable.class),
                 mock(RecommendationsTable.class)
         );
@@ -42,7 +44,8 @@ class PostgresDrinksRepositoryTest {
 
         Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, null, null, null, null);
 
-        PostgresDrinksRepository repo = new PostgresDrinksRepository(
+        PostgresDrinksService repo = new PostgresDrinksService(
+                mock(DrinkNameCollector.class),
                 savedTable,
                 mock(RecommendationsTable.class)
         );
@@ -59,7 +62,8 @@ class PostgresDrinksRepositoryTest {
 
         Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, 3, null, null, null);
 
-        PostgresDrinksRepository repo = new PostgresDrinksRepository(
+        PostgresDrinksService repo = new PostgresDrinksService(
+                mock(DrinkNameCollector.class),
                 savedTable,
                 mock(RecommendationsTable.class)
         );
@@ -85,7 +89,8 @@ class PostgresDrinksRepositoryTest {
 
         Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, 3, null, null, null);
 
-        PostgresDrinksRepository repo = new PostgresDrinksRepository(
+        PostgresDrinksService repo = new PostgresDrinksService(
+                mock(DrinkNameCollector.class),
                 savedTable,
                 mock(RecommendationsTable.class)
         );
@@ -104,7 +109,10 @@ class PostgresDrinksRepositoryTest {
 
         Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, 6, 2, null, null, true, null, null);
 
-        PostgresDrinksRepository repo = new PostgresDrinksRepository(savedTable, recTable);
+        DrinkNameCollector nameCollector = mock(DrinkNameCollector.class);
+        when(nameCollector.withName(any(Recommendation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PostgresDrinksService repo = new PostgresDrinksService(nameCollector, savedTable, recTable);
         repo.saveDrink(drink);
 
         verify(recTable).save(any(Recommendation.class));
@@ -120,7 +128,7 @@ class PostgresDrinksRepositoryTest {
 
         Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, null, false, null, null);
 
-        PostgresDrinksRepository repo = new PostgresDrinksRepository(savedTable, recTable);
+        PostgresDrinksService repo = new PostgresDrinksService(mock(DrinkNameCollector.class), savedTable, recTable);
         repo.saveDrink(drink);
 
         verify(recTable, never()).save(any());
@@ -132,7 +140,8 @@ class PostgresDrinksRepositoryTest {
         SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
         when(savedTable.findByUserIdAndDate(USER, "2026-09-08")).thenReturn(List.of(drink));
 
-        PostgresDrinksRepository repo = new PostgresDrinksRepository(
+        PostgresDrinksService repo = new PostgresDrinksService(
+                mock(DrinkNameCollector.class),
                 savedTable,
                 mock(RecommendationsTable.class)
         );
@@ -147,7 +156,8 @@ class PostgresDrinksRepositoryTest {
         SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
         when(savedTable.deleteAndCountByIds(List.of(1, 2, 3))).thenReturn(3);
 
-        PostgresDrinksRepository repo = new PostgresDrinksRepository(
+        PostgresDrinksService repo = new PostgresDrinksService(
+                mock(DrinkNameCollector.class),
                 savedTable,
                 mock(RecommendationsTable.class)
         );
