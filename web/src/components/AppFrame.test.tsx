@@ -147,7 +147,7 @@ describe('AppFrame', () => {
       'Recommendations',
       'Add new type',
       'Logout',
-      'Light theme',
+      '',
     ]);
   });
 
