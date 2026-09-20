@@ -189,9 +189,10 @@ const SunIcon: React.FC = () => (
 );
 
 const ThemeToggleGroup = styled.span`
-  margin-left: 24px;
+  width: 100%;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   color: var(--ds-ink-tertiary);
 
