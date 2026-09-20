@@ -1,4 +1,4 @@
-package com.drinksaver.repository.postgres;
+package com.drinksaver.service;
 
 import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.model.db.SavedDrink;
@@ -6,6 +6,7 @@ import com.drinksaver.model.dto.Drink;
 import com.drinksaver.repository.DrinksRepository;
 import com.drinksaver.repository.postgres.schema.RecommendationsTable;
 import com.drinksaver.repository.postgres.schema.SavedDrinksTable;
+import com.drinksaver.service.namecollector.DrinkNameCollector;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,12 +17,18 @@ import java.util.UUID;
 import java.util.stream.IntStream;
 
 @Repository
-public class PostgresDrinksRepository implements DrinksRepository {
+public class PostgresDrinksService implements DrinksRepository {
+    private final DrinkNameCollector drinkNameCollector;
     private final SavedDrinksTable savedDrinksTable;
     private final RecommendationsTable recommendationsTable;
 
     @Autowired
-    PostgresDrinksRepository(SavedDrinksTable savedDrinksTable, RecommendationsTable recommendationsTable) {
+    PostgresDrinksService(
+        DrinkNameCollector drinkNameCollector,
+        SavedDrinksTable savedDrinksTable,
+        RecommendationsTable recommendationsTable
+    ) {
+        this.drinkNameCollector = drinkNameCollector;
         this.savedDrinksTable = savedDrinksTable;
         this.recommendationsTable = recommendationsTable;
     }
@@ -40,7 +47,7 @@ public class PostgresDrinksRepository implements DrinksRepository {
     public List<SavedDrink> saveDrink(Drink drink) {
         if (drink.shouldAddToRecommendations()) {
             Integer maxOrder = recommendationsTable.findNonTemporaryByUserId(drink.userId()).getFirst();
-            recommendationsTable.save(Recommendation.of(drink, maxOrder));
+            recommendationsTable.save(drinkNameCollector.withName(Recommendation.of(drink, maxOrder)));
         }
 
         return drink.quantity() == null

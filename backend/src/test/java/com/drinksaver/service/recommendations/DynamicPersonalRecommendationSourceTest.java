@@ -5,8 +5,7 @@ import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.model.db.SavedDrink;
 import com.drinksaver.repository.postgres.schema.SavedDrinksTable;
 import com.drinksaver.service.model.DrinkKey;
-import com.drinksaver.service.namecollector.AlcoholNameCollector;
-import com.drinksaver.service.namecollector.BeerNameCollector;
+import com.drinksaver.service.namecollector.DrinkNameCollector;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
@@ -33,13 +32,10 @@ class DynamicPersonalRecommendationSourceTest {
                 "postgres", "postgres", "postgres", "postgres", "postgres",
                 List.of(), 4, 10, decayFactor
         );
-        BeerNameCollector beerNames = mock(BeerNameCollector.class);
-        when(beerNames.collectBeerName(any(DrinkKey.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0, DrinkKey.class).withName("A beer"));
-        AlcoholNameCollector alcoholNames = mock(AlcoholNameCollector.class);
-        when(alcoholNames.collectAlcoholName(any(DrinkKey.class)))
+        DrinkNameCollector drinkNames = mock(DrinkNameCollector.class);
+        when(drinkNames.withName(any(DrinkKey.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0, DrinkKey.class).withName("A drink"));
-        return new DynamicPersonalRecommendationSource(configuration, table, beerNames, alcoholNames, CLOCK);
+        return new DynamicPersonalRecommendationSource(configuration, drinkNames, table, CLOCK);
     }
 
     private SavedDrink drinkOn(String date, int alcoholTypeId) {

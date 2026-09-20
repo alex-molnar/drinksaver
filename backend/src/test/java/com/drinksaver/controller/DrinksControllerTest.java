@@ -271,7 +271,7 @@ class DrinksControllerTest {
 
     /**
      * `quantity` is the number of rows to write, so anything below 1 is meaningless.
-     * It used to reach `PostgresDrinksRepository.saveDrink`, where an empty
+     * It used to reach `PostgresDrinksService.saveDrink`, where an empty
      * IntStream range made `saveAll(...).getFirst()` throw NoSuchElementException
      * and the caller saw a 500 for what is plainly a bad request.
      *
