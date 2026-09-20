@@ -1,0 +1,79 @@
+name: DrinkSaver
+options:
+  developmentLanguage: en
+  deploymentTarget:
+    iOS: "18.0"
+  minimumXcodeGenVersion: "2.40.0"
+configs:
+  Local: debug
+  Test: debug
+  Release: release
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    SUPPORTS_MACCATALYST: NO
+    SUPPORTED_PLATFORMS: iphoneos iphonesimulator
+targets:
+  DrinkSaver:
+    type: application
+    platform: iOS
+    sources:
+      - path: DrinkSaver
+        excludes:
+          - Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: im.kak.drinksaver
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: DrinkSaver/Info.plist
+        TARGETED_DEVICE_FAMILY: "1"
+    scheme:
+      testTargets:
+        - DrinkSaverTests
+        - DrinkSaverUITests
+  DrinkSaverTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - DrinkSaverTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: im.kak.drinksaver.Tests
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: DrinkSaver
+  DrinkSaverUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - DrinkSaverUITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: im.kak.drinksaver.UITests
+        TEST_TARGET_NAME: DrinkSaver
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: DrinkSaver
+schemes:
+  DrinkSaver:
+    build:
+      targets:
+        DrinkSaver: all
+        DrinkSaverTests: [test]
+        DrinkSaverUITests: [test]
+    test:
+      config: Test
+      gatherCoverageData: true
+      targets:
+        - DrinkSaverTests
+        - DrinkSaverUITests
+    run:
+      config: Local
+    profile:
+      config: Release
+    analyze:
+      config: Local
+    archive:
+      config: Release

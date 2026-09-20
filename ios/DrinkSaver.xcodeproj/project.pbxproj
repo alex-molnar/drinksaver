@@ -1,0 +1,643 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0A96AA529A667C6D3438E8DC /* DrinkSaverApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED1AA4A25AEBB8D765D97C15 /* DrinkSaverApp.swift */; };
+		86B731A1EDCBF3C0D0712030 /* ProjectSmokeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DFBB0972B91E0D1020DB99 /* ProjectSmokeUITests.swift */; };
+		8962406F6F079784FCBC4C4E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A1DC861BA01381B57B81E63 /* Assets.xcassets */; };
+		9078BAE450A7DFB4661FD1BF /* ProjectSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BA400D70C680F958C13B55A /* ProjectSmokeTests.swift */; };
+		FBE22C2DF1EDB1E6569482EF /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27CF943A6D6AD7F72DE5315 /* RootView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9E3A483C1371C6A1310D27BA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BA5F042B9F30E169B630AFBE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DBCB89BB37C2FEC5C6894FD8;
+			remoteInfo = DrinkSaver;
+		};
+		F896243C4D3CE3474F91AF25 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BA5F042B9F30E169B630AFBE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DBCB89BB37C2FEC5C6894FD8;
+			remoteInfo = DrinkSaver;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0BA400D70C680F958C13B55A /* ProjectSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSmokeTests.swift; sourceTree = "<group>"; };
+		6249F444B47593A4E53A8431 /* DrinkSaverTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DrinkSaverTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		71DFBB0972B91E0D1020DB99 /* ProjectSmokeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSmokeUITests.swift; sourceTree = "<group>"; };
+		7A1DC861BA01381B57B81E63 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D607AE4B66B7E49C970409CD /* DrinkSaverUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DrinkSaverUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		ED1AA4A25AEBB8D765D97C15 /* DrinkSaverApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkSaverApp.swift; sourceTree = "<group>"; };
+		F27CF943A6D6AD7F72DE5315 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		FE1EE1EA4717F66BA70DCC39 /* DrinkSaver.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DrinkSaver.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		1B722D7851D8AAF271BDF66A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FE1EE1EA4717F66BA70DCC39 /* DrinkSaver.app */,
+				6249F444B47593A4E53A8431 /* DrinkSaverTests.xctest */,
+				D607AE4B66B7E49C970409CD /* DrinkSaverUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */ = {
+			isa = PBXGroup;
+			children = (
+				0BA400D70C680F958C13B55A /* ProjectSmokeTests.swift */,
+			);
+			path = DrinkSaverTests;
+			sourceTree = "<group>";
+		};
+		512BA331B4E32F1F917D9043 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				7A1DC861BA01381B57B81E63 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		902F5B0264EEB68A8333745C /* App */ = {
+			isa = PBXGroup;
+			children = (
+				ED1AA4A25AEBB8D765D97C15 /* DrinkSaverApp.swift */,
+				F27CF943A6D6AD7F72DE5315 /* RootView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		CB37CFD8A3EF0482029730F5 /* DrinkSaverUITests */ = {
+			isa = PBXGroup;
+			children = (
+				71DFBB0972B91E0D1020DB99 /* ProjectSmokeUITests.swift */,
+			);
+			path = DrinkSaverUITests;
+			sourceTree = "<group>";
+		};
+		EB017125E6B6546232F6720C /* DrinkSaver */ = {
+			isa = PBXGroup;
+			children = (
+				902F5B0264EEB68A8333745C /* App */,
+				512BA331B4E32F1F917D9043 /* Resources */,
+			);
+			path = DrinkSaver;
+			sourceTree = "<group>";
+		};
+		EDFA41DF5811BC8C1739E01C = {
+			isa = PBXGroup;
+			children = (
+				EB017125E6B6546232F6720C /* DrinkSaver */,
+				4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */,
+				CB37CFD8A3EF0482029730F5 /* DrinkSaverUITests */,
+				1B722D7851D8AAF271BDF66A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		BC7C14EA7E1050600BFFC2DE /* DrinkSaverUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 437B0BFA5D5B2AD3769B2B08 /* Build configuration list for PBXNativeTarget "DrinkSaverUITests" */;
+			buildPhases = (
+				5A3A512CAFD3DE8EBA28C47E /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8EF7024CA4CF960162DA8788 /* PBXTargetDependency */,
+			);
+			name = DrinkSaverUITests;
+			packageProductDependencies = (
+			);
+			productName = DrinkSaverUITests;
+			productReference = D607AE4B66B7E49C970409CD /* DrinkSaverUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		DBCB89BB37C2FEC5C6894FD8 /* DrinkSaver */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 920117F9ECB576EF24EF9338 /* Build configuration list for PBXNativeTarget "DrinkSaver" */;
+			buildPhases = (
+				0FB68DEB996931938D5907E3 /* Sources */,
+				0EC21C9471A921CD5F9F3BC1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DrinkSaver;
+			packageProductDependencies = (
+			);
+			productName = DrinkSaver;
+			productReference = FE1EE1EA4717F66BA70DCC39 /* DrinkSaver.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F3A1B47D3802FD2149479EC6 /* DrinkSaverTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1BFFB21DAC097EDF8B722685 /* Build configuration list for PBXNativeTarget "DrinkSaverTests" */;
+			buildPhases = (
+				CBED85C9E44991D8B5EA2A14 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FC5B7E9E07EAC186E8615422 /* PBXTargetDependency */,
+			);
+			name = DrinkSaverTests;
+			packageProductDependencies = (
+			);
+			productName = DrinkSaverTests;
+			productReference = 6249F444B47593A4E53A8431 /* DrinkSaverTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BA5F042B9F30E169B630AFBE /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					BC7C14EA7E1050600BFFC2DE = {
+						TestTargetID = DBCB89BB37C2FEC5C6894FD8;
+					};
+				};
+			};
+			buildConfigurationList = FF4E715796217F7A2A1D5718 /* Build configuration list for PBXProject "DrinkSaver" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = EDFA41DF5811BC8C1739E01C;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 1B722D7851D8AAF271BDF66A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DBCB89BB37C2FEC5C6894FD8 /* DrinkSaver */,
+				F3A1B47D3802FD2149479EC6 /* DrinkSaverTests */,
+				BC7C14EA7E1050600BFFC2DE /* DrinkSaverUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0EC21C9471A921CD5F9F3BC1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8962406F6F079784FCBC4C4E /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0FB68DEB996931938D5907E3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A96AA529A667C6D3438E8DC /* DrinkSaverApp.swift in Sources */,
+				FBE22C2DF1EDB1E6569482EF /* RootView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5A3A512CAFD3DE8EBA28C47E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				86B731A1EDCBF3C0D0712030 /* ProjectSmokeUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CBED85C9E44991D8B5EA2A14 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9078BAE450A7DFB4661FD1BF /* ProjectSmokeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8EF7024CA4CF960162DA8788 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DBCB89BB37C2FEC5C6894FD8 /* DrinkSaver */;
+			targetProxy = 9E3A483C1371C6A1310D27BA /* PBXContainerItemProxy */;
+		};
+		FC5B7E9E07EAC186E8615422 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DBCB89BB37C2FEC5C6894FD8 /* DrinkSaver */;
+			targetProxy = F896243C4D3CE3474F91AF25 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		12B8F892F3B68696AD1D3BF6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DrinkSaver/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		5C5425C8A71B5FDD95F925C3 /* Local */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver.UITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = DrinkSaver;
+			};
+			name = Local;
+		};
+		65D78E55ABF9FB7DEBFCADF5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		6754333B4521E6352F3C9DFA /* Test */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver.Tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DrinkSaver.app/DrinkSaver";
+			};
+			name = Test;
+		};
+		6AD9D17EDD4C86C76F6CDB6E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver.Tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DrinkSaver.app/DrinkSaver";
+			};
+			name = Release;
+		};
+		70DDBCE83B31BF8CEB7741C6 /* Test */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Test;
+		};
+		8AAE7964E44502CE2F359F45 /* Local */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Local;
+		};
+		9005AFA0105ED6160802037B /* Test */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver.UITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = DrinkSaver;
+			};
+			name = Test;
+		};
+		9F319AEFB4774B9004D19888 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver.UITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = DrinkSaver;
+			};
+			name = Release;
+		};
+		BD17A1697EAECB9B21C731ED /* Local */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver.Tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DrinkSaver.app/DrinkSaver";
+			};
+			name = Local;
+		};
+		BE7ED705D4E09FA6C5B4C378 /* Test */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DrinkSaver/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Test;
+		};
+		F13947E7A5EE0BC25437BF81 /* Local */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DrinkSaver/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Local;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1BFFB21DAC097EDF8B722685 /* Build configuration list for PBXNativeTarget "DrinkSaverTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BD17A1697EAECB9B21C731ED /* Local */,
+				6AD9D17EDD4C86C76F6CDB6E /* Release */,
+				6754333B4521E6352F3C9DFA /* Test */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Local;
+		};
+		437B0BFA5D5B2AD3769B2B08 /* Build configuration list for PBXNativeTarget "DrinkSaverUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5C5425C8A71B5FDD95F925C3 /* Local */,
+				9F319AEFB4774B9004D19888 /* Release */,
+				9005AFA0105ED6160802037B /* Test */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Local;
+		};
+		920117F9ECB576EF24EF9338 /* Build configuration list for PBXNativeTarget "DrinkSaver" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F13947E7A5EE0BC25437BF81 /* Local */,
+				12B8F892F3B68696AD1D3BF6 /* Release */,
+				BE7ED705D4E09FA6C5B4C378 /* Test */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Local;
+		};
+		FF4E715796217F7A2A1D5718 /* Build configuration list for PBXProject "DrinkSaver" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8AAE7964E44502CE2F359F45 /* Local */,
+				65D78E55ABF9FB7DEBFCADF5 /* Release */,
+				70DDBCE83B31BF8CEB7741C6 /* Test */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Local;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = BA5F042B9F30E169B630AFBE /* Project object */;
+}
