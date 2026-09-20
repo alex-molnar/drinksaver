@@ -36,6 +36,7 @@ const AddSheetPanelProbe = () => {
 describe('AppFrame', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
     mockUseDrinksForDate.mockReturnValue({ status: 'loading' });
   });
 
@@ -142,11 +143,25 @@ describe('AppFrame', () => {
     expect(menuButton).toHaveAttribute('aria-expanded', 'true');
     expect(menuButton).toHaveAttribute('aria-controls', 'header-action-menu');
     expect(document.getElementById('header-action-menu')).toBeInTheDocument();
-    expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
+    expect(Array.from(screen.getByRole('menu').querySelectorAll('[role^="menuitem"]')).map((item) => item.textContent)).toEqual([
       'Recommendations',
       'Add new type',
       'Logout',
+      '',
     ]);
+  });
+
+  it('puts a persistent light-theme toggle after every menu action', async () => {
+    renderWithProviders(<AppFrame><div /></AppFrame>);
+    await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+
+    const toggle = screen.getByRole('menuitemcheckbox', { name: 'Light theme' });
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    await userEvent.click(toggle);
+
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+    expect(localStorage.getItem('drinksaver-theme')).toBe('light');
   });
 
   it('navigates to the recommendations screen from the menu', async () => {

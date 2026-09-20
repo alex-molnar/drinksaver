@@ -78,7 +78,7 @@ const TextInput = styled.input`
   min-height: 44px;
   padding: 0 14px;
   border-radius: var(--ds-radius-sm);
-  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 22%, transparent);
+  border: 1.4px solid color-mix(in srgb, var(--ds-ink-primary) 52%, transparent);
   background: color-mix(in srgb, var(--ds-ink-primary) 5%, transparent);
   color: var(--ds-ink-primary);
   font: inherit;
@@ -92,7 +92,7 @@ const SubmitButton = styled.button`
   border-radius: var(--ds-radius-sm);
   border: 0;
   background: var(--ds-accent-primary);
-  color: var(--ds-ink-primary);
+  color: var(--ds-ink-on-accent);
   font-family: var(--ds-type-display-s-font-family);
   font-weight: var(--ds-type-display-s-font-weight);
   font-size: 17px;

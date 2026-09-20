@@ -5,9 +5,7 @@ import { accent, hairline, ink, motionDurations, motionEasings, paper, radii, sp
  * the shape of this interface *is* the shape of the runtime CSS surface. Adding a field adds a
  * variable everywhere `toCssVars` is used; there is no second place to update.
  *
- * `darkTokens` is the only implementation. Per the design doc ("Dark only, deliberately"), the
- * commitment is to the *output*, not to the mechanism: a future light theme is a second object
- * of this same shape, not a rewrite of this file.
+ * Dark and light share this contract so switching themes only replaces values, never layout.
  */
 export interface ThemeTokens {
   surface: SurfaceTokens;
@@ -37,6 +35,7 @@ export interface InkTokens {
   secondary: string;
   tertiary: string;
   onPaper: string;
+  onAccent: string;
 }
 
 export interface LineTokens {
@@ -139,8 +138,8 @@ const fraunces = {
 const familjenGrotesk = "'Familjen Grotesk Variable', 'Familjen Grotesk Fallback', Arial, sans-serif";
 
 /**
- * The only populated `ThemeTokens`. Every colour value is verbatim from the design doc's
- * Colour tokens table; every type value is verbatim from its Type roles table.
+ * The original dark `ThemeTokens`. Every colour value is verbatim from the design doc's Colour
+ * tokens table; every type value is verbatim from its Type roles table.
  */
 export const darkTokens: ThemeTokens = {
   surface: {
@@ -155,6 +154,7 @@ export const darkTokens: ThemeTokens = {
     secondary: ink.secondary,
     tertiary: ink.tertiary,
     onPaper: ink.onPaper,
+    onAccent: ink.primary,
   },
   line: {
     hairline,
@@ -200,4 +200,41 @@ export const darkTokens: ThemeTokens = {
     duration: motionDurations,
     easing: motionEasings,
   },
+};
+
+/** Warm plaster in daylight, keeping the dark theme's painted-board and paper-tab character. */
+export const lightTokens: ThemeTokens = {
+  surface: {
+    ground: '#F3E8D4',
+    raised: '#E9D8BA',
+    panel: '#FBF2E2',
+    recess: '#D8C1A0',
+    paper: '#E5CFA7',
+  },
+  ink: {
+    primary: '#35231B',
+    secondary: '#5C473D',
+    tertiary: '#70574A',
+    onPaper: '#3A281E',
+    onAccent: '#FFF7E7',
+  },
+  line: {
+    hairline: 'rgba(53,35,27,.18)',
+  },
+  accent: {
+    primary: '#B74632',
+    danger: '#B74632',
+    active: '#966018',
+  },
+  texture: darkTokens.texture,
+  elevation: {
+    flat: 'none',
+    raised: '0 1px 2px rgba(75,48,31,.16), 0 5px 14px rgba(75,48,31,.13)',
+    sunken: 'inset 0 2px 4px rgba(75,48,31,.20)',
+    overlay: '0 10px 28px rgba(75,48,31,.22), 0 2px 8px rgba(75,48,31,.14)',
+  },
+  radius: darkTokens.radius,
+  space: darkTokens.space,
+  type: darkTokens.type,
+  motion: darkTokens.motion,
 };

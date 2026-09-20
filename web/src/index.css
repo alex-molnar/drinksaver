@@ -6,9 +6,7 @@
 }
 
 :root {
-  /* Dark only, deliberately: there is no light variant to offer, so this is a fixed
-     declaration rather than a prefers-color-scheme media query. Lets browser-drawn chrome
-     (scrollbars, form controls) match before any of our own CSS has even been read. */
+  /* Synchronous startup code replaces this fallback before React renders. */
   color-scheme: dark;
 }
 

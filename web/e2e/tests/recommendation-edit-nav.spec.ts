@@ -62,7 +62,8 @@ test('editing a recommendation and saving navigates to home page', async ({ page
   // Wait for navigation to home page (happens after save commits)
   await expect(page).toHaveURL('/', { timeout: 15_000 });
 
-  expect(postSaveRequests).toEqual(['edit', 'list']);
+  // The PATCH response is authoritative and replaces the cache, so home must not refetch.
+  expect(postSaveRequests).toEqual(['edit']);
 });
 
 test('mobile drag handle owns touch gestures without disabling name selection', async ({ page }) => {

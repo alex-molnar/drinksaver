@@ -52,7 +52,7 @@ const Bar = styled.div`
 const GhostButton = styled.button`
   min-height: 44px;
   padding: 0 var(--ds-space-lg);
-  border: 1px solid color-mix(in srgb, var(--ds-ink-primary) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ds-ink-primary) 52%, transparent);
   border-radius: var(--ds-radius-sm);
   background: none;
   color: var(--ds-ink-primary);
@@ -67,7 +67,7 @@ const PrimaryButton = styled.button`
   border: 0;
   border-radius: var(--ds-radius-sm);
   background: var(--ds-accent-active);
-  color: var(--ds-ink-primary);
+  color: var(--ds-ink-on-accent);
   font-family: var(--ds-type-display-family);
   font-size: 1rem;
   cursor: pointer;

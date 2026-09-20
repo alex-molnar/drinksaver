@@ -19,10 +19,10 @@ A mobile-first web application for tracking alcohol consumption. Built with Reac
 
 `AppFrame` exposes four actions in the header menu:
 
-- **Settings**: intentionally disabled until its route is available
-- **Recommendations**: intentionally disabled until its route is available
+- **Recommendations**: opens the recommendation editor
 - **Add new type**: opens the existing alcohol-type create panel over the current page; it is not a new route or form
 - **Logout**: delegates to the existing Keycloak auth
+- **Light theme**: the final, separated menu item toggles the visual theme without closing the menu and persists the explicit choice locally
 
 ## Tech Stack
 
@@ -205,9 +205,10 @@ src/
 │   └── useAuth.ts           # Context accessor
 ├── theme/
 │   ├── primitives.ts    # Raw scales. No component imports this
-│   ├── tokens.ts        # The ThemeTokens interface and the dark set
+│   ├── tokens.ts        # Shared ThemeTokens contract plus dark and light sets
 │   ├── cssVars.ts       # Emits --ds-* custom properties
 │   ├── muiTheme.ts      # MUI's behavioural shells, skinned through those variables
+│   ├── ThemeModeProvider.tsx # Applies and persists the selected theme
 │   └── fonts.css        # Self hosted Fraunces and Familjen Grotesk
 ├── drink/
 │   ├── day.ts           # The 06:00 drinking day
@@ -307,9 +308,10 @@ added, never lower them to make a build pass.
 
 ## The interface
 
-The UI is the **Utolsó Kör** direction: a Budapest kocsma. An umber plaster ground, drinks as
-screwed-up enamel signs, a bar menu with dotted leader lines, and a light paper bar tab you cross
-off. Dark only, deliberately. The full reasoning is in
+The UI is the **Utolsó Kör** direction: a Budapest kocsma. Drinks remain screwed-up enamel signs,
+the add flow remains a dotted-leader bar menu, and History remains a paper tab you cross off.
+Dark mode uses an umber night-time plaster; light mode moves the same materials into warm,
+sun-baked plaster without changing the composition. The full original reasoning is in
 `docs/superpowers/specs/2026-09-09-ui-redesign-design.md`, which is the contract this code is
 built against.
 
@@ -322,15 +324,15 @@ exception is `AppErrorBoundary`, whose fallback has to render when the styleshee
 failed to load, so its custom properties each carry a literal behind them.
 
 **Every field and ink pair is contrast gated.** `src/drink/contrast.ts` computes WCAG 2.2 ratios
-and a test fails below 4.5:1 for every entry in the identity table. That test is what caught two
-colours during design; both moved rather than the threshold.
+and a test fails below 4.5:1 for both `inkDark` and `inkLight` in every palette fixture. Runtime
+palette data comes from the backend; if `inkLight` is absent, a plate safely keeps `inkDark`.
 
 ### Components
 
 | Component | What it is | States | Key props |
 | --- | --- | --- | --- |
-| `AppFrame` | The painted board header and bottom nav that frame every screen. Owns navigation and sign-out directly. | Header reads **Tonight** between midnight and the 06:00 rollover, **Today** otherwise, unless a screen names itself. The Add tab opens the sheet in place rather than navigating. | `title?`, `subtitle?`, `children` |
-| `Plate` | One enamel sign. Field colour and ink come from the drink's identity, never from a literal. | `idle`, `saving` (pressed, `aria-busy`), `saved` (stamped for the undo window). A variant renders the dashed "Something else" plate. | `name`, `alcoholTypeId?`, `caption?`, `state`, `onClick` |
+| `AppFrame` | The painted board header and bottom nav that frame every screen. Owns navigation, sign-out and the persisted theme toggle directly. | Header reads **Tonight** between midnight and the 06:00 rollover, **Today** otherwise, unless a screen names itself. The Add tab opens the sheet in place rather than navigating. | `title?`, `subtitle?`, `children` |
+| `Plate` | One enamel sign. Field colour and mode-appropriate ink come from backend design IDs, never from a component literal. | `idle`, `saving` (pressed, `aria-busy`), `done` (stamped for the undo window). A variant renders the dashed "Something else" plate. | `name`, `colorPaletteId?`, `glasswareId?`, `caption?`, `status?`, `onClick` |
 | `PlateGrid` | Two-column grid of plates with deterministic per-index rotation, plus the trailing add plate. | Scrolls; nothing is hidden past the fold. | `items`, `onSelect`, `onAdd` |
 | `Glass` | The four glassware silhouettes. | `tone="ink"` draws a flat silhouette in the surface's own ink, which is what makes a plate read as a sign. `tone="chroma"` fills the liquid with the drink's colour. | `kind`, `chroma`, `foam?`, `tone?` |
 | `TapeStrip` | The undo strip. History reserves an in-flow slot; other pages and open sheets use a floating portal. | `status` (undoable) announces with `role="status"`; the failed variant is `role="alert"` and never auto-dismisses. Its timer pauses while focus or hover is inside it, per WCAG 2.2 SC 2.2.1. | `entry`, `onUndo`, `onRetry`, `stripHandlers`, `container?`, `inline?` |

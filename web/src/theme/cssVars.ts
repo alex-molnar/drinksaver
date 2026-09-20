@@ -36,9 +36,8 @@ export const toCssVars = (tokens: ThemeTokens): CssVarMap => {
 };
 
 /**
- * Sets every custom property from `tokens` on `el`. Called once, in `main.tsx`, against the
- * document root, before the app renders, so every component that reads `var(--ds-*)` in this
- * same paint already has a value rather than a momentary fallback.
+ * Sets every custom property from `tokens` on `el`. Startup applies the stored mode before the
+ * app renders, and `AppThemeProvider` calls it again when the user switches modes.
  */
 export const applyCssVars = (el: HTMLElement, tokens: ThemeTokens): void => {
   for (const [name, value] of Object.entries(toCssVars(tokens))) {
