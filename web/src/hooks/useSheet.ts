@@ -10,6 +10,10 @@ export interface UseSheetResult<P> {
   /** Pops one panel. Dismisses the whole sheet instead, once there is nothing left under the
    *  current one - a header "back" affordance never has to know which case it is in. */
   popPanel: () => void;
+  /** Pops every panel above the root in one go. Used where a flow's own destination is the root
+   *  panel regardless of how many panels were pushed to get here - e.g. creating a catalogue entry
+   *  from several levels deep should land back on the main menu, not unwind one level at a time. */
+  popToRoot: () => void;
   /** Ends the sheet entirely. Wired to the Drawer's own close (Escape, the scrim, and the
    *  physical back button all reach this, whether directly or via the URL's `sheet` param
    *  disappearing on its own). */
@@ -115,7 +119,15 @@ export const useSheet = <P,>(sheetId: string, initialPanel: P): UseSheetResult<P
     setPanels((current) => current.slice(0, -1));
   }, [panels.length, dismiss]);
 
-  return { isOpen, panels, open, pushPanel, popPanel, dismiss };
+  const popToRoot = useCallback(() => {
+    if (panels.length <= 1) {
+      dismiss();
+      return;
+    }
+    setPanels((current) => current.slice(0, 1));
+  }, [panels.length, dismiss]);
+
+  return { isOpen, panels, open, pushPanel, popPanel, popToRoot, dismiss };
 };
 
 export default useSheet;

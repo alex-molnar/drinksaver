@@ -107,6 +107,29 @@ describe('useSheet', () => {
     });
   });
 
+  describe('popToRoot', () => {
+    it('pops every panel above the root in one go, leaving the sheet open', () => {
+      const { result } = renderHook(() => useHarness(), { wrapper: wrapperFrom(['/']) });
+      act(() => result.current.sheet.open());
+      act(() => result.current.sheet.pushPanel({ kind: 'option', field: 'alcoholType' }));
+      act(() => result.current.sheet.pushPanel({ kind: 'create', field: 'alcoholType' }));
+
+      act(() => result.current.sheet.popToRoot());
+
+      expect(result.current.sheet.panels).toEqual([MENU]);
+      expect(result.current.sheet.isOpen).toBe(true);
+    });
+
+    it('dismisses the whole sheet when there is nothing left to pop to', () => {
+      const { result } = renderHook(() => useHarness(), { wrapper: wrapperFrom(['/']) });
+      act(() => result.current.sheet.open());
+
+      act(() => result.current.sheet.popToRoot());
+
+      expect(result.current.sheet.isOpen).toBe(false);
+    });
+  });
+
   it('open() resets the panel stack back to the initial panel', () => {
     const { result } = renderHook(() => useHarness(), { wrapper: wrapperFrom(['/']) });
     act(() => result.current.sheet.open());
