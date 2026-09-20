@@ -1,0 +1,262 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 55;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1234567890ABCDEF1234567890ABCDEF /* DrinkSaverApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDEF1234567890ABCDEF12 /* DrinkSaverApp.swift */; };
+		1234567890ABCDEF1234567890ABCDEF1 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDEF1234567890ABCDEF1234 /* RootView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1234567890ABCDEF1234567890ABCDEF12 /* DrinkSaverApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkSaverApp.swift; sourceTree = "<group>"; };
+		1234567890ABCDEF1234567890ABCDEF1234 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		1234567890ABCDEF1234567890ABCDEF12345 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1234567890ABCDEF1234567890ABCDEF123456 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostProcessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1234567890ABCDEF1234567890ABCDEF1234567 /* DrinkSaver */ = {
+			isa = PBXGroup;
+			children = (
+				1234567890ABCDEF1234567890ABCDEF12 /* DrinkSaverApp.swift */,
+				1234567890ABCDEF1234567890ABCDEF1234 /* RootView.swift */,
+				1234567890ABCDEF1234567890ABCDEF12345 /* Info.plist */,
+			);
+			name = DrinkSaver;
+			sourceTree = "<group>";
+		};
+		1234567890ABCDEF1234567890ABCDEF12345678 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1234567890ABCDEF1234567890ABCDEF123456789 /* DrinkSaver */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1234567890ABCDEF1234567890ABCDEF1234567890 /* Build configuration list for PBXNativeTarget "DrinkSaver" */;
+			buildPhases = (
+				1234567890ABCDEF1234567890ABCDEF123456 /* Frameworks */,
+				1234567890ABCDEF1234567890ABCDEF123456789 /* Sources */,
+				1234567890ABCDEF1234567890ABCDEF1234567890 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DrinkSaver;
+			productName = DrinkSaver;
+			productReference = 1234567890ABCDEF1234567890ABCDEF1234567891 /* DrinkSaver.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1234567890ABCDEF1234567890ABCDEF1234567890 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1200;
+				LastUpgradeCheck = 1200;
+				ORGANIZATIONNAME = "Alex Molnar";
+			};
+			buildConfigurationList = 1234567890ABCDEF1234567890ABCDEF1234567891 /* Build configuration list for PBXProject "DrinkSaver" */;
+			compatibilityVersion = "Xcode 16.0";
+			hasScannedForEncodings = 0;
+			mainGroup = 1234567890ABCDEF1234567890ABCDEF1234567 /* DrinkSaver */;
+			productRefGroup = 1234567890ABCDEF1234567890ABCDEF12345678 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1234567890ABCDEF1234567890ABCDEF123456789 /* DrinkSaver */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1234567890ABCDEF1234567890ABCDEF1234567890 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1234567890ABCDEF1234567890ABCDEF1234567892 /* Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostProcessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1234567890ABCDEF1234567890ABCDEF1234567891 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1234567890ABCDEF1234567890ABCDEF1234567893 /* DrinkSaverApp.swift in Sources */,
+				1234567890ABCDEF1234567890ABCDEF1234567894 /* RootView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostProcessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1234567890ABCDEF1234567890ABCDEF1234567892 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1234567890ABCDEF1234567890ABCDEF1234567893 /* Local.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIVIDE_BY_ZERO = YES;
+				CLANG_WARN_EMPTY_STATEMENT = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				CLANG_WARN_OBJC_IMPLEMENTATION_DEFAULTS = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_RECEIVER_IS_NIL = YES;
+				CLANG_WARN_OBJC_SELECTOR_CONVERSION = YES;
+				CLANG_WARN_OBJC_VARIABLE_EVALUATION = YES;
+				CLANG_WARN_OBJC_VIER_FIELDS = YES;
+				CLANG_WARN_VOID_HIDDEN = YES;
+				CLANG_WARN_ZERO_AS_NULL = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_REPORTS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_EMPTY;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = DrinkSaver/Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				KEEP_PRIVATE_EXTERNS = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 4.3.0;
+				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = apple-generic;
+			};
+			name = Debug;
+		};
+		1234567890ABCDEF1234567890ABCDEF1234567893 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1234567890ABCDEF1234567890ABCDEF1234567894 /* Release.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIVIDE_BY_ZERO = YES;
+				CLANG_WARN_EMPTY_STATEENT = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				CLANG_WARN_OBJC_IMPLEMENTATION_DEFAULTS = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_RECEIVER_IS_NIL = YES;
+				CLANG_WARN_OBJC_SELECTOR_CONVERSION = YES;
+				CLANG_WARN_OBJC_VARIABLE_EVALUATION = YES;
+				CLANG_WARN_OBJC_VIER_FIELDS = YES;
+				CLANG_WARN_VOID_HIDDEN = YES;
+				CLANG_WARN_ZERO_AS_NULL = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_REPORTS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_EMPTY;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = DrinkSaver/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 4.3.0;
+				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = apple-generic;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1234567890ABCDEF1234567890ABCDEF1234567890 /* Build configuration list for PBXNativeTarget "DrinkSaver" */ = {
+			isa = XCConfigurationList;
+			baseConfigurationReference = 0;
+			buildConfigurations = (
+				1234567890ABCDEF1234567890ABCDEF1234567892 /* Debug */,
+				1234567890ABCDEF1234567890ABCDEF1234567893 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1234567890ABCDEF1234567890ABCDEF1234567891 /* Build configuration list for PBXProject "DrinkSaver" */ = {
+			isa = XCConfigurationList;
+			baseConfigurationReference = 0;
+			buildConfigurations = (
+				1234567890ABCDEF1234567890ABCDEF1234567892 /* Debug */,
+				1234567890ABCDEF1234567890ABCDEF1234567893 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 1234567890ABCDEF1234567890ABCDEF1234567890 /* Project object */;
+}
