@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en-US</string>
+    <key>CFBundleIdentifier</key>
+    <string>im.kak.drinksaver</string>
+    <key>CFBundleName</key>
+    <string>DrinkSaver</string>
+    <key>CFBundleVersion</key>
+    <string>1.0</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>UIMainStoryboardFile</key>
+    <string></string>
+    <key>UIRequiredDeviceCapabilities</key>
+    <string>uiipad</string>
+    <key>UIDeviceFamily</key>
+    <integer>1</integer>
+</dict>
+</plist>

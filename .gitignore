@@ -2,3 +2,12 @@
 .metals/
 .bloop/
 .idea/
+
+# iOS Xcode DerivedData
+ios/DerivedData/
+
+# iOS Xcode user state
+*.xcuserstate
+
+# iOS Xcode user data
+xcuserdata/
