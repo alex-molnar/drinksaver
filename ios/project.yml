@@ -29,6 +29,7 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: DrinkSaver/Info.plist
         TARGETED_DEVICE_FAMILY: "1"
+        DEVELOPMENT_TEAM: 777BH83DM5
     scheme:
       testTargets:
         - DrinkSaverTests
