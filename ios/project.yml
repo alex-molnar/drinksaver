@@ -2,7 +2,7 @@ name: DrinkSaver
 options:
   developmentLanguage: en
   deploymentTarget:
-    iOS: "18.0"
+    iOS: "26.0"
   minimumXcodeGenVersion: "2.40.0"
 configs:
   Local: debug
@@ -11,7 +11,7 @@ configs:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
     TARGETED_DEVICE_FAMILY: "1"
     SUPPORTS_MACCATALYST: NO
     SUPPORTED_PLATFORMS: iphoneos iphonesimulator
