@@ -23,8 +23,8 @@ GitHub Actions workflows, sharing only the root `VERSION` file.
 ### Code sharing: none, deliberately
 
 No npm workspace and no shared package. The admin app copies what it needs from `web/`:
-`config.ts`, `api/client.ts`, the four files under `auth/`, and the theme tokens. That is
-roughly 400 lines.
+`config.ts`, `api/client.ts`, the four files under `auth/`, and the three theme files. That
+is roughly 400 lines.
 
 The alternative, a workspace with a `shared/` package, removes the duplication but changes
 `web/`'s build context, its Dockerfile, its CI cache keys and its coverage configuration,
@@ -73,7 +73,7 @@ The one abstraction this design introduces is a section registry.
 
 ```
 admin/src/sections/
-  registry.ts          // SectionDescriptor[]
+  registry.tsx         // SectionDescriptor[]
   palettes/
   glassware/
   recommendations/
@@ -92,7 +92,7 @@ export interface SectionDescriptor {
 }
 ```
 
-`registry.ts` collects them into an array. Navigation and routes are both derived from that
+`registry.tsx` collects them into an array. Navigation and routes are both derived from that
 array, so adding a future admin area is one folder plus one line. There is no plugin
 system, no dynamic import machinery and no configuration file, because a registry array is
 the whole of what "ready for more features" actually requires here.
@@ -106,14 +106,21 @@ MUI's `md`.
 
 ### Visual register
 
-The admin panel reuses the consumer app's design tokens: the same palette variables, the
-same typefaces (Fraunces and Familjen Grotesk), the same surface treatment. It applies them
-in a denser, cooler register: data tables, inline editing, a persistent rail, and very
-little motion.
+`theme/primitives.ts`, `theme/tokens.ts` and `theme/cssVars.ts` are copied from `web/`
+byte for byte, so the admin panel paints on `--ds-surface-ground`, `--ds-ink-primary`,
+`--ds-line-hairline` and the rest of the same generated custom properties the consumer app
+uses. Only the MUI theme on top of them is this application's own.
 
-Reusing the tokens is not laziness, it is a correctness requirement. An administrator
-editing `inkDark` needs the preview to show what a real user will see. A preview rendered
-against an unrelated admin theme would be a lie.
+Copying rather than re-declaring is a correctness requirement, not laziness. An administrator
+editing `inkDark` needs the preview to show what a real user will see, and a parallel token
+set that merely looks similar today would drift into a preview that lies. The admin theme's
+test asserts that every `var(--ds-*)` it names is one the copied files actually define, so a
+plausible but non-existent variable fails the suite rather than rendering as nothing.
+
+What differs is density, not colour: data tables, inline editing, a persistent rail, small
+controls, very little motion. The panel is dark only, because it is used at a desk rather
+than in a bar at midnight and on a terrace at noon; the palette editor renders both modes
+side by side regardless, which is the one place both are needed.
 
 ## 4. The four sections
 
@@ -169,6 +176,11 @@ Tabs for alcohol types, alcohol subtypes, volumes, brands, beer flavours and con
 types. Each tab is a table of every row across all users, with columns for name, owner,
 design assignment and shared state. The default filter is "user-defined only", because
 reviewing what users have created is the job; showing everything is the exception.
+
+This is the one screen with no natural ceiling, since it holds every row every user has ever
+created, so it carries a name filter and shows how many rows the filters are hiding. The
+filtering is client-side over the full list, which is honest into the low thousands of rows
+and becomes a server-side query parameter after that, not a faster filter.
 
 Per row: rename, change the palette or glassware assignment, and publish. Publishing calls
 the dedicated action endpoint (section 5), is confirmed in a dialog naming the entry, and is
@@ -286,6 +298,22 @@ and `deploy/values/admin-prod.yaml`, own image `ghcr.io/alex-molnar/drinksaver-a
 | Production | `drinksaver` | `admin.drinksaver.kak.im` |
 
 Both on the existing traefik ingress class with the `letsencrypt-prod` cluster issuer.
+
+### Exposure, and what is accepted
+
+The panel sits on the public internet behind Keycloak and nothing else: no IP allowlist, no
+VPN, no ingress-level authentication. That is an accepted risk, in keeping with how SEC-4 is
+recorded, and it is written down rather than left implicit. The controls that do apply are
+the group gate, the backend rejecting `/v1/admin/**` for a non-member, and the response
+headers below.
+
+`admin/nginx.conf` sets `Content-Security-Policy: frame-ancestors 'none'` and
+`X-Frame-Options: DENY`, plus `X-Content-Type-Options: nosniff` and
+`Referrer-Policy: no-referrer`. The consumer app sets none of these. The difference is that
+this panel's buttons publish reference data to every user of the product, so a framed copy
+of it and one misdirected click is a cheap way to make an administrator publish something
+they never read. `X-Robots-Tag: noindex, nofollow` covers every response, not just the
+document the meta tag covers.
 
 Four workflow changes, mirroring the web pipeline exactly:
 

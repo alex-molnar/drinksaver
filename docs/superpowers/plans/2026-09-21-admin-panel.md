@@ -570,7 +570,7 @@ git commit -m "feat(admin): runtime configuration read from an injected global"
 ### Task 3: Keycloak authentication and the admin group gate
 
 **Files:**
-- Create: `admin/src/auth/keycloak.ts`, `admin/src/auth/AuthContext.ts`, `admin/src/auth/KeycloakProvider.tsx`, `admin/src/auth/useAuth.ts`, `admin/src/auth/adminGroup.ts`, `admin/src/auth/AdminGate.tsx`, `admin/src/auth/index.ts`
+- Create: `admin/src/auth/keycloak.ts`, `admin/src/auth/AuthContext.ts`, `admin/src/auth/KeycloakProvider.tsx`, `admin/src/auth/useAuth.ts`, `admin/src/auth/adminGroup.ts`, `admin/src/auth/AdminGate.tsx`
 - Test: `admin/src/auth/adminGroup.test.ts`, `admin/src/auth/KeycloakProvider.test.tsx`, `admin/src/auth/AdminGate.test.tsx`
 
 **Interfaces:**
@@ -578,7 +578,6 @@ git commit -m "feat(admin): runtime configuration read from an injected global"
 - Produces:
   - `isAdmin(groups: unknown): boolean` and `ADMIN_GROUP` from `auth/adminGroup.ts`
   - `AuthContextType { isAuthenticated, isLoading, isAdmin, token, userId, username, login, logout, keycloak }` from `auth/AuthContext.ts`
-  - `KeycloakProvider`, `useAuth`, `AdminGate`, `keycloak` re-exported from `auth/index.ts`
   - Task 6 wraps the shell in `<KeycloakProvider><AdminGate>`.
 
 - [ ] **Step 1: Write the failing test for the group check**
@@ -1039,23 +1038,12 @@ export const AdminGate = ({ children }: { children: ReactNode }) => {
 export default AdminGate;
 ```
 
-- [ ] **Step 12: Write `admin/src/auth/index.ts`**
-
-```ts
-export { KeycloakProvider } from './KeycloakProvider';
-export { AdminGate } from './AdminGate';
-export { useAuth } from './useAuth';
-export { isAdmin, ADMIN_GROUP } from './adminGroup';
-export { AuthContext, type AuthContextType } from './AuthContext';
-export { default as keycloak } from './keycloak';
-```
-
-- [ ] **Step 13: Run the whole suite and lint**
+- [ ] **Step 12: Run the whole suite and lint**
 
 Run: `cd admin && npm run lint && npm test`
 Expected: all tests pass, lint clean.
 
-- [ ] **Step 14: Commit**
+- [ ] **Step 13: Commit**
 
 ```bash
 git add admin/src/auth/
@@ -1177,15 +1165,6 @@ export interface ConsumptionType extends AdminOwned {
   name: string;
   glasswareId: number;
 }
-
-/** Every catalogue row shares this shape, which is what lets one table render all six. */
-export type CatalogueEntity =
-  | AlcoholType
-  | AlcoholSubtype
-  | AlcoholVolume
-  | Brand
-  | BeerFlavour
-  | ConsumptionType;
 ```
 
 - [ ] **Step 2: Write `admin/src/api/client.ts`**
@@ -1251,7 +1230,6 @@ apiClient.interceptors.response.use(
 );
 
 export default apiClient;
-export { API_BASE_URL };
 ```
 
 - [ ] **Step 3: Write the failing test for error classification**
@@ -1662,212 +1640,160 @@ git commit -m "feat(admin): wire types, axios client and the admin endpoint modu
 
 ---
 
-### Task 5: Theme tokens and the admin MUI theme
+### Task 5: Theme, copied from the consumer app
 
 **Files:**
-- Create: `admin/src/theme/tokens.ts`, `admin/src/theme/fonts.css`, `admin/src/theme/muiTheme.ts`, `admin/src/theme/AdminThemeProvider.tsx`
+- Copy from `web/src/theme/`: `primitives.ts`, `tokens.ts`, `cssVars.ts` into `admin/src/theme/`
+- Create: `admin/src/theme/fonts.css`, `admin/src/theme/muiTheme.ts`, `admin/src/theme/AdminThemeProvider.tsx`
 - Modify: `admin/src/index.css`
-- Test: `admin/src/theme/tokens.test.ts`, `admin/src/theme/muiTheme.test.ts`
+- Test: `admin/src/theme/muiTheme.test.ts`
 
 **Interfaces:**
 - Consumes: nothing.
 - Produces:
-  - `TOKENS: Record<string, string>` and `tokenCss(mode: 'light' | 'dark'): string` from `theme/tokens.ts`
-  - `adminTheme(mode: 'light' | 'dark'): Theme` from `theme/muiTheme.ts`
-  - `AdminThemeProvider` from `theme/AdminThemeProvider.tsx`, which Task 6 wraps the shell in.
+  - `darkTokens`, `lightTokens`, `type ThemeTokens` from `theme/tokens.ts` (copied)
+  - `toCssVars`, `applyCssVars` from `theme/cssVars.ts` (copied)
+  - `adminTheme(): Theme` from `theme/muiTheme.ts`
+  - `AdminThemeProvider` from `theme/AdminThemeProvider.tsx`, which Task 6 wraps the shell in
+- The custom property names every later task reads come from the copied files, not from anything
+  written here. The ones used in this plan are `--ds-surface-ground`, `--ds-surface-raised`,
+  `--ds-surface-panel`, `--ds-ink-primary`, `--ds-ink-secondary`, `--ds-line-hairline` and
+  `--ds-accent-primary`.
 
-Read `web/src/theme/tokens.ts` and `web/src/theme/primitives.ts` before starting. The token
-names must match the consumer app exactly, or a palette preview is rendered against surfaces
-the real app does not have.
+The palette editor previews a colour against the surfaces a real user sees. That is only true if
+the surfaces are the same objects, not a parallel set that happens to look similar today. So the
+token files are copied verbatim rather than rewritten, and the admin register lives entirely in
+the MUI theme on top of them: small controls, tight cells, no elevation.
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Copy the three token files unchanged**
 
-`admin/src/theme/tokens.test.ts`:
-
-```ts
-import { describe, expect, it } from 'vitest';
-import { TOKENS, tokenCss } from './tokens';
-
-describe('admin tokens', () => {
-  it('declares every token the sections read', () => {
-    for (const name of ['--ds-surface', '--ds-surface-raised', '--ds-ink', '--ds-ink-muted', '--ds-line', '--ds-accent']) {
-      expect(Object.keys(TOKENS)).toContain(name);
-    }
-  });
-
-  it('emits a custom property declaration per token', () => {
-    const css = tokenCss('dark');
-    for (const name of Object.keys(TOKENS)) {
-      expect(css).toContain(`${name}:`);
-    }
-  });
-
-  it('produces different surfaces for the two modes', () => {
-    expect(tokenCss('light')).not.toBe(tokenCss('dark'));
-  });
-});
+```bash
+cd /Users/alexmolnar/personal/sandbox/adminpaneler
+mkdir -p admin/src/theme
+cp web/src/theme/primitives.ts web/src/theme/tokens.ts web/src/theme/cssVars.ts admin/src/theme/
+cp web/src/theme/cssVars.test.ts web/src/theme/tokens.test.ts admin/src/theme/
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+Copy the tests too. They are the proof that the copy is intact, and they cost nothing to keep
+green. Do not edit any of the five files: a diff against `web/src/theme/` is what tells a future
+reader the two are still the same, and `docs/remaining-work.md` records the duplication (Task 14).
 
-Run: `cd admin && npx vitest run src/theme/tokens.test.ts`
-Expected: FAIL, cannot resolve `./tokens`.
+- [ ] **Step 2: Confirm the copies are byte-identical and their tests pass**
 
-- [ ] **Step 3: Write `admin/src/theme/tokens.ts`**
-
-The values below are the admin register: the consumer app's hues, flattened and cooled for a
-dense tool. Copy the exact hex values for `--ds-accent` and the ink pair from
-`web/src/theme/tokens.ts` so a palette preview is truthful; the surface and line values are
-this application's own.
-
-```ts
-/**
- * Design tokens for the admin panel.
- *
- * The names match web/src/theme/tokens.ts on purpose. A palette editor previewing a
- * colour has to render it against the same surfaces the consumer app uses, or the
- * preview is a lie, and matching names are what let a component be read across both
- * applications without translation.
- *
- * The values are the admin register: same hues, flatter and cooler, because this is a
- * dense desk tool rather than a phone app.
- */
-export const TOKENS = {
-  '--ds-surface': 'surface',
-  '--ds-surface-raised': 'surfaceRaised',
-  '--ds-ink': 'ink',
-  '--ds-ink-muted': 'inkMuted',
-  '--ds-line': 'line',
-  '--ds-accent': 'accent',
-} as const;
-
-export type TokenName = keyof typeof TOKENS;
-export type ThemeMode = 'light' | 'dark';
-
-const PALETTES: Record<ThemeMode, Record<TokenName, string>> = {
-  dark: {
-    '--ds-surface': '#151412',
-    '--ds-surface-raised': '#1f1d1a',
-    '--ds-ink': '#f2ece1',
-    '--ds-ink-muted': '#a49b8b',
-    '--ds-line': '#2e2b26',
-    '--ds-accent': '#e8c37e',
-  },
-  light: {
-    '--ds-surface': '#faf7f1',
-    '--ds-surface-raised': '#ffffff',
-    '--ds-ink': '#1b1a17',
-    '--ds-ink-muted': '#6b6357',
-    '--ds-line': '#e2dbcd',
-    '--ds-accent': '#9a6b1f',
-  },
-};
-
-export const tokenValues = (mode: ThemeMode): Record<TokenName, string> => PALETTES[mode];
-
-/** The custom property block for a mode, ready to drop into a :root rule. */
-export const tokenCss = (mode: ThemeMode): string =>
-  (Object.keys(TOKENS) as TokenName[])
-    .map((name) => `${name}: ${PALETTES[mode][name]};`)
-    .join('\n  ');
+```bash
+cd /Users/alexmolnar/personal/sandbox/adminpaneler
+for f in primitives.ts tokens.ts cssVars.ts; do diff -q "web/src/theme/$f" "admin/src/theme/$f"; done
+cd admin && npx vitest run src/theme
 ```
 
-- [ ] **Step 4: Run it to verify it passes**
+Expected: `diff` prints nothing for all three, and the copied tests pass. If a copied test imports
+something outside `src/theme/`, copy that too or stop and reconsider: a token file reaching into
+the rest of the web app is a sign this cannot be a clean copy.
 
-Run: `cd admin && npx vitest run src/theme/tokens.test.ts`
-Expected: 3 passed.
-
-- [ ] **Step 5: Write the failing test for the MUI theme**
-
-`admin/src/theme/muiTheme.test.ts`:
-
-```ts
-import { describe, expect, it } from 'vitest';
-import { adminTheme } from './muiTheme';
-
-describe('adminTheme', () => {
-  it('reads its palette from the tokens rather than from MUI defaults', () => {
-    const theme = adminTheme('dark');
-    expect(theme.palette.background.default).toBe('var(--ds-surface)');
-    expect(theme.palette.text.primary).toBe('var(--ds-ink)');
-  });
-
-  it('carries the mode through so MUI components pick the right contrast', () => {
-    expect(adminTheme('light').palette.mode).toBe('light');
-    expect(adminTheme('dark').palette.mode).toBe('dark');
-  });
-
-  it('sets the display and body families the repository uses', () => {
-    const theme = adminTheme('dark');
-    expect(theme.typography.fontFamily).toMatch(/Familjen Grotesk/);
-    expect(theme.typography.h1.fontFamily).toMatch(/Fraunces/);
-  });
-
-  it('places the md breakpoint at 900, which is where the rail collapses', () => {
-    expect(adminTheme('dark').breakpoints.values.md).toBe(900);
-  });
-});
-```
-
-- [ ] **Step 6: Run it to verify it fails**
-
-Run: `cd admin && npx vitest run src/theme/muiTheme.test.ts`
-Expected: FAIL, cannot resolve `./muiTheme`.
-
-- [ ] **Step 7: Write `admin/src/theme/muiTheme.ts` and `admin/src/theme/fonts.css`**
-
-`admin/src/theme/fonts.css`:
+- [ ] **Step 3: Write `admin/src/theme/fonts.css`**
 
 ```css
 @import '@fontsource-variable/fraunces';
 @import '@fontsource-variable/familjen-grotesk';
 ```
 
-`admin/src/theme/muiTheme.ts`:
+- [ ] **Step 4: Write the failing test for the MUI theme**
+
+`admin/src/theme/muiTheme.test.ts`:
+
+```ts
+import { describe, expect, it } from 'vitest';
+import { adminTheme } from './muiTheme';
+import { toCssVars } from './cssVars';
+import { darkTokens } from './tokens';
+
+describe('adminTheme', () => {
+  it('reads its palette from the shared custom properties, not from MUI defaults', () => {
+    const theme = adminTheme();
+    expect(theme.palette.background.default).toBe('var(--ds-surface-ground)');
+    expect(theme.palette.background.paper).toBe('var(--ds-surface-raised)');
+    expect(theme.palette.text.primary).toBe('var(--ds-ink-primary)');
+    expect(theme.palette.divider).toBe('var(--ds-line-hairline)');
+  });
+
+  it('only names custom properties the token files actually define', () => {
+    const defined = new Set(Object.keys(toCssVars(darkTokens)));
+    const used = JSON.stringify(adminTheme()).match(/--ds-[a-z0-9-]+/g) ?? [];
+    expect(used.length).toBeGreaterThan(0);
+    for (const name of used) {
+      expect(defined).toContain(name);
+    }
+  });
+
+  it('places the md breakpoint at 900, which is where the rail collapses', () => {
+    expect(adminTheme().breakpoints.values.md).toBe(900);
+  });
+
+  it('is denser than the consumer app: small controls by default', () => {
+    const theme = adminTheme();
+    expect(theme.components?.MuiTextField?.defaultProps?.size).toBe('small');
+    expect(theme.components?.MuiTable?.defaultProps?.size).toBe('small');
+  });
+});
+```
+
+The second test is the one that matters. It is what stops this plan's invented names from coming
+back: any `var(--ds-*)` in the theme that the copied token files do not define fails the suite.
+
+- [ ] **Step 5: Run it to verify it fails**
+
+Run: `cd admin && npx vitest run src/theme/muiTheme.test.ts`
+Expected: FAIL, cannot resolve `./muiTheme`.
+
+- [ ] **Step 6: Write `admin/src/theme/muiTheme.ts`**
 
 ```ts
 import { createTheme, type Theme } from '@mui/material/styles';
-import type { ThemeMode } from './tokens';
 
 const BODY = "'Familjen Grotesk Variable', system-ui, sans-serif";
 const DISPLAY = "'Fraunces Variable', Georgia, serif";
 
 /**
- * The MUI theme reads custom properties rather than literal colours, so a mode switch
- * is a change to one :root block instead of a re-created theme object, and so a
- * component can be styled from either MUI's palette or a raw var() without the two
- * disagreeing.
+ * The admin register, built on the consumer app's tokens.
  *
- * Density is where this differs most from the consumer app: small controls, tight
- * table cells, no elevation. A curation tool shows more rows per screen than a phone
- * app shows drinks.
+ * Every colour is a custom property defined by the copied theme/tokens.ts, so a palette
+ * previewed here sits on the same surfaces a real user sees. muiTheme.test.ts asserts that
+ * every name used below is one the token files actually define, which is what keeps a
+ * plausible-looking but non-existent variable from silently rendering as nothing.
+ *
+ * What differs from the consumer app is density, not colour: small controls, tight table
+ * cells, flat surfaces. A curation tool shows more rows per screen than a phone shows drinks.
+ *
+ * Dark only. The consumer app offers both modes because a phone is used in a bar at midnight
+ * and on a terrace at noon; this is used at a desk. The palette editor renders both modes
+ * side by side regardless, which is the one place both are needed.
  */
-export const adminTheme = (mode: ThemeMode): Theme =>
+export const adminTheme = (): Theme =>
   createTheme({
     breakpoints: {
       values: { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 },
     },
     palette: {
-      mode,
+      mode: 'dark',
       background: {
-        default: 'var(--ds-surface)',
+        default: 'var(--ds-surface-ground)',
         paper: 'var(--ds-surface-raised)',
       },
       text: {
-        primary: 'var(--ds-ink)',
-        secondary: 'var(--ds-ink-muted)',
+        primary: 'var(--ds-ink-primary)',
+        secondary: 'var(--ds-ink-secondary)',
       },
-      divider: 'var(--ds-line)',
+      divider: 'var(--ds-line-hairline)',
       primary: {
-        main: 'var(--ds-accent)',
-        contrastText: 'var(--ds-surface)',
+        main: 'var(--ds-accent-primary)',
+        contrastText: 'var(--ds-ink-on-accent)',
       },
     },
     shape: { borderRadius: 6 },
     typography: {
       fontFamily: BODY,
-      h1: { fontFamily: DISPLAY, fontSize: '1.75rem', fontWeight: 600 },
-      h2: { fontFamily: DISPLAY, fontSize: '1.375rem', fontWeight: 600 },
+      h1: { fontFamily: DISPLAY, fontSize: '1.75rem', fontWeight: 700 },
+      h2: { fontFamily: DISPLAY, fontSize: '1.375rem', fontWeight: 700 },
       h3: { fontFamily: DISPLAY, fontSize: '1.125rem', fontWeight: 600 },
       button: { textTransform: 'none', fontWeight: 600 },
     },
@@ -1875,40 +1801,43 @@ export const adminTheme = (mode: ThemeMode): Theme =>
       MuiTextField: { defaultProps: { size: 'small', variant: 'outlined' } },
       MuiButton: { defaultProps: { disableElevation: true } },
       MuiTable: { defaultProps: { size: 'small' } },
-      MuiPaper: { defaultProps: { elevation: 0 }, styleOverrides: { root: { border: '1px solid var(--ds-line)' } } },
+      MuiPaper: {
+        defaultProps: { elevation: 0 },
+        styleOverrides: { root: { border: '1px solid var(--ds-line-hairline)' } },
+      },
     },
   });
 
 export default adminTheme;
 ```
 
-- [ ] **Step 8: Write `admin/src/theme/AdminThemeProvider.tsx` and update `admin/src/index.css`**
+If the second test fails on `--ds-ink-on-accent`, the copied `tokens.ts` names that leaf
+differently. Read `toCssVars(darkTokens)` and use the name it actually produces rather than
+adding the leaf to the copied file, which would break the byte-identical check from step 2.
 
-`admin/src/theme/AdminThemeProvider.tsx`:
+- [ ] **Step 7: Write `admin/src/theme/AdminThemeProvider.tsx`**
 
 ```tsx
-import { useMemo, type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import { adminTheme } from './muiTheme';
-import type { ThemeMode } from './tokens';
+import { applyCssVars } from './cssVars';
+import { darkTokens } from './tokens';
+
+const theme = adminTheme();
 
 /**
- * The mode is fixed rather than switchable. The consumer app offers both because a
- * phone is used in a bar at midnight and on a terrace at noon; an admin panel is used
- * at a desk, and a toggle nobody asked for is a preference to persist, a test matrix
- * to double and a preview to keep honest in two directions.
+ * Applies the shared custom properties to the document, then MUI's theme on top.
  *
- * The palette editor previews both modes side by side regardless, which is the only
- * place both are actually needed.
+ * applyCssVars is the same function the consumer app uses, so the two cannot drift in how a
+ * token reaches the DOM. The theme object is created once at module scope: it has no inputs,
+ * so rebuilding it per render would allocate for nothing.
  */
-export const AdminThemeProvider = ({
-  mode = 'dark',
-  children,
-}: {
-  mode?: ThemeMode;
-  children: ReactNode;
-}) => {
-  const theme = useMemo(() => adminTheme(mode), [mode]);
+export const AdminThemeProvider = ({ children }: { children: ReactNode }) => {
+  useEffect(() => {
+    applyCssVars(document.documentElement, darkTokens);
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -1920,20 +1849,21 @@ export const AdminThemeProvider = ({
 export default AdminThemeProvider;
 ```
 
-Replace `admin/src/index.css` with the token block. `tokenCss` generates the same values; the
-static copy here is what paints before React mounts, which is what keeps the first frame from
-flashing white:
+- [ ] **Step 8: Update `admin/src/index.css`**
+
+The provider applies the full token set once React mounts. This file carries only what has to
+paint before that, so the first frame is not a white flash:
 
 ```css
 @import './theme/fonts.css';
 
 :root {
-  --ds-surface: #151412;
-  --ds-surface-raised: #1f1d1a;
-  --ds-ink: #f2ece1;
-  --ds-ink-muted: #a49b8b;
-  --ds-line: #2e2b26;
-  --ds-accent: #e8c37e;
+  /* The provider applies the full token set from theme/tokens.ts on mount. These two are
+     duplicated here because they paint before React runs, and a white first frame on a dark
+     application is worse than one duplicated pair. Keep them in step with darkTokens.surface
+     .ground and darkTokens.ink.primary. */
+  --ds-surface-ground: #191712;
+  --ds-ink-primary: #f2ece1;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -1945,21 +1875,24 @@ body,
 #root {
   height: 100%;
   margin: 0;
-  background: var(--ds-surface);
-  color: var(--ds-ink);
+  background: var(--ds-surface-ground);
+  color: var(--ds-ink-primary);
 }
 ```
 
-- [ ] **Step 9: Run the theme tests and lint**
+Read the real values out of the copied `primitives.ts` (`umber.ground` and `ink.primary`) and
+use those, not the two above, which are illustrative.
 
-Run: `cd admin && npx vitest run src/theme && npm run lint`
-Expected: 7 passed, lint clean.
+- [ ] **Step 9: Run the theme tests, lint and build**
+
+Run: `cd admin && npx vitest run src/theme && npm run lint && npm run build`
+Expected: the copied tests and the four new ones pass, lint clean, build succeeds.
 
 - [ ] **Step 10: Commit**
 
 ```bash
 git add admin/src/theme/ admin/src/index.css
-git commit -m "feat(admin): design tokens and the admin MUI theme"
+git commit -m "feat(admin): theme built on the consumer app's token files"
 ```
 
 ---
@@ -2284,7 +2217,7 @@ export const AdminShell = ({ children }: { children: ReactNode }) => {
           sx={{
             width: RAIL_WIDTH,
             flexShrink: 0,
-            borderRight: '1px solid var(--ds-line)',
+            borderRight: '1px solid var(--ds-line-hairline)',
             bgcolor: 'var(--ds-surface-raised)',
             display: 'flex',
             flexDirection: 'column',
@@ -2299,7 +2232,7 @@ export const AdminShell = ({ children }: { children: ReactNode }) => {
             </Typography>
           </Box>
           <SectionNav />
-          <Box sx={{ mt: 'auto', p: 2, borderTop: '1px solid var(--ds-line)' }}>
+          <Box sx={{ mt: 'auto', p: 2, borderTop: '1px solid var(--ds-line-hairline)' }}>
             <Typography variant="body2" noWrap>
               {username}
             </Typography>
@@ -2321,7 +2254,7 @@ export const AdminShell = ({ children }: { children: ReactNode }) => {
           <AppBar
             position="sticky"
             color="transparent"
-            sx={{ borderBottom: '1px solid var(--ds-line)', bgcolor: 'var(--ds-surface-raised)' }}
+            sx={{ borderBottom: '1px solid var(--ds-line-hairline)', bgcolor: 'var(--ds-surface-raised)' }}
           >
             <Toolbar>
               <IconButton
@@ -2497,14 +2430,14 @@ git commit -m "feat(admin): section registry, shell and routing"
 ### Task 7: Shared query hooks, usage counts and the responsive table
 
 **Files:**
-- Create: `admin/src/api/queries.ts`, `admin/src/design/usageCounts.ts`, `admin/src/components/ResponsiveTable.tsx`, `admin/src/components/ConfirmDialog.tsx`, `admin/src/test/test-utils.tsx`
-- Test: `admin/src/design/usageCounts.test.ts`, `admin/src/components/ResponsiveTable.test.tsx`, `admin/src/components/ConfirmDialog.test.tsx`
+- Create: `admin/src/api/queries.ts`, `admin/src/usageCounts.ts`, `admin/src/components/ResponsiveTable.tsx`, `admin/src/components/ConfirmDialog.tsx`, `admin/src/test/test-utils.tsx`
+- Test: `admin/src/usageCounts.test.ts`, `admin/src/components/ResponsiveTable.test.tsx`, `admin/src/components/ConfirmDialog.test.tsx`
 
 **Interfaces:**
 - Consumes: `api/admin.ts` (Task 4), the theme (Task 5).
 - Produces:
   - `queryKeys` and the hooks `usePalettes()`, `useGlassware()`, `useDefaultRecommendations()`, `useAlcoholTypes()`, `useBrands()`, `useConsumptionTypes()` from `api/queries.ts`
-  - `designUsage(input): UsageCounts` from `design/usageCounts.ts`, where
+  - `designUsage(input): UsageCounts` from `usageCounts.ts`, where
     `interface UsageCounts { palettes: Map<number, number>; glassware: Map<number, number> }`
   - `ResponsiveTable<T>` from `components/ResponsiveTable.tsx`
   - `ConfirmDialog` from `components/ConfirmDialog.tsx`
@@ -2513,7 +2446,7 @@ git commit -m "feat(admin): section registry, shell and routing"
 
 - [ ] **Step 1: Write the failing test for usage counts**
 
-`admin/src/design/usageCounts.test.ts`:
+`admin/src/usageCounts.test.ts`:
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -2564,13 +2497,13 @@ describe('designUsage', () => {
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `cd admin && npx vitest run src/design/usageCounts.test.ts`
+Run: `cd admin && npx vitest run src/usageCounts.test.ts`
 Expected: FAIL, cannot resolve `./usageCounts`.
 
-- [ ] **Step 3: Write `admin/src/design/usageCounts.ts`**
+- [ ] **Step 3: Write `admin/src/usageCounts.ts`**
 
 ```ts
-import type { AlcoholType, Brand, ConsumptionType } from '../types/api';
+import type { AlcoholType, Brand, ConsumptionType } from './types/api';
 
 export interface UsageCounts {
   palettes: Map<number, number>;
@@ -2624,7 +2557,7 @@ export const designUsage = ({
 
 - [ ] **Step 4: Run it to verify it passes**
 
-Run: `cd admin && npx vitest run src/design/usageCounts.test.ts`
+Run: `cd admin && npx vitest run src/usageCounts.test.ts`
 Expected: 4 passed.
 
 - [ ] **Step 5: Write `admin/src/api/queries.ts`**
@@ -3097,7 +3030,7 @@ Expected: all green.
 - [ ] **Step 14: Commit**
 
 ```bash
-git add admin/src/api/queries.ts admin/src/design/ admin/src/components/ admin/src/test/
+git add admin/src/api/queries.ts admin/src/usageCounts.ts admin/src/usageCounts.test.ts admin/src/components/ admin/src/test/
 git commit -m "feat(admin): query keys, usage counts and the shared table and dialog"
 ```
 
@@ -3376,7 +3309,7 @@ const ColourField = ({
         aria-label={`${label} colour`}
         value={normalised ?? '#000000'}
         onChange={(event) => onChange(event.target.value)}
-        sx={{ width: 44, height: 40, p: 0, border: '1px solid var(--ds-line)', borderRadius: 1, background: 'none' }}
+        sx={{ width: 44, height: 40, p: 0, border: '1px solid var(--ds-line-hairline)', borderRadius: 1, background: 'none' }}
       />
       <TextField
         label={`${label} hex`}
@@ -3595,6 +3528,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert, Box, Button, Dialog, DialogContent, DialogTitle, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+// display:none and visibility:hidden are not exposed to assistive technology, so a
+// description hidden that way is not a description at all. This is the one clipping
+// pattern screen readers do read.
+import { visuallyHidden } from '@mui/utils';
 import {
   createColorPalette,
   deleteColorPalette,
@@ -3602,7 +3539,7 @@ import {
 } from '../../api/admin';
 import { queryKeys, useAlcoholTypes, useBrands, useConsumptionTypes, usePalettes } from '../../api/queries';
 import { apiErrorMessage } from '../../api/errors';
-import { designUsage } from '../../design/usageCounts';
+import { designUsage } from '../../usageCounts';
 import { ResponsiveTable, type Column } from '../../components/ResponsiveTable';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { PaletteEditor } from './PaletteEditor';
@@ -3670,7 +3607,7 @@ export const PalettesSection = () => {
               <Box
                 key={index}
                 aria-hidden
-                sx={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid var(--ds-line)', background: colour }}
+                sx={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid var(--ds-line-hairline)', background: colour }}
               />
             ) : null
           )}
@@ -3710,7 +3647,7 @@ export const PalettesSection = () => {
                 >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
-                <Box component="span" id={`delete-reason-${palette.id}`} sx={{ display: 'none' }}>
+                <Box component="span" id={`delete-reason-${palette.id}`} sx={visuallyHidden}>
                   {reason}
                 </Box>
               </span>
@@ -4347,6 +4284,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert, Box, Button, Dialog, DialogContent, DialogTitle, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+// See PalettesSection: display:none would hide this from assistive technology too.
+import { visuallyHidden } from '@mui/utils';
 import { createGlassware, deleteGlassware, updateGlassware } from '../../api/admin';
 import {
   queryKeys,
@@ -4357,7 +4296,7 @@ import {
   usePalettes,
 } from '../../api/queries';
 import { apiErrorMessage } from '../../api/errors';
-import { designUsage } from '../../design/usageCounts';
+import { designUsage } from '../../usageCounts';
 import { ResponsiveTable, type Column } from '../../components/ResponsiveTable';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { GlasswareEditor } from './GlasswareEditor';
@@ -4455,7 +4394,7 @@ export const GlasswareSection = () => {
                 >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
-                <Box component="span" id={`delete-reason-${glass.id}`} sx={{ display: 'none' }}>
+                <Box component="span" id={`delete-reason-${glass.id}`} sx={visuallyHidden}>
                   {reason}
                 </Box>
               </span>
@@ -4693,11 +4632,11 @@ Expected: 7 passed.
 
 - [ ] **Step 6: Add the dependent catalogue hooks to `admin/src/api/queries.ts`**
 
-Append:
+Add the three names to the existing `import { ... } from './admin'` at the top of the file,
+which already imports `getAlcoholTypes` and the rest. They are `getAlcoholSubtypes`,
+`getAlcoholVolumes` and `getBeerFlavours`. Then append the hooks below the existing ones:
 
 ```ts
-import { getAlcoholSubtypes, getAlcoholVolumes, getBeerFlavours } from './admin';
-
 /**
  * The dependent lists. `enabled` keeps them from firing with an undefined id, which
  * would otherwise request /v1/admin/alcohol/types/undefined/subtypes and 404 every time
@@ -5654,6 +5593,18 @@ describe('CatalogueSection', () => {
     expect(await screen.findByText('Beer')).toBeInTheDocument();
   });
 
+  it('filters by name, and says so when nothing matches', async () => {
+    renderWithProviders(<CatalogueSection />);
+    await screen.findByText('Mead');
+
+    await userEvent.type(screen.getByLabelText(/search by name/i), 'mea');
+    expect(screen.getByText('Mead')).toBeInTheDocument();
+    expect(screen.queryByText('My draft')).not.toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText(/search by name/i), 'zzz');
+    expect(await screen.findByText(/nothing matches the current filters/i)).toBeInTheDocument();
+  });
+
   it('labels the owner of each row', async () => {
     renderWithProviders(<CatalogueSection />);
     await screen.findByText('Mead');
@@ -5761,6 +5712,8 @@ interface Props {
   currentUserId: string | undefined;
   isLoading: boolean;
   error?: string;
+  /** Distinguishes "no rows match the filters" from "this kind has no rows at all". */
+  emptyMessage?: string;
   onRename: (id: number, name: string) => void;
   onAssign: (id: number, changes: { colorPaletteId?: number; glasswareId?: number }) => void;
   onTogglePublish: (row: Row) => void;
@@ -5774,6 +5727,7 @@ export const CatalogueTable = ({
   currentUserId,
   isLoading,
   error,
+  emptyMessage = 'Nothing to review here.',
   onRename,
   onAssign,
   onTogglePublish,
@@ -5877,7 +5831,7 @@ export const CatalogueTable = ({
         rowKey={(row) => row.id}
         isLoading={isLoading}
         error={error}
-        empty="Nothing to review here."
+        empty={emptyMessage}
       />
     </Stack>
   );
@@ -5952,6 +5906,7 @@ export const CatalogueSection = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const [parentId, setParentId] = useState<number | undefined>();
   const [userDefinedOnly, setUserDefinedOnly] = useState(true);
+  const [search, setSearch] = useState('');
   const [publishing, setPublishing] = useState<Row | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -5973,10 +5928,19 @@ export const CatalogueSection = () => {
     enabled: !needsParent,
   });
 
+  /**
+   * This is the one list in the application with no ceiling: it is every row every user has
+   * created, and it only grows. A name filter is what makes it usable past the first screenful.
+   *
+   * ponytail: filtered client-side over the full list. Fine into the low thousands of rows;
+   * past that this needs a server-side query parameter and pagination, not a faster filter.
+   */
   const rows = useMemo(() => {
     const all = list.data ?? [];
-    return userDefinedOnly ? all.filter(isUserDefined) : all;
-  }, [list.data, userDefinedOnly]);
+    const visible = userDefinedOnly ? all.filter(isUserDefined) : all;
+    const needle = search.trim().toLowerCase();
+    return needle === '' ? visible : visible.filter((row) => row.name.toLowerCase().includes(needle));
+  }, [list.data, userDefinedOnly, search]);
 
   const publish = usePublish({ kind: tab.kind, queryKey, onError: setActionError });
 
@@ -6035,6 +5999,13 @@ export const CatalogueSection = () => {
             ))}
           </TextField>
         )}
+        <TextField
+          label="Search by name"
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          sx={{ minWidth: 220 }}
+        />
         <FormControlLabel
           control={
             <Switch
@@ -6044,6 +6015,9 @@ export const CatalogueSection = () => {
           }
           label="User-defined only"
         />
+        <Typography variant="body2" color="text.secondary">
+          {rows.length} of {list.data?.length ?? 0}
+        </Typography>
       </Stack>
 
       {needsParent ? (
@@ -6061,6 +6035,11 @@ export const CatalogueSection = () => {
           error={list.isError ? apiErrorMessage(list.error) : undefined}
           onRename={(id, name) => patch.mutate({ id, changes: { name } })}
           onAssign={(id, changes) => patch.mutate({ id, changes })}
+          emptyMessage={
+            search.trim() !== '' || userDefinedOnly
+              ? 'Nothing matches the current filters.'
+              : 'Nothing to review here.'
+          }
           onTogglePublish={(row) =>
             row.shared ? publish.mutate({ id: row.id, publish: false }) : setPublishing(row)
           }
@@ -6164,6 +6143,18 @@ server {
     # index.html only covers the document; this covers every response.
     add_header X-Robots-Tag "noindex, nofollow" always;
 
+    # This panel's buttons publish reference data to every user of the product. A framed
+    # copy of it plus a misdirected click is the cheapest way to make an administrator
+    # publish something they never read, so the page refuses to be framed at all.
+    # frame-ancestors is the modern control; X-Frame-Options covers anything that ignores
+    # it. The consumer app sets neither, which is defensible there and is not here.
+    add_header Content-Security-Policy "frame-ancestors 'none'" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    # The admin hostname itself is worth not leaking to whatever an administrator clicks
+    # through to, and this app links nowhere that needs a referrer.
+    add_header Referrer-Policy "no-referrer" always;
+
     gzip on;
     gzip_vary on;
     gzip_min_length 1024;
@@ -6238,26 +6229,23 @@ echo "Starting admin panel with apiUrl=${API_URL} keycloakUrl=${KEYCLOAK_URL} re
 exec "$@"
 ```
 
-- [ ] **Step 4: Check the entrypoint's escaping by hand**
+- [ ] **Step 4: Check the entrypoint's escaping by running the real script**
 
-The entrypoint is shell, so it has no vitest suite. Run it once against a hostile value and
-read the output:
+The entrypoint is shell, so it has no vitest suite. Run the actual file against a hostile
+value, with the output path overridden, and read what it wrote:
 
 ```bash
-cd admin
-mkdir -p /tmp/admin-entrypoint/usr/share/nginx/html
-API_URL='https://api.example"+alert(1)+"' \
-KEYCLOAK_CLIENT_ID='drinksaver-admin' \
-sh -c 'CONFIG_FILE=/tmp/admin-entrypoint/config.js; . /dev/stdin' <<'EOF'
-set -eu
-API_URL="${API_URL:-http://localhost:8080}"
-escape() { printf '%s' "$1" | tr -d '\r\n' | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
-printf 'apiUrl: "%s"\n' "$(escape "$API_URL")"
-EOF
+cd /Users/alexmolnar/personal/sandbox/adminpaneler/admin
+mkdir -p /tmp/admin-entrypoint
+sed 's#^CONFIG_FILE=.*#CONFIG_FILE=/tmp/admin-entrypoint/config.js#' docker-entrypoint.sh > /tmp/admin-entrypoint/run.sh
+API_URL='https://api.example"+alert(1)+"' sh /tmp/admin-entrypoint/run.sh true
+cat /tmp/admin-entrypoint/config.js
+node --check /tmp/admin-entrypoint/config.js && echo "config.js parses as JavaScript"
 ```
 
-Expected: the quote in the value appears as `\"`, so the generated line stays one string
-literal. If it does not, stop and fix `escape` before continuing.
+Expected: the quote in the value appears as `\"`, and `node --check` reports the file parses.
+An unescaped quote makes the whole file a SyntaxError, which silently reverts the running app
+to its localhost defaults. If it does not parse, stop and fix `escape` before continuing.
 
 - [ ] **Step 5: Create the Helm chart by copying the web chart**
 
@@ -6637,13 +6625,63 @@ Then extend the `summary` job: change `needs: [version, backend, web]` to
 
 - [ ] **Step 4: Add the admin deployment to `.github/workflows/deploy.yml`**
 
-Read the file first. It is the manual production release, so match whatever shape its web job
-has: if it deploys `drinksaver-web` from a released chart version, add a sibling job doing the
-same for `drinksaver-admin`, with `--values deploy/values/admin-prod.yaml` and
-`--namespace drinksaver`. If it takes a version input, the admin job takes the same input,
-since both come from the same `VERSION` file and are published together.
+The workflow is manual only, takes a per-chart boolean and an optional version, and has one job
+per chart. Add a third input, after `deploy-web`:
 
-Add the admin release to whatever summary or report step the workflow ends with.
+```yaml
+      deploy-admin:
+        description: 'Deploy the drinksaver-admin chart'
+        type: boolean
+        default: true
+```
+
+Then add the job after the `web` job. It is the `web` job with the names changed: nothing is
+built, the chart and image were published by `build.yml` and are pulled by version.
+
+```yaml
+  admin:
+    name: Deploy admin
+    needs: version
+    if: ${{ inputs.deploy-admin }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Configure kubectl
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          set -euo pipefail
+          # umask first: the redirect below creates the file before chmod runs.
+          umask 077
+          mkdir -p "$HOME/.kube"
+          printf '%s' "$KUBE_CONFIG" | base64 -d > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Deploy chart from registry
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          OWNER: ${{ needs.version.outputs.owner }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          helm registry login ghcr.io --username "$GH_ACTOR" --password "$GH_TOKEN"
+          helm upgrade --install drinksaver-admin \
+            "oci://ghcr.io/${OWNER}/charts/drinksaver-admin" \
+            --version "${VERSION}" \
+            --namespace drinksaver \
+            --values deploy/values/admin-prod.yaml \
+            --set image.tag="${VERSION}" \
+            --wait --timeout 5m
+
+      - name: Report
+        run: kubectl get deploy,pod,ingress -n drinksaver -l app.kubernetes.io/name=drinksaver-admin
+```
+
+The workflow ends each job with its own `Report` step rather than a shared summary, so there is
+nothing else to extend. Leave the `version` job untouched: the admin chart takes the same version
+as the other two, because all three come from one `VERSION` file and are published together.
 
 - [ ] **Step 5: Lint the workflows**
 
@@ -6839,37 +6877,157 @@ admin panel is coded against, and that the backend implementing them is written 
 
 - [ ] **Step 6: Add the admin section to `docs/DEPLOYMENT.md`**
 
-Read the document first and follow its structure. The new material:
+Read the document's structure first and place these where its existing per-application material
+lives, matching its headings and tone. The content:
 
-- The admin panel is a third deployable: image `ghcr.io/alex-molnar/drinksaver-admin`, chart
-  `drinksaver-admin`, both versioned from the root `VERSION` file like everything else.
-- Hosts: `test.admin.drinksaver.kak.im` in `drinksaver-test`, `admin.drinksaver.kak.im` in
-  `drinksaver`.
-- Values live at `deploy/values/admin-test.yaml` and `deploy/values/admin-prod.yaml`.
-- Workflows: `deploy-test-admin.yml` on any non-main push touching `admin/**`,
-  `apply-values-admin.yml` for values-only edits, an `admin` job in `build.yml` and in
-  `deploy.yml`.
-- Keycloak setup, which is the part nobody will guess: each realm needs a client
-  (`test-drinksaver-admin`, `drinksaver-admin`) with a Group Membership protocol mapper writing
-  the `groups` claim into the access token, and an `admin` group whose members are the
-  administrators. Without the mapper, every signed-in user is refused by the gate and the
-  symptom looks like a broken login rather than a missing mapper.
-- Runtime config: the admin bundle reads `window.__DRINKSAVER_ADMIN_CONFIG__`, deliberately
-  distinct from the consumer app's global.
+````markdown
+## The admin panel
+
+A third deployable, built and released exactly like the other two. Image
+`ghcr.io/alex-molnar/drinksaver-admin`, chart `drinksaver-admin`, both versioned from the root
+`VERSION` file.
+
+| Environment | Namespace | Host | Values |
+| --- | --- | --- | --- |
+| Test | `drinksaver-test` | `test.admin.drinksaver.kak.im` | `deploy/values/admin-test.yaml` |
+| Production | `drinksaver` | `admin.drinksaver.kak.im` | `deploy/values/admin-prod.yaml` |
+
+Workflows: `deploy-test-admin.yml` on any non-main push touching `admin/**`,
+`apply-values-admin.yml` for a values-only edit, an `admin` job in `build.yml` on a push to
+main, and a `deploy-admin` input on `deploy.yml` for the manual production release.
+
+### Keycloak setup, which nothing else in this repository needs
+
+The panel is gated on membership of a Keycloak group named `admin`. Two things have to exist in
+each realm before anyone can use it, and neither is created by the deploy:
+
+1. A group named `admin`, with the administrators as members.
+2. A client (`test-drinksaver-admin` in `test-drinksaver`, `drinksaver-admin` in `drinksaver`)
+   carrying a **Group Membership** protocol mapper that writes the `groups` claim into the
+   access token.
+
+Without the mapper the token carries no `groups` claim, the panel refuses every signed-in user,
+and the symptom reads as a broken login rather than a missing mapper. That is the failure to
+check first when someone reports they cannot get in.
+
+The panel accepts either `admin` or `/admin`, so the mapper's "Full group path" setting does not
+matter.
+
+### Runtime configuration
+
+Same mechanism as the web app: one image per version, `docker-entrypoint.sh` writes `/config.js`
+before nginx starts. The global is `window.__DRINKSAVER_ADMIN_CONFIG__`, deliberately distinct
+from the consumer app's `window.__DRINKSAVER_CONFIG__`, so neither can supply the other's
+Keycloak client id.
+
+### Exposure
+
+The panel is on the public internet behind Keycloak and nothing else: no IP allowlist, no VPN,
+no ingress-level auth. That is an accepted risk, recorded alongside the others in
+`docs/remaining-work.md`. The controls that do apply are the group gate, the backend rejecting
+`/v1/admin/**` for non-members, and the frame-ancestors and X-Frame-Options headers in
+`admin/nginx.conf`.
+````
 
 - [ ] **Step 7: Record the deferred work in `docs/remaining-work.md`**
 
-Read the file, find the next free id in each group, and append in its existing style:
+Three entries, in the file's existing format. Check the current highest id in each group first
+and use the next free one; the ids below assume `HK-3` and `OPS-3` are the last in the file
+today.
 
-- An `HK-*` entry for the missing Playwright suite: the local realm has no admin user and no
-  admin group, so an end-to-end journey needs `deploy/local/keycloak-realm.json` extended with
-  both, an admin project in the e2e config, and a login plus edit-a-palette journey. Note that
-  this was deliberately deferred when the panel landed.
-- An `HK-*` entry for the duplicated infrastructure between `web/src` and `admin/src`
-  (`config.ts`, `api/client.ts`, `auth/`), naming the workspace extraction as the fix if the
-  duplication ever causes a real bug, and stating that it was accepted knowingly.
-- An `OPS-*` entry for the DNS records and certificates for the two admin hosts, if they are
-  not yet created.
+````markdown
+## HK-4. No end-to-end suite for the admin panel
+
+**Effort:** medium.
+**Blocked by:** nothing.
+
+### Why
+
+The admin panel shipped with unit tests and no browser journey. Its riskiest path, the Keycloak
+group gate, is the one thing a unit test can only assert against a mocked token: whether the
+real realm actually issues a `groups` claim is not something jsdom can answer.
+
+This was deferred deliberately rather than forgotten. The local stack has no admin user and no
+admin group, so the suite needs realm changes before it needs test code, and a journey written
+against a UI that has not settled is a journey rewritten twice.
+
+### Where
+
+`deploy/local/keycloak-realm.json`, `web/e2e/` (or a new `admin/e2e/`), `.github/workflows/e2e.yml`.
+
+### Do
+
+1. Add an `admin` group and an admin user to `deploy/local/keycloak-realm.json`, plus the group
+   membership mapper on the client, so the local token carries the claim the app reads.
+2. Add a Playwright project for the admin panel, following `web/e2e/playwright.config.ts`.
+3. Write two journeys: a non-admin user is refused, and an admin edits a palette and sees it
+   persist. The refusal is the more valuable of the two.
+4. Gate it on main only, the way the web e2e suite is gated.
+
+### Done when
+
+`npm run e2e` drives a real browser through a real Keycloak login for both an admin and a
+non-admin, and CI runs it on main.
+
+## HK-5. `web/src` and `admin/src` carry duplicate infrastructure
+
+**Effort:** medium.
+**Blocked by:** nothing. Do not do this speculatively.
+
+### Why
+
+`config.ts`, `api/client.ts`, the four files under `auth/`, and `theme/{primitives,tokens,cssVars}.ts`
+exist twice, once per application, about 400 lines. This was chosen knowingly when the admin
+panel landed: an npm workspace would have changed the web app's build context, Dockerfile, CI
+cache keys and coverage configuration, all of which currently assume `web/` is self-contained,
+and that is a real cost paid up front against a drift risk that is small and slow.
+
+The theme copies are the ones that matter. If they diverge, the admin panel's palette previews
+stop showing what a user actually sees, which is the entire point of that screen, and nothing
+fails to tell you.
+
+### Where
+
+`web/src/{config.ts,api/client.ts,auth/,theme/}` and their twins under `admin/src/`.
+
+### Do
+
+1. First, cheaply: add a CI step that runs `diff` on the three theme files and fails if they
+   differ. That catches the failure that actually costs something, for about five lines.
+2. Only if the duplication causes a real bug, extract a `shared/` workspace package, and budget
+   for touching both Dockerfiles, both CI caches and both coverage configs.
+
+### Done when
+
+Either the diff check is in CI, or the shared package exists and both applications build from it.
+
+## OPS-4. DNS and certificates for the two admin hosts
+
+**Effort:** small.
+**Blocked by:** nothing.
+
+### Why
+
+`test.admin.drinksaver.kak.im` and `admin.drinksaver.kak.im` are referenced by
+`deploy/values/admin-{test,prod}.yaml`. A deploy against a host with no DNS record produces an
+ingress that resolves nowhere and a cert-manager order that never completes, and the Helm
+release still reports success.
+
+### Where
+
+The DNS zone for `drinksaver.kak.im`, and the `drinksaver-admin-tls` secret in each namespace.
+
+### Do
+
+1. Create both records, pointing at the same ingress as the existing hosts.
+2. Run the test deploy and confirm cert-manager issues `drinksaver-admin-tls` in
+   `drinksaver-test`.
+3. Repeat for production at cutover.
+
+### Done when
+
+Both hosts serve the panel over HTTPS with a valid certificate.
+````
 
 - [ ] **Step 8: Add the admin row to the repository instruction files**
 
@@ -6920,6 +7078,7 @@ After Task 14, check each spec section against what was built:
 | Spec section | Verified by |
 | --- | --- |
 | 1, separate application | `admin/` builds, images and charts publish independently (Tasks 1, 12, 13) |
+| 3, theme copied not re-declared | `diff` against `web/src/theme/` plus the token-name test in `muiTheme.test.ts` (Task 5) |
 | 2, auth and group gate | `adminGroup.test.ts`, `KeycloakProvider.test.tsx`, `AdminGate.test.tsx` (Task 3) |
 | 3, registry and layout | `registry.test.ts`, `AdminShell.test.tsx` (Task 6) |
 | 4.1, palettes | `PaletteEditor.test.tsx`, `PalettesSection.test.tsx` (Task 8) |
@@ -6929,7 +7088,7 @@ After Task 14, check each spec section against what was built:
 | 5, backend contract | `admin.test.ts` asserts every path and verb (Task 4); `docs/api-docs.yaml` records it (Task 14) |
 | 6, data layer | `queries.ts` centralises keys; optimistic paths tested in Tasks 10 and 11 |
 | 7, runtime configuration | `config.test.ts` (Task 2), entrypoint check (Task 12) |
-| 8, deployment | `helm template` against both values files (Task 12), workflow paths (Task 13) |
+| 8, deployment and exposure | `helm template` against both values files and the response headers in `nginx.conf` (Task 12), workflow paths (Task 13) |
 | 9, testing | Coverage ratchet set from a real measurement (Task 14) |
 | 10, documentation | DEPLOYMENT.md, api-docs.yaml, README.md (Task 14) |
 
