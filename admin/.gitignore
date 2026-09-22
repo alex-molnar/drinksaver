@@ -1,0 +1,14 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+coverage
+*.local
+.env
+.env.local
+.env.*.local
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+npm-debug.log*
+.vite/
