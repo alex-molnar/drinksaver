@@ -140,6 +140,11 @@ export default defineConfig({
 
 `admin/tsconfig.app.json`:
 
+`"types": ["vite/client"]` declares the `*.css` module so `main.tsx`'s side-effect
+import `import './index.css'` survives `noUncheckedSideEffectImports` — the same
+mechanism `web/tsconfig.app.json` uses. Without it `tsc -b` fails with TS2882 before
+Task 2's `vite-env.d.ts` exists, so it cannot wait.
+
 ```json
 {
   "compilerOptions": {
@@ -149,6 +154,7 @@ export default defineConfig({
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "types": ["vite/client"],
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
@@ -514,9 +520,11 @@ export default config;
 
 - [ ] **Step 4: Create `admin/src/vite-env.d.ts`**
 
-```ts
-/// <reference types="vite/client" />
+No `/// <reference types="vite/client" />` line here. Task 1's `tsconfig.app.json`
+already loads `vite/client` through `"types": ["vite/client"]`, so a second reference
+would be redundant. This file's only job is the `ImportMetaEnv` augmentation.
 
+```ts
 interface ImportMetaEnv {
   readonly VITE_API_URL?: string;
   readonly VITE_KEYCLOAK_URL?: string;
