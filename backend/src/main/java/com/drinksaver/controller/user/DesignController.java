@@ -3,7 +3,6 @@ package com.drinksaver.controller.user;
 import com.drinksaver.model.db.ColorPalette;
 import com.drinksaver.model.db.Glassware;
 import com.drinksaver.repository.DesignRepository;
-import com.drinksaver.service.InjectorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,8 +16,8 @@ public class DesignController {
     private DesignRepository designRepository;
 
     @Autowired
-    public DesignController(InjectorService injectorService) {
-        this.designRepository = injectorService.getDesignRepository();
+    public DesignController(DesignRepository designRepository) {
+        this.designRepository = designRepository;
     }
 
     @GetMapping("/color-palettes")

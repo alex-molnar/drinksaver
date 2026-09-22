@@ -7,9 +7,10 @@ import com.drinksaver.model.db.AlcoholVolume;
 import com.drinksaver.model.dto.NewAlcoholEntry;
 import com.drinksaver.model.dto.NewAlcoholSubtype;
 import com.drinksaver.model.dto.NewVolumeEntry;
-import com.drinksaver.repository.postgres.schema.AlcoholSubtypesTable;
-import com.drinksaver.repository.postgres.schema.AlcoholTypesTable;
-import com.drinksaver.repository.postgres.schema.AlcoholVolumeTable;
+import com.drinksaver.repository.AlcoholRepository;
+import com.drinksaver.repository.schema.AlcoholSubtypesTable;
+import com.drinksaver.repository.schema.AlcoholTypesTable;
+import com.drinksaver.repository.schema.AlcoholVolumeTable;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -25,7 +26,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-class PostgresAlcoholRepositoryTest {
+class AlcoholRepositoryTest {
 
     private static final UUID USER = UUID.randomUUID();
     private static final UUID ADMIN = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -38,26 +39,11 @@ class PostgresAlcoholRepositoryTest {
     }
 
     @Test
-    void isReturnsTrueForPostgres() {
-        PostgresAlcoholRepository repo = new PostgresAlcoholRepository(
-                mock(AlcoholTypesTable.class),
-                mock(AlcoholSubtypesTable.class),
-                mock(AlcoholVolumeTable.class),
-                configWithAdmins(List.of())
-        );
-
-        assertThat(repo.is("postgres")).isTrue();
-        assertThat(repo.is("Postgres")).isTrue();
-        assertThat(repo.is("POSTGRES")).isTrue();
-        assertThat(repo.is("mysql")).isFalse();
-    }
-
-    @Test
     void getAlcoholTypesIncludesAdminAndCallerIds() {
         AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
         when(typesTable.findAllByUserIdInOrderByNameAsc(any())).thenReturn(List.of());
 
-        PostgresAlcoholRepository repo = new PostgresAlcoholRepository(
+        AlcoholRepository repo = new AlcoholRepository(
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 mock(AlcoholVolumeTable.class),
@@ -78,7 +64,7 @@ class PostgresAlcoholRepositoryTest {
         AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
         when(typesTable.findAllByUserIdInOrderByNameAsc(any())).thenReturn(List.of(type));
 
-        PostgresAlcoholRepository repo = new PostgresAlcoholRepository(
+        AlcoholRepository repo = new AlcoholRepository(
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 mock(AlcoholVolumeTable.class),
@@ -95,7 +81,7 @@ class PostgresAlcoholRepositoryTest {
         AlcoholSubtypesTable subtypesTable = mock(AlcoholSubtypesTable.class);
         when(subtypesTable.findAllByAlcoholTypeIdAndUserIdInOrderByNameAsc(anyInt(), any())).thenReturn(List.of());
 
-        PostgresAlcoholRepository repo = new PostgresAlcoholRepository(
+        AlcoholRepository repo = new AlcoholRepository(
                 mock(AlcoholTypesTable.class),
                 subtypesTable,
                 mock(AlcoholVolumeTable.class),
@@ -116,7 +102,7 @@ class PostgresAlcoholRepositoryTest {
         AlcoholSubtype saved = new AlcoholSubtype(1, USER, "Pale Ale");
         when(subtypesTable.save(any())).thenReturn(saved);
 
-        PostgresAlcoholRepository repo = new PostgresAlcoholRepository(
+        AlcoholRepository repo = new AlcoholRepository(
                 mock(AlcoholTypesTable.class),
                 subtypesTable,
                 mock(AlcoholVolumeTable.class),
@@ -138,7 +124,7 @@ class PostgresAlcoholRepositoryTest {
         AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
         when(typesTable.findById(1)).thenReturn(Optional.empty());
 
-        PostgresAlcoholRepository repo = new PostgresAlcoholRepository(
+        AlcoholRepository repo = new AlcoholRepository(
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 mock(AlcoholVolumeTable.class),
@@ -160,7 +146,7 @@ class PostgresAlcoholRepositoryTest {
         AlcoholVolumeTable volumeTable = mock(AlcoholVolumeTable.class);
         when(volumeTable.findAllById(List.of(1))).thenReturn(List.of(volume));
 
-        PostgresAlcoholRepository repo = new PostgresAlcoholRepository(
+        AlcoholRepository repo = new AlcoholRepository(
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 volumeTable,
@@ -184,7 +170,7 @@ class PostgresAlcoholRepositoryTest {
 
         AlcoholVolumeTable volumeTable = mock(AlcoholVolumeTable.class);
 
-        PostgresAlcoholRepository repo = new PostgresAlcoholRepository(
+        AlcoholRepository repo = new AlcoholRepository(
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 volumeTable,
@@ -208,7 +194,7 @@ class PostgresAlcoholRepositoryTest {
         AlcoholVolumeTable volumeTable = mock(AlcoholVolumeTable.class);
         when(volumeTable.save(any())).thenReturn(saved);
 
-        PostgresAlcoholRepository repo = new PostgresAlcoholRepository(
+        AlcoholRepository repo = new AlcoholRepository(
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 volumeTable,
@@ -232,7 +218,7 @@ class PostgresAlcoholRepositoryTest {
         AlcoholVolumeTable volumeTable = mock(AlcoholVolumeTable.class);
         AlcoholSubtypesTable subtypesTable = mock(AlcoholSubtypesTable.class);
 
-        PostgresAlcoholRepository repo = new PostgresAlcoholRepository(
+        AlcoholRepository repo = new AlcoholRepository(
                 typesTable,
                 subtypesTable,
                 volumeTable,

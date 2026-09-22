@@ -9,8 +9,6 @@ import com.drinksaver.model.db.AlcoholVolume;
 import com.drinksaver.model.dto.NewAlcoholEntry;
 import com.drinksaver.model.dto.NewAlcoholSubtype;
 import com.drinksaver.repository.AlcoholRepository;
-import com.drinksaver.repository.BeerRepository;
-import com.drinksaver.service.InjectorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -44,7 +42,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Slice test for {@link AlcoholController}. The controller obtains its {@link AlcoholRepository}
- * from {@link InjectorService} rather than by direct injection, so {@link TestConfig} builds a
  * real {@code InjectorService} around a {@code @MockitoBean} repository instead of mocking
  * {@code InjectorService} itself. That real instance resolves the repository via
  * {@code InjectorService}'s own {@code is(name)} matching, which happens while the
@@ -67,7 +64,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     ServletWebSecurityAutoConfiguration.class,
     SecurityFilterAutoConfiguration.class
 })
-@Import({SecurityConfig.class, AlcoholControllerTest.TestConfig.class})
+@Import({SecurityConfig.class})
 class AlcoholControllerTest {
 
     @Autowired
@@ -75,23 +72,6 @@ class AlcoholControllerTest {
 
     @MockitoBean
     private AlcoholRepository alcoholRepository;
-
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        InjectorService injectorService(AlcoholRepository alcoholRepository) {
-            when(alcoholRepository.is(any())).thenReturn(true);
-            RepositoryConfiguration config = new RepositoryConfiguration(
-                "mock", "mock", "mock", "mock", "mock", List.of(), 4, 10, 0.97
-            );
-            return new InjectorService(
-                Map.of("alcohol", alcoholRepository),
-                Map.of("beer", org.mockito.Mockito.mock(BeerRepository.class)),
-                Map.of(),
-                config
-            );
-        }
-    }
 
     @Test
     void getAlcoholTypesReturnsOkWithExpectedShape() throws Exception {

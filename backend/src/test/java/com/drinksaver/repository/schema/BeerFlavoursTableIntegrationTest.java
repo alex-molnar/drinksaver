@@ -1,4 +1,4 @@
-package com.drinksaver.repository.postgres.schema;
+package com.drinksaver.repository.schema;
 
 import com.drinksaver.model.db.BeerFlavour;
 import org.junit.jupiter.api.Test;

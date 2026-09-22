@@ -8,7 +8,6 @@ import com.drinksaver.model.dto.NewAlcoholSubtype;
 import com.drinksaver.model.dto.NewVolumeEntry;
 import com.drinksaver.repository.AlcoholRepository;
 import com.drinksaver.security.AuthenticatedUser;
-import com.drinksaver.service.InjectorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -30,8 +29,8 @@ public class AlcoholController {
     private final AlcoholRepository alcoholRepository;
 
     @Autowired
-    public AlcoholController(InjectorService injectorService) {
-        this.alcoholRepository = injectorService.getAlcoholRepository();
+    public AlcoholController(AlcoholRepository alcoholRepository) {
+        this.alcoholRepository = alcoholRepository;
     }
 
     @GetMapping("/types")

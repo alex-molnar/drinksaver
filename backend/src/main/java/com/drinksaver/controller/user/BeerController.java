@@ -7,7 +7,6 @@ import com.drinksaver.model.dto.NewBeerBrand;
 import com.drinksaver.model.dto.NewBeerFlavour;
 import com.drinksaver.repository.BeerRepository;
 import com.drinksaver.security.AuthenticatedUser;
-import com.drinksaver.service.InjectorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -22,8 +21,8 @@ public class BeerController {
     private final BeerRepository beerRepository;
 
     @Autowired
-    public BeerController(InjectorService injectorService) {
-        this.beerRepository = injectorService.getBeerRepository();
+    public BeerController(BeerRepository beerRepository) {
+        this.beerRepository = beerRepository;
     }
 
     @GetMapping("/brands")

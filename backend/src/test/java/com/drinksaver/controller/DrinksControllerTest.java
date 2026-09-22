@@ -5,9 +5,6 @@ import com.drinksaver.config.SecurityConfig;
 import com.drinksaver.controller.user.DrinksController;
 import com.drinksaver.model.db.SavedDrink;
 import com.drinksaver.model.dto.Drink;
-import com.drinksaver.repository.AlcoholRepository;
-import com.drinksaver.repository.BeerRepository;
-import com.drinksaver.service.InjectorService;
 import com.drinksaver.service.DrinksService;
 import com.drinksaver.service.RecommendationCacheService;
 import com.drinksaver.service.model.DrinkKey;
@@ -95,16 +92,6 @@ class DrinksControllerTest {
 
     @TestConfiguration
     static class TestConfig {
-        @Bean
-        InjectorService injectorService() {
-            return new InjectorService(
-                Map.of("alcohol", mock(AlcoholRepository.class)),
-                Map.of("beer", mock(BeerRepository.class)),
-                Map.of(),
-                repositoryConfiguration()
-            );
-        }
-
         @Bean
         RepositoryConfiguration repositoryConfiguration() {
             return new RepositoryConfiguration("mock", "mock", "mock", "mock", "mock", List.of(), BEER_ID, 10, 0.97);

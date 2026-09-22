@@ -3,9 +3,10 @@ package com.drinksaver.repository.postgres;
 import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.dto.NewAlcoholEntry;
 import com.drinksaver.model.dto.NewVolumeEntry;
-import com.drinksaver.repository.postgres.schema.AlcoholSubtypesTable;
-import com.drinksaver.repository.postgres.schema.AlcoholTypesTable;
-import com.drinksaver.repository.postgres.schema.AlcoholVolumeTable;
+import com.drinksaver.repository.AlcoholRepository;
+import com.drinksaver.repository.schema.AlcoholSubtypesTable;
+import com.drinksaver.repository.schema.AlcoholTypesTable;
+import com.drinksaver.repository.schema.AlcoholVolumeTable;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -33,7 +34,7 @@ import static org.mockito.Mockito.when;
  *
  * Three details make the test mean what it says:
  *
- * - The class does not extend {@link com.drinksaver.repository.postgres.schema.AbstractPostgresIntegrationTest}
+ * - The class does not extend {@link com.drinksaver.repository.schema.AbstractPostgresIntegrationTest}
  *   because it needs its own {@code @Import} of the repository under test, and because it has
  *   to opt out of the surrounding test transaction. It still shares the same container image
  *   and the same {@code disabledWithoutDocker} behaviour.
@@ -51,9 +52,9 @@ import static org.mockito.Mockito.when;
  */
 @DataJpaTest
 @Testcontainers(disabledWithoutDocker = true)
-@Import(PostgresAlcoholRepository.class)
+@Import(AlcoholRepository.class)
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
-class PostgresAlcoholRepositoryTransactionIntegrationTest {
+class AlcoholRepositoryTransactionIntegrationTest {
 
     @ServiceConnection
     static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine");
@@ -62,7 +63,7 @@ class PostgresAlcoholRepositoryTransactionIntegrationTest {
     private static final UUID ROLLING_BACK_USER = UUID.fromString("00000000-0000-0000-0000-000000000043");
 
     @Autowired
-    private PostgresAlcoholRepository repository;
+    private AlcoholRepository repository;
 
     @Autowired
     private AlcoholTypesTable alcoholTypesTable;

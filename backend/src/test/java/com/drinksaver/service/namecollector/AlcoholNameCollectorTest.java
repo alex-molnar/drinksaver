@@ -3,9 +3,9 @@ package com.drinksaver.service.namecollector;
 import com.drinksaver.model.db.AlcoholSubtype;
 import com.drinksaver.model.db.AlcoholType;
 import com.drinksaver.model.db.AlcoholVolume;
-import com.drinksaver.repository.postgres.schema.AlcoholSubtypesTable;
-import com.drinksaver.repository.postgres.schema.AlcoholTypesTable;
-import com.drinksaver.repository.postgres.schema.AlcoholVolumeTable;
+import com.drinksaver.repository.schema.AlcoholSubtypesTable;
+import com.drinksaver.repository.schema.AlcoholTypesTable;
+import com.drinksaver.repository.schema.AlcoholVolumeTable;
 import com.drinksaver.service.model.DrinkKey;
 import org.junit.jupiter.api.Test;
 

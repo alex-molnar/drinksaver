@@ -1,4 +1,4 @@
-package com.drinksaver.repository.postgres.schema;
+package com.drinksaver.repository.schema;
 
 import com.drinksaver.model.db.Recommendation;
 import org.springframework.data.jpa.repository.JpaRepository;

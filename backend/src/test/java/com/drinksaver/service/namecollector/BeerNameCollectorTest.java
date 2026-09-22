@@ -4,10 +4,10 @@ import com.drinksaver.model.db.AlcoholVolume;
 import com.drinksaver.model.db.BeerFlavour;
 import com.drinksaver.model.db.Brand;
 import com.drinksaver.model.db.ConsumptionType;
-import com.drinksaver.repository.postgres.schema.AlcoholVolumeTable;
-import com.drinksaver.repository.postgres.schema.BeerFlavoursTable;
-import com.drinksaver.repository.postgres.schema.BrandsTable;
-import com.drinksaver.repository.postgres.schema.ConsumptionTypesTable;
+import com.drinksaver.repository.schema.AlcoholVolumeTable;
+import com.drinksaver.repository.schema.BeerFlavoursTable;
+import com.drinksaver.repository.schema.BrandsTable;
+import com.drinksaver.repository.schema.ConsumptionTypesTable;
 import com.drinksaver.service.model.DrinkKey;
 import org.junit.jupiter.api.Test;
 

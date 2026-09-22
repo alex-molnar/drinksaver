@@ -2,7 +2,7 @@ package com.drinksaver.service.recommendations;
 
 import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.db.Recommendation;
-import com.drinksaver.repository.postgres.schema.RecommendationsTable;
+import com.drinksaver.repository.schema.RecommendationsTable;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

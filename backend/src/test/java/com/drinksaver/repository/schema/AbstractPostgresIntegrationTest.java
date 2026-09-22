@@ -1,4 +1,4 @@
-package com.drinksaver.repository.postgres.schema;
+package com.drinksaver.repository.schema;
 
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;

@@ -1,4 +1,4 @@
-package com.drinksaver.repository.postgres.schema;
+package com.drinksaver.repository.schema;
 
 import com.drinksaver.model.db.AlcoholType;
 import org.junit.jupiter.api.Test;

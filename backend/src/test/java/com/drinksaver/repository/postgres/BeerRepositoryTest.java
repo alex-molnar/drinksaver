@@ -1,9 +1,10 @@
 package com.drinksaver.repository.postgres;
 
 import com.drinksaver.config.RepositoryConfiguration;
-import com.drinksaver.repository.postgres.schema.BeerFlavoursTable;
-import com.drinksaver.repository.postgres.schema.BrandsTable;
-import com.drinksaver.repository.postgres.schema.ConsumptionTypesTable;
+import com.drinksaver.repository.BeerRepository;
+import com.drinksaver.repository.schema.BeerFlavoursTable;
+import com.drinksaver.repository.schema.BrandsTable;
+import com.drinksaver.repository.schema.ConsumptionTypesTable;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -19,7 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class PostgresBeerRepositoryTest {
+class BeerRepositoryTest {
 
     private static final UUID ADMIN = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID USER = UUID.fromString("00000000-0000-0000-0000-000000000002");
@@ -31,8 +32,8 @@ class PostgresBeerRepositoryTest {
         );
     }
 
-    private PostgresBeerRepository repositoryWith(BrandsTable brands, List<UUID> admins) {
-        return new PostgresBeerRepository(
+    private BeerRepository repositoryWith(BrandsTable brands, List<UUID> admins) {
+        return new BeerRepository(
                 brands,
                 mock(ConsumptionTypesTable.class),
                 mock(BeerFlavoursTable.class),
@@ -76,7 +77,7 @@ class PostgresBeerRepositoryTest {
         BeerFlavoursTable flavours = mock(BeerFlavoursTable.class);
         when(flavours.findAllByBrandIdAndUserIdIn(eq(7), anyList())).thenReturn(List.of());
 
-        new PostgresBeerRepository(
+        new BeerRepository(
                 mock(BrandsTable.class),
                 mock(ConsumptionTypesTable.class),
                 flavours,
@@ -87,13 +88,5 @@ class PostgresBeerRepositoryTest {
         verify(flavours).findAllByBrandIdAndUserIdIn(eq(7), captor.capture());
 
         assertThat(captor.getValue()).containsExactly(ADMIN, USER);
-    }
-
-    @Test
-    void isMatchesOnlyThePostgresRepositoryType() {
-        PostgresBeerRepository repository = repositoryWith(mock(BrandsTable.class), List.of(ADMIN));
-
-        assertThat(repository.is("postgres")).isTrue();
-        assertThat(repository.is("hardcoded")).isFalse();
     }
 }
