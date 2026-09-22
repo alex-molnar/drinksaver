@@ -6896,22 +6896,13 @@ Workflows: `deploy-test-admin.yml` on any non-main push touching `admin/**`,
 `apply-values-admin.yml` for a values-only edit, an `admin` job in `build.yml` on a push to
 main, and a `deploy-admin` input on `deploy.yml` for the manual production release.
 
-### Keycloak setup, which nothing else in this repository needs
+### Keycloak setup
 
-The panel is gated on membership of a Keycloak group named `admin`. Two things have to exist in
-each realm before anyone can use it, and neither is created by the deploy:
-
-1. A group named `admin`, with the administrators as members.
-2. A client (`test-drinksaver-admin` in `test-drinksaver`, `drinksaver-admin` in `drinksaver`)
-   carrying a **Group Membership** protocol mapper that writes the `groups` claim into the
-   access token.
-
-Without the mapper the token carries no `groups` claim, the panel refuses every signed-in user,
-and the symptom reads as a broken login rather than a missing mapper. That is the failure to
-check first when someone reports they cannot get in.
-
-The panel accepts either `admin` or `/admin`, so the mapper's "Full group path" setting does not
-matter.
+The panel is gated on membership of a Keycloak group named `admin`, and neither the group nor
+the client is created by a deploy. `docs/keycloak-admin-setup.md` is the step-by-step guide:
+the group, the client per realm, and the Group Membership mapper that puts the claim in the
+access token. Follow it before the first deploy of each environment, or the panel refuses
+every signed-in user and the symptom reads as a broken login.
 
 ### Runtime configuration
 
@@ -7037,6 +7028,7 @@ table in each:
 ```markdown
 | `admin/` | React 19, TypeScript, Vite, MUI 9, TanStack Query, `keycloak-js`. Desktop-first admin panel, gated on the Keycloak `admin` group. |
 | `admin/helm/drinksaver-admin/` | The admin panel Helm chart. |
+| `docs/keycloak-admin-setup.md` | The Keycloak group, client and mapper the admin panel needs. Not created by any deploy. |
 ```
 
 And to the testing table:
