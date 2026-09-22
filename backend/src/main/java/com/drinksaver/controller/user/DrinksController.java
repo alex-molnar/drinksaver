@@ -1,12 +1,11 @@
-package com.drinksaver.controller;
+package com.drinksaver.controller.user;
 
 import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.db.SavedDrink;
 import com.drinksaver.model.dto.Drink;
 import com.drinksaver.model.dto.EditableDrink;
-import com.drinksaver.repository.DrinksRepository;
 import com.drinksaver.security.AuthenticatedUser;
-import com.drinksaver.service.InjectorService;
+import com.drinksaver.service.DrinksService;
 import com.drinksaver.service.RecommendationCacheService;
 import com.drinksaver.service.model.DrinkKey;
 import com.drinksaver.service.namecollector.AlcoholNameCollector;
@@ -25,7 +24,7 @@ import java.util.UUID;
 @RequestMapping("/v1/drinks")
 public class DrinksController {
 
-    private final DrinksRepository drinksRepository;
+    private final DrinksService drinksService;
     private final RecommendationCacheService recommendationCacheService;
     private final AlcoholNameCollector alcoholNameCollector;
     private final BeerNameCollector beerNameCollector;
@@ -33,13 +32,13 @@ public class DrinksController {
 
     @Autowired
     public DrinksController(
-        InjectorService injectorService,
+        DrinksService drinksService,
         RecommendationCacheService recommendationCacheService,
         AlcoholNameCollector alcoholNameCollector,
         BeerNameCollector beerNameCollector,
         RepositoryConfiguration repositoryConfiguration
     ) {
-        this.drinksRepository = injectorService.getDrinksRepository();
+        this.drinksService = drinksService;
         this.recommendationCacheService = recommendationCacheService;
         this.alcoholNameCollector = alcoholNameCollector;
         this.beerNameCollector = beerNameCollector;
@@ -53,7 +52,7 @@ public class DrinksController {
     @PostMapping("/new")
     public List<SavedDrink> saveDrink(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody Drink drink) {
         Drink ownedDrink = drink.withUserId(AuthenticatedUser.id(jwt));
-        List<SavedDrink> saved = drinksRepository.saveDrink(ownedDrink);
+        List<SavedDrink> saved = drinksService.saveDrink(ownedDrink);
         recommendationCacheService.onDrinkSaved(ownedDrink);
         return saved;
     }
@@ -61,7 +60,7 @@ public class DrinksController {
     @GetMapping("/date/{date}")
     public List<EditableDrink> getSavedDrinks(@AuthenticationPrincipal Jwt jwt, @PathVariable String date) {
         UUID userId = AuthenticatedUser.id(jwt);
-        return drinksRepository
+        return drinksService
             .getSavedDrinks(userId, date)
                 .stream()
                 .map(savedDrink -> {
@@ -78,8 +77,8 @@ public class DrinksController {
     @DeleteMapping("/byIds")
     public int deleteSavedDrink(@AuthenticationPrincipal Jwt jwt, @RequestParam List<Integer> drinkIds) {
         UUID userId = AuthenticatedUser.id(jwt);
-        List<Integer> ownedIds = drinksRepository.ownedDrinkIds(drinkIds, userId);
-        return drinksRepository.deleteSavedDrink(ownedIds);
+        List<Integer> ownedIds = drinksService.ownedDrinkIds(drinkIds, userId);
+        return drinksService.deleteSavedDrink(ownedIds);
     }
 }
 

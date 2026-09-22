@@ -1,4 +1,4 @@
-package com.drinksaver.controller;
+package com.drinksaver.controller.user;
 
 import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.model.dto.RecommendationUpdate;

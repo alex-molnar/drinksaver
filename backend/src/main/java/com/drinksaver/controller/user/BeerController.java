@@ -1,4 +1,4 @@
-package com.drinksaver.controller;
+package com.drinksaver.controller.user;
 
 import com.drinksaver.model.db.BeerFlavour;
 import com.drinksaver.model.db.Brand;
