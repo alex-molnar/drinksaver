@@ -3,7 +3,6 @@ package com.drinksaver.service;
 import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.model.db.SavedDrink;
 import com.drinksaver.model.dto.Drink;
-import com.drinksaver.repository.DrinksRepository;
 import com.drinksaver.repository.postgres.schema.RecommendationsTable;
 import com.drinksaver.repository.postgres.schema.SavedDrinksTable;
 import com.drinksaver.service.namecollector.DrinkNameCollector;
@@ -17,13 +16,13 @@ import java.util.UUID;
 import java.util.stream.IntStream;
 
 @Repository
-public class PostgresDrinksService implements DrinksRepository {
+public class DrinksService {
     private final DrinkNameCollector drinkNameCollector;
     private final SavedDrinksTable savedDrinksTable;
     private final RecommendationsTable recommendationsTable;
 
     @Autowired
-    PostgresDrinksService(
+    DrinksService(
         DrinkNameCollector drinkNameCollector,
         SavedDrinksTable savedDrinksTable,
         RecommendationsTable recommendationsTable
@@ -33,7 +32,6 @@ public class PostgresDrinksService implements DrinksRepository {
         this.recommendationsTable = recommendationsTable;
     }
 
-    @Override
     public boolean is(String repositoryType) {
         return repositoryType.equals("postgres");
     }
@@ -42,7 +40,6 @@ public class PostgresDrinksService implements DrinksRepository {
      * Returns every row written, not just the first. A caller that saved N drinks needs all N
      * ids to be able to undo the save; returning getFirst() left N-1 rows unreachable.
      */
-    @Override
     @Transactional
     public List<SavedDrink> saveDrink(Drink drink) {
         if (drink.shouldAddToRecommendations()) {
@@ -57,12 +54,10 @@ public class PostgresDrinksService implements DrinksRepository {
             );
     }
 
-    @Override
     public List<SavedDrink> getSavedDrinks(UUID userId, String date) {
         return savedDrinksTable.findByUserIdAndDate(userId, date);
     }
 
-    @Override
     public List<Integer> ownedDrinkIds(List<Integer> drinkIds, UUID userId) {
         return savedDrinksTable.findAllById(drinkIds).stream()
             // Objects.equals, not .equals: user_id is nullable, so one null row whose id
@@ -73,7 +68,6 @@ public class PostgresDrinksService implements DrinksRepository {
             .toList();
     }
 
-    @Override
     public int deleteSavedDrink(List<Integer> drinkIds) {
         return savedDrinksTable.deleteAndCountByIds(drinkIds);
     }

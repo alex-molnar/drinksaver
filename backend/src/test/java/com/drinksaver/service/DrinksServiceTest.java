@@ -20,13 +20,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class PostgresDrinksServiceTest {
+class DrinksServiceTest {
 
     private static final UUID USER = UUID.randomUUID();
 
     @Test
     void isReturnsTrueForPostgres() {
-        PostgresDrinksService repo = new PostgresDrinksService(
+        DrinksService repo = new DrinksService(
                 mock(DrinkNameCollector.class),
                 mock(SavedDrinksTable.class),
                 mock(RecommendationsTable.class)
@@ -44,7 +44,7 @@ class PostgresDrinksServiceTest {
 
         Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, null, null, null, null);
 
-        PostgresDrinksService repo = new PostgresDrinksService(
+        DrinksService repo = new DrinksService(
                 mock(DrinkNameCollector.class),
                 savedTable,
                 mock(RecommendationsTable.class)
@@ -62,7 +62,7 @@ class PostgresDrinksServiceTest {
 
         Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, 3, null, null, null);
 
-        PostgresDrinksService repo = new PostgresDrinksService(
+        DrinksService repo = new DrinksService(
                 mock(DrinkNameCollector.class),
                 savedTable,
                 mock(RecommendationsTable.class)
@@ -89,7 +89,7 @@ class PostgresDrinksServiceTest {
 
         Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, 3, null, null, null);
 
-        PostgresDrinksService repo = new PostgresDrinksService(
+        DrinksService repo = new DrinksService(
                 mock(DrinkNameCollector.class),
                 savedTable,
                 mock(RecommendationsTable.class)
@@ -112,7 +112,7 @@ class PostgresDrinksServiceTest {
         DrinkNameCollector nameCollector = mock(DrinkNameCollector.class);
         when(nameCollector.withName(any(Recommendation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        PostgresDrinksService repo = new PostgresDrinksService(nameCollector, savedTable, recTable);
+        DrinksService repo = new DrinksService(nameCollector, savedTable, recTable);
         repo.saveDrink(drink);
 
         verify(recTable).save(any(Recommendation.class));
@@ -128,7 +128,7 @@ class PostgresDrinksServiceTest {
 
         Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, null, false, null, null);
 
-        PostgresDrinksService repo = new PostgresDrinksService(mock(DrinkNameCollector.class), savedTable, recTable);
+        DrinksService repo = new DrinksService(mock(DrinkNameCollector.class), savedTable, recTable);
         repo.saveDrink(drink);
 
         verify(recTable, never()).save(any());
@@ -140,7 +140,7 @@ class PostgresDrinksServiceTest {
         SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
         when(savedTable.findByUserIdAndDate(USER, "2026-09-08")).thenReturn(List.of(drink));
 
-        PostgresDrinksService repo = new PostgresDrinksService(
+        DrinksService repo = new DrinksService(
                 mock(DrinkNameCollector.class),
                 savedTable,
                 mock(RecommendationsTable.class)
@@ -156,7 +156,7 @@ class PostgresDrinksServiceTest {
         SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
         when(savedTable.deleteAndCountByIds(List.of(1, 2, 3))).thenReturn(3);
 
-        PostgresDrinksService repo = new PostgresDrinksService(
+        DrinksService repo = new DrinksService(
                 mock(DrinkNameCollector.class),
                 savedTable,
                 mock(RecommendationsTable.class)

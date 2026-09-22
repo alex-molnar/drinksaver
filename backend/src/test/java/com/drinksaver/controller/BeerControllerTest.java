@@ -2,11 +2,11 @@ package com.drinksaver.controller;
 
 import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.config.SecurityConfig;
+import com.drinksaver.controller.user.BeerController;
 import com.drinksaver.model.db.BeerFlavour;
 import com.drinksaver.model.db.Brand;
 import com.drinksaver.repository.AlcoholRepository;
 import com.drinksaver.repository.BeerRepository;
-import com.drinksaver.repository.DrinksRepository;
 import com.drinksaver.service.InjectorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,6 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -69,7 +68,6 @@ class BeerControllerTest {
             return new InjectorService(
                 Map.of("alcohol", org.mockito.Mockito.mock(AlcoholRepository.class)),
                 Map.of("beer", beerRepository),
-                Map.of("drinks", org.mockito.Mockito.mock(DrinksRepository.class)),
                 Map.of(),
                 config
             );

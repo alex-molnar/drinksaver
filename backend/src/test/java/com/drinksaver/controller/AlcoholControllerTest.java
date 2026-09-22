@@ -2,6 +2,7 @@ package com.drinksaver.controller;
 
 import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.config.SecurityConfig;
+import com.drinksaver.controller.user.AlcoholController;
 import com.drinksaver.model.db.AlcoholSubtype;
 import com.drinksaver.model.db.AlcoholType;
 import com.drinksaver.model.db.AlcoholVolume;
@@ -9,7 +10,6 @@ import com.drinksaver.model.dto.NewAlcoholEntry;
 import com.drinksaver.model.dto.NewAlcoholSubtype;
 import com.drinksaver.repository.AlcoholRepository;
 import com.drinksaver.repository.BeerRepository;
-import com.drinksaver.repository.DrinksRepository;
 import com.drinksaver.service.InjectorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,7 +87,6 @@ class AlcoholControllerTest {
             return new InjectorService(
                 Map.of("alcohol", alcoholRepository),
                 Map.of("beer", org.mockito.Mockito.mock(BeerRepository.class)),
-                Map.of("drinks", org.mockito.Mockito.mock(DrinksRepository.class)),
                 Map.of(),
                 config
             );

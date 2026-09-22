@@ -3,7 +3,6 @@ package com.drinksaver.service;
 import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.repository.AlcoholRepository;
 import com.drinksaver.repository.BeerRepository;
-import com.drinksaver.repository.DrinksRepository;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -32,7 +31,6 @@ class InjectorServiceTest {
         InjectorService service = new InjectorService(
                 Map.of("alcohol", alcohol),
                 Map.of("beer", mock(BeerRepository.class)),
-                Map.of("drinks", mock(DrinksRepository.class)),
                 Map.of(),
                 config
         );
@@ -55,7 +53,6 @@ class InjectorServiceTest {
         InjectorService service = new InjectorService(
                 Map.of("alcohol", mock(AlcoholRepository.class)),
                 Map.of("beer", beer),
-                Map.of("drinks", mock(DrinksRepository.class)),
                 Map.of(),
                 config
         );
@@ -63,29 +60,6 @@ class InjectorServiceTest {
         BeerRepository result = service.getBeerRepository();
 
         assertThat(result).isNotNull().isEqualTo(beer);
-    }
-
-    @Test
-    void getDrinksRepositoryReturnsPostgresImpl() {
-        DrinksRepository drinks = mock(DrinksRepository.class);
-        when(drinks.is("postgres")).thenReturn(true);
-
-        RepositoryConfiguration config = new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres", "postgres",
-                List.of(ADMIN), 4, 10, 0.97
-        );
-
-        InjectorService service = new InjectorService(
-                Map.of("alcohol", mock(AlcoholRepository.class)),
-                Map.of("beer", mock(BeerRepository.class)),
-                Map.of("drinks", drinks),
-                Map.of(),
-                config
-        );
-
-        DrinksRepository result = service.getDrinksRepository();
-
-        assertThat(result).isNotNull().isEqualTo(drinks);
     }
 
     @Test
@@ -101,7 +75,6 @@ class InjectorServiceTest {
         InjectorService service = new InjectorService(
                 Map.of("alcohol", alcohol),
                 Map.of("beer", mock(BeerRepository.class)),
-                Map.of("drinks", mock(DrinksRepository.class)),
                 Map.of(),
                 config
         );
@@ -124,7 +97,6 @@ class InjectorServiceTest {
         InjectorService service = new InjectorService(
                 Map.of("alcohol", mock(AlcoholRepository.class)),
                 Map.of("beer", beer),
-                Map.of("drinks", mock(DrinksRepository.class)),
                 Map.of(),
                 config
         );
@@ -132,28 +104,5 @@ class InjectorServiceTest {
         assertThatThrownBy(service::getBeerRepository)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("No such BeerRepository");
-    }
-
-    @Test
-    void getDrinksRepositoryThrowsWhenNoMatchingImplementation() {
-        DrinksRepository drinks = mock(DrinksRepository.class);
-        when(drinks.is("mysql")).thenReturn(false);
-
-        RepositoryConfiguration config = new RepositoryConfiguration(
-                "postgres", "postgres", "mysql", "postgres", "postgres",
-                List.of(ADMIN), 4, 10, 0.97
-        );
-
-        InjectorService service = new InjectorService(
-                Map.of("alcohol", mock(AlcoholRepository.class)),
-                Map.of("beer", mock(BeerRepository.class)),
-                Map.of("drinks", drinks),
-                Map.of(),
-                config
-        );
-
-        assertThatThrownBy(service::getDrinksRepository)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("No such DrinksRepository");
     }
 }
