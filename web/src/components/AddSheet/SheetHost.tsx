@@ -86,7 +86,9 @@ const SheetHost: React.FC = () => {
         {top.kind === 'option' && (
           <OptionPanel field={top.field} onPushPanel={sheet.pushPanel} onPopPanel={sheet.popPanel} onDismiss={sheet.dismiss} />
         )}
-        {top.kind === 'create' && <CreatePanel field={top.field} onPopPanel={sheet.popPanel} />}
+        {top.kind === 'create' && (
+          <CreatePanel field={top.field} onPopPanel={sheet.popPanel} onPopToRoot={sheet.popToRoot} />
+        )}
       </Suspense>
       {sheet.isOpen && <div ref={stripSlotRef} />}
     </StyledDrawer>

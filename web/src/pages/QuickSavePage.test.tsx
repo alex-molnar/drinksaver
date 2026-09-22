@@ -43,6 +43,7 @@ beforeEach(() => {
     open: openAddSheet,
     pushPanel: vi.fn(),
     popPanel: vi.fn(),
+    popToRoot: vi.fn(),
     dismiss: vi.fn(),
   });
   mockUseDrinksForDate.mockReturnValue({ status: 'ready', rows: [] });

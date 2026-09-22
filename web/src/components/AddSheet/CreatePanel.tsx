@@ -9,6 +9,7 @@ import DesignSelector from './DesignSelector';
 export interface CreatePanelProps {
   field: CreatableCatalogueField;
   onPopPanel: () => void;
+  onPopToRoot: () => void;
 }
 
 const Heading = styled.h2`
@@ -122,11 +123,12 @@ const CREATE_TITLES: Record<CreatableCatalogueField, string> = {
 
 /**
  * The sheet's create panel: one small form behind any "New ..." row in `OptionPanel`. Adopts the
- * created entry into the draft and returns to the menu on success - see `useCreateCatalogueEntry`,
- * whose `onAdopted` callback this wires straight to `onPopPanel`, matching the design doc's
- * "it is saved and picked for you, you stay right here."
+ * created entry into the draft and returns all the way to the root menu on success - see
+ * `useCreateCatalogueEntry`, whose `onAdopted` callback this wires to `onPopToRoot` rather than
+ * `onPopPanel`, so a create reached via an option list's own "New ..." row skips back past that
+ * list instead of leaving the user to dismiss it by hand.
  */
-const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
+const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel, onPopToRoot }) => {
   const { draft } = useDraft();
   const catalogue = useCatalogue(draft);
   const design = useDesign();
@@ -140,7 +142,7 @@ const CreatePanel: React.FC<CreatePanelProps> = ({ field, onPopPanel }) => {
     headingRef.current?.focus();
   }, []);
 
-  const onAdopted = useCallback(() => onPopPanel(), [onPopPanel]);
+  const onAdopted = useCallback(() => onPopToRoot(), [onPopToRoot]);
   const mutation = useCreateCatalogueEntry(onAdopted);
 
   // Only these two fields nest under another catalogue choice already on the draft - see

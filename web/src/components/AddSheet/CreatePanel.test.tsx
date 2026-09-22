@@ -78,15 +78,15 @@ const setMutationState = (overrides: Partial<ReturnType<typeof useCreateCatalogu
   });
 };
 
-const renderCreatePanel = (field: CreatableCatalogueField, onPopPanel = vi.fn()) => {
+const renderCreatePanel = (field: CreatableCatalogueField, onPopPanel = vi.fn(), onPopToRoot = vi.fn()) => {
   render(
     <ThemeProvider theme={muiTheme}>
       <TestDesignProvider>
-        <CreatePanel field={field} onPopPanel={onPopPanel} />
+        <CreatePanel field={field} onPopPanel={onPopPanel} onPopToRoot={onPopToRoot} />
       </TestDesignProvider>
     </ThemeProvider>
   );
-  return { onPopPanel };
+  return { onPopPanel, onPopToRoot };
 };
 
 beforeEach(() => {
@@ -326,10 +326,11 @@ describe('CreatePanel', () => {
     expect(screen.getByRole('alert')).toBeInTheDocument();
   });
 
-  it('wires onAdopted through to onPopPanel, so a successful create returns to the menu', () => {
-    const { onPopPanel } = renderCreatePanel('brand');
+  it('wires onAdopted through to onPopToRoot, so a successful create returns all the way to the menu', () => {
+    const { onPopPanel, onPopToRoot } = renderCreatePanel('brand');
     expect(capturedOnAdopted).toBeDefined();
     capturedOnAdopted?.();
-    expect(onPopPanel).toHaveBeenCalledTimes(1);
+    expect(onPopToRoot).toHaveBeenCalledTimes(1);
+    expect(onPopPanel).not.toHaveBeenCalled();
   });
 });

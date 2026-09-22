@@ -43,10 +43,19 @@ vi.mock('./OptionPanel', () => ({
 }));
 
 vi.mock('./CreatePanel', () => ({
-  default: ({ field, onPopPanel }: { field: string; onPopPanel: () => void }) => (
+  default: ({
+    field,
+    onPopPanel,
+    onPopToRoot,
+  }: {
+    field: string;
+    onPopPanel: () => void;
+    onPopToRoot: () => void;
+  }) => (
     <div>
       <span>create-panel:{field}</span>
       <button onClick={onPopPanel}>pop</button>
+      <button onClick={onPopToRoot}>pop-to-root</button>
     </div>
   ),
 }));
@@ -115,6 +124,20 @@ describe('SheetHost', () => {
 
     await userEvent.click(screen.getByText('push-create'));
     expect(await screen.findByText('create-panel:brand')).toBeInTheDocument();
+  });
+
+  it('popping to root from the create panel skips the option panel and lands on the menu', async () => {
+    renderSheetHost('/?sheet=add');
+    await screen.findByText('menu-panel');
+    await userEvent.click(screen.getByText('push-option'));
+    await screen.findByText('option-panel:alcoholType');
+    await userEvent.click(screen.getByText('push-create'));
+    await screen.findByText('create-panel:brand');
+
+    await userEvent.click(screen.getByText('pop-to-root'));
+
+    expect(await screen.findByText('menu-panel')).toBeInTheDocument();
+    expect(screen.queryByText('option-panel:alcoholType')).not.toBeInTheDocument();
   });
 
   it('dismissing from the menu clears the sheet param from the URL', async () => {
