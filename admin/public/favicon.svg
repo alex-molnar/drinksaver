@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title>DrinkSaver glass mark</title>
+  <path fill="#EBDCC0" d="M14 11h36l-4.5 41H18.5L14 11Z"/>
+  <path fill="#C4462E" d="M17.2 30h29.6l-2.2 19H19.4l-2.2-19Z"/>
+  <path fill="#2B1A14" d="M16.2 33h31.6l-.5 4H16.7l-.5-4Z" opacity=".55"/>
+  <path fill="none" stroke="#2B1A14" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 11h36M18.5 52h27"/>
+</svg>
