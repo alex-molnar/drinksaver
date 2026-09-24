@@ -44,7 +44,7 @@ public class AlcoholController {
     }
 
     @PostMapping("/types/{alcoholTypeId}/subtypes")
-    public AlcoholSubtype getSubtypesByAlcoholType(@AuthenticationPrincipal Jwt jwt, @PathVariable Integer alcoholTypeId, @RequestBody NewAlcoholSubtype newAlcoholSubtype) {
+    public AlcoholSubtype getSubtypesByAlcoholType(@AuthenticationPrincipal Jwt jwt, @PathVariable Integer alcoholTypeId,  @Valid @RequestBody NewAlcoholSubtype newAlcoholSubtype) {
         return alcoholRepository.saveSubtypeForAlcoholType(alcoholTypeId, newAlcoholSubtype.withUserId(AuthenticatedUser.id(jwt)));
     }
 
@@ -56,7 +56,7 @@ public class AlcoholController {
     @PostMapping("/types/{alcoholTypeId}/volumes")
     public ResponseEntity<AlcoholVolume> saveVolumeForAlcoholType(
             @PathVariable Integer alcoholTypeId,
-            @RequestBody NewVolumeEntry volumeDescription) {
+            @Valid @RequestBody NewVolumeEntry volumeDescription) {
         return alcoholRepository
                 .saveVolumeForAlcoholType(alcoholTypeId, volumeDescription)
                 .map(ResponseEntity::ok)

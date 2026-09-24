@@ -5,6 +5,7 @@ import com.drinksaver.model.dto.RecommendationUpdate;
 import com.drinksaver.security.AuthenticatedUser;
 import com.drinksaver.service.RecommendationCacheService;
 import com.drinksaver.service.RecommendationService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -32,7 +33,7 @@ public class RecommendationsController {
     }
 
     @PatchMapping("/edit")
-    public List<Recommendation> reorderRecommendations(@AuthenticationPrincipal Jwt jwt, @RequestBody List<RecommendationUpdate> recommendationUpdates) {
+    public List<Recommendation> reorderRecommendations(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody List<RecommendationUpdate> recommendationUpdates) {
         UUID userId = AuthenticatedUser.id(jwt);
         List<Integer> userOwnedRecommendations = recommendationService.getRecommendations(userId)
                 .stream()

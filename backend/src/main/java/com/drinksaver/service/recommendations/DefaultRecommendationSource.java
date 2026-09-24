@@ -22,7 +22,7 @@ public class DefaultRecommendationSource implements RecommendationSource {
     }
 
     @Override
-    public Stream<Recommendation> buildRecommendation(UUID userId, Stream<Recommendation> processed) {
+    public Stream<Recommendation> buildRecommendation(UUID userId, Stream<Recommendation> processed) { // TODO get admin recommendation from default table
         List<UUID> adminUserIds = repositoryConfiguration.adminUserList();
         if (adminUserIds == null || adminUserIds.isEmpty()) {
             return Stream.empty();

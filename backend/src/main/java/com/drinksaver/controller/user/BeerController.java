@@ -7,6 +7,7 @@ import com.drinksaver.model.dto.NewBeerBrand;
 import com.drinksaver.model.dto.NewBeerFlavour;
 import com.drinksaver.repository.BeerRepository;
 import com.drinksaver.security.AuthenticatedUser;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -36,7 +37,7 @@ public class BeerController {
     }
 
     @PostMapping("/brands")
-    public Brand saveBrand(@AuthenticationPrincipal Jwt jwt, @RequestBody NewBeerBrand newBeerBrand) {
+    public Brand saveBrand(@AuthenticationPrincipal Jwt jwt,  @Valid @RequestBody NewBeerBrand newBeerBrand) {
         return beerRepository.saveBrand(AuthenticatedUser.id(jwt), newBeerBrand.name(), newBeerBrand.flavours(), newBeerBrand.colorPaletteId());
     }
 
@@ -46,7 +47,7 @@ public class BeerController {
     }
 
     @PostMapping("/brands/{brandId}/flavours")
-    public BeerFlavour saveBrandName(@AuthenticationPrincipal Jwt jwt, @PathVariable Integer brandId, @RequestBody NewBeerFlavour newBeerFlavour) {
+    public BeerFlavour saveBrandName(@AuthenticationPrincipal Jwt jwt, @PathVariable Integer brandId, @Valid @RequestBody NewBeerFlavour newBeerFlavour) {
         return beerRepository.saveBeerFlavour(brandId, AuthenticatedUser.id(jwt), newBeerFlavour.name(), newBeerFlavour.colorPaletteId());
     }
 }
