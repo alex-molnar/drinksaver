@@ -69,6 +69,10 @@ const renderSheetHost = (
   initialEntry: NonNullable<Parameters<typeof MemoryRouter>[0]['initialEntries']>[number],
   setContainer = vi.fn()
 ) => {
+  // The real sheet opens from a focused control. jsdom 30.1 otherwise reports Document as
+  // the previous focus target, which MUI cannot focus again when the Drawer unmounts.
+  render(<button>outside</button>);
+  screen.getByText('outside').focus();
   render(
     <ThemeProvider theme={muiTheme}>
       <MemoryRouter initialEntries={[initialEntry]}>
@@ -177,16 +181,7 @@ describe('SheetHost', () => {
    * trap is off, the same way MUI's own docs fix this class of bug for a portal-rendered popup.
    */
   it('does not force focus back into the sheet once it has moved elsewhere', async () => {
-    render(
-      <ThemeProvider theme={muiTheme}>
-        <MemoryRouter initialEntries={['/?sheet=add']}>
-          <SheetPortalContext.Provider value={{ container: null, setContainer: vi.fn() }}>
-            <button>outside</button>
-            <SheetHost />
-          </SheetPortalContext.Provider>
-        </MemoryRouter>
-      </ThemeProvider>
-    );
+    renderSheetHost('/?sheet=add');
     await screen.findByText('menu-panel');
 
     const outside = screen.getByText('outside');
