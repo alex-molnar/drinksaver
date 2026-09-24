@@ -44,7 +44,7 @@ public record Drink(
          * order of magnitude above the 9 the UI's QuantitySelector allows.
          */
         @Min(1) @Max(100) Integer quantity,
-        @NotNull Boolean addToRecommendations,
+        Boolean addToRecommendations,
         Boolean onlyTemporarily,
         @Size(max = 255) String name
 ) {
