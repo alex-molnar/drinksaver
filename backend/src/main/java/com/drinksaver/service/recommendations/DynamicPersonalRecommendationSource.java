@@ -2,10 +2,8 @@ package com.drinksaver.service.recommendations;
 
 import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.db.Recommendation;
-import com.drinksaver.repository.postgres.schema.SavedDrinksTable;
+import com.drinksaver.repository.schema.SavedDrinksTable;
 import com.drinksaver.service.model.DrinkKey;
-import com.drinksaver.service.namecollector.AlcoholNameCollector;
-import com.drinksaver.service.namecollector.BeerNameCollector;
 import com.drinksaver.service.namecollector.DrinkNameCollector;
 import com.drinksaver.service.recommendations.api.RecommendationSource;
 import org.springframework.beans.factory.annotation.Autowired;

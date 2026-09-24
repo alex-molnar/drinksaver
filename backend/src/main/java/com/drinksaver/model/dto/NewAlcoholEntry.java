@@ -2,6 +2,7 @@ package com.drinksaver.model.dto;
 
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.UUID;
@@ -24,8 +25,8 @@ public record NewAlcoholEntry(
          */
         @Size(max = 50) List<NewVolumeEntry> volumes,
         @Size(max = 50) List<String> alcoholSubtypes,
-        Integer colorPaletteId,
-        Integer glasswareId
+        @NotNull Integer colorPaletteId,
+        @NotNull Integer glasswareId
 ) {
     public NewAlcoholEntry withUserId(UUID userId) {
         return new NewAlcoholEntry(userId, name, volumes, alcoholSubtypes, colorPaletteId, glasswareId);

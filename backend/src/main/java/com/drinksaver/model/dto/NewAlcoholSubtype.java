@@ -1,6 +1,7 @@
 package com.drinksaver.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
@@ -12,11 +13,11 @@ import java.util.UUID;
  * rather than whatever the caller asked for.
  */
 public record NewAlcoholSubtype(
-        Integer alcoholTypeId,
+        @NotNull Integer alcoholTypeId,
         @JsonProperty(access = JsonProperty.Access.READ_ONLY) UUID userId,
-        String name,
-        Integer colorPaletteId,
-        Integer glasswareId
+        @NotNull String name,
+        @NotNull Integer colorPaletteId,
+        @NotNull Integer glasswareId
 ) {
     public NewAlcoholSubtype withUserId(UUID userId) {
         return new NewAlcoholSubtype(alcoholTypeId, userId, name, colorPaletteId, glasswareId);

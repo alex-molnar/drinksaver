@@ -123,7 +123,7 @@ This is the step that actually makes the group visible, and the one worth double
 | --- | --- | --- |
 | Name | `groups` | Any name works. This one matches the claim, which saves a puzzle later |
 | Token Claim Name | `groups` | The panel reads `tokenParsed.groups`. A different name here means the panel sees nothing |
-| Full group path | Either | On emits `/admin`, off emits `admin`. The panel handles both |
+| Full group path | On | Emits `/admin`. The backend requires exactly `/admin`, so off locks every admin out of `/v1/admin/**` |
 | Add to ID token | On | Harmless, and useful when debugging |
 | **Add to access token** | **On** | **Required.** See below |
 | Add to userinfo | On | Harmless |

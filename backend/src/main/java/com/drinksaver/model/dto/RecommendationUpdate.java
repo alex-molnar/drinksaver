@@ -1,3 +1,5 @@
 package com.drinksaver.model.dto;
 
-public record RecommendationUpdate(Integer id, String name) {}
+import jakarta.validation.constraints.NotNull;
+
+public record RecommendationUpdate(@NotNull Integer id, @NotNull String name) {}

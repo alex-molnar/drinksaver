@@ -1,0 +1,169 @@
+package com.drinksaver.service;
+
+import com.drinksaver.model.db.Recommendation;
+import com.drinksaver.model.db.SavedDrink;
+import com.drinksaver.model.dto.Drink;
+import com.drinksaver.repository.schema.RecommendationsTable;
+import com.drinksaver.repository.schema.SavedDrinksTable;
+import com.drinksaver.service.namecollector.DrinkNameCollector;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+
+import java.util.List;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+class DrinksServiceTest {
+
+    private static final UUID USER = UUID.randomUUID();
+
+    @Test
+    void isReturnsTrueForPostgres() {
+        DrinksService repo = new DrinksService(
+                mock(DrinkNameCollector.class),
+                mock(SavedDrinksTable.class),
+                mock(RecommendationsTable.class)
+        );
+
+        assertThat(repo.is("postgres")).isTrue();
+        assertThat(repo.is("mysql")).isFalse();
+    }
+
+    @Test
+    void saveDrinkWithNullQuantitySavesSingle() {
+        SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
+        SavedDrink saved = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
+        when(savedTable.save(any())).thenReturn(saved);
+
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, null, null, null, null);
+
+        DrinksService repo = new DrinksService(
+                mock(DrinkNameCollector.class),
+                savedTable,
+                mock(RecommendationsTable.class)
+        );
+
+        assertThat(repo.saveDrink(drink)).containsExactly(saved);
+        verify(savedTable, times(1)).save(any());
+    }
+
+    @Test
+    void saveDrinkWithQuantityMultiplier() {
+        SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
+        SavedDrink saved = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
+        when(savedTable.saveAll(any())).thenReturn(List.of(saved, saved, saved));
+
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, 3, null, null, null);
+
+        DrinksService repo = new DrinksService(
+                mock(DrinkNameCollector.class),
+                savedTable,
+                mock(RecommendationsTable.class)
+        );
+
+        assertThat(repo.saveDrink(drink)).hasSize(3);
+        ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+        verify(savedTable).saveAll(captor.capture());
+        assertThat(captor.getValue()).hasSize(3);
+    }
+
+    /**
+     * The reason this endpoint's contract changed. `saveAll` writes `quantity` rows and the
+     * repository used to return only `getFirst()`, so a caller that saved three drinks held one
+     * id and could undo exactly one of them. The other two stayed, silently.
+     */
+    @Test
+    void saveDrinkWithQuantityReturnsEveryRowItWrote() {
+        SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
+        SavedDrink first = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
+        SavedDrink second = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
+        SavedDrink third = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
+        when(savedTable.saveAll(any())).thenReturn(List.of(first, second, third));
+
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, 3, null, null, null);
+
+        DrinksService repo = new DrinksService(
+                mock(DrinkNameCollector.class),
+                savedTable,
+                mock(RecommendationsTable.class)
+        );
+
+        assertThat(repo.saveDrink(drink)).containsExactly(first, second, third);
+    }
+
+    @Test
+    void saveDrinkSavesRecommendationWhenShouldAdd() {
+        SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
+        SavedDrink saved = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
+        when(savedTable.save(any())).thenReturn(saved);
+
+        RecommendationsTable recTable = mock(RecommendationsTable.class);
+        when(recTable.findNonTemporaryByUserId(USER)).thenReturn(List.of(4));
+
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, 6, 2, null, null, true, null, null);
+
+        DrinkNameCollector nameCollector = mock(DrinkNameCollector.class);
+        when(nameCollector.withName(any(Recommendation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DrinksService repo = new DrinksService(nameCollector, savedTable, recTable);
+        repo.saveDrink(drink);
+
+        verify(recTable).save(any(Recommendation.class));
+    }
+
+    @Test
+    void saveDrinkDoesNotSaveRecommendationWhenShouldNotAdd() {
+        SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
+        SavedDrink saved = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
+        when(savedTable.save(any())).thenReturn(saved);
+
+        RecommendationsTable recTable = mock(RecommendationsTable.class);
+
+        Drink drink = new Drink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null, null, false, null, null);
+
+        DrinksService repo = new DrinksService(mock(DrinkNameCollector.class), savedTable, recTable);
+        repo.saveDrink(drink);
+
+        verify(recTable, never()).save(any());
+    }
+
+    @Test
+    void getSavedDrinksQueriesTable() {
+        SavedDrink drink = new SavedDrink(USER, "2026-09-08", 1, 2, 3, null, null, null, null, null, null);
+        SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
+        when(savedTable.findByUserIdAndDate(USER, "2026-09-08")).thenReturn(List.of(drink));
+
+        DrinksService repo = new DrinksService(
+                mock(DrinkNameCollector.class),
+                savedTable,
+                mock(RecommendationsTable.class)
+        );
+
+        List<SavedDrink> result = repo.getSavedDrinks(USER, "2026-09-08");
+
+        assertThat(result).contains(drink);
+    }
+
+    @Test
+    void deleteSavedDrinkDelegatesAndReturnsCount() {
+        SavedDrinksTable savedTable = mock(SavedDrinksTable.class);
+        when(savedTable.deleteAndCountByIds(List.of(1, 2, 3))).thenReturn(3);
+
+        DrinksService repo = new DrinksService(
+                mock(DrinkNameCollector.class),
+                savedTable,
+                mock(RecommendationsTable.class)
+        );
+
+        int result = repo.deleteSavedDrink(List.of(1, 2, 3));
+
+        assertThat(result).isEqualTo(3);
+    }
+}

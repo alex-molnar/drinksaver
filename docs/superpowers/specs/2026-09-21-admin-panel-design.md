@@ -162,7 +162,7 @@ The recommendations every user sees before they have created any of their own.
 A table of the current defaults with drag reordering, using `@dnd-kit` exactly as `web/`
 does, inline name editing, and delete. Creation opens a dialog composing the full
 recommendation: alcohol type, optional subtype, volume, optional brand, optional flavour,
-optional consumption type, and optional palette and glassware overrides. The selects are
+optional consumption type, and a required palette and glassware. The selects are
 populated from the admin catalogue endpoints and cascade, so choosing an alcohol type
 narrows the subtype and volume options.
 

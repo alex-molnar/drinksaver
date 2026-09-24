@@ -2,12 +2,10 @@ package com.drinksaver.controller;
 
 import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.config.SecurityConfig;
+import com.drinksaver.controller.user.DrinksController;
 import com.drinksaver.model.db.SavedDrink;
 import com.drinksaver.model.dto.Drink;
-import com.drinksaver.repository.AlcoholRepository;
-import com.drinksaver.repository.BeerRepository;
-import com.drinksaver.repository.DrinksRepository;
-import com.drinksaver.service.InjectorService;
+import com.drinksaver.service.DrinksService;
 import com.drinksaver.service.RecommendationCacheService;
 import com.drinksaver.service.model.DrinkKey;
 import com.drinksaver.service.namecollector.AlcoholNameCollector;
@@ -30,7 +28,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -82,7 +79,7 @@ class DrinksControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private DrinksRepository drinksRepository;
+    private DrinksService drinksService;
 
     @MockitoBean
     private RecommendationCacheService recommendationCacheService;
@@ -95,18 +92,6 @@ class DrinksControllerTest {
 
     @TestConfiguration
     static class TestConfig {
-        @Bean
-        InjectorService injectorService(DrinksRepository drinksRepository) {
-            when(drinksRepository.is(any())).thenReturn(true);
-            return new InjectorService(
-                Map.of("alcohol", mock(AlcoholRepository.class)),
-                Map.of("beer", mock(BeerRepository.class)),
-                Map.of("drinks", drinksRepository),
-                Map.of(),
-                repositoryConfiguration()
-            );
-        }
-
         @Bean
         RepositoryConfiguration repositoryConfiguration() {
             return new RepositoryConfiguration("mock", "mock", "mock", "mock", "mock", List.of(), BEER_ID, 10, 0.97);
@@ -132,6 +117,8 @@ class DrinksControllerTest {
               "brandId": 3,
               "beerFlavourId": null,
               "consumptionTypeId": 1,
+              "colorPaletteId": 3,
+              "glasswareId": 4,
               "comments": null,
               "quantity": %s,
               "addToRecommendations": false,
@@ -146,7 +133,7 @@ class DrinksControllerTest {
         UUID userId = UUID.randomUUID();
         SavedDrink beerDrink = savedDrink(1, userId, BEER_ID);
 
-        when(drinksRepository.getSavedDrinks(userId, "2026-01-01")).thenReturn(List.of(beerDrink));
+        when(drinksService.getSavedDrinks(userId, "2026-01-01")).thenReturn(List.of(beerDrink));
         when(beerNameCollector.collectBeerName(any(DrinkKey.class)))
             .thenReturn(DrinkKey.of(beerDrink).withName("Heineken (33cl)"));
 
@@ -167,7 +154,7 @@ class DrinksControllerTest {
         int wineTypeId = BEER_ID + 1;
         SavedDrink wineDrink = savedDrink(2, userId, wineTypeId);
 
-        when(drinksRepository.getSavedDrinks(userId, "2026-01-01")).thenReturn(List.of(wineDrink));
+        when(drinksService.getSavedDrinks(userId, "2026-01-01")).thenReturn(List.of(wineDrink));
         when(alcoholNameCollector.collectAlcoholName(any(DrinkKey.class)))
             .thenReturn(DrinkKey.of(wineDrink).withName("Merlot (75cl)"));
 
@@ -193,7 +180,7 @@ class DrinksControllerTest {
         UUID userId = UUID.randomUUID();
         SavedDrink typelessDrink = savedDrink(3, userId, null);
 
-        when(drinksRepository.getSavedDrinks(userId, "2026-01-01")).thenReturn(List.of(typelessDrink));
+        when(drinksService.getSavedDrinks(userId, "2026-01-01")).thenReturn(List.of(typelessDrink));
         when(alcoholNameCollector.collectAlcoholName(any(DrinkKey.class)))
             .thenReturn(DrinkKey.of(typelessDrink));
 
@@ -212,13 +199,13 @@ class DrinksControllerTest {
         UUID authenticatedUserId = UUID.randomUUID();
         UUID otherUserId = UUID.randomUUID();
 
-        when(drinksRepository.getSavedDrinks(authenticatedUserId, "2026-01-01")).thenReturn(List.of());
+        when(drinksService.getSavedDrinks(authenticatedUserId, "2026-01-01")).thenReturn(List.of());
 
         mockMvc.perform(get("/v1/drinks/date/{date}", "2026-01-01")
                 .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString()))))
             .andExpect(status().isOk());
 
-        verify(drinksRepository).getSavedDrinks(authenticatedUserId, "2026-01-01");
+        verify(drinksService).getSavedDrinks(authenticatedUserId, "2026-01-01");
         verifyNoInteractions(alcoholNameCollector, beerNameCollector);
         assertThat(otherUserId).isNotEqualTo(authenticatedUserId);
     }
@@ -242,6 +229,8 @@ class DrinksControllerTest {
               "brandId": 3,
               "beerFlavourId": null,
               "consumptionTypeId": 1,
+              "colorPaletteId": 3,
+              "glasswareId": 4,
               "comments": null,
               "quantity": 1,
               "addToRecommendations": false,
@@ -251,7 +240,7 @@ class DrinksControllerTest {
             """.formatted(userId);
 
         SavedDrink saved = savedDrink(9, userId, BEER_ID);
-        when(drinksRepository.saveDrink(any())).thenReturn(List.of(saved));
+        when(drinksService.saveDrink(any())).thenReturn(List.of(saved));
 
         mockMvc.perform(post("/v1/drinks/new")
                 .with(jwt().jwt(token -> token.subject(userId.toString())))
@@ -264,14 +253,14 @@ class DrinksControllerTest {
             .andExpect(jsonPath("$[0].userId").value(userId.toString()))
             .andExpect(jsonPath("$[0].alcoholTypeId").value(BEER_ID));
 
-        org.mockito.InOrder inOrder = org.mockito.Mockito.inOrder(drinksRepository, recommendationCacheService);
-        inOrder.verify(drinksRepository, times(1)).saveDrink(any());
+        org.mockito.InOrder inOrder = org.mockito.Mockito.inOrder(drinksService, recommendationCacheService);
+        inOrder.verify(drinksService, times(1)).saveDrink(any());
         inOrder.verify(recommendationCacheService, times(1)).onDrinkSaved(any());
     }
 
     /**
      * `quantity` is the number of rows to write, so anything below 1 is meaningless.
-     * It used to reach `PostgresDrinksService.saveDrink`, where an empty
+     * It used to reach `DrinksService.saveDrink`, where an empty
      * IntStream range made `saveAll(...).getFirst()` throw NoSuchElementException
      * and the caller saw a 500 for what is plainly a bad request.
      *
@@ -290,14 +279,14 @@ class DrinksControllerTest {
                 .content(drinkBody(userId, String.valueOf(quantity))))
             .andExpect(status().isBadRequest());
 
-        verifyNoInteractions(drinksRepository, recommendationCacheService);
+        verifyNoInteractions(drinksService, recommendationCacheService);
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"null", "1", "100"})
     void saveDrinkAcceptsAnAbsentQuantityAndBothEndsOfTheRange(String quantity) throws Exception {
         UUID userId = UUID.randomUUID();
-        when(drinksRepository.saveDrink(any())).thenReturn(List.of(savedDrink(9, userId, BEER_ID)));
+        when(drinksService.saveDrink(any())).thenReturn(List.of(savedDrink(9, userId, BEER_ID)));
 
         mockMvc.perform(post("/v1/drinks/new")
                 .with(jwt().jwt(token -> token.subject(userId.toString())))
@@ -305,7 +294,7 @@ class DrinksControllerTest {
                 .content(drinkBody(userId, quantity)))
             .andExpect(status().isOk());
 
-        verify(drinksRepository, times(1)).saveDrink(any());
+        verify(drinksService, times(1)).saveDrink(any());
     }
 
     /**
@@ -324,13 +313,13 @@ class DrinksControllerTest {
                 .content(drinkBody(userId, "1").replace("\"comments\": null", "\"comments\": \"" + tooLong + "\"")))
             .andExpect(status().isBadRequest());
 
-        verifyNoInteractions(drinksRepository, recommendationCacheService);
+        verifyNoInteractions(drinksService, recommendationCacheService);
     }
 
     @Test
     void saveDrinkAcceptsCommentsAtTheColumnLimit() throws Exception {
         UUID userId = UUID.randomUUID();
-        when(drinksRepository.saveDrink(any())).thenReturn(List.of(savedDrink(9, userId, BEER_ID)));
+        when(drinksService.saveDrink(any())).thenReturn(List.of(savedDrink(9, userId, BEER_ID)));
 
         mockMvc.perform(post("/v1/drinks/new")
                 .with(jwt().jwt(token -> token.subject(userId.toString())))
@@ -353,6 +342,8 @@ class DrinksControllerTest {
               "brandId": 3,
               "beerFlavourId": null,
               "consumptionTypeId": 1,
+              "colorPaletteId": 3,
+              "glasswareId": 4,
               "comments": null,
               "quantity": 1,
               "addToRecommendations": false,
@@ -361,7 +352,7 @@ class DrinksControllerTest {
             }
             """.formatted(spoofedUserId);
 
-        when(drinksRepository.saveDrink(any())).thenReturn(List.of(savedDrink(9, authenticatedUserId, BEER_ID)));
+        when(drinksService.saveDrink(any())).thenReturn(List.of(savedDrink(9, authenticatedUserId, BEER_ID)));
 
         mockMvc.perform(post("/v1/drinks/new")
                 .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
@@ -370,7 +361,7 @@ class DrinksControllerTest {
             .andExpect(status().isOk());
 
         org.mockito.ArgumentCaptor<Drink> captor = org.mockito.ArgumentCaptor.forClass(Drink.class);
-        verify(drinksRepository).saveDrink(captor.capture());
+        verify(drinksService).saveDrink(captor.capture());
         assertThat(captor.getValue().userId()).isEqualTo(authenticatedUserId);
     }
 
@@ -378,8 +369,8 @@ class DrinksControllerTest {
     void deleteSavedDrinkOnlyDeletesIdsOwnedByTheAuthenticatedUser() throws Exception {
         UUID authenticatedUserId = UUID.randomUUID();
 
-        when(drinksRepository.ownedDrinkIds(List.of(1, 2), authenticatedUserId)).thenReturn(List.of(1));
-        when(drinksRepository.deleteSavedDrink(List.of(1))).thenReturn(1);
+        when(drinksService.ownedDrinkIds(List.of(1, 2), authenticatedUserId)).thenReturn(List.of(1));
+        when(drinksService.deleteSavedDrink(List.of(1))).thenReturn(1);
 
         mockMvc.perform(delete("/v1/drinks/byIds")
                 .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
@@ -387,6 +378,6 @@ class DrinksControllerTest {
             .andExpect(status().isOk())
             .andExpect(content().string("1"));
 
-        verify(drinksRepository).deleteSavedDrink(List.of(1));
+        verify(drinksService).deleteSavedDrink(List.of(1));
     }
 }
