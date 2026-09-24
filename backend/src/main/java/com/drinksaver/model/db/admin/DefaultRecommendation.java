@@ -1,5 +1,6 @@
 package com.drinksaver.model.db.admin;
 
+import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.model.dto.NewDefaultRecommendation;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -26,6 +27,20 @@ public class DefaultRecommendation {
     private Integer colorPaletteId;
     private Integer glasswareId;
     private Integer orderNumber;
+
+    public Recommendation toRecommendation() {
+        Recommendation recommendation = new Recommendation();
+        recommendation.setName(getName());
+        recommendation.setAlcoholTypeId(getAlcoholTypeId());
+        recommendation.setAlcoholSubtypeId(getAlcoholSubtypeId());
+        recommendation.setAlcoholVolumeId(getAlcoholVolumeId());
+        recommendation.setBrandId(getBrandId());
+        recommendation.setBeerFlavourId(getBeerFlavourId());
+        recommendation.setConsumptionTypeId(getConsumptionTypeId());
+        recommendation.setGlasswareId(getGlasswareId());
+        recommendation.setColorPaletteId(getColorPaletteId());
+        return recommendation;
+    }
 
     public static DefaultRecommendation of(NewDefaultRecommendation newDefaultRecommendation, Integer maxOrderNumber) {
         DefaultRecommendation recommendation =  new DefaultRecommendation();
