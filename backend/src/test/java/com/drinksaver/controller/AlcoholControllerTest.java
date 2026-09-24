@@ -224,7 +224,7 @@ class AlcoholControllerTest {
         mockMvc.perform(post("/v1/alcohol/types")
                 .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"Gin\",\"volumes\":[" + volumes + "],\"alcoholSubtypes\":[]}"))
+                .content("{\"name\":\"Gin\",\"volumes\":[" + volumes + "],\"alcoholSubtypes\":[],\"colorPaletteId\":3,\"glasswareId\":4}"))
             .andExpect(status().isBadRequest());
 
         verifyNoInteractions(alcoholRepository);
@@ -239,7 +239,7 @@ class AlcoholControllerTest {
         mockMvc.perform(post("/v1/alcohol/types")
                 .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"Gin\",\"volumes\":[],\"alcoholSubtypes\":[" + subtypes + "]}"))
+                .content("{\"name\":\"Gin\",\"volumes\":[],\"alcoholSubtypes\":[" + subtypes + "],\"colorPaletteId\":3,\"glasswareId\":4}"))
             .andExpect(status().isBadRequest());
 
         verifyNoInteractions(alcoholRepository);
@@ -259,7 +259,7 @@ class AlcoholControllerTest {
         mockMvc.perform(post("/v1/alcohol/types")
                 .with(jwt().jwt(token -> token.subject(userId.toString())))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"Gin\",\"volumes\":[" + volumes + "],\"alcoholSubtypes\":[]}"))
+                .content("{\"name\":\"Gin\",\"volumes\":[" + volumes + "],\"alcoholSubtypes\":[],\"colorPaletteId\":3,\"glasswareId\":4}"))
             .andExpect(status().isOk());
     }
 }
