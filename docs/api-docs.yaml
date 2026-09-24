@@ -375,6 +375,95 @@ paths:
               schema:
                 type: integer
                 format: int32
+  /v1/admin/recommendations/list:
+    get:
+      tags:
+      - admin-recommendations-controller
+      operationId: getRecommendationsList_1
+      description: Admin only. The default recommendations every user starts with, sorted by orderNumber.
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DefaultRecommendation"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/recommendations:
+    post:
+      tags:
+      - admin-recommendations-controller
+      operationId: createDefaultRecommendation
+      description: Admin only. The new recommendation is placed after the current last one.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewDefaultRecommendation"
+        required: true
+      responses:
+        "200":
+          description: The saved recommendation
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DefaultRecommendation"
+        "400":
+          description: name, alcoholTypeId, colorPaletteId or glasswareId is missing
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/recommendations/edit:
+    patch:
+      tags:
+      - admin-recommendations-controller
+      operationId: reorderRecommendations_1
+      description: >-
+        Admin only. Renumbers the listed recommendations 1..N in request order and
+        sets their names. Send the full list: rows left out keep their old order number.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/RecommendationUpdate"
+        required: true
+      responses:
+        "200":
+          description: All default recommendations, sorted by orderNumber
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DefaultRecommendation"
+        "400":
+          description: an entry is missing id or name
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/recommendations/{id}:
+    delete:
+      tags:
+      - admin-recommendations-controller
+      operationId: deleteRecommendation_1
+      description: Admin only.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Recommendation deleted
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no default recommendation with that id
 components:
   schemas:
     Drink:
@@ -731,3 +820,72 @@ components:
           type: string
         f:
           type: string
+    DefaultRecommendation:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        alcoholTypeId:
+          type: integer
+          format: int32
+        alcoholSubtypeId:
+          type: integer
+          format: int32
+        alcoholVolumeId:
+          type: integer
+          format: int32
+        brandId:
+          type: integer
+          format: int32
+        beerFlavourId:
+          type: integer
+          format: int32
+        consumptionTypeId:
+          type: integer
+          format: int32
+        colorPaletteId:
+          type: integer
+          format: int32
+        glasswareId:
+          type: integer
+          format: int32
+        orderNumber:
+          type: integer
+          format: int32
+    NewDefaultRecommendation:
+      type: object
+      required:
+      - name
+      - alcoholTypeId
+      - colorPaletteId
+      - glasswareId
+      properties:
+        name:
+          type: string
+        alcoholTypeId:
+          type: integer
+          format: int32
+        alcoholSubtypeId:
+          type: integer
+          format: int32
+        alcoholVolumeId:
+          type: integer
+          format: int32
+        brandId:
+          type: integer
+          format: int32
+        beerFlavourId:
+          type: integer
+          format: int32
+        consumptionTypeId:
+          type: integer
+          format: int32
+        colorPaletteId:
+          type: integer
+          format: int32
+        glasswareId:
+          type: integer
+          format: int32

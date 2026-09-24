@@ -39,7 +39,7 @@ public class AdminRecommendationsController {
                 : ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/create")
+    @PostMapping
     public DefaultRecommendation createDefaultRecommendation(@Valid @RequestBody NewDefaultRecommendation newDefaultRecommendation) {
         return adminRecommendationsRepository.addRecommendation(newDefaultRecommendation);
     }
