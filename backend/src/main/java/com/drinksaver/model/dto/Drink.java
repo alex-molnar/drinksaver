@@ -3,6 +3,7 @@ package com.drinksaver.model.dto;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -18,15 +19,15 @@ import java.util.UUID;
  */
 public record Drink(
         @JsonProperty(access = JsonProperty.Access.READ_ONLY) UUID userId,
-        String date,
-        Integer alcoholTypeId,
+        @NotNull String date,
+        @NotNull Integer alcoholTypeId,
         Integer alcoholSubtypeId,
         Integer alcoholVolumeId,
         Integer brandId,
         Integer beerFlavourId,
         Integer consumptionTypeId,
-        Integer colorPaletteId,
-        Integer glasswareId,
+        @NotNull Integer colorPaletteId,
+        @NotNull Integer glasswareId,
         /**
          * ddl-auto derives varchar(255) from this field, so anything longer was a
          * DataIntegrityViolationException and a 500: the same "500 for a plainly bad
@@ -43,7 +44,7 @@ public record Drink(
          * order of magnitude above the 9 the UI's QuantitySelector allows.
          */
         @Min(1) @Max(100) Integer quantity,
-        Boolean addToRecommendations,
+        @NotNull Boolean addToRecommendations,
         Boolean onlyTemporarily,
         @Size(max = 255) String name
 ) {

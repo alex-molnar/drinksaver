@@ -1,3 +1,5 @@
 package com.drinksaver.model.dto;
 
-public record NewVolumeEntry(String name, Float volume) {}
+import jakarta.validation.constraints.NotNull;
+
+public record NewVolumeEntry(@NotNull String name, @NotNull Float volume) {}
