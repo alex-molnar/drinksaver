@@ -3,7 +3,9 @@ package com.drinksaver.repository.schema.admin;
 import java.util.List;
 
 import com.drinksaver.model.db.admin.DefaultRecommendation;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -43,6 +45,8 @@ public interface DefaultRecommendationsTable extends JpaRepository<DefaultRecomm
             """, nativeQuery = true)  // TODO return result
     int updateDefaultRecommendationsOrderArray(@Param("recommendationIds") Integer[] recommendationIds, @Param("recommendationNames") String[] recommendationNames);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     long countByColorPaletteId(Integer colorPaletteId);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     long countByGlasswareId(Integer glasswareId);
 }

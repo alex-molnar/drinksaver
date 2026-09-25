@@ -126,21 +126,21 @@ public class DesignService {
     private long countColorPaletteIdUsage(Integer colorPaletteId) {
         return
             alcoholTypesTable.countByColorPaletteId(colorPaletteId) +
-                alcoholSubtypesTable.countByColorPaletteId(colorPaletteId) +
-                brandsTable.countByColorPaletteId(colorPaletteId) +
-                beerFlavoursTable.countByColorPaletteId(colorPaletteId) +
-                recommendationsTable.countByColorPaletteId(colorPaletteId) +
-                defaultRecommendationsTable.countByColorPaletteId(colorPaletteId) +
-                savedDrinksTable.countByColorPaletteId(colorPaletteId);
+            alcoholSubtypesTable.countByColorPaletteId(colorPaletteId) +
+            brandsTable.countByColorPaletteId(colorPaletteId) +
+            beerFlavoursTable.countByColorPaletteId(colorPaletteId) +
+            recommendationsTable.countByColorPaletteId(colorPaletteId) +
+            defaultRecommendationsTable.countByColorPaletteId(colorPaletteId) +
+            savedDrinksTable.countByColorPaletteId(colorPaletteId);
     }
 
     private long countGlasswareIdUsage(Integer glasswareId) {
         return
             alcoholTypesTable.countByGlasswareId(glasswareId) +
-                alcoholSubtypesTable.countByGlasswareId(glasswareId) +
-                consumptionTypesTable.countByGlasswareId(glasswareId) +
-                recommendationsTable.countByGlasswareId(glasswareId) +
-                defaultRecommendationsTable.countByGlasswareId(glasswareId) +
-                savedDrinksTable.countByGlasswareId(glasswareId);
+            alcoholSubtypesTable.countByGlasswareId(glasswareId) +
+            consumptionTypesTable.countByGlasswareId(glasswareId) +
+            recommendationsTable.countByGlasswareId(glasswareId) +
+            defaultRecommendationsTable.countByGlasswareId(glasswareId) +
+            savedDrinksTable.countByGlasswareId(glasswareId);
     }
 }
