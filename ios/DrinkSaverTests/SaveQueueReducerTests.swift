@@ -38,6 +38,19 @@ final class SaveQueueReducerTests: XCTestCase {
         XCTAssertEqual(SaveQueueReducer.currentFeedback(in: state)?.id, next.id)
     }
 
+    func testLateOlderSaveCompletionDoesNotSupersedeNewerDelete() {
+        let save = saveEntry(sequence: 1)
+        var state = SaveQueueReducer.reduce(SaveQueueState(), .saveStarted(save))
+        let delete = deleteEntry(sequence: 2, ids: [9], until: now.addingTimeInterval(10))
+        state = SaveQueueReducer.reduce(state, .deleteStarted(delete))
+
+        state = SaveQueueReducer.reduce(state, .saveSucceeded(id: save.id, drinkIDs: [1], undoUntil: now.addingTimeInterval(6.5)))
+
+        XCTAssertEqual(state.entries.first { $0.id == save.id }?.status, .committed)
+        XCTAssertEqual(state.entries.first { $0.id == delete.id }?.status, .undoable(until: now.addingTimeInterval(10)))
+        XCTAssertEqual(SaveQueueReducer.currentFeedback(in: state)?.id, delete.id)
+    }
+
     func testUndoTransitionsAndDeleteUndoDoesNotCreateAnyNetworkIntent() {
         let delete = deleteEntry(sequence: 1, ids: [8], until: now.addingTimeInterval(10))
         let state = SaveQueueReducer.reduce(SaveQueueState(), .deleteStarted(delete))

@@ -1117,7 +1117,8 @@ struct PendingDeleteRecord: Codable, Equatable {
     func delete(_ operation: DeleteOperation) -> UUID?
     func undoCurrent()
     func retryCurrent()
-    func applicationDidEnterBackground() async
+    func applicationWillEnterBackground() -> [UUID]
+    func flushBackgroundDeletes(_ operationIDs: [UUID]) async
     func reconcilePersistedDeletes() async
 }
 ```

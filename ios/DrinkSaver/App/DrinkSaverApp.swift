@@ -49,7 +49,8 @@ struct DrinkSaverApp: App {
             rootView
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .background {
-                        Task { await saveQueueStore.applicationDidEnterBackground() }
+                        let pendingDeletes = saveQueueStore.applicationWillEnterBackground()
+                        Task { await saveQueueStore.flushBackgroundDeletes(pendingDeletes) }
                     }
                 }
         }

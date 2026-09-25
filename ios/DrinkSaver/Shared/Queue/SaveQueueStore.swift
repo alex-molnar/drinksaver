@@ -153,7 +153,8 @@ final class SaveQueueStore {
         }
     }
 
-    func applicationDidEnterBackground() async {
+    @discardableResult
+    func applicationWillEnterBackground() -> [UUID] {
         let deletes = state.entries.filter { entry in
             guard case .delete = entry.kind else { return false }
             if case .undoable = entry.status { return true }
@@ -162,7 +163,7 @@ final class SaveQueueStore {
         }
         guard let subject = sessionStore.userID, let configuration else {
             state = SaveQueueReducer.reduce(state, .expire(now: .distantFuture))
-            return
+            return []
         }
 
         var persisted = Set<UUID>()
@@ -182,12 +183,15 @@ final class SaveQueueStore {
         }
 
         state = SaveQueueReducer.reduce(state, .expire(now: .distantFuture))
-        let scoped = persisted.filter { !inFlightDeletes.contains($0) }
-        guard !scoped.isEmpty else { return }
+        return persisted.filter { !inFlightDeletes.contains($0) }
+    }
+
+    func flushBackgroundDeletes(_ operationIDs: [UUID]) async {
+        guard !operationIDs.isEmpty else { return }
         let generation = accountGeneration
         await backgroundWork { [weak self] in
             guard let self else { return }
-            for id in scoped {
+            for id in operationIDs {
                 guard !Task.isCancelled, generation == accountGeneration,
                       let entry = state.entries.first(where: { $0.id == id }) else { continue }
                 await performDelete(entry, generation: generation)

@@ -87,7 +87,9 @@ final class SaveQueueStoreTests: XCTestCase {
         })
         let (store, _, configuration) = await makeStore(api: api, pending: pending)
         _ = store.delete(deleteOperation([31, 32]))
-        await store.applicationDidEnterBackground()
+        let pendingIDs = store.applicationWillEnterBackground()
+        XCTAssertEqual(try pending.records().map(\.drinkIDs), [[31, 32]])
+        await store.flushBackgroundDeletes(pendingIDs)
         XCTAssertTrue(observed.value)
 
         let matching = PendingDeleteRecord(operationID: UUID(), drinkIDs: [40], environment: .test, issuer: configuration.issuerURL, subject: "account-a")

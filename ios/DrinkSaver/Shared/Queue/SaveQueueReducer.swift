@@ -73,15 +73,17 @@ enum SaveQueueReducer {
             var next = state
             next.entries.removeAll { if case .committed = $0.status { true } else { false } }
             next.entries.append(entry)
-            next.entries = supersedeUndoables(in: next.entries, keeping: entry.id)
+            next.entries = supersedeUndoables(in: next.entries, olderThan: entry.sequence, keeping: entry.id)
             return next
         case .saveSucceeded(let id, let drinkIDs, let undoUntil):
+            guard let completed = state.entries.first(where: { $0.id == id }) else { return state }
+            guard case .saving = completed.status else { return state }
+            let newerOperationExists = state.entries.contains { $0.sequence > completed.sequence }
             var next = updating(state, id: id) {
-                guard $0.status == .saving else { return }
                 $0.drinkIDs = drinkIDs
-                $0.status = .undoable(until: undoUntil)
+                $0.status = newerOperationExists ? .committed : .undoable(until: undoUntil)
             }
-            next.entries = supersedeUndoables(in: next.entries, keeping: id)
+            next.entries = supersedeUndoables(in: next.entries, olderThan: completed.sequence, keeping: id)
             return next
         case .failed(let id, let failure):
             return updating(state, id: id) { $0.status = .failed(failure) }
@@ -178,9 +180,9 @@ enum SaveQueueReducer {
         return next
     }
 
-    private static func supersedeUndoables(in entries: [QueueEntry], keeping id: UUID) -> [QueueEntry] {
+    private static func supersedeUndoables(in entries: [QueueEntry], olderThan sequence: Int, keeping id: UUID) -> [QueueEntry] {
         entries.map { entry in
-            guard entry.id != id, case .undoable = entry.status else { return entry }
+            guard entry.id != id, entry.sequence < sequence, case .undoable = entry.status else { return entry }
             var finalized = entry
             if case .delete = entry.kind { finalized.status = .saving }
             else { finalized.status = .committed }
