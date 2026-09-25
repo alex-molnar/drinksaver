@@ -9,6 +9,7 @@ struct DrinkSaverApp: App {
     @State private var saveQueueStore: SaveQueueStore
     @State private var currentDrinkingDayStore: CurrentDrinkingDayStore
     @State private var quickSaveStore: QuickSaveStore
+    @State private var addDrinkStore: AddDrinkStore
     @State private var appCoordinator: AppCoordinator
     @Environment(\.scenePhase) private var scenePhase
 #if UI_TESTING
@@ -38,6 +39,8 @@ struct DrinkSaverApp: App {
                 drinkingDayStore: dayStore,
                 coordinator: coordinator
             ))
+            _addDrinkStore = State(initialValue: AddDrinkStore(api: fixture.api, queue: queueStore, day: dayStore,
+                designs: catalogueStore, session: fixture.sessionStore, coordinator: coordinator))
             return
         }
 #endif
@@ -73,6 +76,8 @@ struct DrinkSaverApp: App {
             drinkingDayStore: dayStore,
             coordinator: coordinator
         ))
+        _addDrinkStore = State(initialValue: AddDrinkStore(api: api, queue: queueStore, day: dayStore,
+            designs: catalogueStore, session: sessionStore, coordinator: coordinator))
     }
 
     var body: some Scene {
@@ -126,6 +131,7 @@ struct DrinkSaverApp: App {
             .environment(saveQueueStore)
             .environment(currentDrinkingDayStore)
             .environment(quickSaveStore)
+            .environment(addDrinkStore)
             .environment(appCoordinator)
             .task { await sessionStore.restore() }
             .onOpenURL { _ = sessionStore.handleOpenURL($0) }

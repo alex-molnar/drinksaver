@@ -16,6 +16,7 @@
 		A01300000000000000000014 /* PlateGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000004 /* PlateGridView.swift */; };
 		A01300000000000000000015 /* PlateGridSkeleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000005 /* PlateGridSkeleton.swift */; };
 		A01300000000000000000016 /* QuickSaveStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000006 /* QuickSaveStoreTests.swift */; };
+		A01400000000000000000011 /* AddDrinkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01400000000000000000001 /* AddDrinkStore.swift */; };
 		A01300000000000000000017 /* QuickSaveLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000007 /* QuickSaveLayoutTests.swift */; };
 		A01300000000000000000018 /* QuickSaveUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000008 /* QuickSaveUITests.swift */; };
 		A01200000000000000000007 /* AppCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01200000000000000000008 /* AppCoordinatorTests.swift */; };
@@ -125,6 +126,7 @@
 		A01300000000000000000006 /* QuickSaveStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickSaveStoreTests.swift; sourceTree = "<group>"; };
 		A01300000000000000000007 /* QuickSaveLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickSaveLayoutTests.swift; sourceTree = "<group>"; };
 		A01300000000000000000008 /* QuickSaveUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickSaveUITests.swift; sourceTree = "<group>"; };
+		A01400000000000000000001 /* AddDrinkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddDrinkStore.swift; sourceTree = "<group>"; };
 		A01200000000000000000008 /* AppCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinatorTests.swift; sourceTree = "<group>"; };
 		A01200000000000000000010 /* AppFrameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFrameTests.swift; sourceTree = "<group>"; };
 		A01200000000000000000012 /* AppFrameUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFrameUITests.swift; sourceTree = "<group>"; };
@@ -422,6 +424,7 @@
 		EB017125E6B6546232F6720C /* DrinkSaver */ = {
 			isa = PBXGroup;
 			children = (
+				A01400000000000000000020 /* AddDrink */,
 				A01300000000000000000020 /* QuickSave */,
 				414A53BECCA22B346362E0C7 /* Info-Local.plist */,
 				902F5B0264EEB68A8333745C /* App */,
@@ -429,6 +432,12 @@
 				AE5E9CD6FB62921779A34391 /* Shared */,
 			);
 			path = DrinkSaver;
+			sourceTree = "<group>";
+		};
+		A01400000000000000000020 /* AddDrink */ = {
+			isa = PBXGroup;
+			children = (A01400000000000000000001 /* AddDrinkStore.swift */,);
+			path = Features/AddDrink;
 			sourceTree = "<group>";
 		};
 		A01300000000000000000020 /* QuickSave */ = {
@@ -634,6 +643,7 @@
 				A01200000000000000000003 /* ViewState.swift in Sources */,
 				A01200000000000000000005 /* AppFrame.swift in Sources */,
 				A01300000000000000000011 /* QuickSaveStore.swift in Sources */,
+				A01400000000000000000011 /* AddDrinkStore.swift in Sources */,
 				A01300000000000000000012 /* QuickSaveView.swift in Sources */,
 				A01300000000000000000013 /* PlateView.swift in Sources */,
 				A01300000000000000000014 /* PlateGridView.swift in Sources */,

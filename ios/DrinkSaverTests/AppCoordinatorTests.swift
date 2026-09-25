@@ -43,4 +43,22 @@ final class AppCoordinatorTests: XCTestCase {
         XCTAssertEqual(coordinator.currentScreen, .quick)
         XCTAssertFalse(coordinator.isAddPresented)
     }
+
+    func testAddDrinkCascadesSelectionsAndResetsRecommendationFields() {
+        var draft = AddDrinkDraft()
+        let beer = AlcoholType(id: 4, userId: nil, name: "Beer", volumeIds: [6], colorPaletteId: 101, glasswareId: 201)
+        draft.select(beer)
+        draft.brand = Brand(id: 7, userId: nil, name: "House", colorPaletteId: nil)
+        draft.flavour = BeerFlavour(id: 8, brandId: 7, userId: nil, name: "Pilsner", colorPaletteId: nil)
+        draft.setRecommend(true)
+        draft.onlyTemporarily = true
+        draft.name = "House beer"
+        draft.setRecommend(false)
+        XCTAssertFalse(draft.onlyTemporarily)
+        XCTAssertEqual(draft.name, "")
+        draft.select(AlcoholType(id: 1, userId: nil, name: "Wine", volumeIds: [2], colorPaletteId: 101, glasswareId: 201))
+        XCTAssertNil(draft.brand)
+        XCTAssertNil(draft.flavour)
+    }
+
 }
