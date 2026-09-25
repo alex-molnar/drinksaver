@@ -96,6 +96,9 @@ struct TypeRole: Equatable {
 
     var font: Font {
         let font = Font.custom(postScriptName, size: size, relativeTo: textStyle.swiftUITextStyle)
+        if postScriptName == "FamiljenGroteskVariable", weight == 500 {
+            return font.weight(.medium)
+        }
         return monospacedDigits ? font.monospacedDigit() : font
     }
 }

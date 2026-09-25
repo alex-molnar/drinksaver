@@ -11,6 +11,7 @@
 		16426425A8F8D9AFC636303F /* Local.plist in Resources */ = {isa = PBXBuildFile; fileRef = 12525D71B60E607B8A427670 /* Local.plist */; };
 		1ABA636CBF917154EDDC1BC8 /* FrauncesDisplayM.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3D052A8B3B63233EC727E55D /* FrauncesDisplayM.ttf */; };
 		34096B58906EC9559B127EE6 /* FrauncesNumeral.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA541A73170A23458FC41594 /* FrauncesNumeral.ttf */; };
+		4D28567DB6FB37B1BF73460B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4012A89C2E54E77CC5544015 /* LaunchScreen.storyboard */; };
 		560E2EE927D51E32FD8C9276 /* HTTPStatusError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 026CA577AB8FDFC7619CE33E /* HTTPStatusError.swift */; };
 		5E47075ECFC49BC69EB7627C /* AppConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75AF806F508BC872825B555 /* AppConfigurationTests.swift */; };
 		679BDDB1CD1CAA85829F6233 /* RetryPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D11A6A4941263E547E0D5138 /* RetryPolicyTests.swift */; };
@@ -35,6 +36,7 @@
 		F313660F9E4208CF8F75BD8D /* RetryPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A60F8FD4EBD52CDABC252A /* RetryPolicy.swift */; };
 		F5EAFDFE183BEC739CCD976E /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80460F42E4C8F76BBACF7D6D /* Color+Hex.swift */; };
 		FBE22C2DF1EDB1E6569482EF /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27CF943A6D6AD7F72DE5315 /* RootView.swift */; };
+		FF7E702141B3EC1A48E50AAA /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5F8814CA538CC4D2B8D3B845 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,9 +63,11 @@
 		12525D71B60E607B8A427670 /* Local.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Local.plist; sourceTree = "<group>"; };
 		131DE07C906D317C18A91B84 /* ThemeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTests.swift; sourceTree = "<group>"; };
 		3D052A8B3B63233EC727E55D /* FrauncesDisplayM.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FrauncesDisplayM.ttf; sourceTree = "<group>"; };
+		4012A89C2E54E77CC5544015 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		414A53BECCA22B346362E0C7 /* Info-Local.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Local.plist"; sourceTree = "<group>"; };
 		54BEF5B18E74A6185FA2D8AB /* Release.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Release.plist; sourceTree = "<group>"; };
 		5595726C335D0B61A093D5E7 /* PlasterBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlasterBackground.swift; sourceTree = "<group>"; };
+		5F8814CA538CC4D2B8D3B845 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		61C2E20947DEAA8D3058D670 /* DrinkingDay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkingDay.swift; sourceTree = "<group>"; };
 		6249F444B47593A4E53A8431 /* DrinkSaverTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DrinkSaverTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		71DFBB0972B91E0D1020DB99 /* ProjectSmokeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSmokeUITests.swift; sourceTree = "<group>"; };
@@ -121,7 +125,9 @@
 			isa = PBXGroup;
 			children = (
 				7A1DC861BA01381B57B81E63 /* Assets.xcassets */,
+				4012A89C2E54E77CC5544015 /* LaunchScreen.storyboard */,
 				B51064531E0ACD497191F2E0 /* OFL.txt */,
+				5F8814CA538CC4D2B8D3B845 /* PrivacyInfo.xcprivacy */,
 				F710999A19A9A54E086136AF /* Fonts */,
 			);
 			path = Resources;
@@ -353,7 +359,9 @@
 				1ABA636CBF917154EDDC1BC8 /* FrauncesDisplayM.ttf in Resources */,
 				A8368B5A5C41E08B6032C084 /* FrauncesDisplayS.ttf in Resources */,
 				34096B58906EC9559B127EE6 /* FrauncesNumeral.ttf in Resources */,
+				4D28567DB6FB37B1BF73460B /* LaunchScreen.storyboard in Resources */,
 				9C7D9DC59950C13E7E64011C /* OFL.txt in Resources */,
+				FF7E702141B3EC1A48E50AAA /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

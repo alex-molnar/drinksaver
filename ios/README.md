@@ -26,3 +26,14 @@ display L, `(30, 700, 85, 1)` for display M, `(28, 600, 70, 1)` for display S, a
 `(90, 700, 90, 1)` for numerals. Generated fonts have a fixed OpenType timestamp and verified
 output checksums in the script. The separate copyright notices and SIL Open Font License 1.1
 terms are in `DrinkSaver/Resources/OFL.txt`.
+
+## App artwork and privacy
+
+`DrinkSaver/Resources/Assets.xcassets/AppIcon.appiconset` and the launch screen mark are derived
+from the existing `web/public/favicon.svg`; no other logo source is used. Regenerate the two PNG
+assets with `ios/scripts/generate-app-artwork.sh`. The app icon adds a full-bleed umber background
+and scales the original mark to Apple's visual safe area. `LaunchScreen.storyboard` uses the same
+ground and mark. Both app Info.plists select that storyboard and register the bundled fonts.
+
+`DrinkSaver/Resources/PrivacyInfo.xcprivacy` declares only the app's direct UserDefaults use, with
+reason `CA92.1`. No other required-reason API use was found in the app source.
