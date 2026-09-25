@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		0A96AA529A667C6D3438E8DC /* DrinkSaverApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED1AA4A25AEBB8D765D97C15 /* DrinkSaverApp.swift */; };
 		16426425A8F8D9AFC636303F /* Local.plist in Resources */ = {isa = PBXBuildFile; fileRef = 12525D71B60E607B8A427670 /* Local.plist */; };
+		1ABA636CBF917154EDDC1BC8 /* FrauncesDisplayM.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3D052A8B3B63233EC727E55D /* FrauncesDisplayM.ttf */; };
+		34096B58906EC9559B127EE6 /* FrauncesNumeral.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA541A73170A23458FC41594 /* FrauncesNumeral.ttf */; };
 		560E2EE927D51E32FD8C9276 /* HTTPStatusError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 026CA577AB8FDFC7619CE33E /* HTTPStatusError.swift */; };
 		5E47075ECFC49BC69EB7627C /* AppConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75AF806F508BC872825B555 /* AppConfigurationTests.swift */; };
 		679BDDB1CD1CAA85829F6233 /* RetryPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D11A6A4941263E547E0D5138 /* RetryPolicyTests.swift */; };
@@ -17,12 +19,17 @@
 		7AEF518E4CFC815CEA535302 /* DrinkingDay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61C2E20947DEAA8D3058D670 /* DrinkingDay.swift */; };
 		86B731A1EDCBF3C0D0712030 /* ProjectSmokeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DFBB0972B91E0D1020DB99 /* ProjectSmokeUITests.swift */; };
 		8962406F6F079784FCBC4C4E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A1DC861BA01381B57B81E63 /* Assets.xcassets */; };
+		8A591C00192F3ADED64084E0 /* FamiljenGroteskVariable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A1BB6A3678645194A1D6488F /* FamiljenGroteskVariable.ttf */; };
 		8D487ED3A64A62DAA5C358DA /* Release.plist in Resources */ = {isa = PBXBuildFile; fileRef = 54BEF5B18E74A6185FA2D8AB /* Release.plist */; };
 		9078BAE450A7DFB4661FD1BF /* ProjectSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BA400D70C680F958C13B55A /* ProjectSmokeTests.swift */; };
+		9B25429190217843F1A97B1F /* FontRegistrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E03828352F2AC953218628F5 /* FontRegistrationTests.swift */; };
+		9C7D9DC59950C13E7E64011C /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = B51064531E0ACD497191F2E0 /* OFL.txt */; };
+		A8368B5A5C41E08B6032C084 /* FrauncesDisplayS.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FC35E7119EFE9E30086CC1DC /* FrauncesDisplayS.ttf */; };
 		B32D1137A58061D6BB0B1974 /* DrinkingDayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A72D2E5250DD020F0033ECC4 /* DrinkingDayTests.swift */; };
 		BDB6039EC793F67B5597C6C4 /* Clock.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CE8C69FF67A744EEF90A85 /* Clock.swift */; };
 		C543D235DD636423FDAE5550 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97FFB415DD8F55C0F6D6D058 /* AppConfiguration.swift */; };
 		CBC280C9C90CE490B10C58EB /* ThemeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC83A16D20EA1FF7D66C8384 /* ThemeStore.swift */; };
+		D1006CD7A29F0404D62F5781 /* FrauncesDisplayL.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B230FF2E270307FB452A1ADF /* FrauncesDisplayL.ttf */; };
 		E56DEE83175A73DA6CF3DDA4 /* PlasterBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5595726C335D0B61A093D5E7 /* PlasterBackground.swift */; };
 		EC5270DB37D3CB168DB3D186 /* Test.plist in Resources */ = {isa = PBXBuildFile; fileRef = DCA916D18D6A35CC98AF57D7 /* Test.plist */; };
 		F313660F9E4208CF8F75BD8D /* RetryPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A60F8FD4EBD52CDABC252A /* RetryPolicy.swift */; };
@@ -53,6 +60,7 @@
 		1213899360D084D49C7B6F53 /* DrinkSaverTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkSaverTheme.swift; sourceTree = "<group>"; };
 		12525D71B60E607B8A427670 /* Local.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Local.plist; sourceTree = "<group>"; };
 		131DE07C906D317C18A91B84 /* ThemeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTests.swift; sourceTree = "<group>"; };
+		3D052A8B3B63233EC727E55D /* FrauncesDisplayM.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FrauncesDisplayM.ttf; sourceTree = "<group>"; };
 		414A53BECCA22B346362E0C7 /* Info-Local.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Local.plist"; sourceTree = "<group>"; };
 		54BEF5B18E74A6185FA2D8AB /* Release.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Release.plist; sourceTree = "<group>"; };
 		5595726C335D0B61A093D5E7 /* PlasterBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlasterBackground.swift; sourceTree = "<group>"; };
@@ -62,18 +70,24 @@
 		7A1DC861BA01381B57B81E63 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		80460F42E4C8F76BBACF7D6D /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
 		97FFB415DD8F55C0F6D6D058 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
+		A1BB6A3678645194A1D6488F /* FamiljenGroteskVariable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FamiljenGroteskVariable.ttf; sourceTree = "<group>"; };
 		A72D2E5250DD020F0033ECC4 /* DrinkingDayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkingDayTests.swift; sourceTree = "<group>"; };
 		AE82620D450113D99E98D84A /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		B230FF2E270307FB452A1ADF /* FrauncesDisplayL.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FrauncesDisplayL.ttf; sourceTree = "<group>"; };
 		B2CE8C69FF67A744EEF90A85 /* Clock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clock.swift; sourceTree = "<group>"; };
 		B2F1D6B0BEA5A130517C218F /* Local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Local.xcconfig; sourceTree = "<group>"; };
+		B51064531E0ACD497191F2E0 /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
 		C343000EEF3BE95EB38379E2 /* Test.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Test.xcconfig; sourceTree = "<group>"; };
 		C9A60F8FD4EBD52CDABC252A /* RetryPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetryPolicy.swift; sourceTree = "<group>"; };
 		D11A6A4941263E547E0D5138 /* RetryPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetryPolicyTests.swift; sourceTree = "<group>"; };
 		D607AE4B66B7E49C970409CD /* DrinkSaverUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DrinkSaverUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DA541A73170A23458FC41594 /* FrauncesNumeral.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FrauncesNumeral.ttf; sourceTree = "<group>"; };
 		DCA916D18D6A35CC98AF57D7 /* Test.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Test.plist; sourceTree = "<group>"; };
+		E03828352F2AC953218628F5 /* FontRegistrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontRegistrationTests.swift; sourceTree = "<group>"; };
 		E75AF806F508BC872825B555 /* AppConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigurationTests.swift; sourceTree = "<group>"; };
 		ED1AA4A25AEBB8D765D97C15 /* DrinkSaverApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkSaverApp.swift; sourceTree = "<group>"; };
 		F27CF943A6D6AD7F72DE5315 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		FC35E7119EFE9E30086CC1DC /* FrauncesDisplayS.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FrauncesDisplayS.ttf; sourceTree = "<group>"; };
 		FC83A16D20EA1FF7D66C8384 /* ThemeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeStore.swift; sourceTree = "<group>"; };
 		FE1EE1EA4717F66BA70DCC39 /* DrinkSaver.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DrinkSaver.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -94,6 +108,7 @@
 			children = (
 				E75AF806F508BC872825B555 /* AppConfigurationTests.swift */,
 				A72D2E5250DD020F0033ECC4 /* DrinkingDayTests.swift */,
+				E03828352F2AC953218628F5 /* FontRegistrationTests.swift */,
 				0BA400D70C680F958C13B55A /* ProjectSmokeTests.swift */,
 				D11A6A4941263E547E0D5138 /* RetryPolicyTests.swift */,
 				131DE07C906D317C18A91B84 /* ThemeTests.swift */,
@@ -106,6 +121,8 @@
 			isa = PBXGroup;
 			children = (
 				7A1DC861BA01381B57B81E63 /* Assets.xcassets */,
+				B51064531E0ACD497191F2E0 /* OFL.txt */,
+				F710999A19A9A54E086136AF /* Fonts */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -217,6 +234,18 @@
 			);
 			sourceTree = "<group>";
 		};
+		F710999A19A9A54E086136AF /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				A1BB6A3678645194A1D6488F /* FamiljenGroteskVariable.ttf */,
+				B230FF2E270307FB452A1ADF /* FrauncesDisplayL.ttf */,
+				3D052A8B3B63233EC727E55D /* FrauncesDisplayM.ttf */,
+				FC35E7119EFE9E30086CC1DC /* FrauncesDisplayS.ttf */,
+				DA541A73170A23458FC41594 /* FrauncesNumeral.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -319,6 +348,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				8962406F6F079784FCBC4C4E /* Assets.xcassets in Resources */,
+				8A591C00192F3ADED64084E0 /* FamiljenGroteskVariable.ttf in Resources */,
+				D1006CD7A29F0404D62F5781 /* FrauncesDisplayL.ttf in Resources */,
+				1ABA636CBF917154EDDC1BC8 /* FrauncesDisplayM.ttf in Resources */,
+				A8368B5A5C41E08B6032C084 /* FrauncesDisplayS.ttf in Resources */,
+				34096B58906EC9559B127EE6 /* FrauncesNumeral.ttf in Resources */,
+				9C7D9DC59950C13E7E64011C /* OFL.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -367,6 +402,7 @@
 			files = (
 				5E47075ECFC49BC69EB7627C /* AppConfigurationTests.swift in Sources */,
 				B32D1137A58061D6BB0B1974 /* DrinkingDayTests.swift in Sources */,
+				9B25429190217843F1A97B1F /* FontRegistrationTests.swift in Sources */,
 				9078BAE450A7DFB4661FD1BF /* ProjectSmokeTests.swift in Sources */,
 				679BDDB1CD1CAA85829F6233 /* RetryPolicyTests.swift in Sources */,
 				71AD9F9C7F5F6AA07D6DEE35 /* ThemeTests.swift in Sources */,
