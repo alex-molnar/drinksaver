@@ -9,26 +9,33 @@ struct UITestFixture: Sendable {
     let contentSize: DynamicTypeSize
     let reduceMotion: Bool
 
-    static func parse(arguments: [String]) -> UITestFixture? {
-        guard arguments.contains("-ui-fixture") else { return nil }
+    static func parse(arguments: [String]) throws -> UITestFixture? {
+        let fixtureArguments = [
+            "-ui-fixture",
+            "-ui-fixed-now",
+            "-ui-locale",
+            "-ui-content-size",
+            "-ui-reduce-motion"
+        ]
+        guard arguments.contains(where: fixtureArguments.contains) else { return nil }
 
-        let identifier = requiredValue(for: "-ui-fixture", in: arguments)
+        let identifier = try requiredValue(for: "-ui-fixture", in: arguments)
         guard ["signed-in", "signed-in-api-failure"].contains(identifier) else {
-            fatalError("Unknown UI fixture '\(identifier)'.")
+            throw InvalidUITestFixtureArguments("Unknown UI fixture '\(identifier)'.")
         }
-        let dateText = requiredValue(for: "-ui-fixed-now", in: arguments)
+        let dateText = try requiredValue(for: "-ui-fixed-now", in: arguments)
         let formatter = ISO8601DateFormatter()
         guard let fixedNow = formatter.date(from: dateText) else {
-            fatalError("Invalid -ui-fixed-now value '\(dateText)'.")
+            throw InvalidUITestFixtureArguments("Invalid -ui-fixed-now value '\(dateText)'.")
         }
-        let locale = requiredValue(for: "-ui-locale", in: arguments)
-        let contentSize = requiredValue(for: "-ui-content-size", in: arguments)
-        let reduceMotionText = requiredValue(for: "-ui-reduce-motion", in: arguments)
+        let locale = try requiredValue(for: "-ui-locale", in: arguments)
+        let contentSize = try requiredValue(for: "-ui-content-size", in: arguments)
+        let reduceMotionText = try requiredValue(for: "-ui-reduce-motion", in: arguments)
         guard let dynamicTypeSize = dynamicTypeSize(for: contentSize) else {
-            fatalError("Invalid -ui-content-size value '\(contentSize)'.")
+            throw InvalidUITestFixtureArguments("Invalid -ui-content-size value '\(contentSize)'.")
         }
         guard let reduceMotion = Bool(reduceMotionText) else {
-            fatalError("Invalid -ui-reduce-motion value '\(reduceMotionText)'.")
+            throw InvalidUITestFixtureArguments("Invalid -ui-reduce-motion value '\(reduceMotionText)'.")
         }
 
         return UITestFixture(
@@ -40,11 +47,11 @@ struct UITestFixture: Sendable {
         )
     }
 
-    private static func requiredValue(for flag: String, in arguments: [String]) -> String {
+    private static func requiredValue(for flag: String, in arguments: [String]) throws -> String {
         guard let index = arguments.firstIndex(of: flag),
               arguments.indices.contains(index + 1),
               !arguments[index + 1].hasPrefix("-") else {
-            fatalError("Missing value for UI test argument '\(flag)'.")
+            throw InvalidUITestFixtureArguments("Missing value for UI test argument '\(flag)'.")
         }
         return arguments[index + 1]
     }
@@ -65,6 +72,14 @@ struct UITestFixture: Sendable {
         case "accessibility5": .accessibility5
         default: nil
         }
+    }
+}
+
+struct InvalidUITestFixtureArguments: Error, CustomStringConvertible {
+    let description: String
+
+    init(_ description: String) {
+        self.description = description
     }
 }
 #endif

@@ -9,7 +9,13 @@ struct UITestFixtureBootstrap {
     let clock: any Clock
 
     static func launchIfRequested(arguments: [String]) -> UITestFixtureBootstrap? {
-        guard let fixture = UITestFixture.parse(arguments: arguments) else { return nil }
+        let fixture: UITestFixture?
+        do {
+            fixture = try UITestFixture.parse(arguments: arguments)
+        } catch {
+            fatalError("Invalid UI fixture arguments: \(error)")
+        }
+        guard let fixture else { return nil }
         return UITestFixtureBootstrap(fixture: fixture)
     }
 

@@ -10,6 +10,7 @@
 		A003A0000000000000000001 /* UITestFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A0000000000000000003 /* UITestFixture.swift */; };
 		A003A0000000000000000002 /* UITestFixtureBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A0000000000000000004 /* UITestFixtureBootstrap.swift */; };
 		A003A0000000000000000009 /* FixtureHarnessUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A000000000000000000A /* FixtureHarnessUITests.swift */; };
+		A003A000000000000000000B /* UITestFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A000000000000000000C /* UITestFixtureTests.swift */; };
 		A00900000000000000000001 /* KeychainAuthorizationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000002 /* KeychainAuthorizationStore.swift */; };
 		A00900000000000000000003 /* KeychainAuthorizationStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000004 /* KeychainAuthorizationStoreTests.swift */; };
 		A00900000000000000000005 /* InMemoryAuthorizationDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000006 /* InMemoryAuthorizationDataStore.swift */; };
@@ -92,6 +93,7 @@
 		A003A0000000000000000003 /* UITestFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixture.swift; sourceTree = "<group>"; };
 		A003A0000000000000000004 /* UITestFixtureBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixtureBootstrap.swift; sourceTree = "<group>"; };
 		A003A000000000000000000A /* FixtureHarnessUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixtureHarnessUITests.swift; sourceTree = "<group>"; };
+		A003A000000000000000000C /* UITestFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixtureTests.swift; sourceTree = "<group>"; };
 		A01000000000000000000011 /* SessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoreTests.swift; sourceTree = "<group>"; };
 		A01000000000000000000013 /* AuthorizationProviding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizationProviding.swift; sourceTree = "<group>"; };
 		A01000000000000000000015 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
@@ -181,6 +183,7 @@
 		4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */ = {
 			isa = PBXGroup;
 			children = (
+				A003A000000000000000000C /* UITestFixtureTests.swift */,
 				A01000000000000000000019 /* AppAuthClientTests.swift */,
 				A01000000000000000000011 /* SessionStoreTests.swift */,
 				A00900000000000000000004 /* KeychainAuthorizationStoreTests.swift */,
@@ -579,6 +582,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A003A000000000000000000B /* UITestFixtureTests.swift in Sources */,
 				A01000000000000000000018 /* AppAuthClientTests.swift in Sources */,
 				A01000000000000000000010 /* SessionStoreTests.swift in Sources */,
 				A00900000000000000000003 /* KeychainAuthorizationStoreTests.swift in Sources */,

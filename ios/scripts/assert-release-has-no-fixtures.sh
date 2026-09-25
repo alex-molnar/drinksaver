@@ -19,8 +19,16 @@ if [[ ! -f "$executable" ]]; then
 fi
 
 fixture_resource=$(find "$app" -type f -iname '*UITestFixture*' -print -quit)
-if /usr/bin/nm "$executable" 2>/dev/null | /usr/bin/grep -Eiq 'UITestFixture|UI_TESTING' ||
-   /usr/bin/strings "$executable" | /usr/bin/grep -Eiq 'ui-fixture|fixture\.signed-in|ui-fixture-access-token|UITestFixture|UI_TESTING' ||
+inspection_dir=$(mktemp -d)
+trap 'rm -rf "$inspection_dir"' EXIT
+nm_output="$inspection_dir/nm.txt"
+strings_output="$inspection_dir/strings.txt"
+
+/usr/bin/nm "$executable" >"$nm_output" 2>/dev/null
+/usr/bin/strings "$executable" >"$strings_output"
+
+if /usr/bin/grep -Eiq 'UITestFixture|UI_TESTING' "$nm_output" ||
+   /usr/bin/grep -Eiq 'ui-fixture|fixture\.signed-in|ui-fixture-access-token|UITestFixture|UI_TESTING' "$strings_output" ||
    [[ -n "$fixture_resource" ]]; then
   printf 'error: UI fixture code or markers found in Release app: %s\n' "$app" >&2
   exit 1
