@@ -23,6 +23,9 @@ targets:
       - path: DrinkSaver
         excludes:
           - Info.plist
+    resources:
+      - path: DrinkSaver/Resources/LaunchScreen.storyboard
+      - path: DrinkSaver/Resources/PrivacyInfo.xcprivacy
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: im.kak.drinksaver

@@ -30,10 +30,18 @@
 	<string>$(OIDC_REDIRECT_URL)</string>
 	<key>CFBundleURLTypes</key>
 	<array><dict><key>CFBundleURLSchemes</key><array><string>im.kak.drinksaver</string></array></dict></array>
+	<key>UIAppFonts</key>
+	<array>
+		<string>FrauncesDisplayL.ttf</string>
+		<string>FrauncesDisplayM.ttf</string>
+		<string>FrauncesDisplayS.ttf</string>
+		<string>FrauncesNumeral.ttf</string>
+		<string>FamiljenGroteskVariable.ttf</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>UILaunchScreen</key>
-	<dict/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
 	<key>UIRequiresFullScreen</key>
 	<true/>
 	<key>UISupportedInterfaceOrientations</key>
