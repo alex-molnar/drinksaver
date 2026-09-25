@@ -41,6 +41,13 @@ individual or selected bulk cross-off through `SaveQueueStore`; the row remains 
 motion, and the screen exposes Undo or Retry feedback. Reduce Motion removes the row immediately
 while keeping the same queue and Undo behavior.
 
+## Recommendation editing state
+
+`RecommendationsStore` edits only rows with a persisted ID owned by the signed-in user. Its draft
+tracks names and order separately from the committed snapshot; hidden pending deletions retain
+their order slots. `RecommendationQueue` defers deletes and arrangement updates for 6.5 seconds,
+serializes network operations, restores a saved snapshot on Undo, and keeps failures retryable.
+
 ## Add a drink
 
 The Add sheet retains one draft across its nested drink, size, subtype, serving, brand, and flavour
