@@ -43,4 +43,9 @@ final class AppCoordinator {
     }
 
     func dismissAdd() { addPanels = [] }
+
+    func sessionDidSignOut() {
+        currentScreen = .quick
+        dismissAdd()
+    }
 }

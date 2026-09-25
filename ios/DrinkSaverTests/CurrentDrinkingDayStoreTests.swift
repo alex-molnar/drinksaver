@@ -105,6 +105,17 @@ final class CurrentDrinkingDayStoreTests: XCTestCase {
         XCTAssertEqual(utcStore.date, "2026-09-24")
     }
 
+    func testNextBoundaryDelayUsesCalendarTimezoneAndAdvancesAtSix() async {
+        let zone = TimeZone(identifier: "Europe/Amsterdam")!
+        let clock = AdjustableCurrentDayClock(date(2026, 9, 25, 5, 59, timeZone: zone.identifier))
+        let (_, _, store) = await makeStores(api: CurrentDayTestAPI(), clock: clock, timeZone: zone)
+
+        XCTAssertEqual(store.secondsUntilDrinkingDayBoundary, 60, accuracy: 1)
+
+        clock.now = date(2026, 9, 25, 6, 0, timeZone: zone.identifier)
+        XCTAssertEqual(store.secondsUntilDrinkingDayBoundary, 24 * 60 * 60, accuracy: 1)
+    }
+
     func testSignOutDiscardsLateResponseAndClearsAccountData() async {
         let gate = CurrentDayFetchGate()
         let api = CurrentDayTestAPI(rows: [drink(1)], gate: gate)

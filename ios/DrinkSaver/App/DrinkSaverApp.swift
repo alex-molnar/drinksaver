@@ -55,6 +55,18 @@ struct DrinkSaverApp: App {
     var body: some Scene {
         WindowGroup {
             rootView
+                .task(id: scenePhase == .active && sessionStore.userID != nil) {
+                    guard scenePhase == .active, sessionStore.userID != nil else { return }
+                    await currentDrinkingDayStore.clockDidCrossDrinkingDayBoundary()
+                    while !Task.isCancelled {
+                        do {
+                            try await Task.sleep(for: .seconds(currentDrinkingDayStore.secondsUntilDrinkingDayBoundary))
+                        } catch {
+                            return
+                        }
+                        await currentDrinkingDayStore.clockDidCrossDrinkingDayBoundary()
+                    }
+                }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .background {
                         let pendingDeletes = saveQueueStore.applicationWillEnterBackground()

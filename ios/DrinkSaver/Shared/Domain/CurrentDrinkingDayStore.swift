@@ -31,6 +31,9 @@ final class CurrentDrinkingDayStore {
     private var loadedSubject: String?
 
     var isTonight: Bool { calendar.component(.hour, from: clock.now) < 6 }
+    var secondsUntilDrinkingDayBoundary: TimeInterval {
+        max(1, nextDrinkingDayBoundary.timeIntervalSince(clock.now))
+    }
 
     init(
         api: (any DrinkQueueAPI)?,
@@ -87,6 +90,16 @@ final class CurrentDrinkingDayStore {
         serverDrinks = []
         state = .idle
         await load()
+    }
+
+    private var nextDrinkingDayBoundary: Date {
+        calendar.nextDate(
+            after: clock.now,
+            matching: DateComponents(hour: 6),
+            matchingPolicy: .nextTime,
+            repeatedTimePolicy: .first,
+            direction: .forward
+        )!
     }
 
     func sessionDidSignOut() {

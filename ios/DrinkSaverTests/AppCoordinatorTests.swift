@@ -32,4 +32,15 @@ final class AppCoordinatorTests: XCTestCase {
         coordinator.presentAdd(startingAt: .create(.alcoholType))
         XCTAssertEqual(coordinator.addPanels, [.create(.alcoholType)])
     }
+
+    func testSignOutResetsNavigationAndDismissesAdd() {
+        let coordinator = AppCoordinator()
+        coordinator.navigate(to: .recommendations)
+        coordinator.presentAdd(startingAt: .create(.alcoholType))
+
+        coordinator.sessionDidSignOut()
+
+        XCTAssertEqual(coordinator.currentScreen, .quick)
+        XCTAssertFalse(coordinator.isAddPresented)
+    }
 }

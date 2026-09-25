@@ -183,6 +183,8 @@ struct AppFrame: View {
                     .overlay(alignment: themeStore.mode == .dark ? .leading : .trailing) {
                         Circle().fill(theme.accent.active.color).frame(width: 20, height: 20).padding(3)
                     }
+                    .frame(width: 48, height: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Appearance")

@@ -15,7 +15,9 @@ the numeral role also uses tabular digits.
 Today/Tonight header, Recommendations/Add new type/Logout menu, Quick/Add/History navigation, and
 the single Add sheet host; feature interiors remain owned by their feature tasks. Quick header
 counts come from the injected `CurrentDrinkingDayStore` (`Nothing yet` or `N so far` after its
-first successful load). `AppCoordinator` retains the selected tab while Add routes are presented.
+first successful load); the current day is refreshed on foreground and at the next local 06:00
+boundary. `AppCoordinator` retains the selected tab while Add routes are presented and resets it
+to Quick on sign-out.
 The menu appearance control toggles the persisted `ThemeStore` choice, which defaults to dark and
 overrides system appearance. Stable `frame.*` accessibility identifiers support simulator UI tests.
 

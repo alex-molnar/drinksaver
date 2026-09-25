@@ -31,6 +31,7 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Add new type"].exists)
         XCTAssertTrue(app.buttons["Logout"].exists)
         let appearance = app.buttons["frame.theme.toggle"]
+        XCTAssertGreaterThanOrEqual(appearance.frame.height, 44)
         XCTAssertEqual(appearance.value as? String, "Dark")
         appearance.tap()
         XCTAssertEqual(appearance.value as? String, "Light")
@@ -47,9 +48,15 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["frame.add.create.alcoholType"].waitForExistence(timeout: 3))
         app.buttons["frame.add.close"].tap()
         app.buttons["frame.menu"].tap()
+        app.buttons["Recommendations"].tap()
+        app.buttons["frame.menu"].tap()
         app.buttons["Logout"].tap()
         XCTAssertTrue(app.buttons["Sign in"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["frame.tab.quick"].exists)
+        app.buttons["Sign in"].tap()
+        XCTAssertTrue(app.staticTexts["frame.title"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["frame.title"].label, "Tonight")
+        XCTAssertEqual(app.buttons["frame.tab.quick"].value as? String, "Selected")
     }
 
     private func launchSignedIn() -> XCUIApplication {

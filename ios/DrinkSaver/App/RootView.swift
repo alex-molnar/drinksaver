@@ -6,6 +6,7 @@ struct RootView: View {
     @Environment(DesignCatalogueStore.self) private var designCatalogueStore
     @Environment(SaveQueueStore.self) private var saveQueueStore: SaveQueueStore?
     @Environment(CurrentDrinkingDayStore.self) private var currentDrinkingDayStore
+    @Environment(AppCoordinator.self) private var appCoordinator
 
     var body: some View {
         Group {
@@ -37,6 +38,7 @@ struct RootView: View {
         .accessibilityIdentifier("app.root")
         .task(id: sessionStore.userID) {
             if sessionStore.userID == nil {
+                appCoordinator.sessionDidSignOut()
                 designCatalogueStore.sessionDidSignOut()
                 saveQueueStore?.sessionDidSignOut()
                 currentDrinkingDayStore.sessionDidSignOut()
