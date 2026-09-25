@@ -66,7 +66,6 @@ enum SaveQueueReducer {
         switch action {
         case .saveStarted(let entry):
             var next = state
-            next.entries.removeAll { if case .committed = $0.status { true } else { false } }
             next.entries.append(entry)
             return next
         case .deleteStarted(let entry):

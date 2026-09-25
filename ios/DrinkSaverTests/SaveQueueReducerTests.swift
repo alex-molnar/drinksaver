@@ -84,6 +84,23 @@ final class SaveQueueReducerTests: XCTestCase {
         XCTAssertEqual(SaveQueueReducer.suppressedIDs(in: state, date: "2026-01-02"), Set([7]))
     }
 
+    func testStartingNewSaveRetainsCommittedSaveUntilServerAcknowledgesIt() {
+        let first = saveEntry(sequence: 1)
+        var state = SaveQueueReducer.reduce(SaveQueueState(), .saveStarted(first))
+        state = SaveQueueReducer.reduce(state, .saveSucceeded(id: first.id, drinkIDs: [6], undoUntil: now))
+        state = SaveQueueReducer.reduce(state, .commit(id: first.id))
+
+        let second = saveEntry(sequence: 2)
+        state = SaveQueueReducer.reduce(state, .saveStarted(second))
+
+        XCTAssertEqual(state.entries.first(where: { $0.id == first.id })?.status, .committed)
+        XCTAssertTrue(SaveQueueReducer.pendingInsertions(in: state, date: "2026-01-02").contains { $0.id == 6 })
+
+        state = SaveQueueReducer.reduce(state, .cleanupAcknowledged(date: "2026-01-02", serverIDs: [6]))
+        XCTAssertNil(state.entries.first(where: { $0.id == first.id }))
+        XCTAssertNotNil(state.entries.first(where: { $0.id == second.id }))
+    }
+
     private func saveOperation() -> SaveOperation {
         SaveOperation(label: "Pint", date: "2026-01-02", alcoholTypeID: 3, payload: DrinkSaveRequest(alcoholTypeId: 3, alcoholVolumeId: 4), rowCountBaseline: 2)
     }

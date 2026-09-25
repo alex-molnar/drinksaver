@@ -21,6 +21,15 @@ retains the selected tab while Add routes are presented and resets it to Quick o
 The menu appearance control toggles the persisted `ThemeStore` choice, which defaults to dark and
 overrides system appearance. Stable `frame.*` accessibility identifiers support simulator UI tests.
 
+## Quick Save
+
+`QuickSaveView` shows backend recommendations as a two-column plate grid. It has loading skeleton,
+retryable error, and ready states; the ready state keeps Add plate last in the grid and routes it to
+the shared Add sheet. Each plate resolves the recommendation's palette and glass design, and shows
+queue-backed saving and saved feedback with an accessible status. `QuickSaveStore` sends saves
+through `SaveQueueStore`, uses the current drinking-day date and selected design, and delays a
+recommendation refresh until queued saves or undo operations finish.
+
 The bundled Fraunces roles are static native instances at the frozen optical-size, weight,
 softness, and wonk values. Familjen Grotesk stays variable over weights 400–700. The source WOFF2
 files in `web/src/assets/fonts/` are never converted or shipped by iOS.

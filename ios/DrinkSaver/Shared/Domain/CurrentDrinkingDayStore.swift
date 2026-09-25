@@ -15,6 +15,8 @@ final class CurrentDrinkingDayStore {
     private(set) var serverDrinks: [EditableDrink] = []
     private(set) var state: State = .idle
 
+    var serverRowCount: Int { Set(serverDrinks.map(\.id)).count }
+
     var visibleCount: Int {
         let suppressed = queueStore.suppressedDrinkIDs(for: date)
         var ids = Set(serverDrinks.lazy.map(\.id).filter { !suppressed.contains($0) })

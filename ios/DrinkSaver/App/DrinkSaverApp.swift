@@ -8,7 +8,8 @@ struct DrinkSaverApp: App {
     @State private var designCatalogueStore: DesignCatalogueStore
     @State private var saveQueueStore: SaveQueueStore
     @State private var currentDrinkingDayStore: CurrentDrinkingDayStore
-    @State private var appCoordinator = AppCoordinator()
+    @State private var quickSaveStore: QuickSaveStore
+    @State private var appCoordinator: AppCoordinator
     @Environment(\.scenePhase) private var scenePhase
 #if UI_TESTING
     private let uiFixtureBootstrap: UITestFixtureBootstrap?
@@ -19,13 +20,23 @@ struct DrinkSaverApp: App {
         let fixture = UITestFixtureBootstrap.launchIfRequested(arguments: ProcessInfo.processInfo.arguments)
         uiFixtureBootstrap = fixture
         if let fixture {
+            let coordinator = AppCoordinator()
+            _appCoordinator = State(initialValue: coordinator)
             _sessionStore = State(initialValue: fixture.sessionStore)
-            _designCatalogueStore = State(initialValue: DesignCatalogueStore(api: fixture.api, sessionStore: fixture.sessionStore))
+            let catalogueStore = DesignCatalogueStore(api: fixture.api, sessionStore: fixture.sessionStore)
+            _designCatalogueStore = State(initialValue: catalogueStore)
             let configuration = try? AppConfiguration.load()
             let queueStore = SaveQueueStore(api: fixture.api, sessionStore: fixture.sessionStore, configuration: configuration, clock: fixture.clock)
             _saveQueueStore = State(initialValue: queueStore)
-            _currentDrinkingDayStore = State(initialValue: CurrentDrinkingDayStore(
-                api: fixture.api, queueStore: queueStore, sessionStore: fixture.sessionStore, clock: fixture.clock
+            let dayStore = CurrentDrinkingDayStore(api: fixture.api, queueStore: queueStore, sessionStore: fixture.sessionStore, clock: fixture.clock)
+            _currentDrinkingDayStore = State(initialValue: dayStore)
+            _quickSaveStore = State(initialValue: QuickSaveStore(
+                api: fixture.api,
+                sessionStore: fixture.sessionStore,
+                designCatalogueStore: catalogueStore,
+                queueStore: queueStore,
+                drinkingDayStore: dayStore,
+                coordinator: coordinator
             ))
             return
         }
@@ -45,11 +56,23 @@ struct DrinkSaverApp: App {
             api = nil
         }
         let sessionStore = SessionStore(authorizationProvider: authorizationProvider)
+        let coordinator = AppCoordinator()
         _sessionStore = State(initialValue: sessionStore)
-        _designCatalogueStore = State(initialValue: DesignCatalogueStore(api: api, sessionStore: sessionStore))
+        _appCoordinator = State(initialValue: coordinator)
         let queueStore = SaveQueueStore(api: api, sessionStore: sessionStore, configuration: configuration)
         _saveQueueStore = State(initialValue: queueStore)
-        _currentDrinkingDayStore = State(initialValue: CurrentDrinkingDayStore(api: api, queueStore: queueStore, sessionStore: sessionStore))
+        let dayStore = CurrentDrinkingDayStore(api: api, queueStore: queueStore, sessionStore: sessionStore)
+        _currentDrinkingDayStore = State(initialValue: dayStore)
+        let catalogueStore = DesignCatalogueStore(api: api, sessionStore: sessionStore)
+        _designCatalogueStore = State(initialValue: catalogueStore)
+        _quickSaveStore = State(initialValue: QuickSaveStore(
+            api: api,
+            sessionStore: sessionStore,
+            designCatalogueStore: catalogueStore,
+            queueStore: queueStore,
+            drinkingDayStore: dayStore,
+            coordinator: coordinator
+        ))
     }
 
     var body: some Scene {
@@ -102,6 +125,7 @@ struct DrinkSaverApp: App {
             .environment(designCatalogueStore)
             .environment(saveQueueStore)
             .environment(currentDrinkingDayStore)
+            .environment(quickSaveStore)
             .environment(appCoordinator)
             .task { await sessionStore.restore() }
             .onOpenURL { _ = sessionStore.handleOpenURL($0) }
