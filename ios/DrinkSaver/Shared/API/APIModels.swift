@@ -190,5 +190,5 @@ struct NewBeerFlavour: Codable, Equatable, Sendable {
 struct EditableDrink: Codable, Equatable, Sendable {
     let id: Int
     let name: String
-    let alcoholTypeId: Int
+    let alcoholTypeId: Int?
 }

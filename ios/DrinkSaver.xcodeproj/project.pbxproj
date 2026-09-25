@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A00800000000000000000001 /* DrinkSaverAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00800000000000000000002 /* DrinkSaverAPI.swift */; };
+		A00800000000000000000003 /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00800000000000000000004 /* APIError.swift */; };
+		A00800000000000000000005 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00800000000000000000006 /* APIClient.swift */; };
+		A00800000000000000000007 /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00800000000000000000008 /* APIClientTests.swift */; };
+		A00800000000000000000009 /* URLProtocolStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0080000000000000000000A /* URLProtocolStub.swift */; };
 		A00700000000000000000001 /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00700000000000000000002 /* APIModels.swift */; };
 		A00700000000000000000003 /* APIModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00700000000000000000004 /* APIModelTests.swift */; };
 		A00700000000000000000005 /* drink-save-request.json in Resources */ = {isa = PBXBuildFile; fileRef = A00700000000000000000006 /* drink-save-request.json */; };
@@ -71,6 +76,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A00800000000000000000002 /* DrinkSaverAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkSaverAPI.swift; sourceTree = "<group>"; };
+		A00800000000000000000004 /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIError.swift; sourceTree = "<group>"; };
+		A00800000000000000000006 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		A00800000000000000000008 /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
+		A0080000000000000000000A /* URLProtocolStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLProtocolStub.swift; sourceTree = "<group>"; };
 		A00700000000000000000002 /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModels.swift; sourceTree = "<group>"; };
 		A00700000000000000000004 /* APIModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModelTests.swift; sourceTree = "<group>"; };
 		A00700000000000000000006 /* drink-save-request.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "drink-save-request.json"; sourceTree = "<group>"; };
@@ -138,6 +148,8 @@
 		4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */ = {
 			isa = PBXGroup;
 			children = (
+				A00800000000000000000008 /* APIClientTests.swift */,
+				A0080000000000000000000A /* URLProtocolStub.swift */,
 				A00700000000000000000004 /* APIModelTests.swift */,
 				E75AF806F508BC872825B555 /* AppConfigurationTests.swift */,
 				A72D2E5250DD020F0033ECC4 /* DrinkingDayTests.swift */,
@@ -230,6 +242,9 @@
 		A00700000000000000000013 /* API */ = {
 			isa = PBXGroup;
 			children = (
+				A00800000000000000000002 /* DrinkSaverAPI.swift */,
+				A00800000000000000000004 /* APIError.swift */,
+				A00800000000000000000006 /* APIClient.swift */,
 				A00700000000000000000002 /* APIModels.swift */,
 			);
 			path = API;
@@ -447,6 +462,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A00800000000000000000001 /* DrinkSaverAPI.swift in Sources */,
+				A00800000000000000000003 /* APIError.swift in Sources */,
+				A00800000000000000000005 /* APIClient.swift in Sources */,
 				A00700000000000000000001 /* APIModels.swift in Sources */,
 				C543D235DD636423FDAE5550 /* AppConfiguration.swift in Sources */,
 				BDB6039EC793F67B5597C6C4 /* Clock.swift in Sources */,
@@ -477,6 +495,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A00800000000000000000007 /* APIClientTests.swift in Sources */,
+				A00800000000000000000009 /* URLProtocolStub.swift in Sources */,
 				A00700000000000000000003 /* APIModelTests.swift in Sources */,
 				5E47075ECFC49BC69EB7627C /* AppConfigurationTests.swift in Sources */,
 				B32D1137A58061D6BB0B1974 /* DrinkingDayTests.swift in Sources */,

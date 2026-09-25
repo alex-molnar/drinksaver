@@ -56,4 +56,9 @@ non-finite or extreme coordinates use the highball outline.
 unset optional values and never send `userId`; the server derives ownership from the bearer token.
 `SavedDrink` and `Recommendation` model backend responses, including nullable design IDs and the
 nullable recommendation ID. `DrinkSaverTests/APIModelTests.swift` checks these shapes against the
-JSON fixtures in `DrinkSaverTests/Fixtures/API/`.
+JSON fixtures in `DrinkSaverTests/Fixtures/API/`. `APIClient` implements the `DrinkSaverAPI`
+endpoints over an ephemeral `URLSession`, adds bearer tokens from `AccessTokenProviding`, and
+refreshes and retries a request once after a 401. It uses a 10-second request timeout and reports
+status, authentication, decoding, timeout, and connection failures without retaining response
+bodies or credentials. `DrinkSaverTests/APIClientTests.swift` verifies endpoint requests and retry
+behavior with a stub URL protocol.

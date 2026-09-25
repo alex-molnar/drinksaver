@@ -62,7 +62,8 @@ final class APIModelTests: XCTestCase {
         XCTAssertNil(try decoder.decode([BeerFlavour].self, from: JSONSerialization.data(withJSONObject: object["flavours"]!))[0].colorPaletteId)
         XCTAssertEqual(try decoder.decode([AlcoholVolume].self, from: JSONSerialization.data(withJSONObject: object["volumes"]!))[0].volume, 0.5)
         XCTAssertEqual(try decoder.decode([ConsumptionType].self, from: JSONSerialization.data(withJSONObject: object["consumptionTypes"]!))[0].glasswareId, 1)
-        XCTAssertEqual(try decoder.decode([EditableDrink].self, from: JSONSerialization.data(withJSONObject: object["editableDrinks"]!))[0].name, "Pint")
+        let editableDrinks = try decoder.decode([EditableDrink].self, from: JSONSerialization.data(withJSONObject: object["editableDrinks"]!))
+        XCTAssertEqual(editableDrinks.map(\.alcoholTypeId), [4, nil])
         XCTAssertNil(try decoder.decode([Palette].self, from: JSONSerialization.data(withJSONObject: object["palettes"]!))[0].inkLight)
         XCTAssertNil(try decoder.decode([Glassware].self, from: JSONSerialization.data(withJSONObject: object["glassware"]!))[0].f)
 
