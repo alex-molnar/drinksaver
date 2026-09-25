@@ -18,9 +18,12 @@ struct GlassShape: Shape {
         if let parsed = SVGPathParser.parse(pathData), let fitted = Self.fit(parsed, in: rect) {
             return fitted
         }
-        guard let fallback = SVGPathParser.parse(fallbackPathData)
-                ?? SVGPathParser.parse(DesignCatalogue.fallbackGlass.g) else { return Path() }
-        return Self.fit(fallback, in: rect) ?? Path()
+        if let fallback = SVGPathParser.parse(fallbackPathData),
+           let fitted = Self.fit(fallback, in: rect) {
+            return fitted
+        }
+        guard let highball = SVGPathParser.parse(DesignCatalogue.fallbackGlass.g) else { return Path() }
+        return Self.fit(highball, in: rect) ?? Path()
     }
 
     private static func fit(_ path: CGPath, in rect: CGRect) -> Path? {

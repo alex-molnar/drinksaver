@@ -66,4 +66,14 @@ final class GlassShapeTests: XCTestCase {
         ).path(in: box).boundingRect
         XCTAssertNotEqual(liquidFallback, fallback)
     }
+
+    func testUnfittableCustomFallbackUsesBuiltInHighball() {
+        let expected = GlassShape(pathData: DesignCatalogue.fallbackGlass.g).path(in: box).boundingRect
+        let actual = GlassShape(
+            pathData: "M0 0Q1 1 2 2",
+            fallbackPathData: "M100 100L101 101"
+        ).path(in: box).boundingRect
+
+        XCTAssertEqual(actual, expected)
+    }
 }
