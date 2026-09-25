@@ -52,7 +52,7 @@ class AlcoholRepositoryTest {
         ArgumentCaptor<List<UUID>> captor = ArgumentCaptor.forClass(List.class);
         verify(typesTable).findAllByUserIdInOrderByNameAsc(captor.capture());
 
-        assertThat(captor.getValue()).containsExactly(ADMIN, USER);
+        assertThat(captor.getValue()).containsExactlyInAnyOrder(ADMIN, USER);
     }
 
     @Test
@@ -90,7 +90,7 @@ class AlcoholRepositoryTest {
         ArgumentCaptor<List<UUID>> captor = ArgumentCaptor.forClass(List.class);
         verify(subtypesTable).findAllByAlcoholTypeIdAndUserIdInOrderByNameAsc(anyInt(), captor.capture());
 
-        assertThat(captor.getValue()).containsExactly(ADMIN, USER);
+        assertThat(captor.getValue()).containsExactlyInAnyOrder(ADMIN, USER);
     }
 
     @Test

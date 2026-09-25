@@ -101,7 +101,7 @@ public ResponseEntity<AlcoholVolume> saveVolumeForAlcoholType(
 Neither takes an `@AuthenticationPrincipal`, and `PostgresAlcoholRepository.saveVolumeForAlcoholType`
 filters on `alcoholTypeId` alone. So any authenticated user can attach a volume row to **any**
 user's alcohol type, including the admin-owned types that `getAlcoholTypes` returns to
-everyone via `repository.admin-user-list`. That row then appears in every user's volume list
+everyone via `repository.admin-user-uuid`. That row then appears in every user's volume list
 and is rendered into their drink names by `AlcoholNameCollector`, which does no ownership
 check either.
 
@@ -149,7 +149,7 @@ does this task is editing the same signature and should take both.
 Decide first:
 
 - **A. The catalogue is global.** Then say so in a comment on both methods and on
-  `AlcoholVolume`, and restrict `POST` to the admin user list so ordinary users cannot write
+  `AlcoholVolume`, and restrict `POST` to the configured admin UUID so ordinary users cannot write
   to shared vocabulary. `getVolumesByAlcoholType` can stay open.
 - **B. Volumes belong to the type's owner.** Then add `@AuthenticationPrincipal`, check
   ownership of the `alcoholTypeId` before writing, and return 404 rather than 403 so the

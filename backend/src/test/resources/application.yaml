@@ -26,7 +26,7 @@ repository:
   beer: "postgres"
   drink: "postgres"
   recommendation: "postgres"
-  admin-user-list: "00000000-0000-0000-0000-000000000000"
+  admin-user-uuid: "00000000-0000-0000-0000-000000000000"
   beer-id: "4"
   max-personal-recommendations: "10"
   decay-factor: "0.97"

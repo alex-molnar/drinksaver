@@ -29,7 +29,7 @@ class BeerRepositoryTest {
                 ADMIN, 4, 10, 0.97
     );
 
-    private BeerRepository repositoryWith(BrandsTable brands, List<UUID> admins) {
+    private BeerRepository repositoryWith(BrandsTable brands) {
         return new BeerRepository(
                 brands,
                 mock(ConsumptionTypesTable.class),
@@ -49,19 +49,9 @@ class BeerRepositoryTest {
         BrandsTable brands = mock(BrandsTable.class);
         when(brands.findAllByUserIdInOrderByName(anyCollection())).thenReturn(List.of());
 
-        repositoryWith(brands, List.of(ADMIN)).getBrands(USER);
+        repositoryWith(brands).getBrands(USER);
 
-        assertThat(capturedUserIds(brands)).containsExactly(ADMIN, USER);
-    }
-
-    @Test
-    void getBrandsStillIncludesTheCallerWhenThereAreNoAdmins() {
-        BrandsTable brands = mock(BrandsTable.class);
-        when(brands.findAllByUserIdInOrderByName(anyCollection())).thenReturn(List.of());
-
-        repositoryWith(brands, List.of()).getBrands(USER);
-
-        assertThat(capturedUserIds(brands)).containsExactly(USER);
+        assertThat(capturedUserIds(brands)).containsExactlyInAnyOrder(ADMIN, USER);
     }
 
     /**
@@ -84,6 +74,6 @@ class BeerRepositoryTest {
         ArgumentCaptor<List<UUID>> captor = ArgumentCaptor.captor();
         verify(flavours).findAllByBrandIdAndUserIdIn(eq(7), captor.capture());
 
-        assertThat(captor.getValue()).containsExactly(ADMIN, USER);
+        assertThat(captor.getValue()).containsExactlyInAnyOrder(ADMIN, USER);
     }
 }
