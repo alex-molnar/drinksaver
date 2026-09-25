@@ -3,6 +3,9 @@ import SwiftUI
 struct RootView: View {
     @Environment(ThemeStore.self) private var themeStore
     @Environment(SessionStore.self) private var sessionStore
+#if UI_TESTING
+    @Environment(\.uiFixtureIdentifier) private var uiFixtureIdentifier
+#endif
 
     var body: some View {
         Group {
@@ -20,6 +23,9 @@ struct RootView: View {
                     Text("DrinkSaver")
                         .font(themeStore.theme.type.displayL.font)
                         .foregroundStyle(themeStore.theme.ink.primary.color)
+#if UI_TESTING
+                        .accessibilityIdentifier(uiFixtureIdentifier.map { "fixture.\($0)" } ?? "app.home.title")
+#endif
                     Button("Sign out") { Task { await sessionStore.signOut() } }
                 }
             case .failed(let message):
@@ -35,6 +41,7 @@ struct RootView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background { PlasterBackground(theme: themeStore.theme) }
         .preferredColorScheme(themeStore.mode == .dark ? .dark : .light)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("app.root")
     }
 

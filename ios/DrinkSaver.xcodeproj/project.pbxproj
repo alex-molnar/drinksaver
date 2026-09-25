@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A003A0000000000000000001 /* UITestFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A0000000000000000003 /* UITestFixture.swift */; };
+		A003A0000000000000000002 /* UITestFixtureBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A0000000000000000004 /* UITestFixtureBootstrap.swift */; };
+		A003A0000000000000000009 /* FixtureHarnessUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A000000000000000000A /* FixtureHarnessUITests.swift */; };
+		A003A000000000000000000B /* UITestFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A000000000000000000C /* UITestFixtureTests.swift */; };
 		A00900000000000000000001 /* KeychainAuthorizationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000002 /* KeychainAuthorizationStore.swift */; };
 		A00900000000000000000003 /* KeychainAuthorizationStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000004 /* KeychainAuthorizationStoreTests.swift */; };
 		A00900000000000000000005 /* InMemoryAuthorizationDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000006 /* InMemoryAuthorizationDataStore.swift */; };
@@ -86,6 +90,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A003A0000000000000000003 /* UITestFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixture.swift; sourceTree = "<group>"; };
+		A003A0000000000000000004 /* UITestFixtureBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixtureBootstrap.swift; sourceTree = "<group>"; };
+		A003A000000000000000000A /* FixtureHarnessUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixtureHarnessUITests.swift; sourceTree = "<group>"; };
+		A003A000000000000000000C /* UITestFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixtureTests.swift; sourceTree = "<group>"; };
 		A01000000000000000000011 /* SessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoreTests.swift; sourceTree = "<group>"; };
 		A01000000000000000000013 /* AuthorizationProviding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizationProviding.swift; sourceTree = "<group>"; };
 		A01000000000000000000015 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
@@ -153,6 +161,15 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		A003A0000000000000000005 /* UITestSupport */ = {
+			isa = PBXGroup;
+			children = (
+				A003A0000000000000000003 /* UITestFixture.swift */,
+				A003A0000000000000000004 /* UITestFixtureBootstrap.swift */,
+			);
+			path = UITestSupport;
+			sourceTree = "<group>";
+		};
 		1B722D7851D8AAF271BDF66A /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -166,6 +183,7 @@
 		4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */ = {
 			isa = PBXGroup;
 			children = (
+				A003A000000000000000000C /* UITestFixtureTests.swift */,
 				A01000000000000000000019 /* AppAuthClientTests.swift */,
 				A01000000000000000000011 /* SessionStoreTests.swift */,
 				A00900000000000000000004 /* KeychainAuthorizationStoreTests.swift */,
@@ -320,6 +338,7 @@
 		CB37CFD8A3EF0482029730F5 /* DrinkSaverUITests */ = {
 			isa = PBXGroup;
 			children = (
+				A003A000000000000000000A /* FixtureHarnessUITests.swift */,
 				71DFBB0972B91E0D1020DB99 /* ProjectSmokeUITests.swift */,
 			);
 			path = DrinkSaverUITests;
@@ -339,6 +358,7 @@
 		EDFA41DF5811BC8C1739E01C = {
 			isa = PBXGroup;
 			children = (
+				A003A0000000000000000005 /* UITestSupport */,
 				C8692CCE87537942C11D2B08 /* Config */,
 				EB017125E6B6546232F6720C /* DrinkSaver */,
 				4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */,
@@ -522,6 +542,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A003A0000000000000000001 /* UITestFixture.swift in Sources */,
+				A003A0000000000000000002 /* UITestFixtureBootstrap.swift in Sources */,
 				A01000000000000000000016 /* AppAuthClient.swift in Sources */,
 				A01000000000000000000012 /* AuthorizationProviding.swift in Sources */,
 				A01000000000000000000014 /* SessionStore.swift in Sources */,
@@ -551,6 +573,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A003A0000000000000000009 /* FixtureHarnessUITests.swift in Sources */,
 				86B731A1EDCBF3C0D0712030 /* ProjectSmokeUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -559,6 +582,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A003A000000000000000000B /* UITestFixtureTests.swift in Sources */,
 				A01000000000000000000018 /* AppAuthClientTests.swift in Sources */,
 				A01000000000000000000010 /* SessionStoreTests.swift in Sources */,
 				A00900000000000000000003 /* KeychainAuthorizationStoreTests.swift in Sources */,
@@ -603,6 +627,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = "$(DRINKSAVER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 777BH83DM5;
+				EXCLUDED_SOURCE_FILE_NAMES = "UITestFixture.swift UITestFixtureBootstrap.swift";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrinkSaver/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -934,6 +959,7 @@
 				OIDC_REDIRECT_URL = "$(OIDC_REDIRECT_URL)";
 				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver;
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) UI_TESTING";
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Test;
@@ -960,6 +986,7 @@
 				OIDC_REDIRECT_URL = "$(OIDC_REDIRECT_URL)";
 				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver;
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) UI_TESTING";
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Local;
