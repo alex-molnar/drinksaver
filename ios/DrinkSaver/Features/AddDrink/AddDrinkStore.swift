@@ -136,6 +136,8 @@ final class AddDrinkStore {
         } catch { errorMessage = "Couldn’t add it. Try again." }
     }
 
+    func save() {}
+
     func sessionDidSignOut() { generation += 1; draft = AddDrinkDraft(); errorMessage = nil }
     static func clampedQuantity(_ value: Int) -> Int { min(24, max(1, value)) }
     private func load<Value: Equatable>(_ request: (any DrinkSaverAPI) async throws -> Value) async -> LoadState<Value> {

@@ -59,6 +59,23 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertEqual(app.buttons["frame.tab.quick"].value as? String, "Selected")
     }
 
+    func testAddDrinkSelectionPersistsAcrossNestedPanelsAndResetsForNewSheet() {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.add"].tap()
+        app.buttons["Drink, Choose"].tap()
+        let wine = app.buttons["Wine"]
+        XCTAssertTrue(wine.waitForExistence(timeout: 3))
+        wine.tap()
+        app.buttons["Size, Choose"].tap()
+        let glass = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Glass'")).firstMatch
+        XCTAssertTrue(glass.waitForExistence(timeout: 3))
+        glass.tap()
+        XCTAssertTrue(app.buttons["Size, Glass (0.25L)"].exists)
+        app.buttons["frame.add.close"].tap()
+        app.buttons["frame.tab.add"].tap()
+        XCTAssertTrue(app.buttons["Drink, Choose"].waitForExistence(timeout: 3))
+    }
+
     private func launchSignedIn() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [

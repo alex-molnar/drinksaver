@@ -5,6 +5,8 @@ struct AppFrame: View {
     @Environment(SessionStore.self) private var sessionStore
     @Environment(CurrentDrinkingDayStore.self) private var drinkingDay
     @Environment(AppCoordinator.self) private var coordinator
+    @Environment(AddDrinkStore.self) private var addDrinkStore
+    @Environment(SaveQueueStore.self) private var saveQueueStore: SaveQueueStore?
     @State private var menuIsOpen = false
 
     private var theme: DrinkSaverTheme { themeStore.theme }
@@ -24,9 +26,14 @@ struct AppFrame: View {
         ZStack(alignment: .top) {
             VStack(spacing: 0) {
                 headerBar
-                content
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    .accessibilityIdentifier("frame.content.\(screenName)")
+                VStack(spacing: 0) {
+                    if coordinator.currentScreen != .quick, let entry = saveQueueStore?.currentFeedback {
+                        queueFeedback(entry)
+                    }
+                    content
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .accessibilityIdentifier("frame.content.\(screenName)")
+                }
                 bottomNavigation
             }
 
@@ -44,6 +51,9 @@ struct AppFrame: View {
             }
         }
         .background { PlasterBackground(theme: theme) }
+        .onChange(of: coordinator.isAddPresented) { _, presented in
+            if presented { addDrinkStore.reset() }
+        }
         .sheet(isPresented: addPresented, onDismiss: { coordinator.dismissAdd() }) {
             addSheet
                 .presentationDetents([.medium, .large])
@@ -134,6 +144,27 @@ struct AppFrame: View {
         .contentShape(Rectangle())
     }
 
+    @ViewBuilder private func queueFeedback(_ entry: QueueEntry) -> some View {
+        let title: String = switch entry.kind { case .save(let operation): operation.label; case .delete(let operation): operation.label }
+        HStack(spacing: 12) {
+            Text(feedbackMessage(entry, label: title)).font(theme.type.body.font).foregroundStyle(theme.ink.primary.color)
+                .accessibilityIdentifier("frame.queue.message")
+            Spacer(minLength: 4)
+            switch entry.status {
+            case .undoable: Button("Undo") { saveQueueStore?.undoCurrent() }.accessibilityIdentifier("frame.queue.undo")
+            case .failed: Button("Retry") { saveQueueStore?.retryCurrent() }.accessibilityIdentifier("frame.queue.retry")
+            case .undoing: ProgressView().accessibilityLabel("Undoing")
+            case .saving, .committed: EmptyView()
+            }
+        }
+        .buttonStyle(.bordered).padding(.horizontal, 16).padding(.vertical, 10)
+        .background(theme.surface.panel.color)
+        .overlay(alignment: .bottom) { Rectangle().fill(theme.line.hairline.color).frame(height: 1) }
+    }
+    private func feedbackMessage(_ entry: QueueEntry, label: String) -> String {
+        switch entry.status { case .undoable: "Saved \(label)"; case .undoing: "Undoing \(label)…"; case .failed(let failure): failure.message; case .saving, .committed: "" }
+    }
+
     private var menuCard: some View {
         VStack(spacing: 0) {
             menuAction("Recommendations") {
@@ -220,21 +251,181 @@ struct AppFrame: View {
             .buttonStyle(.plain)
             .foregroundStyle(theme.ink.primary.color)
             .padding(.horizontal, 12)
-            Color.clear
+            VStack(spacing: 0) { addPanel }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("frame.add-sheet")
-            Spacer(minLength: 0)
         }
         .padding(.top, 20)
         .background(theme.surface.panel.color)
-        .overlay(alignment: .top) {
-            if case .create(.alcoholType) = coordinator.addPanels.last {
-                Text("Add alcohol type")
-                    .font(theme.type.body.font)
-                    .foregroundStyle(theme.ink.secondary.color)
-                    .padding(.top, 88)
-                    .accessibilityIdentifier("frame.add.create.alcoholType")
+    }
+
+    @ViewBuilder private var addPanel: some View {
+        switch coordinator.addPanels.last ?? .menu {
+        case .menu:
+            VStack(alignment: .leading, spacing: 0) {
+                Text("What are you having?").font(theme.type.displayM.font).foregroundStyle(theme.ink.primary.color).padding(.horizontal, 20)
+                Text("Drink and size are all it needs.").font(theme.type.caption.font).foregroundStyle(theme.ink.tertiary.color).padding(.horizontal, 20).padding(.top, 5).padding(.bottom, 8)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        addRow("Drink", value: addDrinkStore.draft.alcoholType?.name, field: .alcoholType)
+                        addRow("Size", value: addDrinkStore.draft.volume.map { "\($0.name) (\($0.volume)L)" }, field: .volume)
+                        if hasOptions(addDrinkStore.subtypes) || addDrinkStore.draft.subtype != nil { addRow("Kind", value: addDrinkStore.draft.subtype?.name, field: .subtype) }
+                        if addDrinkStore.draft.isBeer {
+                            addRow("Served", value: addDrinkStore.draft.consumptionType?.name, field: .consumptionType)
+                            addRow("Brand", value: addDrinkStore.draft.brand?.name, field: .brand)
+                            if addDrinkStore.draft.brand != nil { addRow("Flavour", value: addDrinkStore.draft.flavour?.name, field: .flavour) }
+                        }
+                        HStack {
+                            Text("Date"); Spacer()
+                            DatePicker("Date", selection: Binding(get: { addDrinkStore.draft.date ?? Date() }, set: { addDrinkStore.draft.date = $0 }), in: ...Date(), displayedComponents: .date)
+                                .labelsHidden().accessibilityLabel("Date")
+                        }.padding(.horizontal, 20).frame(minHeight: 48)
+                        HStack {
+                            Text("Notes"); Spacer()
+                            TextField("Optional", text: Binding(get: { addDrinkStore.draft.notes }, set: { addDrinkStore.draft.notes = $0 }))
+                                .multilineTextAlignment(.trailing).accessibilityLabel("Notes")
+                        }.padding(.horizontal, 20).frame(minHeight: 48)
+                        HStack {
+                            Text("Quantity"); Spacer()
+                            Button { addDrinkStore.setQuantity(addDrinkStore.draft.quantity - 1) } label: { Image(systemName: "minus.circle") }.accessibilityLabel("Decrease quantity")
+                            Text("\(addDrinkStore.draft.quantity)").frame(minWidth: 32).accessibilityIdentifier("add.quantity")
+                            Button { addDrinkStore.setQuantity(addDrinkStore.draft.quantity + 1) } label: { Image(systemName: "plus.circle") }.accessibilityLabel("Increase quantity")
+                        }.padding(.horizontal, 20).frame(minHeight: 48)
+                        Toggle("Add to recommendations", isOn: Binding(get: { addDrinkStore.draft.recommend }, set: { addDrinkStore.setRecommend($0) })).padding(.horizontal, 20).frame(minHeight: 48)
+                        if addDrinkStore.draft.recommend {
+                            Toggle("Temporary recommendation", isOn: Binding(get: { addDrinkStore.draft.onlyTemporarily }, set: { addDrinkStore.draft.onlyTemporarily = $0 })).padding(.horizontal, 20)
+                            TextField("Recommendation name", text: Binding(get: { addDrinkStore.draft.name }, set: { addDrinkStore.draft.name = $0 })).textFieldStyle(.roundedBorder).padding(.horizontal, 20)
+                        }
+                    }
+                }
+                if let error = addDrinkStore.errorMessage { Text(error).foregroundStyle(theme.accent.danger.color).padding(.horizontal, 20) }
+                Button(addDrinkStore.draft.quantity == 1 ? "Save drink" : "Save \(addDrinkStore.draft.quantity) drinks") { addDrinkStore.save() }
+                    .buttonStyle(.borderedProminent).frame(maxWidth: .infinity).padding()
+                    .disabled(addDrinkStore.draft.alcoholType == nil || addDrinkStore.draft.volume == nil || (addDrinkStore.draft.isBeer && addDrinkStore.draft.consumptionType == nil) || addDrinkStore.isSaving)
+                    .accessibilityIdentifier("add.save")
             }
+            .task { await addDrinkStore.loadAlcoholTypes() }
+        case .option(let field): optionPanel(field)
+        case .create(let field): createPanel(field)
+        }
+    }
+
+    private func addRow(_ title: String, value: String?, field: AddRouteField) -> some View {
+        Button {
+            coordinator.push(.option(field))
+            Task {
+                switch field {
+                case .alcoholType: await addDrinkStore.loadAlcoholTypes()
+                case .volume: await addDrinkStore.loadVolumes()
+                case .subtype: await addDrinkStore.loadSubtypes()
+                case .consumptionType: await addDrinkStore.loadConsumptionTypes()
+                case .brand: await addDrinkStore.loadBrands()
+                case .flavour: await addDrinkStore.loadFlavours()
+                case .date, .notes, .recommend: break
+                }
+            }
+        } label: {
+            HStack { Text(title).font(theme.type.displayS.font); Spacer(minLength: 18).overlay(alignment: .trailing) { Rectangle().stroke(style: StrokeStyle(lineWidth: 1, dash: [2, 4])).foregroundStyle(theme.line.hairline.color).frame(height: 1) }; Text(value ?? "Choose").font(theme.type.body.font).foregroundStyle(value == nil ? theme.ink.tertiary.color : theme.accent.active.color) }
+                .padding(.horizontal, 20).frame(minHeight: 48).contentShape(Rectangle())
+        }.buttonStyle(.plain).accessibilityLabel("\(title), \(value ?? "Choose")")
+    }
+
+    @ViewBuilder private func optionPanel(_ field: AddRouteField) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(optionTitle(field)).font(theme.type.displayM.font).padding(.horizontal, 20)
+            if case .loading = state(for: field) { ProgressView("Loading…").padding() }
+            else if case .failed = state(for: field) { Text("Couldn’t load. Close and try again.").padding() }
+            else {
+                ScrollView { VStack(spacing: 0) {
+                    ForEach(optionValues(field), id: \.id) { item in
+                        Button(item.name) { select(item.id, field: field); coordinator.popAddPanel() }
+                            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).padding(.horizontal, 20).buttonStyle(.plain)
+                    }
+                    if let creatable = creatable(field) {
+                        Button("＋ Add new \(fieldName(field))") { coordinator.push(.create(creatable)) }
+                            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).padding(.horizontal, 20)
+                    }
+                } }
+            }
+        }
+    }
+
+    private struct AddOption: Identifiable, Equatable { let id: Int; let name: String }
+    private func optionValues(_ field: AddRouteField) -> [AddOption] {
+        switch field {
+        case .alcoholType: if case .loaded(let values) = addDrinkStore.alcoholTypes { values.map { AddOption(id:$0.id,name:$0.name) } } else { [] }
+        case .volume: if case .loaded(let values) = addDrinkStore.volumes { values.map { AddOption(id:$0.id,name:"\($0.name) (\($0.volume)L)") } } else { [] }
+        case .subtype: if case .loaded(let values) = addDrinkStore.subtypes { values.map { AddOption(id:$0.id,name:$0.name) } } else { [] }
+        case .consumptionType: if case .loaded(let values) = addDrinkStore.consumptionTypes { values.map { AddOption(id:$0.id,name:$0.name) } } else { [] }
+        case .brand: if case .loaded(let values) = addDrinkStore.brands { values.map { AddOption(id:$0.id,name:$0.name) } } else { [] }
+        case .flavour: if case .loaded(let values) = addDrinkStore.flavours { values.map { AddOption(id:$0.id,name:$0.name) } } else { [] }
+        case .date, .notes, .recommend: []
+        }
+    }
+    private func state(for field: AddRouteField) -> AddDrinkStore.LoadState<[AddOption]> {
+        switch field {
+        case .alcoholType: mapState(addDrinkStore.alcoholTypes, transform: { $0.map { AddOption(id:$0.id,name:$0.name) } })
+        case .volume: mapState(addDrinkStore.volumes, transform: { $0.map { AddOption(id:$0.id,name:$0.name) } })
+        case .subtype: mapState(addDrinkStore.subtypes, transform: { $0.map { AddOption(id:$0.id,name:$0.name) } })
+        case .consumptionType: mapState(addDrinkStore.consumptionTypes, transform: { $0.map { AddOption(id:$0.id,name:$0.name) } })
+        case .brand: mapState(addDrinkStore.brands, transform: { $0.map { AddOption(id:$0.id,name:$0.name) } })
+        case .flavour: mapState(addDrinkStore.flavours, transform: { $0.map { AddOption(id:$0.id,name:$0.name) } })
+        default: .idle
+        }
+    }
+    private func mapState<T: Equatable>(_ state: AddDrinkStore.LoadState<T>, transform: (T) -> [AddOption]) -> AddDrinkStore.LoadState<[AddOption]> {
+        switch state { case .idle: .idle; case .loading: .loading; case .failed: .failed; case .loaded(let value): .loaded(transform(value)) }
+    }
+    private func hasOptions<T: Equatable>(_ value: AddDrinkStore.LoadState<[T]>) -> Bool { if case .loaded(let items) = value { !items.isEmpty } else { false } }
+    private func creatable(_ field: AddRouteField) -> AddCreatableField? {
+        switch field { case .alcoholType: .alcoholType; case .volume: .volume; case .subtype: .subtype; case .brand: .brand; case .flavour: .flavour; default: nil }
+    }
+    private func select(_ id: Int, field: AddRouteField) {
+        switch field {
+        case .alcoholType: if case .loaded(let items) = addDrinkStore.alcoholTypes, let item = items.first(where:{$0.id == id}) { addDrinkStore.selectAlcoholType(item) }
+        case .volume: if case .loaded(let items) = addDrinkStore.volumes { addDrinkStore.draft.volume = items.first(where:{$0.id == id}) }
+        case .subtype: if case .loaded(let items) = addDrinkStore.subtypes { addDrinkStore.draft.subtype = items.first(where:{$0.id == id}) }
+        case .consumptionType: if case .loaded(let items) = addDrinkStore.consumptionTypes { addDrinkStore.draft.consumptionType = items.first(where:{$0.id == id}) }
+        case .brand: if case .loaded(let items) = addDrinkStore.brands, let item = items.first(where:{$0.id == id}) { addDrinkStore.selectBrand(item) }
+        case .flavour: if case .loaded(let items) = addDrinkStore.flavours { addDrinkStore.draft.flavour = items.first(where:{$0.id == id}) }
+        default: break
+        }
+    }
+    private func optionTitle(_ field: AddRouteField) -> String {
+        switch field { case .alcoholType: "What are you drinking?"; case .volume: "What size?"; case .subtype: "Which kind?"; case .consumptionType: "How is it served?"; case .brand: "Which brand?"; case .flavour: "Which flavour?"; case .date: "Date"; case .notes: "Notes"; case .recommend: "Recommendations" }
+    }
+    private func fieldName(_ field: AddRouteField) -> String { optionTitle(field).lowercased().replacingOccurrences(of: "which ", with: "") }
+    private func createPanel(_ field: AddCreatableField) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("New \(field == .alcoholType ? "alcohol type" : String(describing: field))").font(theme.type.displayM.font).padding(.horizontal, 20)
+                .accessibilityIdentifier(field == .alcoholType ? "frame.add.create.alcoholType" : "add.create.title")
+            TextField("Name", text: Binding(get: { addDrinkStore.draft.name }, set: { addDrinkStore.draft.name = $0 })).textFieldStyle(.roundedBorder).padding(.horizontal, 20).accessibilityIdentifier("add.create.name")
+            if field == .volume {
+                TextField("Litres", text: Binding(get: { addDrinkStore.draft.volumeLitres }, set: { addDrinkStore.draft.volumeLitres = $0 }))
+                    .keyboardType(.decimalPad).textFieldStyle(.roundedBorder).padding(.horizontal, 20).accessibilityLabel("Litres")
+            }
+            if field != .volume, field != .flavour {
+                let palettes = addDrinkStore.catalogue.palettes
+                if !palettes.isEmpty {
+                    Picker("Color", selection: Binding(get: { addDrinkStore.draft.colorPaletteId }, set: { addDrinkStore.draft.colorPaletteId = $0 })) {
+                        Text("Inherited").tag(Int?.none)
+                        ForEach(palettes) { palette in Text(palette.name).tag(Optional(palette.id)) }
+                    }.padding(.horizontal, 20)
+                }
+                if field != .brand {
+                    let glasses = addDrinkStore.catalogue.glassware
+                    if !glasses.isEmpty {
+                        Picker("Glass", selection: Binding(get: { addDrinkStore.draft.glasswareId }, set: { addDrinkStore.draft.glasswareId = $0 })) {
+                            Text("Inherited").tag(Int?.none)
+                            ForEach(glasses) { glass in Text(glass.name).tag(Optional(glass.id)) }
+                        }.padding(.horizontal, 20)
+                    }
+                }
+            }
+            Button("Add and use it") { Task { await addDrinkStore.create(field, name: addDrinkStore.draft.name, litres: field == .volume ? Double(addDrinkStore.draft.volumeLitres) : nil) } }
+                .buttonStyle(.borderedProminent).padding(.horizontal, 20).accessibilityIdentifier("add.create.submit")
+            if let error = addDrinkStore.errorMessage { Text(error).foregroundStyle(theme.accent.danger.color).padding(.horizontal, 20) }
         }
     }
 
