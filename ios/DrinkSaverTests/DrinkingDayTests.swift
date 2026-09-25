@@ -18,6 +18,14 @@ final class DrinkingDayTests: XCTestCase {
         XCTAssertEqual(DrinkingDay.isoString(for: date(2026, 9, 10, 6, 0, calendar), calendar: calendar), "2026-09-10")
     }
 
+    func testISOStringUsesGregorianYearWithSuppliedCalendarTimezone() throws {
+        var buddhistCalendar = Calendar(identifier: .buddhist)
+        buddhistCalendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Europe/Amsterdam"))
+        let instant = date(2026, 9, 10, 12, 0, try amsterdamCalendar())
+
+        XCTAssertEqual(DrinkingDay.isoString(for: instant, calendar: buddhistCalendar), "2026-09-10")
+    }
+
     func testRolloverHandlesMonthYearAndLeapDayBoundaries() throws {
         let calendar = try amsterdamCalendar()
 
