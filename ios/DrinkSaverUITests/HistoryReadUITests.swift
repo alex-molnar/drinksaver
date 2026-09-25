@@ -36,7 +36,7 @@ final class HistoryReadUITests: XCTestCase {
         let drink = app.staticTexts["Fixture drink one"]
         XCTAssertTrue(drink.waitForExistence(timeout: 5))
         app.buttons["Cross off Fixture drink one"].tap()
-        let undo = app.buttons["history.queue.undo"]
+        let undo = app.buttons["frame.queue.undo"]
         XCTAssertTrue(undo.waitForExistence(timeout: 3))
         undo.tap()
         XCTAssertTrue(drink.waitForExistence(timeout: 3))

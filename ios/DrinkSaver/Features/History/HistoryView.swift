@@ -4,7 +4,6 @@ struct HistoryView: View {
     @Environment(HistoryStore.self) private var store
     @Environment(ThemeStore.self) private var themeStore
     @Environment(CurrentDrinkingDayStore.self) private var drinkingDay
-    @Environment(SaveQueueStore.self) private var queueStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.locale) private var locale
     @State private var presentsCalendar = false
@@ -102,7 +101,6 @@ struct HistoryView: View {
 
     private var paperTab: some View {
         VStack(spacing: 0) {
-            queueFeedback
             HStack(alignment: .firstTextBaseline) {
                 Text(selectedLabel).font(theme.type.displayM.font)
                 Spacer()
@@ -166,37 +164,4 @@ struct HistoryView: View {
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: row.exitingToken)
     }
 
-    @ViewBuilder
-    private var queueFeedback: some View {
-        if let entry = queueStore.currentFeedback, case .delete(let operation) = entry.kind {
-            HStack(spacing: 12) {
-                Text(queueMessage(entry.status, label: operation.label))
-                    .font(theme.type.body.font).foregroundStyle(theme.ink.primary.color)
-                    .accessibilityIdentifier("history.queue.message")
-                Spacer(minLength: 4)
-                switch entry.status {
-                case .undoable:
-                    Button("Undo") { queueStore.undoCurrent() }.accessibilityIdentifier("history.queue.undo")
-                case .failed:
-                    Button("Retry") { queueStore.retryCurrent() }.accessibilityIdentifier("history.queue.retry")
-                case .undoing:
-                    ProgressView().accessibilityLabel("Undoing")
-                case .saving, .committed:
-                    EmptyView()
-                }
-            }
-            .buttonStyle(.bordered).padding(.horizontal, 16).padding(.vertical, 10)
-            .background(theme.surface.panel.color)
-            .overlay(alignment: .bottom) { Rectangle().fill(theme.line.hairline.color).frame(height: 1) }
-        }
-    }
-
-    private func queueMessage(_ status: QueueStatus, label: String) -> String {
-        switch status {
-        case .undoable: "Crossed off \(label)"
-        case .undoing: "Undoing \(label)…"
-        case .failed(let failure): failure.message
-        case .saving, .committed: ""
-        }
-    }
 }
