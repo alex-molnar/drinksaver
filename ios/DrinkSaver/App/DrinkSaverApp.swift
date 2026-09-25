@@ -5,6 +5,7 @@ import SwiftUI
 struct DrinkSaverApp: App {
     @State private var themeStore = ThemeStore()
     @State private var sessionStore: SessionStore
+    @State private var designCatalogueStore: DesignCatalogueStore
 #if UI_TESTING
     private let uiFixtureBootstrap: UITestFixtureBootstrap?
 #endif
@@ -15,16 +16,24 @@ struct DrinkSaverApp: App {
         uiFixtureBootstrap = fixture
         if let fixture {
             _sessionStore = State(initialValue: fixture.sessionStore)
+            _designCatalogueStore = State(initialValue: DesignCatalogueStore(api: fixture.api, sessionStore: fixture.sessionStore))
             return
         }
 #endif
         let authorizationProvider: (any AuthorizationProviding)?
+        let api: (any DesignCatalogueLoading)?
         do {
-            authorizationProvider = AppAuthClient(configuration: try AppConfiguration.load())
+            let configuration = try AppConfiguration.load()
+            let appAuthClient = AppAuthClient(configuration: configuration)
+            authorizationProvider = appAuthClient
+            api = APIClient(baseURL: configuration.apiBaseURL, accessTokenProvider: appAuthClient)
         } catch {
             authorizationProvider = nil
+            api = nil
         }
-        _sessionStore = State(initialValue: SessionStore(authorizationProvider: authorizationProvider))
+        let sessionStore = SessionStore(authorizationProvider: authorizationProvider)
+        _sessionStore = State(initialValue: sessionStore)
+        _designCatalogueStore = State(initialValue: DesignCatalogueStore(api: api, sessionStore: sessionStore))
     }
 
     var body: some Scene {
@@ -56,6 +65,7 @@ struct DrinkSaverApp: App {
         RootView()
             .environment(themeStore)
             .environment(sessionStore)
+            .environment(designCatalogueStore)
             .task { await sessionStore.restore() }
             .onOpenURL { _ = sessionStore.handleOpenURL($0) }
     }

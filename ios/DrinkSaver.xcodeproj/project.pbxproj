@@ -11,6 +11,8 @@
 		A003A0000000000000000002 /* UITestFixtureBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A0000000000000000004 /* UITestFixtureBootstrap.swift */; };
 		A003A0000000000000000009 /* FixtureHarnessUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A000000000000000000A /* FixtureHarnessUITests.swift */; };
 		A003A000000000000000000B /* UITestFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A000000000000000000C /* UITestFixtureTests.swift */; };
+		A010A0000000000000000001 /* DesignCatalogueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A010A0000000000000000002 /* DesignCatalogueStore.swift */; };
+		A010A0000000000000000003 /* DesignCatalogueStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A010A0000000000000000004 /* DesignCatalogueStoreTests.swift */; };
 		A00900000000000000000001 /* KeychainAuthorizationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000002 /* KeychainAuthorizationStore.swift */; };
 		A00900000000000000000003 /* KeychainAuthorizationStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000004 /* KeychainAuthorizationStoreTests.swift */; };
 		A00900000000000000000005 /* InMemoryAuthorizationDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000006 /* InMemoryAuthorizationDataStore.swift */; };
@@ -94,6 +96,8 @@
 		A003A0000000000000000004 /* UITestFixtureBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixtureBootstrap.swift; sourceTree = "<group>"; };
 		A003A000000000000000000A /* FixtureHarnessUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixtureHarnessUITests.swift; sourceTree = "<group>"; };
 		A003A000000000000000000C /* UITestFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixtureTests.swift; sourceTree = "<group>"; };
+		A010A0000000000000000002 /* DesignCatalogueStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignCatalogueStore.swift; sourceTree = "<group>"; };
+		A010A0000000000000000004 /* DesignCatalogueStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignCatalogueStoreTests.swift; sourceTree = "<group>"; };
 		A01000000000000000000011 /* SessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoreTests.swift; sourceTree = "<group>"; };
 		A01000000000000000000013 /* AuthorizationProviding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizationProviding.swift; sourceTree = "<group>"; };
 		A01000000000000000000015 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
@@ -183,6 +187,7 @@
 		4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */ = {
 			isa = PBXGroup;
 			children = (
+				A010A0000000000000000004 /* DesignCatalogueStoreTests.swift */,
 				A003A000000000000000000C /* UITestFixtureTests.swift */,
 				A01000000000000000000019 /* AppAuthClientTests.swift */,
 				A01000000000000000000011 /* SessionStoreTests.swift */,
@@ -229,6 +234,7 @@
 		7CE830F330EFB2C1944D2200 /* Design */ = {
 			isa = PBXGroup;
 			children = (
+				A010A0000000000000000002 /* DesignCatalogueStore.swift */,
 				80460F42E4C8F76BBACF7D6D /* Color+Hex.swift */,
 				5AC006A10000000000000004 /* DesignCatalogue.swift */,
 				5AC006A10000000000000005 /* DesignResolver.swift */,
@@ -542,6 +548,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A010A0000000000000000001 /* DesignCatalogueStore.swift in Sources */,
 				A003A0000000000000000001 /* UITestFixture.swift in Sources */,
 				A003A0000000000000000002 /* UITestFixtureBootstrap.swift in Sources */,
 				A01000000000000000000016 /* AppAuthClient.swift in Sources */,
@@ -582,6 +589,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A010A0000000000000000003 /* DesignCatalogueStoreTests.swift in Sources */,
 				A003A000000000000000000B /* UITestFixtureTests.swift in Sources */,
 				A01000000000000000000018 /* AppAuthClientTests.swift in Sources */,
 				A01000000000000000000010 /* SessionStoreTests.swift in Sources */,
