@@ -13,6 +13,11 @@
 		34096B58906EC9559B127EE6 /* FrauncesNumeral.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DA541A73170A23458FC41594 /* FrauncesNumeral.ttf */; };
 		4D28567DB6FB37B1BF73460B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4012A89C2E54E77CC5544015 /* LaunchScreen.storyboard */; };
 		560E2EE927D51E32FD8C9276 /* HTTPStatusError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 026CA577AB8FDFC7619CE33E /* HTTPStatusError.swift */; };
+		5AC006A10000000000000001 /* DesignCatalogue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AC006A10000000000000004 /* DesignCatalogue.swift */; };
+		5AC006A10000000000000002 /* DesignResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AC006A10000000000000005 /* DesignResolver.swift */; };
+		5AC006A10000000000000003 /* GlassShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AC006A10000000000000006 /* GlassShape.swift */; };
+		5AC006A10000000000000007 /* DesignResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AC006A1000000000000000A /* DesignResolverTests.swift */; };
+		5AC006A10000000000000008 /* GlassShapeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AC006A1000000000000000B /* GlassShapeTests.swift */; };
 		5E47075ECFC49BC69EB7627C /* AppConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75AF806F508BC872825B555 /* AppConfigurationTests.swift */; };
 		679BDDB1CD1CAA85829F6233 /* RetryPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D11A6A4941263E547E0D5138 /* RetryPolicyTests.swift */; };
 		71AD9F9C7F5F6AA07D6DEE35 /* ThemeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 131DE07C906D317C18A91B84 /* ThemeTests.swift */; };
@@ -66,6 +71,11 @@
 		4012A89C2E54E77CC5544015 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		414A53BECCA22B346362E0C7 /* Info-Local.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Local.plist"; sourceTree = "<group>"; };
 		54BEF5B18E74A6185FA2D8AB /* Release.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Release.plist; sourceTree = "<group>"; };
+		5AC006A10000000000000004 /* DesignCatalogue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignCatalogue.swift; sourceTree = "<group>"; };
+		5AC006A10000000000000005 /* DesignResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignResolver.swift; sourceTree = "<group>"; };
+		5AC006A10000000000000006 /* GlassShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassShape.swift; sourceTree = "<group>"; };
+		5AC006A1000000000000000A /* DesignResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignResolverTests.swift; sourceTree = "<group>"; };
+		5AC006A1000000000000000B /* GlassShapeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassShapeTests.swift; sourceTree = "<group>"; };
 		5595726C335D0B61A093D5E7 /* PlasterBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlasterBackground.swift; sourceTree = "<group>"; };
 		5F8814CA538CC4D2B8D3B845 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		61C2E20947DEAA8D3058D670 /* DrinkingDay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkingDay.swift; sourceTree = "<group>"; };
@@ -116,6 +126,8 @@
 				0BA400D70C680F958C13B55A /* ProjectSmokeTests.swift */,
 				D11A6A4941263E547E0D5138 /* RetryPolicyTests.swift */,
 				131DE07C906D317C18A91B84 /* ThemeTests.swift */,
+				5AC006A1000000000000000A /* DesignResolverTests.swift */,
+				5AC006A1000000000000000B /* GlassShapeTests.swift */,
 				C31D4CDC7F26CB99795ECC18 /* Fixtures */,
 			);
 			path = DrinkSaverTests;
@@ -147,6 +159,9 @@
 			isa = PBXGroup;
 			children = (
 				80460F42E4C8F76BBACF7D6D /* Color+Hex.swift */,
+				5AC006A10000000000000004 /* DesignCatalogue.swift */,
+				5AC006A10000000000000005 /* DesignResolver.swift */,
+				5AC006A10000000000000006 /* GlassShape.swift */,
 				1213899360D084D49C7B6F53 /* DrinkSaverTheme.swift */,
 				FC83A16D20EA1FF7D66C8384 /* ThemeStore.swift */,
 			);
@@ -386,6 +401,9 @@
 				BDB6039EC793F67B5597C6C4 /* Clock.swift in Sources */,
 				F5EAFDFE183BEC739CCD976E /* Color+Hex.swift in Sources */,
 				0A96AA529A667C6D3438E8DC /* DrinkSaverApp.swift in Sources */,
+				5AC006A10000000000000001 /* DesignCatalogue.swift in Sources */,
+				5AC006A10000000000000002 /* DesignResolver.swift in Sources */,
+				5AC006A10000000000000003 /* GlassShape.swift in Sources */,
 				78E58F4CE6AACEAB9BEAEDA1 /* DrinkSaverTheme.swift in Sources */,
 				7AEF518E4CFC815CEA535302 /* DrinkingDay.swift in Sources */,
 				560E2EE927D51E32FD8C9276 /* HTTPStatusError.swift in Sources */,
@@ -414,6 +432,8 @@
 				9078BAE450A7DFB4661FD1BF /* ProjectSmokeTests.swift in Sources */,
 				679BDDB1CD1CAA85829F6233 /* RetryPolicyTests.swift in Sources */,
 				71AD9F9C7F5F6AA07D6DEE35 /* ThemeTests.swift in Sources */,
+				5AC006A10000000000000007 /* DesignResolverTests.swift in Sources */,
+				5AC006A10000000000000008 /* GlassShapeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

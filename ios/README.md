@@ -37,3 +37,15 @@ ground and mark. Both app Info.plists select that storyboard and register the bu
 
 `DrinkSaver/Resources/PrivacyInfo.xcprivacy` declares only the app's direct UserDefaults use, with
 reason `CA92.1`. No other required-reason API use was found in the app source.
+
+## Backend drink design metadata
+
+`Palette` and `Glassware` decode the backend catalogue values. `DesignCatalogue` resolves IDs
+independently and falls back to cream and highball for missing or unknown IDs. `DesignResolver`
+keeps beer flavour → brand → alcohol type and subtype → alcohol type palette inheritance separate
+from glass selection; beer glassware comes from its selected serving type.
+`GlassShape(pathData:fallbackPathData:)` converts the backend `g`, `l`, or optional `f` SVG path
+into a SwiftUI `Shape`, applying the shared web `0 0 34 50` viewBox transform to every layer so
+the liquid and foam stay aligned with the glass. It accepts the backend path commands
+`M/L/H/V/C/S/A/Z`; malformed paths, paths over 16 KiB, paths over 2,048 rendered segments, and
+non-finite or extreme coordinates use the highball outline.
