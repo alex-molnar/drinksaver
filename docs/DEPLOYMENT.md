@@ -47,11 +47,13 @@ for example:
 ios/scripts/xcodebuild.sh -project ios/DrinkSaver.xcodeproj -scheme DrinkSaver build
 ```
 
-The wrapper validates `VERSION` and passes it as the app marketing version.
-Apple build numbers use `DRINKSAVER_BUILD_NUMBER` (default `1`) and may increment
-independently without changing `VERSION`. Select the
+The wrapper accepts the repository SemVer (including prerelease suffixes) and
+uses only its `major.minor.patch` components for Apple's three-integer marketing
+version. Apple build numbers use `DRINKSAVER_BUILD_NUMBER` (default `1`) and may
+increment independently without changing `VERSION`. Select the
 `Local`, `Test`, or `Release` Xcode configuration to use its checked-in API and
-Keycloak issuer; only Local permits cleartext HTTP to `localhost`.
+Keycloak issuer; only Local permits cleartext HTTP to `localhost`. Run
+`ios/scripts/xcodebuild.test.sh` to check the wrapper's version handling.
 
 ## Registry
 
