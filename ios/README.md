@@ -49,3 +49,11 @@ into a SwiftUI `Shape`, applying the shared web `0 0 34 50` viewBox transform to
 the liquid and foam stay aligned with the glass. It accepts the backend path commands
 `M/L/H/V/C/S/A/Z`; malformed paths, paths over 16 KiB, paths over 2,048 rendered segments, and
 non-finite or extreme coordinates use the highball outline.
+
+## REST wire models
+
+`Shared/API/APIModels.swift` mirrors the backend request and response payloads. Request models omit
+unset optional values and never send `userId`; the server derives ownership from the bearer token.
+`SavedDrink` and `Recommendation` model backend responses, including nullable design IDs and the
+nullable recommendation ID. `DrinkSaverTests/APIModelTests.swift` checks these shapes against the
+JSON fixtures in `DrinkSaverTests/Fixtures/API/`.
