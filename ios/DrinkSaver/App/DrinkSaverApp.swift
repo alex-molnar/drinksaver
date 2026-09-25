@@ -7,6 +7,8 @@ struct DrinkSaverApp: App {
     @State private var sessionStore: SessionStore
     @State private var designCatalogueStore: DesignCatalogueStore
     @State private var saveQueueStore: SaveQueueStore
+    @State private var currentDrinkingDayStore: CurrentDrinkingDayStore
+    @State private var appCoordinator = AppCoordinator()
     @Environment(\.scenePhase) private var scenePhase
 #if UI_TESTING
     private let uiFixtureBootstrap: UITestFixtureBootstrap?
@@ -20,7 +22,11 @@ struct DrinkSaverApp: App {
             _sessionStore = State(initialValue: fixture.sessionStore)
             _designCatalogueStore = State(initialValue: DesignCatalogueStore(api: fixture.api, sessionStore: fixture.sessionStore))
             let configuration = try? AppConfiguration.load()
-            _saveQueueStore = State(initialValue: SaveQueueStore(api: fixture.api, sessionStore: fixture.sessionStore, configuration: configuration))
+            let queueStore = SaveQueueStore(api: fixture.api, sessionStore: fixture.sessionStore, configuration: configuration, clock: fixture.clock)
+            _saveQueueStore = State(initialValue: queueStore)
+            _currentDrinkingDayStore = State(initialValue: CurrentDrinkingDayStore(
+                api: fixture.api, queueStore: queueStore, sessionStore: fixture.sessionStore, clock: fixture.clock
+            ))
             return
         }
 #endif
@@ -41,7 +47,9 @@ struct DrinkSaverApp: App {
         let sessionStore = SessionStore(authorizationProvider: authorizationProvider)
         _sessionStore = State(initialValue: sessionStore)
         _designCatalogueStore = State(initialValue: DesignCatalogueStore(api: api, sessionStore: sessionStore))
-        _saveQueueStore = State(initialValue: SaveQueueStore(api: api, sessionStore: sessionStore, configuration: configuration))
+        let queueStore = SaveQueueStore(api: api, sessionStore: sessionStore, configuration: configuration)
+        _saveQueueStore = State(initialValue: queueStore)
+        _currentDrinkingDayStore = State(initialValue: CurrentDrinkingDayStore(api: api, queueStore: queueStore, sessionStore: sessionStore))
     }
 
     var body: some Scene {
@@ -81,6 +89,8 @@ struct DrinkSaverApp: App {
             .environment(sessionStore)
             .environment(designCatalogueStore)
             .environment(saveQueueStore)
+            .environment(currentDrinkingDayStore)
+            .environment(appCoordinator)
             .task { await sessionStore.restore() }
             .onOpenURL { _ = sessionStore.handleOpenURL($0) }
     }

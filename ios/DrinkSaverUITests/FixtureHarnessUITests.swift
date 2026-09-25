@@ -12,6 +12,7 @@ final class FixtureHarnessUITests: XCTestCase {
         ]
         app.launch()
 
-        XCTAssertTrue(app.staticTexts["fixture.signed-in"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["frame.title"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["frame.title"].label, "Tonight")
     }
 }

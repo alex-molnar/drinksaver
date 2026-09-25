@@ -30,6 +30,8 @@ final class CurrentDrinkingDayStore {
     private var generation = 0
     private var loadedSubject: String?
 
+    var isTonight: Bool { calendar.component(.hour, from: clock.now) < 6 }
+
     init(
         api: (any DrinkQueueAPI)?,
         queueStore: SaveQueueStore,

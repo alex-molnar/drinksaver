@@ -5,9 +5,7 @@ struct RootView: View {
     @Environment(SessionStore.self) private var sessionStore
     @Environment(DesignCatalogueStore.self) private var designCatalogueStore
     @Environment(SaveQueueStore.self) private var saveQueueStore: SaveQueueStore?
-#if UI_TESTING
-    @Environment(\.uiFixtureIdentifier) private var uiFixtureIdentifier
-#endif
+    @Environment(CurrentDrinkingDayStore.self) private var currentDrinkingDayStore
 
     var body: some View {
         Group {
@@ -21,15 +19,7 @@ struct RootView: View {
                     await sessionStore.signIn()
                 }
             case .signedIn:
-                VStack(spacing: 24) {
-                    Text("DrinkSaver")
-                        .font(themeStore.theme.type.displayL.font)
-                        .foregroundStyle(themeStore.theme.ink.primary.color)
-#if UI_TESTING
-                        .accessibilityIdentifier(uiFixtureIdentifier.map { "fixture.\($0)" } ?? "app.home.title")
-#endif
-                    Button("Sign out") { Task { await sessionStore.signOut() } }
-                }
+                AppFrame()
             case .failed(let message):
                 sessionGate(title: message, button: "Sign in") {
                     await sessionStore.signIn()
@@ -49,8 +39,10 @@ struct RootView: View {
             if sessionStore.userID == nil {
                 designCatalogueStore.sessionDidSignOut()
                 saveQueueStore?.sessionDidSignOut()
+                currentDrinkingDayStore.sessionDidSignOut()
             } else {
                 await designCatalogueStore.load()
+                await currentDrinkingDayStore.load()
                 await saveQueueStore?.reconcilePersistedDeletes()
             }
         }
@@ -71,8 +63,12 @@ struct RootView: View {
 
 #Preview {
     let sessionStore = SessionStore(authorizationProvider: nil)
+    let queueStore = SaveQueueStore(api: nil, sessionStore: sessionStore, configuration: nil)
     RootView()
         .environment(ThemeStore())
         .environment(sessionStore)
         .environment(DesignCatalogueStore(api: nil, sessionStore: sessionStore))
+        .environment(queueStore)
+        .environment(CurrentDrinkingDayStore(api: nil, queueStore: queueStore, sessionStore: sessionStore))
+        .environment(AppCoordinator())
 }
