@@ -95,7 +95,7 @@ final class CurrentDrinkingDayStoreTests: XCTestCase {
         await store.load()
 
         clock.now = date(2026, 9, 25, 6, 0, timeZone: "Europe/Amsterdam")
-        await store.clockDidCrossDrinkingDayBoundary()
+        await store.refreshClockState()
         XCTAssertEqual(store.date, "2026-09-25")
 
         var utcCalendar = Calendar(identifier: .gregorian)
@@ -103,6 +103,37 @@ final class CurrentDrinkingDayStoreTests: XCTestCase {
         let utcInstant = date(2026, 9, 25, 4, 30, timeZone: "UTC")
         let (_, _, utcStore) = await makeStores(api: api, clock: AdjustableCurrentDayClock(utcInstant), calendar: utcCalendar)
         XCTAssertEqual(utcStore.date, "2026-09-24")
+    }
+
+    func testNextClockUpdateDelayUsesCalendarTimezone() async {
+        let zone = TimeZone(identifier: "Europe/Amsterdam")!
+        let clock = AdjustableCurrentDayClock(date(2026, 9, 25, 5, 59, timeZone: zone.identifier))
+        let (_, _, store) = await makeStores(api: CurrentDayTestAPI(), clock: clock, timeZone: zone)
+
+        XCTAssertEqual(store.secondsUntilNextClockUpdate, 60, accuracy: 1)
+
+        clock.now = date(2026, 9, 25, 6, 0, timeZone: zone.identifier)
+        await store.refreshClockState()
+        XCTAssertEqual(store.secondsUntilNextClockUpdate, 18 * 60 * 60, accuracy: 1)
+    }
+
+    func testMidnightRefreshUpdatesTonightWithoutAdvancingDrinkingDay() async {
+        let api = CurrentDayTestAPI(rows: [drink(1)])
+        let clock = AdjustableCurrentDayClock(date(2026, 9, 25, 23, 59))
+        let (_, _, store) = await makeStores(api: api, clock: clock)
+        await store.load()
+
+        XCTAssertFalse(store.isTonight)
+        clock.now = date(2026, 9, 26, 0, 0)
+        XCTAssertFalse(store.isTonight, "The view state stays stable until the scheduled clock update.")
+
+        await store.refreshClockState()
+
+        XCTAssertTrue(store.isTonight)
+        XCTAssertEqual(store.date, "2026-09-25")
+        XCTAssertEqual(store.secondsUntilNextClockUpdate, 6 * 60 * 60, accuracy: 1)
+        let requestedDates = await api.requestedDates()
+        XCTAssertEqual(requestedDates, ["2026-09-25"])
     }
 
     func testSignOutDiscardsLateResponseAndClearsAccountData() async {

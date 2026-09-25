@@ -30,6 +30,11 @@ final class CurrentDrinkingDayStore {
     private var generation = 0
     private var loadedSubject: String?
 
+    private(set) var isTonight: Bool
+    var secondsUntilNextClockUpdate: TimeInterval {
+        max(1, nextClockUpdate.timeIntervalSince(clock.now))
+    }
+
     init(
         api: (any DrinkQueueAPI)?,
         queueStore: SaveQueueStore,
@@ -42,6 +47,7 @@ final class CurrentDrinkingDayStore {
         self.sessionStore = sessionStore
         self.clock = clock
         self.calendar = calendar
+        isTonight = calendar.component(.hour, from: clock.now) < 6
         date = DrinkingDay.isoString(for: clock.now, calendar: calendar)
     }
 
@@ -77,14 +83,26 @@ final class CurrentDrinkingDayStore {
         }
     }
 
-    func clockDidCrossDrinkingDayBoundary() async {
-        let newDate = DrinkingDay.isoString(for: clock.now, calendar: calendar)
+    func refreshClockState() async {
+        let now = clock.now
+        isTonight = calendar.component(.hour, from: now) < 6
+        let newDate = DrinkingDay.isoString(for: now, calendar: calendar)
         guard newDate != date else { return }
         generation += 1
         date = newDate
         serverDrinks = []
         state = .idle
         await load()
+    }
+
+    private var nextClockUpdate: Date {
+        calendar.nextDate(
+            after: clock.now,
+            matching: DateComponents(hour: isTonight ? 6 : 0),
+            matchingPolicy: .nextTime,
+            repeatedTimePolicy: .first,
+            direction: .forward
+        )!
     }
 
     func sessionDidSignOut() {

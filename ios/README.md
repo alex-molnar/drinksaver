@@ -9,6 +9,18 @@ the root view. Feature surfaces should use the theme's flat colors instead of dr
 noise layer. `TypeRole.font` uses Dynamic Type relative to each role's matching SwiftUI text style;
 the numeral role also uses tabular digits.
 
+## Authenticated app frame
+
+`RootView` shows the signed-in frame only after session restoration succeeds. `AppFrame` owns the
+Today/Tonight header, Recommendations/Add new type/Logout menu, Quick/Add/History navigation, and
+the single Add sheet host; feature interiors remain owned by their feature tasks. Quick header
+counts come from the injected `CurrentDrinkingDayStore` (`Nothing yet` or `N so far` after its
+first successful load); its Today/Tonight label refreshes at local midnight, and the current
+drinking day refreshes on foreground and at the next local 06:00 boundary. `AppCoordinator`
+retains the selected tab while Add routes are presented and resets it to Quick on sign-out.
+The menu appearance control toggles the persisted `ThemeStore` choice, which defaults to dark and
+overrides system appearance. Stable `frame.*` accessibility identifiers support simulator UI tests.
+
 The bundled Fraunces roles are static native instances at the frozen optical-size, weight,
 softness, and wonk values. Familjen Grotesk stays variable over weights 400–700. The source WOFF2
 files in `web/src/assets/fonts/` are never converted or shipped by iOS.

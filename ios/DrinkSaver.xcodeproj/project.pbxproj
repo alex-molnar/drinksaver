@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A01200000000000000000001 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01200000000000000000002 /* AppCoordinator.swift */; };
+		A01200000000000000000003 /* ViewState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01200000000000000000004 /* ViewState.swift */; };
+		A01200000000000000000005 /* AppFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01200000000000000000006 /* AppFrame.swift */; };
+		A01200000000000000000007 /* AppCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01200000000000000000008 /* AppCoordinatorTests.swift */; };
+		A01200000000000000000009 /* AppFrameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01200000000000000000010 /* AppFrameTests.swift */; };
+		A01200000000000000000011 /* AppFrameUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01200000000000000000012 /* AppFrameUITests.swift */; };
 		A003A0000000000000000001 /* UITestFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A0000000000000000003 /* UITestFixture.swift */; };
 		A003A0000000000000000002 /* UITestFixtureBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A0000000000000000004 /* UITestFixtureBootstrap.swift */; };
 		A003A0000000000000000009 /* FixtureHarnessUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A000000000000000000A /* FixtureHarnessUITests.swift */; };
@@ -100,6 +106,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A01200000000000000000002 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
+		A01200000000000000000004 /* ViewState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewState.swift; sourceTree = "<group>"; };
+		A01200000000000000000006 /* AppFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFrame.swift; sourceTree = "<group>"; };
+		A01200000000000000000008 /* AppCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinatorTests.swift; sourceTree = "<group>"; };
+		A01200000000000000000010 /* AppFrameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFrameTests.swift; sourceTree = "<group>"; };
+		A01200000000000000000012 /* AppFrameUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFrameUITests.swift; sourceTree = "<group>"; };
 		A003A0000000000000000003 /* UITestFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixture.swift; sourceTree = "<group>"; };
 		A003A0000000000000000004 /* UITestFixtureBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixtureBootstrap.swift; sourceTree = "<group>"; };
 		A003A000000000000000000A /* FixtureHarnessUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixtureHarnessUITests.swift; sourceTree = "<group>"; };
@@ -203,6 +215,8 @@
 		4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */ = {
 			isa = PBXGroup;
 			children = (
+				A01200000000000000000008 /* AppCoordinatorTests.swift */,
+				A01200000000000000000010 /* AppFrameTests.swift */,
 				A011A0000000000000000004 /* CurrentDrinkingDayStoreTests.swift */,
 				A23D4BF1577A44D1AAA1FAB3 /* SaveQueueReducerTests.swift */,
 				9DA5863CF8A34FCCB887964F /* SaveQueueStoreTests.swift */,
@@ -290,6 +304,7 @@
 		902F5B0264EEB68A8333745C /* App */ = {
 			isa = PBXGroup;
 			children = (
+				A01200000000000000000002 /* AppCoordinator.swift */,
 				97FFB415DD8F55C0F6D6D058 /* AppConfiguration.swift */,
 				ED1AA4A25AEBB8D765D97C15 /* DrinkSaverApp.swift */,
 				F27CF943A6D6AD7F72DE5315 /* RootView.swift */,
@@ -300,6 +315,8 @@
 		9605CFC3A7D5C4F295276B14 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				A01200000000000000000006 /* AppFrame.swift */,
+				A01200000000000000000004 /* ViewState.swift */,
 				5595726C335D0B61A093D5E7 /* PlasterBackground.swift */,
 			);
 			path = UI;
@@ -376,6 +393,7 @@
 		CB37CFD8A3EF0482029730F5 /* DrinkSaverUITests */ = {
 			isa = PBXGroup;
 			children = (
+				A01200000000000000000012 /* AppFrameUITests.swift */,
 				A003A000000000000000000A /* FixtureHarnessUITests.swift */,
 				71DFBB0972B91E0D1020DB99 /* ProjectSmokeUITests.swift */,
 			);
@@ -580,6 +598,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A01200000000000000000001 /* AppCoordinator.swift in Sources */,
+				A01200000000000000000003 /* ViewState.swift in Sources */,
+				A01200000000000000000005 /* AppFrame.swift in Sources */,
 				A011A0000000000000000001 /* CurrentDrinkingDayStore.swift in Sources */,
 				704C47C324C94603969638EB /* SaveQueueReducer.swift in Sources */,
 				3DD7ECE6843441DF86E0D5D4 /* SaveQueueStore.swift in Sources */,
@@ -616,6 +637,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A01200000000000000000011 /* AppFrameUITests.swift in Sources */,
 				A003A0000000000000000009 /* FixtureHarnessUITests.swift in Sources */,
 				86B731A1EDCBF3C0D0712030 /* ProjectSmokeUITests.swift in Sources */,
 			);
@@ -625,6 +647,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A01200000000000000000007 /* AppCoordinatorTests.swift in Sources */,
+				A01200000000000000000009 /* AppFrameTests.swift in Sources */,
 				A011A0000000000000000003 /* CurrentDrinkingDayStoreTests.swift in Sources */,
 				3E60738684AB4670A2DBDF42 /* SaveQueueReducerTests.swift in Sources */,
 				A07E050527774678BA428199 /* SaveQueueStoreTests.swift in Sources */,

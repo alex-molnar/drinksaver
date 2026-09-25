@@ -57,6 +57,14 @@ private actor FixtureAPI: DrinkSaverAPI {
         if fails { throw FixtureAPIError.unavailable }
         return [Glassware(id: 201, name: "fixture-highball", g: "M10 4h14v39H10Z", l: "M11 13h12v29H11Z", f: nil)]
     }
+
+    func drinks(date: String) async throws -> [EditableDrink] {
+        if fails { throw FixtureAPIError.unavailable }
+        return [
+            EditableDrink(id: 301, name: "Fixture drink one", alcoholTypeId: 1),
+            EditableDrink(id: 302, name: "Fixture drink two", alcoholTypeId: 1)
+        ]
+    }
 }
 
 private enum FixtureAPIError: Error {
@@ -80,7 +88,6 @@ private extension DrinkSaverAPI {
     func createBrand(_ entry: NewBeerBrand) async throws -> Brand { throw FixtureAPIError.endpointNotConfigured }
     func flavours(brandID: Int) async throws -> [BeerFlavour] { throw FixtureAPIError.endpointNotConfigured }
     func createFlavour(brandID: Int, entry: NewBeerFlavour) async throws -> BeerFlavour { throw FixtureAPIError.endpointNotConfigured }
-    func drinks(date: String) async throws -> [EditableDrink] { throw FixtureAPIError.endpointNotConfigured }
     func deleteDrinks(ids: [Int]) async throws -> Int { throw FixtureAPIError.endpointNotConfigured }
 }
 
