@@ -1361,7 +1361,11 @@ Expected: 8 passed.
 
 - [ ] **Step 7: Write the failing test for the endpoint module**
 
-The value of this test is the verb and URL of every call, since those are the contract with a backend that does not exist yet.
+The value of this test is the verb, URL, and nullable design-field payload of every call.
+On PATCH, an omitted field stays unchanged; the current backend clears `inkLight` or `f`
+when sent an empty string. The editors keep `null` for an empty field, so the API module
+translates explicit `null` to `''` only for those PATCH fields. Create requests still send
+`null`.
 
 `admin/src/api/admin.test.ts`:
 
@@ -1404,6 +1408,9 @@ describe('admin endpoint module', () => {
     await api.updateColorPalette(7, { name: 'Amber dark' });
     expect(patch).toHaveBeenCalledWith('/v1/admin/design/color-palette/7', { name: 'Amber dark' });
 
+    await api.updateColorPalette(7, { inkLight: null });
+    expect(patch).toHaveBeenLastCalledWith('/v1/admin/design/color-palette/7', { inkLight: '' });
+
     await api.deleteColorPalette(7);
     expect(del).toHaveBeenCalledWith('/v1/admin/design/color-palette/7');
   });
@@ -1415,6 +1422,9 @@ describe('admin endpoint module', () => {
 
     await api.updateGlassware(3, { f: 'M1 1h2' });
     expect(patch).toHaveBeenCalledWith('/v1/admin/design/glassware/3', { f: 'M1 1h2' });
+
+    await api.updateGlassware(3, { f: null });
+    expect(patch).toHaveBeenLastCalledWith('/v1/admin/design/glassware/3', { f: '' });
 
     await api.deleteGlassware(3);
     expect(del).toHaveBeenCalledWith('/v1/admin/design/glassware/3');
@@ -1529,8 +1539,10 @@ export const createColorPalette = async (draft: NewColorPalette): Promise<ColorP
 export const updateColorPalette = async (
   id: number,
   changes: Partial<NewColorPalette>
-): Promise<ColorPalette> =>
-  (await apiClient.patch<ColorPalette>(`/v1/admin/design/color-palette/${id}`, changes)).data;
+): Promise<ColorPalette> => {
+  const payload = changes.inkLight === null ? { ...changes, inkLight: '' } : changes;
+  return (await apiClient.patch<ColorPalette>(`/v1/admin/design/color-palette/${id}`, payload)).data;
+};
 
 export const deleteColorPalette = async (id: number): Promise<void> => {
   await apiClient.delete(`/v1/admin/design/color-palette/${id}`);
@@ -1546,8 +1558,10 @@ export const createGlassware = async (draft: NewGlassware): Promise<Glassware> =
 export const updateGlassware = async (
   id: number,
   changes: Partial<NewGlassware>
-): Promise<Glassware> =>
-  (await apiClient.patch<Glassware>(`/v1/admin/design/glassware/${id}`, changes)).data;
+): Promise<Glassware> => {
+  const payload = changes.f === null ? { ...changes, f: '' } : changes;
+  return (await apiClient.patch<Glassware>(`/v1/admin/design/glassware/${id}`, payload)).data;
+};
 
 export const deleteGlassware = async (id: number): Promise<void> => {
   await apiClient.delete(`/v1/admin/design/glassware/${id}`);
@@ -6836,6 +6850,9 @@ the surrounding indentation and the way responses are described.
 
 At minimum, each path needs its method, a summary, its parameters, a 200 or 204 response, and
 a 403 response. The design DELETE paths also need a 409. Example, matching the file's shape:
+
+For the design PATCH request schemas, document that omitting a field leaves it unchanged and
+an empty string clears `inkLight` or `f`. The response represents cleared fields as `null`.
 
 ```yaml
   /v1/admin/design/color-palette/{id}:
