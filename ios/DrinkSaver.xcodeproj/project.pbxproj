@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A00700000000000000000001 /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00700000000000000000002 /* APIModels.swift */; };
+		A00700000000000000000003 /* APIModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00700000000000000000004 /* APIModelTests.swift */; };
+		A00700000000000000000005 /* drink-save-request.json in Resources */ = {isa = PBXBuildFile; fileRef = A00700000000000000000006 /* drink-save-request.json */; };
+		A00700000000000000000007 /* saved-drinks.json in Resources */ = {isa = PBXBuildFile; fileRef = A00700000000000000000008 /* saved-drinks.json */; };
+		A00700000000000000000009 /* recommendations.json in Resources */ = {isa = PBXBuildFile; fileRef = A0070000000000000000000A /* recommendations.json */; };
+		A0070000000000000000000B /* recommendation-edits.json in Resources */ = {isa = PBXBuildFile; fileRef = A0070000000000000000000C /* recommendation-edits.json */; };
+		A0070000000000000000000D /* catalog.json in Resources */ = {isa = PBXBuildFile; fileRef = A0070000000000000000000E /* catalog.json */; };
+		A0070000000000000000000F /* creation-requests.json in Resources */ = {isa = PBXBuildFile; fileRef = A00700000000000000000010 /* creation-requests.json */; };
+		A00700000000000000000014 /* saved-drink.json in Resources */ = {isa = PBXBuildFile; fileRef = A00700000000000000000015 /* saved-drink.json */; };
 		0A96AA529A667C6D3438E8DC /* DrinkSaverApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED1AA4A25AEBB8D765D97C15 /* DrinkSaverApp.swift */; };
 		16426425A8F8D9AFC636303F /* Local.plist in Resources */ = {isa = PBXBuildFile; fileRef = 12525D71B60E607B8A427670 /* Local.plist */; };
 		1ABA636CBF917154EDDC1BC8 /* FrauncesDisplayM.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3D052A8B3B63233EC727E55D /* FrauncesDisplayM.ttf */; };
@@ -62,6 +71,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A00700000000000000000002 /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModels.swift; sourceTree = "<group>"; };
+		A00700000000000000000004 /* APIModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModelTests.swift; sourceTree = "<group>"; };
+		A00700000000000000000006 /* drink-save-request.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "drink-save-request.json"; sourceTree = "<group>"; };
+		A00700000000000000000008 /* saved-drinks.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "saved-drinks.json"; sourceTree = "<group>"; };
+		A0070000000000000000000A /* recommendations.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "recommendations.json"; sourceTree = "<group>"; };
+		A0070000000000000000000C /* recommendation-edits.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "recommendation-edits.json"; sourceTree = "<group>"; };
+		A0070000000000000000000E /* catalog.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "catalog.json"; sourceTree = "<group>"; };
+		A00700000000000000000010 /* creation-requests.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "creation-requests.json"; sourceTree = "<group>"; };
+		A00700000000000000000015 /* saved-drink.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "saved-drink.json"; sourceTree = "<group>"; };
 		026CA577AB8FDFC7619CE33E /* HTTPStatusError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPStatusError.swift; sourceTree = "<group>"; };
 		0BA400D70C680F958C13B55A /* ProjectSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSmokeTests.swift; sourceTree = "<group>"; };
 		1213899360D084D49C7B6F53 /* DrinkSaverTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkSaverTheme.swift; sourceTree = "<group>"; };
@@ -120,6 +138,7 @@
 		4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */ = {
 			isa = PBXGroup;
 			children = (
+				A00700000000000000000004 /* APIModelTests.swift */,
 				E75AF806F508BC872825B555 /* AppConfigurationTests.swift */,
 				A72D2E5250DD020F0033ECC4 /* DrinkingDayTests.swift */,
 				E03828352F2AC953218628F5 /* FontRegistrationTests.swift */,
@@ -200,6 +219,7 @@
 		AE5E9CD6FB62921779A34391 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				A00700000000000000000013 /* API */,
 				7CE830F330EFB2C1944D2200 /* Design */,
 				7F8A12936E40DEE71F82599E /* Domain */,
 				9605CFC3A7D5C4F295276B14 /* UI */,
@@ -207,12 +227,35 @@
 			path = Shared;
 			sourceTree = "<group>";
 		};
+		A00700000000000000000013 /* API */ = {
+			isa = PBXGroup;
+			children = (
+				A00700000000000000000002 /* APIModels.swift */,
+			);
+			path = API;
+			sourceTree = "<group>";
+		};
 		C31D4CDC7F26CB99795ECC18 /* Fixtures */ = {
 			isa = PBXGroup;
 			children = (
 				70DFC94A15BBA67878838932 /* Configuration */,
+				A00700000000000000000012 /* API Fixtures */,
 			);
 			path = Fixtures;
+			sourceTree = "<group>";
+		};
+		A00700000000000000000012 /* API Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				A00700000000000000000006 /* drink-save-request.json */,
+				A00700000000000000000008 /* saved-drinks.json */,
+				A0070000000000000000000A /* recommendations.json */,
+				A0070000000000000000000C /* recommendation-edits.json */,
+				A0070000000000000000000E /* catalog.json */,
+				A00700000000000000000010 /* creation-requests.json */,
+				A00700000000000000000015 /* saved-drink.json */,
+			);
+			path = API;
 			sourceTree = "<group>";
 		};
 		C8692CCE87537942C11D2B08 /* Config */ = {
@@ -384,6 +427,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A00700000000000000000005 /* drink-save-request.json in Resources */,
+				A00700000000000000000007 /* saved-drinks.json in Resources */,
+				A00700000000000000000009 /* recommendations.json in Resources */,
+				A0070000000000000000000B /* recommendation-edits.json in Resources */,
+				A0070000000000000000000D /* catalog.json in Resources */,
+				A0070000000000000000000F /* creation-requests.json in Resources */,
+				A00700000000000000000014 /* saved-drink.json in Resources */,
 				16426425A8F8D9AFC636303F /* Local.plist in Resources */,
 				8D487ED3A64A62DAA5C358DA /* Release.plist in Resources */,
 				EC5270DB37D3CB168DB3D186 /* Test.plist in Resources */,
@@ -397,6 +447,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A00700000000000000000001 /* APIModels.swift in Sources */,
 				C543D235DD636423FDAE5550 /* AppConfiguration.swift in Sources */,
 				BDB6039EC793F67B5597C6C4 /* Clock.swift in Sources */,
 				F5EAFDFE183BEC739CCD976E /* Color+Hex.swift in Sources */,
@@ -426,6 +477,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A00700000000000000000003 /* APIModelTests.swift in Sources */,
 				5E47075ECFC49BC69EB7627C /* AppConfigurationTests.swift in Sources */,
 				B32D1137A58061D6BB0B1974 /* DrinkingDayTests.swift in Sources */,
 				9B25429190217843F1A97B1F /* FontRegistrationTests.swift in Sources */,
