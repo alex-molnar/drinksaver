@@ -464,6 +464,187 @@ paths:
           description: caller is not in the /admin group
         "404":
           description: no default recommendation with that id
+  /v1/admin/design/color-palettes:
+    get:
+      tags:
+      - admin-design-controller
+      operationId: getAvailableColorPalette
+      description: Admin only. Lists all color palettes available to the design tools.
+      responses:
+        "200":
+          description: Color palettes
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ColorPalette"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/design/color-palette:
+    post:
+      tags:
+      - admin-design-controller
+      operationId: addColorPalette
+      description: Admin only.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewColorPalette"
+        required: true
+      responses:
+        "200":
+          description: The saved color palette
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ColorPalette"
+        "400":
+          description: name or field is missing
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/design/color-palette/{id}:
+    patch:
+      tags:
+      - admin-design-controller
+      operationId: updateColorPalette
+      description: Admin only. Applies the supplied non-null fields.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateColorPalette"
+        required: true
+      responses:
+        "200":
+          description: Updated color palette
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ColorPalette"
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no color palette with that id
+    delete:
+      tags:
+      - admin-design-controller
+      operationId: deleteColorPalette
+      description: Admin only. A palette referenced by existing design data or a saved drink cannot be deleted.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "204":
+          description: Color palette deleted
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no color palette with that id
+        "409":
+          description: color palette is referenced by existing data
+  /v1/admin/design/glassware:
+    get:
+      tags:
+      - admin-design-controller
+      operationId: getAvailableGlasswareIcons
+      description: Admin only. Lists all glassware icons available to the design tools.
+      responses:
+        "200":
+          description: Glassware icons
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Glassware"
+        "403":
+          description: caller is not in the /admin group
+    post:
+      tags:
+      - admin-design-controller
+      operationId: addGlassware
+      description: Admin only.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewGlassware"
+        required: true
+      responses:
+        "200":
+          description: The saved glassware icon
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Glassware"
+        "400":
+          description: name, g or l is missing
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/design/glassware/{id}:
+    patch:
+      tags:
+      - admin-design-controller
+      operationId: updateGlassware
+      description: Admin only. Applies the supplied non-null fields.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateGlassware"
+        required: true
+      responses:
+        "200":
+          description: Updated glassware icon
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Glassware"
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no glassware with that id
+    delete:
+      tags:
+      - admin-design-controller
+      operationId: deleteGlassware
+      description: Admin only. Glassware referenced by existing design data or a saved drink cannot be deleted.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "204":
+          description: Glassware icon deleted
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no glassware with that id
+        "409":
+          description: glassware is referenced by existing data
 components:
   schemas:
     Drink:
@@ -812,6 +993,57 @@ components:
         id:
           type: integer
           format: int32
+        name:
+          type: string
+        g:
+          type: string
+        l:
+          type: string
+        f:
+          type: string
+    NewColorPalette:
+      type: object
+      required:
+      - name
+      - field
+      properties:
+        name:
+          type: string
+        field:
+          type: string
+        inkLight:
+          type: string
+        inkDark:
+          type: string
+    UpdateColorPalette:
+      type: object
+      properties:
+        name:
+          type: string
+        field:
+          type: string
+        inkLight:
+          type: string
+        inkDark:
+          type: string
+    NewGlassware:
+      type: object
+      required:
+      - name
+      - g
+      - l
+      properties:
+        name:
+          type: string
+        g:
+          type: string
+        l:
+          type: string
+        f:
+          type: string
+    UpdateGlassware:
+      type: object
+      properties:
         name:
           type: string
         g:
