@@ -8,9 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		0A96AA529A667C6D3438E8DC /* DrinkSaverApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED1AA4A25AEBB8D765D97C15 /* DrinkSaverApp.swift */; };
+		16426425A8F8D9AFC636303F /* Local.plist in Resources */ = {isa = PBXBuildFile; fileRef = 12525D71B60E607B8A427670 /* Local.plist */; };
+		5E47075ECFC49BC69EB7627C /* AppConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75AF806F508BC872825B555 /* AppConfigurationTests.swift */; };
 		86B731A1EDCBF3C0D0712030 /* ProjectSmokeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DFBB0972B91E0D1020DB99 /* ProjectSmokeUITests.swift */; };
 		8962406F6F079784FCBC4C4E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A1DC861BA01381B57B81E63 /* Assets.xcassets */; };
+		8D487ED3A64A62DAA5C358DA /* Release.plist in Resources */ = {isa = PBXBuildFile; fileRef = 54BEF5B18E74A6185FA2D8AB /* Release.plist */; };
 		9078BAE450A7DFB4661FD1BF /* ProjectSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BA400D70C680F958C13B55A /* ProjectSmokeTests.swift */; };
+		C543D235DD636423FDAE5550 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97FFB415DD8F55C0F6D6D058 /* AppConfiguration.swift */; };
+		EC5270DB37D3CB168DB3D186 /* Test.plist in Resources */ = {isa = PBXBuildFile; fileRef = DCA916D18D6A35CC98AF57D7 /* Test.plist */; };
 		FBE22C2DF1EDB1E6569482EF /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27CF943A6D6AD7F72DE5315 /* RootView.swift */; };
 /* End PBXBuildFile section */
 
@@ -33,10 +38,19 @@
 
 /* Begin PBXFileReference section */
 		0BA400D70C680F958C13B55A /* ProjectSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSmokeTests.swift; sourceTree = "<group>"; };
+		12525D71B60E607B8A427670 /* Local.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Local.plist; sourceTree = "<group>"; };
+		414A53BECCA22B346362E0C7 /* Info-Local.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Local.plist"; sourceTree = "<group>"; };
+		54BEF5B18E74A6185FA2D8AB /* Release.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Release.plist; sourceTree = "<group>"; };
 		6249F444B47593A4E53A8431 /* DrinkSaverTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DrinkSaverTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		71DFBB0972B91E0D1020DB99 /* ProjectSmokeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSmokeUITests.swift; sourceTree = "<group>"; };
 		7A1DC861BA01381B57B81E63 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		97FFB415DD8F55C0F6D6D058 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
+		AE82620D450113D99E98D84A /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		B2F1D6B0BEA5A130517C218F /* Local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Local.xcconfig; sourceTree = "<group>"; };
+		C343000EEF3BE95EB38379E2 /* Test.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Test.xcconfig; sourceTree = "<group>"; };
 		D607AE4B66B7E49C970409CD /* DrinkSaverUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DrinkSaverUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DCA916D18D6A35CC98AF57D7 /* Test.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Test.plist; sourceTree = "<group>"; };
+		E75AF806F508BC872825B555 /* AppConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigurationTests.swift; sourceTree = "<group>"; };
 		ED1AA4A25AEBB8D765D97C15 /* DrinkSaverApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkSaverApp.swift; sourceTree = "<group>"; };
 		F27CF943A6D6AD7F72DE5315 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		FE1EE1EA4717F66BA70DCC39 /* DrinkSaver.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DrinkSaver.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -56,7 +70,9 @@
 		4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */ = {
 			isa = PBXGroup;
 			children = (
+				E75AF806F508BC872825B555 /* AppConfigurationTests.swift */,
 				0BA400D70C680F958C13B55A /* ProjectSmokeTests.swift */,
+				C31D4CDC7F26CB99795ECC18 /* Fixtures */,
 			);
 			path = DrinkSaverTests;
 			sourceTree = "<group>";
@@ -69,13 +85,42 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		70DFC94A15BBA67878838932 /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				12525D71B60E607B8A427670 /* Local.plist */,
+				54BEF5B18E74A6185FA2D8AB /* Release.plist */,
+				DCA916D18D6A35CC98AF57D7 /* Test.plist */,
+			);
+			path = Configuration;
+			sourceTree = "<group>";
+		};
 		902F5B0264EEB68A8333745C /* App */ = {
 			isa = PBXGroup;
 			children = (
+				97FFB415DD8F55C0F6D6D058 /* AppConfiguration.swift */,
 				ED1AA4A25AEBB8D765D97C15 /* DrinkSaverApp.swift */,
 				F27CF943A6D6AD7F72DE5315 /* RootView.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		C31D4CDC7F26CB99795ECC18 /* Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				70DFC94A15BBA67878838932 /* Configuration */,
+			);
+			path = Fixtures;
+			sourceTree = "<group>";
+		};
+		C8692CCE87537942C11D2B08 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				B2F1D6B0BEA5A130517C218F /* Local.xcconfig */,
+				AE82620D450113D99E98D84A /* Release.xcconfig */,
+				C343000EEF3BE95EB38379E2 /* Test.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		CB37CFD8A3EF0482029730F5 /* DrinkSaverUITests */ = {
@@ -89,6 +134,7 @@
 		EB017125E6B6546232F6720C /* DrinkSaver */ = {
 			isa = PBXGroup;
 			children = (
+				414A53BECCA22B346362E0C7 /* Info-Local.plist */,
 				902F5B0264EEB68A8333745C /* App */,
 				512BA331B4E32F1F917D9043 /* Resources */,
 			);
@@ -98,6 +144,7 @@
 		EDFA41DF5811BC8C1739E01C = {
 			isa = PBXGroup;
 			children = (
+				C8692CCE87537942C11D2B08 /* Config */,
 				EB017125E6B6546232F6720C /* DrinkSaver */,
 				4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */,
 				CB37CFD8A3EF0482029730F5 /* DrinkSaverUITests */,
@@ -149,6 +196,7 @@
 			buildConfigurationList = 1BFFB21DAC097EDF8B722685 /* Build configuration list for PBXNativeTarget "DrinkSaverTests" */;
 			buildPhases = (
 				CBED85C9E44991D8B5EA2A14 /* Sources */,
+				9053FBC6D0C32F126D28E332 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -209,6 +257,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9053FBC6D0C32F126D28E332 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				16426425A8F8D9AFC636303F /* Local.plist in Resources */,
+				8D487ED3A64A62DAA5C358DA /* Release.plist in Resources */,
+				EC5270DB37D3CB168DB3D186 /* Test.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -216,6 +274,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C543D235DD636423FDAE5550 /* AppConfiguration.swift in Sources */,
 				0A96AA529A667C6D3438E8DC /* DrinkSaverApp.swift in Sources */,
 				FBE22C2DF1EDB1E6569482EF /* RootView.swift in Sources */,
 			);
@@ -233,6 +292,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5E47075ECFC49BC69EB7627C /* AppConfigurationTests.swift in Sources */,
 				9078BAE450A7DFB4661FD1BF /* ProjectSmokeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -255,9 +315,13 @@
 /* Begin XCBuildConfiguration section */
 		12B8F892F3B68696AD1D3BF6 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AE82620D450113D99E98D84A /* Release.xcconfig */;
 			buildSettings = {
+				API_BASE_URL = "$(API_BASE_URL)";
+				APP_ENVIRONMENT = "$(APP_ENVIRONMENT)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = "$(DRINKSAVER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 777BH83DM5;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrinkSaver/Info.plist;
@@ -265,6 +329,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = "$(DRINKSAVER_VERSION)";
+				OIDC_CLIENT_ID = "$(OIDC_CLIENT_ID)";
+				OIDC_ISSUER_URL = "$(OIDC_ISSUER_URL)";
+				OIDC_REDIRECT_URL = "$(OIDC_REDIRECT_URL)";
 				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -566,9 +634,13 @@
 		};
 		BE7ED705D4E09FA6C5B4C378 /* Test */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C343000EEF3BE95EB38379E2 /* Test.xcconfig */;
 			buildSettings = {
+				API_BASE_URL = "$(API_BASE_URL)";
+				APP_ENVIRONMENT = "$(APP_ENVIRONMENT)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = "$(DRINKSAVER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 777BH83DM5;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrinkSaver/Info.plist;
@@ -576,6 +648,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = "$(DRINKSAVER_VERSION)";
+				OIDC_CLIENT_ID = "$(OIDC_CLIENT_ID)";
+				OIDC_ISSUER_URL = "$(OIDC_ISSUER_URL)";
+				OIDC_REDIRECT_URL = "$(OIDC_REDIRECT_URL)";
 				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -584,16 +660,24 @@
 		};
 		F13947E7A5EE0BC25437BF81 /* Local */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B2F1D6B0BEA5A130517C218F /* Local.xcconfig */;
 			buildSettings = {
+				API_BASE_URL = "$(API_BASE_URL)";
+				APP_ENVIRONMENT = "$(APP_ENVIRONMENT)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = "$(DRINKSAVER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 777BH83DM5;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = DrinkSaver/Info.plist;
+				INFOPLIST_FILE = "DrinkSaver/Info-Local.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = "$(DRINKSAVER_VERSION)";
+				OIDC_CLIENT_ID = "$(OIDC_CLIENT_ID)";
+				OIDC_ISSUER_URL = "$(OIDC_ISSUER_URL)";
+				OIDC_REDIRECT_URL = "$(OIDC_REDIRECT_URL)";
 				PRODUCT_BUNDLE_IDENTIFIER = im.kak.drinksaver;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;

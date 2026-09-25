@@ -28,8 +28,22 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: im.kak.drinksaver
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: DrinkSaver/Info.plist
+        MARKETING_VERSION: $(DRINKSAVER_VERSION)
+        CURRENT_PROJECT_VERSION: $(DRINKSAVER_BUILD_NUMBER)
+        APP_ENVIRONMENT: $(APP_ENVIRONMENT)
+        API_BASE_URL: $(API_BASE_URL)
+        OIDC_ISSUER_URL: $(OIDC_ISSUER_URL)
+        OIDC_CLIENT_ID: $(OIDC_CLIENT_ID)
+        OIDC_REDIRECT_URL: $(OIDC_REDIRECT_URL)
         TARGETED_DEVICE_FAMILY: "1"
         DEVELOPMENT_TEAM: 777BH83DM5
+      configs:
+        Local:
+          INFOPLIST_FILE: DrinkSaver/Info-Local.plist
+    configFiles:
+      Local: Config/Local.xcconfig
+      Test: Config/Test.xcconfig
+      Release: Config/Release.xcconfig
     scheme:
       testTargets:
         - DrinkSaverTests
@@ -39,6 +53,8 @@ targets:
     platform: iOS
     sources:
       - DrinkSaverTests
+    resources:
+      - path: DrinkSaverTests/Fixtures/Configuration
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: im.kak.drinksaver.Tests
