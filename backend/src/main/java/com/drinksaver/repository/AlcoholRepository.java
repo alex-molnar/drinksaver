@@ -34,17 +34,11 @@ public class AlcoholRepository {
     }
 
     public List<AlcoholType> getAlcoholTypes(UUID userId) {
-        return alcoholTypesTable.findAllByUserIdInOrderByNameAsc(Stream.concat(
-            repositoryConfiguration.adminUserList().stream(),
-            Stream.of(userId)
-        ).toList());
+        return alcoholTypesTable.findAllByUserIdInOrderByNameAsc(List.of(userId, repositoryConfiguration.adminUserUUID()));
     }
 
     public List<AlcoholSubtype> getSubtypesByAlcoholType(Integer alcoholTypeId, UUID userId) {
-        return alcoholSubtypesTable.findAllByAlcoholTypeIdAndUserIdInOrderByNameAsc(alcoholTypeId, Stream.concat(
-            repositoryConfiguration.adminUserList().stream(),
-            Stream.of(userId)
-        ).toList());
+        return alcoholSubtypesTable.findAllByAlcoholTypeIdAndUserIdInOrderByNameAsc(alcoholTypeId, List.of(userId, repositoryConfiguration.adminUserUUID()));
     }
 
     public AlcoholSubtype saveSubtypeForAlcoholType(Integer alcoholTypeId, NewAlcoholSubtype newAlcoholSubtype) {

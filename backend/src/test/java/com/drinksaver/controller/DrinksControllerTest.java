@@ -94,7 +94,7 @@ class DrinksControllerTest {
     static class TestConfig {
         @Bean
         RepositoryConfiguration repositoryConfiguration() {
-            return new RepositoryConfiguration("mock", "mock", "mock", "mock", "mock", List.of(), BEER_ID, 10, 0.97);
+            return new RepositoryConfiguration("mock", "mock", "mock", "mock", "mock", UUID.randomUUID(), BEER_ID, 10, 0.97);
         }
     }
 

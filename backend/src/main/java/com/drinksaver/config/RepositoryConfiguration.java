@@ -1,7 +1,7 @@
 package com.drinksaver.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import java.util.List;
+
 import java.util.UUID;
 
 @ConfigurationProperties(prefix = "repository")
@@ -11,7 +11,7 @@ public record RepositoryConfiguration(
     String drink,
     String recommendation,
     String design,
-    List<UUID> adminUserList,
+    UUID adminUserUUID,
     Integer beerId,
     Integer maxPersonalRecommendations,
     Double decayFactor

@@ -24,20 +24,17 @@ class BeerRepositoryTest {
 
     private static final UUID ADMIN = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID USER = UUID.fromString("00000000-0000-0000-0000-000000000002");
-
-    private RepositoryConfiguration configWithAdmins(List<UUID> admins) {
-        return new RepositoryConfiguration(
+    private static final RepositoryConfiguration CONFIG = new RepositoryConfiguration(
                 "postgres", "postgres", "postgres", "postgres", "postgres",
-                admins, 4, 10, 0.97
-        );
-    }
+                ADMIN, 4, 10, 0.97
+    );
 
     private BeerRepository repositoryWith(BrandsTable brands, List<UUID> admins) {
         return new BeerRepository(
                 brands,
                 mock(ConsumptionTypesTable.class),
                 mock(BeerFlavoursTable.class),
-                configWithAdmins(admins)
+                CONFIG
         );
     }
 
@@ -81,7 +78,7 @@ class BeerRepositoryTest {
                 mock(BrandsTable.class),
                 mock(ConsumptionTypesTable.class),
                 flavours,
-                configWithAdmins(List.of(ADMIN))
+                CONFIG
         ).getBeerFlavours(7, USER);
 
         ArgumentCaptor<List<UUID>> captor = ArgumentCaptor.captor();

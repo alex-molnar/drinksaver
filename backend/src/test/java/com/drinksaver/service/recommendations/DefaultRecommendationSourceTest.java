@@ -22,11 +22,7 @@ class DefaultRecommendationSourceTest {
     private DefaultRecommendationSource sourceWith(List<UUID> admins, List<DefaultRecommendation> defaults) {
         DefaultRecommendationsTable table = mock(DefaultRecommendationsTable.class);
         when(table.findAllByOrderByOrderNumberAsc()).thenReturn(defaults);
-        RepositoryConfiguration config = new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres", "postgres",
-                admins, 4, 10, 0.97
-        );
-        return new DefaultRecommendationSource(table, config);
+        return new DefaultRecommendationSource(table);
     }
 
     @Test

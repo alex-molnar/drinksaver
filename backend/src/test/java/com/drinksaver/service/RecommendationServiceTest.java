@@ -140,7 +140,7 @@ class RecommendationServiceTest {
     ) {
         RepositoryConfiguration configuration = new RepositoryConfiguration(
                 "postgres", "postgres", "postgres", "postgres", "postgres",
-                List.of(UUID.randomUUID()), 4, maximum, 0.97
+                UUID.randomUUID(), 4, maximum, 0.97
         );
         return new RecommendationService(configuration, sources, recommendationsTable);
     }

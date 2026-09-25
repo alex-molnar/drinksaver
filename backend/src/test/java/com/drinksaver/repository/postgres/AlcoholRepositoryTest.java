@@ -30,13 +30,10 @@ class AlcoholRepositoryTest {
 
     private static final UUID USER = UUID.randomUUID();
     private static final UUID ADMIN = UUID.fromString("00000000-0000-0000-0000-000000000001");
-
-    private RepositoryConfiguration configWithAdmins(List<UUID> admins) {
-        return new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres", "postgres",
-                admins, 4, 10, 0.97
-        );
-    }
+    private static final RepositoryConfiguration CONFIG = new RepositoryConfiguration(
+            "postgres", "postgres", "postgres", "postgres", "postgres",
+            ADMIN, 4, 10, 0.97
+    );
 
     @Test
     void getAlcoholTypesIncludesAdminAndCallerIds() {
@@ -47,7 +44,7 @@ class AlcoholRepositoryTest {
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 mock(AlcoholVolumeTable.class),
-                configWithAdmins(List.of(ADMIN))
+                CONFIG
         );
 
         repo.getAlcoholTypes(USER);
@@ -68,7 +65,7 @@ class AlcoholRepositoryTest {
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 mock(AlcoholVolumeTable.class),
-                configWithAdmins(List.of(ADMIN))
+                CONFIG
         );
 
         List<AlcoholType> result = repo.getAlcoholTypes(USER);
@@ -85,7 +82,7 @@ class AlcoholRepositoryTest {
                 mock(AlcoholTypesTable.class),
                 subtypesTable,
                 mock(AlcoholVolumeTable.class),
-                configWithAdmins(List.of(ADMIN))
+                CONFIG
         );
 
         repo.getSubtypesByAlcoholType(1, USER);
@@ -106,7 +103,7 @@ class AlcoholRepositoryTest {
                 mock(AlcoholTypesTable.class),
                 subtypesTable,
                 mock(AlcoholVolumeTable.class),
-                configWithAdmins(List.of())
+                CONFIG
         );
 
         AlcoholSubtype result = repo.saveSubtypeForAlcoholType(1, new NewAlcoholSubtype(1, USER, "Pale Ale", null, null));
@@ -128,7 +125,7 @@ class AlcoholRepositoryTest {
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 mock(AlcoholVolumeTable.class),
-                configWithAdmins(List.of())
+                CONFIG
         );
 
         List<AlcoholVolume> result = repo.getVolumesByAlcoholType(1);
@@ -150,7 +147,7 @@ class AlcoholRepositoryTest {
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 volumeTable,
-                configWithAdmins(List.of())
+                CONFIG
         );
 
         List<AlcoholVolume> result = repo.getVolumesByAlcoholType(1);
@@ -174,7 +171,7 @@ class AlcoholRepositoryTest {
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 volumeTable,
-                configWithAdmins(List.of())
+                CONFIG
         );
 
         Optional<AlcoholVolume> result = repo.saveVolumeForAlcoholType(99, new NewVolumeEntry("Shot", 0.05f));
@@ -198,7 +195,7 @@ class AlcoholRepositoryTest {
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 volumeTable,
-                configWithAdmins(List.of())
+                CONFIG
         );
 
         Optional<AlcoholVolume> result = repo.saveVolumeForAlcoholType(1, new NewVolumeEntry("Shot", 0.05f));
@@ -222,7 +219,7 @@ class AlcoholRepositoryTest {
                 typesTable,
                 subtypesTable,
                 volumeTable,
-                configWithAdmins(List.of())
+                CONFIG
         );
 
         AlcoholType result = repo.createAlcoholType(new NewAlcoholEntry(USER, "Gin", null, null, null, null));

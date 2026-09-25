@@ -36,10 +36,7 @@ public class BeerRepository {
     }
 
     public List<Brand> getBrands(UUID userId) {
-        return brandsTable.findAllByUserIdInOrderByName(Stream.concat(
-            repositoryConfiguration.adminUserList().stream(),
-            Stream.of(userId)
-        ).toList());
+        return brandsTable.findAllByUserIdInOrderByName(List.of(userId, repositoryConfiguration.adminUserUUID()));
     }
 
     public List<ConsumptionType> getConsumptionTypes(Integer maxAmount) {
@@ -60,10 +57,7 @@ public class BeerRepository {
     }
 
     public List<BeerFlavour> getBeerFlavours(Integer brandId, UUID userId) {
-        return beerFlavoursTable.findAllByBrandIdAndUserIdIn(brandId, Stream.concat(
-            repositoryConfiguration.adminUserList().stream(),
-            Stream.of(userId)
-        ).toList());
+        return beerFlavoursTable.findAllByBrandIdAndUserIdIn(brandId, List.of(userId, repositoryConfiguration.adminUserUUID()));
     }
 
     public BeerFlavour saveBeerFlavour(Integer brandId, UUID userId, String name, Integer colorPaletteId) {
