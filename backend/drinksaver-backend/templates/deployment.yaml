@@ -77,8 +77,8 @@ spec:
               value: {{ .Values.repository.recommendation | quote }}
             - name: "DESIGN_REPOSITORY"
               value: {{ .Values.repository.design | quote }}
-            - name: "ADMIN_USER_LIST"
-              value: {{ .Values.repository.adminUserList | quote }}
+            - name: "ADMIN_USER_UUID"
+              value: {{ .Values.repository.adminUserUUID | quote }}
             - name: "POSTGRES_DATASOURCE_URL"
               value: {{ .Values.datasource.url | quote }}
             - name: "POSTGRES_PASSWORD"

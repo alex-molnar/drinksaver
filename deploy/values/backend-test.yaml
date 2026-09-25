@@ -9,7 +9,7 @@ datasource:
   passwordSecretName: "secret-postgres-basic-auth"
 
 repository:
-  adminUserList: "c28618df-031e-483b-b33a-dd33c7c4bc92"
+  adminUserUUID: "c28618df-031e-483b-b33a-dd33c7c4bc92"
 
 cors:
   allowedOrigins: "https://test.app.drinksaver.kak.im"
