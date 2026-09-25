@@ -6,6 +6,8 @@ struct DrinkSaverApp: App {
     @State private var themeStore = ThemeStore()
     @State private var sessionStore: SessionStore
     @State private var designCatalogueStore: DesignCatalogueStore
+    @State private var saveQueueStore: SaveQueueStore
+    @Environment(\.scenePhase) private var scenePhase
 #if UI_TESTING
     private let uiFixtureBootstrap: UITestFixtureBootstrap?
 #endif
@@ -17,28 +19,39 @@ struct DrinkSaverApp: App {
         if let fixture {
             _sessionStore = State(initialValue: fixture.sessionStore)
             _designCatalogueStore = State(initialValue: DesignCatalogueStore(api: fixture.api, sessionStore: fixture.sessionStore))
+            let configuration = try? AppConfiguration.load()
+            _saveQueueStore = State(initialValue: SaveQueueStore(api: fixture.api, sessionStore: fixture.sessionStore, configuration: configuration))
             return
         }
 #endif
         let authorizationProvider: (any AuthorizationProviding)?
-        let api: (any DesignCatalogueLoading)?
+        let api: (any DrinkSaverAPI)?
+        let configuration: AppConfiguration?
         do {
-            let configuration = try AppConfiguration.load()
-            let appAuthClient = AppAuthClient(configuration: configuration)
+            let loadedConfiguration = try AppConfiguration.load()
+            configuration = loadedConfiguration
+            let appAuthClient = AppAuthClient(configuration: loadedConfiguration)
             authorizationProvider = appAuthClient
-            api = APIClient(baseURL: configuration.apiBaseURL, accessTokenProvider: appAuthClient)
+            api = APIClient(baseURL: loadedConfiguration.apiBaseURL, accessTokenProvider: appAuthClient)
         } catch {
             authorizationProvider = nil
+            configuration = nil
             api = nil
         }
         let sessionStore = SessionStore(authorizationProvider: authorizationProvider)
         _sessionStore = State(initialValue: sessionStore)
         _designCatalogueStore = State(initialValue: DesignCatalogueStore(api: api, sessionStore: sessionStore))
+        _saveQueueStore = State(initialValue: SaveQueueStore(api: api, sessionStore: sessionStore, configuration: configuration))
     }
 
     var body: some Scene {
         WindowGroup {
             rootView
+                .onChange(of: scenePhase) { _, newPhase in
+                    if newPhase == .background {
+                        Task { await saveQueueStore.applicationDidEnterBackground() }
+                    }
+                }
         }
     }
 
@@ -66,6 +79,7 @@ struct DrinkSaverApp: App {
             .environment(themeStore)
             .environment(sessionStore)
             .environment(designCatalogueStore)
+            .environment(saveQueueStore)
             .task { await sessionStore.restore() }
             .onOpenURL { _ = sessionStore.handleOpenURL($0) }
     }

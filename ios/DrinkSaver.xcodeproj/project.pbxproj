@@ -13,6 +13,12 @@
 		A003A000000000000000000B /* UITestFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A000000000000000000C /* UITestFixtureTests.swift */; };
 		A010A0000000000000000001 /* DesignCatalogueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A010A0000000000000000002 /* DesignCatalogueStore.swift */; };
 		A010A0000000000000000003 /* DesignCatalogueStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A010A0000000000000000004 /* DesignCatalogueStoreTests.swift */; };
+		704C47C324C94603969638EB /* SaveQueueReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CEB6D87B14F4E63BE9E4060 /* SaveQueueReducer.swift */; };
+		3DD7ECE6843441DF86E0D5D4 /* SaveQueueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 092CB91F54E64844A87654DC /* SaveQueueStore.swift */; };
+		ED49EA49518F4771AF8796C1 /* PendingDeleteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 064A1381C0C8414EB688FC34 /* PendingDeleteStore.swift */; };
+		3E60738684AB4670A2DBDF42 /* SaveQueueReducerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A23D4BF1577A44D1AAA1FAB3 /* SaveQueueReducerTests.swift */; };
+		A07E050527774678BA428199 /* SaveQueueStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA5863CF8A34FCCB887964F /* SaveQueueStoreTests.swift */; };
+		A2122E89779142C6A8D892BD /* PendingDeleteStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 598C7941754A413C870F7699 /* PendingDeleteStoreTests.swift */; };
 		A00900000000000000000001 /* KeychainAuthorizationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000002 /* KeychainAuthorizationStore.swift */; };
 		A00900000000000000000003 /* KeychainAuthorizationStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000004 /* KeychainAuthorizationStoreTests.swift */; };
 		A00900000000000000000005 /* InMemoryAuthorizationDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000006 /* InMemoryAuthorizationDataStore.swift */; };
@@ -98,6 +104,12 @@
 		A003A000000000000000000C /* UITestFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixtureTests.swift; sourceTree = "<group>"; };
 		A010A0000000000000000002 /* DesignCatalogueStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignCatalogueStore.swift; sourceTree = "<group>"; };
 		A010A0000000000000000004 /* DesignCatalogueStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignCatalogueStoreTests.swift; sourceTree = "<group>"; };
+		9CEB6D87B14F4E63BE9E4060 /* SaveQueueReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveQueueReducer.swift; sourceTree = "<group>"; };
+		092CB91F54E64844A87654DC /* SaveQueueStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveQueueStore.swift; sourceTree = "<group>"; };
+		064A1381C0C8414EB688FC34 /* PendingDeleteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingDeleteStore.swift; sourceTree = "<group>"; };
+		A23D4BF1577A44D1AAA1FAB3 /* SaveQueueReducerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveQueueReducerTests.swift; sourceTree = "<group>"; };
+		9DA5863CF8A34FCCB887964F /* SaveQueueStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveQueueStoreTests.swift; sourceTree = "<group>"; };
+		598C7941754A413C870F7699 /* PendingDeleteStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingDeleteStoreTests.swift; sourceTree = "<group>"; };
 		A01000000000000000000011 /* SessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoreTests.swift; sourceTree = "<group>"; };
 		A01000000000000000000013 /* AuthorizationProviding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizationProviding.swift; sourceTree = "<group>"; };
 		A01000000000000000000015 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
@@ -187,6 +199,9 @@
 		4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */ = {
 			isa = PBXGroup;
 			children = (
+				A23D4BF1577A44D1AAA1FAB3 /* SaveQueueReducerTests.swift */,
+				9DA5863CF8A34FCCB887964F /* SaveQueueStoreTests.swift */,
+				598C7941754A413C870F7699 /* PendingDeleteStoreTests.swift */,
 				A010A0000000000000000004 /* DesignCatalogueStoreTests.swift */,
 				A003A000000000000000000C /* UITestFixtureTests.swift */,
 				A01000000000000000000019 /* AppAuthClientTests.swift */,
@@ -245,6 +260,16 @@
 			path = Design;
 			sourceTree = "<group>";
 		};
+		B6F1C899E1C149D5A0E5E44F /* Queue */ = {
+			isa = PBXGroup;
+			children = (
+				9CEB6D87B14F4E63BE9E4060 /* SaveQueueReducer.swift */,
+				092CB91F54E64844A87654DC /* SaveQueueStore.swift */,
+				064A1381C0C8414EB688FC34 /* PendingDeleteStore.swift */,
+			);
+			path = Queue;
+			sourceTree = "<group>";
+		};
 		7F8A12936E40DEE71F82599E /* Domain */ = {
 			isa = PBXGroup;
 			children = (
@@ -277,6 +302,7 @@
 		AE5E9CD6FB62921779A34391 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				B6F1C899E1C149D5A0E5E44F /* Queue */,
 				A00900000000000000000007 /* Auth */,
 				A00700000000000000000013 /* API */,
 				7CE830F330EFB2C1944D2200 /* Design */,
@@ -548,6 +574,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				704C47C324C94603969638EB /* SaveQueueReducer.swift in Sources */,
+				3DD7ECE6843441DF86E0D5D4 /* SaveQueueStore.swift in Sources */,
+				ED49EA49518F4771AF8796C1 /* PendingDeleteStore.swift in Sources */,
 				A010A0000000000000000001 /* DesignCatalogueStore.swift in Sources */,
 				A003A0000000000000000001 /* UITestFixture.swift in Sources */,
 				A003A0000000000000000002 /* UITestFixtureBootstrap.swift in Sources */,
@@ -589,6 +618,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3E60738684AB4670A2DBDF42 /* SaveQueueReducerTests.swift in Sources */,
+				A07E050527774678BA428199 /* SaveQueueStoreTests.swift in Sources */,
+				A2122E89779142C6A8D892BD /* PendingDeleteStoreTests.swift in Sources */,
 				A010A0000000000000000003 /* DesignCatalogueStoreTests.swift in Sources */,
 				A003A000000000000000000B /* UITestFixtureTests.swift in Sources */,
 				A01000000000000000000018 /* AppAuthClientTests.swift in Sources */,
