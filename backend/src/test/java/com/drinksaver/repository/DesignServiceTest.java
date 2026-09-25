@@ -8,6 +8,14 @@ import com.drinksaver.model.dto.UpdateColorPalette;
 import com.drinksaver.model.dto.UpdateGlassware;
 import com.drinksaver.repository.schema.ColorPalettesTable;
 import com.drinksaver.repository.schema.GlasswareTable;
+import com.drinksaver.repository.schema.AlcoholTypesTable;
+import com.drinksaver.repository.schema.AlcoholSubtypesTable;
+import com.drinksaver.repository.schema.BrandsTable;
+import com.drinksaver.repository.schema.BeerFlavoursTable;
+import com.drinksaver.repository.schema.ConsumptionTypesTable;
+import com.drinksaver.repository.schema.RecommendationsTable;
+import com.drinksaver.repository.schema.SavedDrinksTable;
+import com.drinksaver.repository.schema.admin.DefaultRecommendationsTable;
 import com.drinksaver.service.DesignService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +28,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,6 +40,22 @@ class DesignServiceTest {
     private ColorPalettesTable colorPalettesTable;
     @Mock
     private GlasswareTable glasswareTable;
+    @Mock
+    private AlcoholTypesTable alcoholTypesTable;
+    @Mock
+    private AlcoholSubtypesTable alcoholSubtypesTable;
+    @Mock
+    private BrandsTable brandsTable;
+    @Mock
+    private BeerFlavoursTable beerFlavoursTable;
+    @Mock
+    private ConsumptionTypesTable consumptionTypesTable;
+    @Mock
+    private RecommendationsTable recommendationsTable;
+    @Mock
+    private DefaultRecommendationsTable defaultRecommendationsTable;
+    @Mock
+    private SavedDrinksTable savedDrinksTable;
     @InjectMocks
     private DesignService designService;
 
@@ -61,22 +86,28 @@ class DesignServiceTest {
         ColorPalette palette = new ColorPalette(3, "Dusk", "#111", "#eee", "#000");
         when(colorPalettesTable.findById(3)).thenReturn(Optional.of(palette));
         when(colorPalettesTable.findById(9)).thenReturn(Optional.empty());
+        when(colorPalettesTable.save(palette)).thenReturn(palette);
 
         assertThat(designService.updateColorPalette(3, new UpdateColorPalette("Night", null, null, null)))
             .containsSame(palette);
         assertThat(palette.getName()).isEqualTo("Night");
         assertThat(designService.updateColorPalette(9, new UpdateColorPalette(null, null, null, null))).isEmpty();
-        verify(colorPalettesTable, never()).save(any());
+        verify(colorPalettesTable).save(palette);
     }
 
     @Test
     void deletesColorPaletteOnlyWhenItExists() {
         when(colorPalettesTable.existsById(3)).thenReturn(true);
+        when(colorPalettesTable.existsById(8)).thenReturn(true);
         when(colorPalettesTable.existsById(9)).thenReturn(false);
+        when(savedDrinksTable.countByColorPaletteId(anyInt()))
+            .thenAnswer(invocation -> invocation.<Integer>getArgument(0) == 8 ? 1L : 0L);
 
-        assertThat(designService.deleteColorPalette(3)).isTrue();
-        assertThat(designService.deleteColorPalette(9)).isFalse();
+        assertThat(designService.deleteColorPalette(3)).isEqualTo(204);
+        assertThat(designService.deleteColorPalette(8)).isEqualTo(409);
+        assertThat(designService.deleteColorPalette(9)).isEqualTo(404);
         verify(colorPalettesTable).deleteById(3);
+        verify(colorPalettesTable, never()).deleteById(8);
         verify(colorPalettesTable, never()).deleteById(9);
     }
 
@@ -107,22 +138,28 @@ class DesignServiceTest {
         Glassware glassware = new Glassware(4, "Pint", "<g/>", "<l/>", null);
         when(glasswareTable.findById(4)).thenReturn(Optional.of(glassware));
         when(glasswareTable.findById(9)).thenReturn(Optional.empty());
+        when(glasswareTable.save(glassware)).thenReturn(glassware);
 
         assertThat(designService.updateGlassware(4, new UpdateGlassware(null, null, null, "<f/>")))
             .containsSame(glassware);
         assertThat(glassware.getF()).isEqualTo("<f/>");
         assertThat(designService.updateGlassware(9, new UpdateGlassware(null, null, null, null))).isEmpty();
-        verify(glasswareTable, never()).save(any());
+        verify(glasswareTable).save(glassware);
     }
 
     @Test
     void deletesGlasswareOnlyWhenItExists() {
         when(glasswareTable.existsById(4)).thenReturn(true);
+        when(glasswareTable.existsById(8)).thenReturn(true);
         when(glasswareTable.existsById(9)).thenReturn(false);
+        when(defaultRecommendationsTable.countByGlasswareId(anyInt()))
+            .thenAnswer(invocation -> invocation.<Integer>getArgument(0) == 8 ? 1L : 0L);
 
-        assertThat(designService.deleteGlassware(4)).isTrue();
-        assertThat(designService.deleteGlassware(9)).isFalse();
+        assertThat(designService.deleteGlassware(4)).isEqualTo(204);
+        assertThat(designService.deleteGlassware(8)).isEqualTo(409);
+        assertThat(designService.deleteGlassware(9)).isEqualTo(404);
         verify(glasswareTable).deleteById(4);
+        verify(glasswareTable, never()).deleteById(8);
         verify(glasswareTable, never()).deleteById(9);
     }
 }

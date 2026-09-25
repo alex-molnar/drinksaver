@@ -66,7 +66,7 @@ class AdminDesignControllerTest {
         NewColorPalette request = new NewColorPalette("Dusk", "#111", "#eee", "#000");
         when(designService.saveColorPalette(request)).thenReturn(new ColorPalette(1, "Dusk", "#111", "#eee", "#000"));
 
-        mockMvc.perform(post("/v1/admin/design/color-palettes").with(admin())
+        mockMvc.perform(post("/v1/admin/design/color-palette").with(admin())
                 .contentType(APPLICATION_JSON)
                 .content("{\"name\":\"Dusk\",\"field\":\"#111\",\"inkLight\":\"#eee\",\"inkDark\":\"#000\"}"))
             .andExpect(status().isOk())
@@ -80,24 +80,26 @@ class AdminDesignControllerTest {
         UpdateColorPalette update = new UpdateColorPalette("Night", null, null, "#fff");
         when(designService.updateColorPalette(1, update)).thenReturn(Optional.of(new ColorPalette(1, "Night", "#111", "#eee", "#fff")));
 
-        mockMvc.perform(patch("/v1/admin/design/color-palettes/1").with(admin())
+        mockMvc.perform(patch("/v1/admin/design/color-palette/1").with(admin())
                 .contentType(APPLICATION_JSON).content("{\"name\":\"Night\",\"inkDark\":\"#fff\"}"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.name").value("Night"));
 
         when(designService.updateColorPalette(9, update)).thenReturn(Optional.empty());
-        mockMvc.perform(patch("/v1/admin/design/color-palettes/9").with(admin())
+        mockMvc.perform(patch("/v1/admin/design/color-palette/9").with(admin())
                 .contentType(APPLICATION_JSON).content("{\"name\":\"Night\",\"inkDark\":\"#fff\"}"))
             .andExpect(status().isNotFound());
     }
 
     @Test
     void deletesColorPaletteOrReturnsNotFound() throws Exception {
-        when(designService.deleteColorPalette(1)).thenReturn(true);
-        when(designService.deleteColorPalette(9)).thenReturn(false);
+        when(designService.deleteColorPalette(1)).thenReturn(204);
+        when(designService.deleteColorPalette(8)).thenReturn(409);
+        when(designService.deleteColorPalette(9)).thenReturn(404);
 
-        mockMvc.perform(delete("/v1/admin/design/color-palettes/1").with(admin())).andExpect(status().isNoContent());
-        mockMvc.perform(delete("/v1/admin/design/color-palettes/9").with(admin())).andExpect(status().isNotFound());
+        mockMvc.perform(delete("/v1/admin/design/color-palette/1").with(admin())).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/v1/admin/design/color-palette/8").with(admin())).andExpect(status().isConflict());
+        mockMvc.perform(delete("/v1/admin/design/color-palette/9").with(admin())).andExpect(status().isNotFound());
     }
 
     @Test
@@ -140,10 +142,12 @@ class AdminDesignControllerTest {
 
     @Test
     void deletesGlasswareOrReturnsNotFound() throws Exception {
-        when(designService.deleteGlassware(2)).thenReturn(true);
-        when(designService.deleteGlassware(9)).thenReturn(false);
+        when(designService.deleteGlassware(2)).thenReturn(204);
+        when(designService.deleteGlassware(8)).thenReturn(409);
+        when(designService.deleteGlassware(9)).thenReturn(404);
 
         mockMvc.perform(delete("/v1/admin/design/glassware/2").with(admin())).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/v1/admin/design/glassware/8").with(admin())).andExpect(status().isConflict());
         mockMvc.perform(delete("/v1/admin/design/glassware/9").with(admin())).andExpect(status().isNotFound());
     }
 
