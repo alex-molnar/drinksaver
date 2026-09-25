@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ConsumptionTypesTable extends JpaRepository<ConsumptionType, Integer> {}
+public interface ConsumptionTypesTable extends JpaRepository<ConsumptionType, Integer> {
+}

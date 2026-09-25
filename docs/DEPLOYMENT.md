@@ -413,6 +413,14 @@ Test and production use different database users, so these are not copies of
 each other. The databases (`drinksaver` and `test-drinksaver`) and the Keycloak
 realms (`drinksaver` and `test-drinksaver`) already exist.
 
+`backend/sql/foreign_keys.sql` is a one-time manual migration for each database.
+Hibernate's `ddl-auto=update` does not run it. Check for existing design IDs that
+have no matching palette or glassware row before applying it, and record which
+databases have received it; the script is not idempotent. Apply it before deploying
+a backend that relies on the constraints, and verify that all 13 named foreign keys
+exist in `pg_constraint` in each database. The admin design DELETE endpoints rely on
+these constraints to return 409 for designs still in use.
+
 ## Rollback
 
 ```bash
