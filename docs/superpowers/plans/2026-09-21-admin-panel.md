@@ -12,7 +12,8 @@
 
 ## Global Constraints
 
-- The backend endpoints in spec section 5 do not exist yet. Every test mocks `admin/src/api/admin.ts` with `vi.mock`. Nothing in this plan requires a running backend.
+- The backend type endpoints in spec section 5 do not exist yet. Their default/user-defined split is enforced by the server, not by filtering one mixed response in the browser. Every test mocks `admin/src/api/admin.ts` with `vi.mock`. Nothing in this plan requires a running backend.
+- Before those endpoints are implemented, add an owner to alcohol volumes, backfill only rows with reliable provenance, and reconcile ambiguous existing rows. New volume ownership comes from the JWT. A volume attached to a default type can still be user-defined.
 - Node 24 in CI. Do not use Node 20: jsdom 30 fails at import with `webidl.util.markAsUncloneable is not a function`.
 - Shared dependency versions must match `web/package.json` exactly, so the two apps cannot drift into different React or MUI majors.
 - The root `VERSION` file is the single source of truth. Never hand-edit the version in `admin/package.json`; CI stamps it with `jq`.
@@ -1068,11 +1069,11 @@ git commit -m "feat(admin): keycloak login and the admin group gate"
 
 **Interfaces:**
 - Consumes: `config` (Task 2), `keycloak` (Task 3).
-- Produces: the types listed in step 1 and every function in step 9, plus `CATALOGUE_PATHS`, `type CatalogueKind` and `interface CatalogueChanges`. Tasks 7 through 11 call these and mock the module with `vi.mock('../../api/admin')`.
+- Produces: the types listed in step 1 and every function in step 9, plus `CATALOGUE_PATHS`, `type CatalogueKind`, `type CatalogueSource` and `interface CatalogueChanges`. Tasks 7 through 11 call these and mock the module with `vi.mock('../../api/admin')`.
 
 - [ ] **Step 1: Write `admin/src/types/api.ts`**
 
-Only the entities the admin panel touches. `AdminOwned` carries the two fields every admin catalogue GET adds.
+Only the entities the admin panel touches. `AdminOwned` carries the two fields every admin catalogue GET adds. The default-only consumption type response uses `userId: null` and `shared: true`, because the underlying table has no owner.
 
 ```ts
 // Wire types for the admin API. Only the entities this application touches are
@@ -1436,45 +1437,55 @@ describe('admin endpoint module', () => {
     expect(del).toHaveBeenCalledWith('/v1/admin/recommendations/9');
   });
 
-  it('reads every catalogue list from its admin path', async () => {
+  it('reads default and user-defined catalogue lists from separate paths', async () => {
     await api.getAlcoholTypes();
-    expect(get).toHaveBeenCalledWith('/v1/admin/alcohol/types');
+    expect(get).toHaveBeenCalledWith('/v1/admin/default/alcohol/types');
+    await api.getUserAlcoholTypes();
+    expect(get).toHaveBeenCalledWith('/v1/admin/user-defined/alcohol/types');
 
     await api.getAlcoholSubtypes(4);
-    expect(get).toHaveBeenCalledWith('/v1/admin/alcohol/types/4/subtypes');
+    expect(get).toHaveBeenCalledWith('/v1/admin/default/alcohol/types/4/subtypes');
+    await api.getUserAlcoholSubtypes(4);
+    expect(get).toHaveBeenCalledWith('/v1/admin/user-defined/alcohol/types/4/subtypes');
 
     await api.getAlcoholVolumes(4);
-    expect(get).toHaveBeenCalledWith('/v1/admin/alcohol/types/4/volumes');
+    expect(get).toHaveBeenCalledWith('/v1/admin/default/alcohol/types/4/volumes');
+    await api.getUserAlcoholVolumes(4);
+    expect(get).toHaveBeenCalledWith('/v1/admin/user-defined/alcohol/types/4/volumes');
 
     await api.getBrands();
-    expect(get).toHaveBeenCalledWith('/v1/admin/beer/brands');
+    expect(get).toHaveBeenCalledWith('/v1/admin/default/beer/brands');
+    await api.getUserBrands();
+    expect(get).toHaveBeenCalledWith('/v1/admin/user-defined/beer/brands');
 
     await api.getBeerFlavours(5);
-    expect(get).toHaveBeenCalledWith('/v1/admin/beer/brands/5/flavours');
+    expect(get).toHaveBeenCalledWith('/v1/admin/default/beer/brands/5/flavours');
+    await api.getUserBeerFlavours(5);
+    expect(get).toHaveBeenCalledWith('/v1/admin/user-defined/beer/brands/5/flavours');
 
     await api.getConsumptionTypes();
-    expect(get).toHaveBeenCalledWith('/v1/admin/beer/consumption-types');
+    expect(get).toHaveBeenCalledWith('/v1/admin/default/beer/consumption-types');
   });
 
-  it('patches a catalogue entry on the entity path for its kind', async () => {
-    await api.updateCatalogueEntry('alcoholTypes', 4, { name: 'Lager' });
-    expect(patch).toHaveBeenCalledWith('/v1/admin/alcohol/types/4', { name: 'Lager' });
+  it('patches each catalogue source through its own entity path', async () => {
+    await api.updateCatalogueEntry('default', 'alcoholTypes', 4, { name: 'Lager' });
+    expect(patch).toHaveBeenCalledWith('/v1/admin/default/alcohol/types/4', { name: 'Lager' });
 
-    await api.updateCatalogueEntry('flavours', 6, { colorPaletteId: 2 });
-    expect(patch).toHaveBeenCalledWith('/v1/admin/beer/flavours/6', { colorPaletteId: 2 });
+    await api.updateCatalogueEntry('user-defined', 'flavours', 6, { colorPaletteId: 2 });
+    expect(patch).toHaveBeenCalledWith('/v1/admin/user-defined/beer/flavours/6', { colorPaletteId: 2 });
   });
 
   it('publishes and unpublishes through the action endpoints with no body', async () => {
     await api.publishCatalogueEntry('brands', 5);
-    expect(post).toHaveBeenCalledWith('/v1/admin/beer/brands/5/publish');
+    expect(post).toHaveBeenCalledWith('/v1/admin/user-defined/beer/brands/5/publish');
 
     await api.unpublishCatalogueEntry('brands', 5);
-    expect(post).toHaveBeenCalledWith('/v1/admin/beer/brands/5/unpublish');
+    expect(post).toHaveBeenCalledWith('/v1/admin/user-defined/beer/brands/5/unpublish');
   });
 
   it('never sends a user id in a publish payload', async () => {
     await api.publishCatalogueEntry('alcoholTypes', 1);
-    expect(post).toHaveBeenCalledWith('/v1/admin/alcohol/types/1/publish');
+    expect(post).toHaveBeenCalledWith('/v1/admin/user-defined/alcohol/types/1/publish');
     expect(post).not.toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ userId: expect.anything() })
@@ -1576,27 +1587,43 @@ export const deleteDefaultRecommendation = async (id: number): Promise<void> => 
   await apiClient.delete(`/v1/admin/recommendations/${id}`);
 };
 
-// Catalogue reads
+// Default catalogue reads. Recommendations compose only these entries.
 export const getAlcoholTypes = async (): Promise<AlcoholType[]> =>
-  (await apiClient.get<AlcoholType[]>('/v1/admin/alcohol/types')).data;
+  (await apiClient.get<AlcoholType[]>('/v1/admin/default/alcohol/types')).data;
 
 export const getAlcoholSubtypes = async (alcoholTypeId: number): Promise<AlcoholSubtype[]> =>
-  (await apiClient.get<AlcoholSubtype[]>(`/v1/admin/alcohol/types/${alcoholTypeId}/subtypes`)).data;
+  (await apiClient.get<AlcoholSubtype[]>(`/v1/admin/default/alcohol/types/${alcoholTypeId}/subtypes`)).data;
 
 export const getAlcoholVolumes = async (alcoholTypeId: number): Promise<AlcoholVolume[]> =>
-  (await apiClient.get<AlcoholVolume[]>(`/v1/admin/alcohol/types/${alcoholTypeId}/volumes`)).data;
+  (await apiClient.get<AlcoholVolume[]>(`/v1/admin/default/alcohol/types/${alcoholTypeId}/volumes`)).data;
 
 export const getBrands = async (): Promise<Brand[]> =>
-  (await apiClient.get<Brand[]>('/v1/admin/beer/brands')).data;
+  (await apiClient.get<Brand[]>('/v1/admin/default/beer/brands')).data;
 
 export const getBeerFlavours = async (brandId: number): Promise<BeerFlavour[]> =>
-  (await apiClient.get<BeerFlavour[]>(`/v1/admin/beer/brands/${brandId}/flavours`)).data;
+  (await apiClient.get<BeerFlavour[]>(`/v1/admin/default/beer/brands/${brandId}/flavours`)).data;
 
 export const getConsumptionTypes = async (): Promise<ConsumptionType[]> =>
-  (await apiClient.get<ConsumptionType[]>('/v1/admin/beer/consumption-types')).data;
+  (await apiClient.get<ConsumptionType[]>('/v1/admin/default/beer/consumption-types')).data;
+
+// User-defined catalogue reads for review. Publication does not move rows out of these lists.
+export const getUserAlcoholTypes = async (): Promise<AlcoholType[]> =>
+  (await apiClient.get<AlcoholType[]>('/v1/admin/user-defined/alcohol/types')).data;
+
+export const getUserAlcoholSubtypes = async (alcoholTypeId: number): Promise<AlcoholSubtype[]> =>
+  (await apiClient.get<AlcoholSubtype[]>(`/v1/admin/user-defined/alcohol/types/${alcoholTypeId}/subtypes`)).data;
+
+export const getUserAlcoholVolumes = async (alcoholTypeId: number): Promise<AlcoholVolume[]> =>
+  (await apiClient.get<AlcoholVolume[]>(`/v1/admin/user-defined/alcohol/types/${alcoholTypeId}/volumes`)).data;
+
+export const getUserBrands = async (): Promise<Brand[]> =>
+  (await apiClient.get<Brand[]>('/v1/admin/user-defined/beer/brands')).data;
+
+export const getUserBeerFlavours = async (brandId: number): Promise<BeerFlavour[]> =>
+  (await apiClient.get<BeerFlavour[]>(`/v1/admin/user-defined/beer/brands/${brandId}/flavours`)).data;
 
 /**
- * The six catalogue kinds and the single-entity path each one patches. One map rather
+ * The six catalogue kinds and the resource path each one patches. One map rather
  * than six near-identical functions, because the only thing that varies is the path
  * segment, and a table rendering all six needs to address them by a key anyway.
  */
@@ -1610,6 +1637,7 @@ export const CATALOGUE_PATHS = {
 } as const;
 
 export type CatalogueKind = keyof typeof CATALOGUE_PATHS;
+export type CatalogueSource = 'default' | 'user-defined';
 
 export interface CatalogueChanges {
   name?: string;
@@ -1618,19 +1646,20 @@ export interface CatalogueChanges {
 }
 
 export const updateCatalogueEntry = async (
+  source: CatalogueSource,
   kind: CatalogueKind,
   id: number,
   changes: CatalogueChanges
 ): Promise<void> => {
-  await apiClient.patch(`/v1/admin/${CATALOGUE_PATHS[kind]}/${id}`, changes);
+  await apiClient.patch(`/v1/admin/${source}/${CATALOGUE_PATHS[kind]}/${id}`, changes);
 };
 
 export const publishCatalogueEntry = async (kind: CatalogueKind, id: number): Promise<void> => {
-  await apiClient.post(`/v1/admin/${CATALOGUE_PATHS[kind]}/${id}/publish`);
+  await apiClient.post(`/v1/admin/user-defined/${CATALOGUE_PATHS[kind]}/${id}/publish`);
 };
 
 export const unpublishCatalogueEntry = async (kind: CatalogueKind, id: number): Promise<void> => {
-  await apiClient.post(`/v1/admin/${CATALOGUE_PATHS[kind]}/${id}/unpublish`);
+  await apiClient.post(`/v1/admin/user-defined/${CATALOGUE_PATHS[kind]}/${id}/unpublish`);
 };
 ```
 
@@ -2444,7 +2473,7 @@ git commit -m "feat(admin): section registry, shell and routing"
 **Interfaces:**
 - Consumes: `api/admin.ts` (Task 4), the theme (Task 5).
 - Produces:
-  - `queryKeys` and the hooks `usePalettes()`, `useGlassware()`, `useDefaultRecommendations()`, `useAlcoholTypes()`, `useBrands()`, `useConsumptionTypes()` from `api/queries.ts`
+  - `queryKeys` and the hooks `usePalettes()`, `useGlassware()`, `useDefaultRecommendations()`, `useAlcoholTypes()`, `useUserAlcoholTypes()`, `useBrands()`, `useUserBrands()`, `useConsumptionTypes()` from `api/queries.ts`
   - `designUsage(input): UsageCounts` from `usageCounts.ts`, where
     `interface UsageCounts { palettes: Map<number, number>; glassware: Map<number, number> }`
   - `ResponsiveTable<T>` from `components/ResponsiveTable.tsx`
@@ -2574,7 +2603,9 @@ Expected: 4 passed.
 import { useQuery } from '@tanstack/react-query';
 import {
   getAlcoholTypes,
+  getUserAlcoholTypes,
   getBrands,
+  getUserBrands,
   getColorPalettes,
   getConsumptionTypes,
   getDefaultRecommendations,
@@ -2591,9 +2622,11 @@ export const queryKeys = {
   glassware: ['admin', 'glassware'] as const,
   recommendations: ['admin', 'recommendations'] as const,
   alcoholTypes: ['admin', 'alcoholTypes'] as const,
+  userAlcoholTypes: ['admin', 'userAlcoholTypes'] as const,
   subtypes: (alcoholTypeId: number) => ['admin', 'subtypes', alcoholTypeId] as const,
   volumes: (alcoholTypeId: number) => ['admin', 'volumes', alcoholTypeId] as const,
   brands: ['admin', 'brands'] as const,
+  userBrands: ['admin', 'userBrands'] as const,
   flavours: (brandId: number) => ['admin', 'flavours', brandId] as const,
   consumptionTypes: ['admin', 'consumptionTypes'] as const,
 };
@@ -2610,7 +2643,12 @@ export const useDefaultRecommendations = () =>
 export const useAlcoholTypes = () =>
   useQuery({ queryKey: queryKeys.alcoholTypes, queryFn: getAlcoholTypes });
 
+export const useUserAlcoholTypes = () =>
+  useQuery({ queryKey: queryKeys.userAlcoholTypes, queryFn: getUserAlcoholTypes });
+
 export const useBrands = () => useQuery({ queryKey: queryKeys.brands, queryFn: getBrands });
+
+export const useUserBrands = () => useQuery({ queryKey: queryKeys.userBrands, queryFn: getUserBrands });
 
 export const useConsumptionTypes = () =>
   useQuery({ queryKey: queryKeys.consumptionTypes, queryFn: getConsumptionTypes });
@@ -3442,7 +3480,9 @@ describe('PalettesSection', () => {
     vi.mocked(api.getAlcoholTypes).mockResolvedValue([
       { ...owned, id: 1, name: 'Lager', volumeIds: [], colorPaletteId: 1, glasswareId: 1 },
     ]);
+    vi.mocked(api.getUserAlcoholTypes).mockResolvedValue([]);
     vi.mocked(api.getBrands).mockResolvedValue([]);
+    vi.mocked(api.getUserBrands).mockResolvedValue([]);
     vi.mocked(api.getConsumptionTypes).mockResolvedValue([]);
   });
 
@@ -3545,7 +3585,7 @@ import {
   deleteColorPalette,
   updateColorPalette,
 } from '../../api/admin';
-import { queryKeys, useAlcoholTypes, useBrands, useConsumptionTypes, usePalettes } from '../../api/queries';
+import { queryKeys, useAlcoholTypes, useUserAlcoholTypes, useBrands, useUserBrands, useConsumptionTypes, usePalettes } from '../../api/queries';
 import { apiErrorMessage } from '../../api/errors';
 import { designUsage } from '../../usageCounts';
 import { ResponsiveTable, type Column } from '../../components/ResponsiveTable';
@@ -3559,7 +3599,9 @@ export const PalettesSection = () => {
   const queryClient = useQueryClient();
   const palettes = usePalettes();
   const alcoholTypes = useAlcoholTypes();
+  const userAlcoholTypes = useUserAlcoholTypes();
   const brands = useBrands();
+  const userBrands = useUserBrands();
   const consumptionTypes = useConsumptionTypes();
 
   const [editing, setEditing] = useState<ColorPalette | 'new' | null>(null);
@@ -3569,11 +3611,11 @@ export const PalettesSection = () => {
   const usage = useMemo(
     () =>
       designUsage({
-        alcoholTypes: alcoholTypes.data,
-        brands: brands.data,
+        alcoholTypes: [...(alcoholTypes.data ?? []), ...(userAlcoholTypes.data ?? [])],
+        brands: [...(brands.data ?? []), ...(userBrands.data ?? [])],
         consumptionTypes: consumptionTypes.data,
       }),
-    [alcoholTypes.data, brands.data, consumptionTypes.data]
+    [alcoholTypes.data, userAlcoholTypes.data, brands.data, userBrands.data, consumptionTypes.data]
   );
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.palettes });
@@ -4208,7 +4250,9 @@ describe('GlasswareSection', () => {
     vi.mocked(api.getAlcoholTypes).mockResolvedValue([
       { ...owned, id: 1, name: 'Lager', volumeIds: [], colorPaletteId: 1, glasswareId: 1 },
     ]);
+    vi.mocked(api.getUserAlcoholTypes).mockResolvedValue([]);
     vi.mocked(api.getBrands).mockResolvedValue([]);
+    vi.mocked(api.getUserBrands).mockResolvedValue([]);
     vi.mocked(api.getConsumptionTypes).mockResolvedValue([]);
   });
 
@@ -4299,9 +4343,11 @@ import {
   queryKeys,
   useAlcoholTypes,
   useBrands,
+  useUserBrands,
   useConsumptionTypes,
   useGlassware,
   usePalettes,
+  useUserAlcoholTypes,
 } from '../../api/queries';
 import { apiErrorMessage } from '../../api/errors';
 import { designUsage } from '../../usageCounts';
@@ -4318,7 +4364,9 @@ export const GlasswareSection = () => {
   const glassware = useGlassware();
   const palettes = usePalettes();
   const alcoholTypes = useAlcoholTypes();
+  const userAlcoholTypes = useUserAlcoholTypes();
   const brands = useBrands();
+  const userBrands = useUserBrands();
   const consumptionTypes = useConsumptionTypes();
 
   const [editing, setEditing] = useState<Glassware | 'new' | null>(null);
@@ -4328,11 +4376,11 @@ export const GlasswareSection = () => {
   const usage = useMemo(
     () =>
       designUsage({
-        alcoholTypes: alcoholTypes.data,
-        brands: brands.data,
+        alcoholTypes: [...(alcoholTypes.data ?? []), ...(userAlcoholTypes.data ?? [])],
+        brands: [...(brands.data ?? []), ...(userBrands.data ?? [])],
         consumptionTypes: consumptionTypes.data,
       }),
-    [alcoholTypes.data, brands.data, consumptionTypes.data]
+    [alcoholTypes.data, userAlcoholTypes.data, brands.data, userBrands.data, consumptionTypes.data]
   );
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.glassware });
@@ -4647,7 +4695,7 @@ which already imports `getAlcoholTypes` and the rest. They are `getAlcoholSubtyp
 ```ts
 /**
  * The dependent lists. `enabled` keeps them from firing with an undefined id, which
- * would otherwise request /v1/admin/alcohol/types/undefined/subtypes and 404 every time
+ * would otherwise request /v1/admin/default/alcohol/types/undefined/subtypes and 404 every time
  * the dialog opens before a type is chosen.
  */
 export const useSubtypes = (alcoholTypeId: number | undefined) =>
@@ -5358,7 +5406,7 @@ git commit -m "feat(admin): default recommendation curation"
 - Test: `admin/src/sections/catalogue/catalogueTabs.test.ts`, `admin/src/sections/catalogue/CatalogueSection.test.tsx`
 
 **Interfaces:**
-- Consumes: `CATALOGUE_PATHS`, `CatalogueKind`, `updateCatalogueEntry`, `publishCatalogueEntry`, `unpublishCatalogueEntry` (Task 4), the catalogue hooks (Tasks 7 and 10), `ResponsiveTable` and `ConfirmDialog` (Task 7).
+- Consumes: `CATALOGUE_PATHS`, `CatalogueKind`, `CatalogueSource`, both catalogue read sets, `updateCatalogueEntry`, `publishCatalogueEntry`, `unpublishCatalogueEntry` (Task 4), the catalogue hooks (Tasks 7 and 10), `ResponsiveTable` and `ConfirmDialog` (Task 7).
 - Produces: `CATALOGUE_TABS: CatalogueTab[]` and `ownerLabel(entry, currentUserId)` from `catalogueTabs.ts`, `CatalogueSection` registered at `/catalogue`.
 
 - [ ] **Step 1: Write the failing test for the tab metadata and owner label**
@@ -5367,7 +5415,7 @@ git commit -m "feat(admin): default recommendation curation"
 
 ```ts
 import { describe, expect, it } from 'vitest';
-import { CATALOGUE_TABS, ownerLabel, isUserDefined } from './catalogueTabs';
+import { CATALOGUE_TABS, ownerLabel } from './catalogueTabs';
 import { CATALOGUE_PATHS } from '../../api/admin';
 
 describe('CATALOGUE_TABS', () => {
@@ -5390,6 +5438,10 @@ describe('CATALOGUE_TABS', () => {
     expect(byKind.flavours.parent).toBe('brands');
     expect(byKind.alcoholTypes.parent).toBeUndefined();
   });
+
+  it('keeps consumption types default-only', () => {
+    expect(CATALOGUE_TABS.find((tab) => tab.kind === 'consumptionTypes')?.defaultOnly).toBe(true);
+  });
 });
 
 describe('ownerLabel', () => {
@@ -5411,15 +5463,6 @@ describe('ownerLabel', () => {
   });
 });
 
-describe('isUserDefined', () => {
-  it('is true for an unpublished row owned by somebody', () => {
-    expect(isUserDefined({ userId: 'u-9', shared: false })).toBe(true);
-  });
-
-  it('is false once the row is published', () => {
-    expect(isUserDefined({ userId: 'u-9', shared: true })).toBe(false);
-  });
-});
 ```
 
 - [ ] **Step 2: Run it to verify it fails**
@@ -5446,6 +5489,8 @@ export interface CatalogueTab {
   hasPalette: boolean;
   /** Whether rows of this kind carry a glassware assignment. */
   hasGlassware: boolean;
+  /** Consumption types have no owner and no user-defined endpoint. */
+  defaultOnly?: boolean;
 }
 
 export const CATALOGUE_TABS: CatalogueTab[] = [
@@ -5454,15 +5499,14 @@ export const CATALOGUE_TABS: CatalogueTab[] = [
   { kind: 'volumes', label: 'Volumes', parent: 'alcoholTypes', hasPalette: false, hasGlassware: false },
   { kind: 'brands', label: 'Brands', hasPalette: true, hasGlassware: false },
   { kind: 'flavours', label: 'Flavours', parent: 'brands', hasPalette: true, hasGlassware: false },
-  { kind: 'consumptionTypes', label: 'Consumption types', hasPalette: false, hasGlassware: true },
+  { kind: 'consumptionTypes', label: 'Consumption types', hasPalette: false, hasGlassware: true, defaultOnly: true },
 ];
 
 /**
  * What the owner column shows.
  *
- * Shared wins over the author, because once a row is published its author is trivia and
- * its availability is the thing an administrator is scanning for. The author is still
- * carried in the data, which is what makes unpublish meaningful.
+ * Shared wins in the visible label because availability is what the administrator is
+ * scanning for. The row remains in its owner-based source after publication.
  */
 export const ownerLabel = (entry: AdminOwned, currentUserId: string | undefined): string => {
   if (entry.shared) return 'Shared';
@@ -5471,14 +5515,12 @@ export const ownerLabel = (entry: AdminOwned, currentUserId: string | undefined)
   return 'User';
 };
 
-/** A row somebody created for themselves and nobody has published yet. */
-export const isUserDefined = (entry: AdminOwned): boolean => !entry.shared && entry.userId !== null;
 ```
 
 - [ ] **Step 4: Run it to verify it passes**
 
 Run: `cd admin && npx vitest run src/sections/catalogue/catalogueTabs.test.ts`
-Expected: 9 passed.
+Expected: 8 passed.
 
 - [ ] **Step 5: Write `admin/src/sections/catalogue/usePublish.ts`**
 
@@ -5550,10 +5592,15 @@ vi.mock('../../api/admin', async (importOriginal) => {
   return {
     ...actual,
     getAlcoholTypes: vi.fn(),
+    getUserAlcoholTypes: vi.fn(),
     getAlcoholSubtypes: vi.fn(),
+    getUserAlcoholSubtypes: vi.fn(),
     getAlcoholVolumes: vi.fn(),
+    getUserAlcoholVolumes: vi.fn(),
     getBrands: vi.fn(),
+    getUserBrands: vi.fn(),
     getBeerFlavours: vi.fn(),
+    getUserBeerFlavours: vi.fn(),
     getConsumptionTypes: vi.fn(),
     getColorPalettes: vi.fn(),
     getGlassware: vi.fn(),
@@ -5567,16 +5614,21 @@ vi.mock('../../auth/useAuth', () => ({
   useAuth: () => ({ userId: 'admin-1', username: 'curator' }),
 }));
 
-const types = [
+const userTypes = [
   { userId: 'user-9', shared: false, id: 1, name: 'Mead', volumeIds: [], colorPaletteId: 1, glasswareId: 1 },
-  { userId: null, shared: true, id: 2, name: 'Beer', volumeIds: [], colorPaletteId: 1, glasswareId: 1 },
   { userId: 'admin-1', shared: false, id: 3, name: 'My draft', volumeIds: [], colorPaletteId: 1, glasswareId: 1 },
+  { userId: 'user-8', shared: true, id: 4, name: 'Published cider', volumeIds: [], colorPaletteId: 1, glasswareId: 1 },
+];
+const defaultTypes = [
+  { userId: 'catalogue-admin', shared: true, id: 2, name: 'Beer', volumeIds: [], colorPaletteId: 1, glasswareId: 1 },
 ];
 
 describe('CatalogueSection', () => {
   beforeEach(() => {
-    vi.mocked(api.getAlcoholTypes).mockResolvedValue(types);
+    vi.mocked(api.getAlcoholTypes).mockResolvedValue(defaultTypes);
+    vi.mocked(api.getUserAlcoholTypes).mockResolvedValue(userTypes);
     vi.mocked(api.getBrands).mockResolvedValue([]);
+    vi.mocked(api.getUserBrands).mockResolvedValue([]);
     vi.mocked(api.getConsumptionTypes).mockResolvedValue([]);
     vi.mocked(api.getColorPalettes).mockResolvedValue([
       { id: 1, name: 'Amber', field: '#e8c37e', inkLight: null, inkDark: '#1b1a17' },
@@ -5587,18 +5639,22 @@ describe('CatalogueSection', () => {
     ]);
   });
 
-  it('shows only user-defined rows by default, because reviewing those is the job', async () => {
+  it('shows user-defined rows, including published user rows, by default', async () => {
     renderWithProviders(<CatalogueSection />);
     expect(await screen.findByText('Mead')).toBeInTheDocument();
     expect(screen.getByText('My draft')).toBeInTheDocument();
+    expect(screen.getByText('Published cider')).toBeInTheDocument();
     expect(screen.queryByText('Beer')).not.toBeInTheDocument();
   });
 
-  it('shows everything when the filter is turned off', async () => {
+  it('shows default rows when the source is selected', async () => {
     renderWithProviders(<CatalogueSection />);
     await screen.findByText('Mead');
-    await userEvent.click(screen.getByLabelText(/user-defined only/i));
+    await userEvent.click(screen.getByLabelText(/catalogue source/i));
+    await userEvent.click(screen.getByRole('option', { name: 'Defaults' }));
     expect(await screen.findByText('Beer')).toBeInTheDocument();
+    expect(screen.queryByText('Mead')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Publish Beer')).not.toBeInTheDocument();
   });
 
   it('filters by name, and says so when nothing matches', async () => {
@@ -5661,7 +5717,7 @@ describe('CatalogueSection', () => {
     await userEvent.tab();
 
     await waitFor(() =>
-      expect(api.updateCatalogueEntry).toHaveBeenCalledWith('alcoholTypes', 1, { name: 'Honey wine' })
+      expect(api.updateCatalogueEntry).toHaveBeenCalledWith('user-defined', 'alcoholTypes', 1, { name: 'Honey wine' })
     );
   });
 
@@ -5674,7 +5730,7 @@ describe('CatalogueSection', () => {
     await userEvent.click(screen.getByRole('option', { name: 'Slate' }));
 
     await waitFor(() =>
-      expect(api.updateCatalogueEntry).toHaveBeenCalledWith('alcoholTypes', 1, { colorPaletteId: 2 })
+      expect(api.updateCatalogueEntry).toHaveBeenCalledWith('user-defined', 'alcoholTypes', 1, { colorPaletteId: 2 })
     );
   });
 
@@ -5724,7 +5780,7 @@ interface Props {
   emptyMessage?: string;
   onRename: (id: number, name: string) => void;
   onAssign: (id: number, changes: { colorPaletteId?: number; glasswareId?: number }) => void;
-  onTogglePublish: (row: Row) => void;
+  onTogglePublish?: (row: Row) => void;
 }
 
 export const CatalogueTable = ({
@@ -5814,7 +5870,7 @@ export const CatalogueTable = ({
     });
   }
 
-  columns.push({
+  if (onTogglePublish) columns.push({
     id: 'publish',
     label: 'Availability',
     align: 'right',
@@ -5855,10 +5911,8 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
-  FormControlLabel,
   MenuItem,
   Stack,
-  Switch,
   Tab,
   Tabs,
   TextField,
@@ -5871,14 +5925,20 @@ import {
   getBeerFlavours,
   getBrands,
   getConsumptionTypes,
+  getUserAlcoholSubtypes,
+  getUserAlcoholTypes,
+  getUserAlcoholVolumes,
+  getUserBeerFlavours,
+  getUserBrands,
   updateCatalogueEntry,
   type CatalogueKind,
+  type CatalogueSource,
 } from '../../api/admin';
 import { queryKeys, useGlassware, usePalettes } from '../../api/queries';
 import { apiErrorMessage } from '../../api/errors';
 import { useAuth } from '../../auth/useAuth';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
-import { CATALOGUE_TABS, isUserDefined } from './catalogueTabs';
+import { CATALOGUE_TABS } from './catalogueTabs';
 import { CatalogueTable } from './CatalogueTable';
 import { usePublish } from './usePublish';
 import type { AdminOwned } from '../../types/api';
@@ -5890,21 +5950,22 @@ type Row = AdminOwned & {
   glasswareId?: number | null;
 };
 
-/** The fetcher and query key for a tab, given the parent row it hangs off, if any. */
-const listFor = (kind: CatalogueKind, parentId: number | undefined) => {
+/** A source has its own cache entry and its own backend endpoint. */
+const listFor = (kind: CatalogueKind, source: CatalogueSource, parentId: number | undefined) => {
+  const queryKey = ['admin', 'catalogue', source, kind, parentId] as const;
   switch (kind) {
     case 'alcoholTypes':
-      return { queryKey: queryKeys.alcoholTypes, queryFn: getAlcoholTypes };
+      return { queryKey, queryFn: source === 'default' ? getAlcoholTypes : getUserAlcoholTypes };
     case 'brands':
-      return { queryKey: queryKeys.brands, queryFn: getBrands };
+      return { queryKey, queryFn: source === 'default' ? getBrands : getUserBrands };
     case 'consumptionTypes':
-      return { queryKey: queryKeys.consumptionTypes, queryFn: getConsumptionTypes };
+      return { queryKey, queryFn: getConsumptionTypes };
     case 'subtypes':
-      return { queryKey: queryKeys.subtypes(parentId ?? -1), queryFn: () => getAlcoholSubtypes(parentId!) };
+      return { queryKey, queryFn: () => source === 'default' ? getAlcoholSubtypes(parentId!) : getUserAlcoholSubtypes(parentId!) };
     case 'volumes':
-      return { queryKey: queryKeys.volumes(parentId ?? -1), queryFn: () => getAlcoholVolumes(parentId!) };
+      return { queryKey, queryFn: () => source === 'default' ? getAlcoholVolumes(parentId!) : getUserAlcoholVolumes(parentId!) };
     case 'flavours':
-      return { queryKey: queryKeys.flavours(parentId ?? -1), queryFn: () => getBeerFlavours(parentId!) };
+      return { queryKey, queryFn: () => source === 'default' ? getBeerFlavours(parentId!) : getUserBeerFlavours(parentId!) };
   }
 };
 
@@ -5913,7 +5974,7 @@ export const CatalogueSection = () => {
   const { userId } = useAuth();
   const [tabIndex, setTabIndex] = useState(0);
   const [parentId, setParentId] = useState<number | undefined>();
-  const [userDefinedOnly, setUserDefinedOnly] = useState(true);
+  const [source, setSource] = useState<CatalogueSource>('user-defined');
   const [search, setSearch] = useState('');
   const [publishing, setPublishing] = useState<Row | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -5924,10 +5985,12 @@ export const CatalogueSection = () => {
 
   // The parent pickers. Both are cheap top-level lists and are always fetched, because a
   // tab switch should not have to wait for one.
-  const alcoholTypes = useQuery({ queryKey: queryKeys.alcoholTypes, queryFn: getAlcoholTypes });
-  const brands = useQuery({ queryKey: queryKeys.brands, queryFn: getBrands });
+  const defaultAlcoholTypes = useQuery({ queryKey: queryKeys.alcoholTypes, queryFn: getAlcoholTypes });
+  const userAlcoholTypes = useQuery({ queryKey: queryKeys.userAlcoholTypes, queryFn: getUserAlcoholTypes });
+  const defaultBrands = useQuery({ queryKey: queryKeys.brands, queryFn: getBrands });
+  const userBrands = useQuery({ queryKey: queryKeys.userBrands, queryFn: getUserBrands });
 
-  const { queryKey, queryFn } = listFor(tab.kind, parentId);
+  const { queryKey, queryFn } = listFor(tab.kind, source, parentId);
   const needsParent = tab.parent !== undefined && parentId === undefined;
 
   const list = useQuery<Row[]>({
@@ -5945,16 +6008,15 @@ export const CatalogueSection = () => {
    */
   const rows = useMemo(() => {
     const all = list.data ?? [];
-    const visible = userDefinedOnly ? all.filter(isUserDefined) : all;
     const needle = search.trim().toLowerCase();
-    return needle === '' ? visible : visible.filter((row) => row.name.toLowerCase().includes(needle));
-  }, [list.data, userDefinedOnly, search]);
+    return needle === '' ? all : all.filter((row) => row.name.toLowerCase().includes(needle));
+  }, [list.data, search]);
 
   const publish = usePublish({ kind: tab.kind, queryKey, onError: setActionError });
 
   const patch = useMutation({
-    mutationFn: ({ id, changes }: { id: number; changes: Parameters<typeof updateCatalogueEntry>[2] }) =>
-      updateCatalogueEntry(tab.kind, id, changes),
+    mutationFn: ({ id, changes }: { id: number; changes: Parameters<typeof updateCatalogueEntry>[3] }) =>
+      updateCatalogueEntry(source, tab.kind, id, changes),
     onSuccess: async () => {
       setActionError(null);
       await queryClient.invalidateQueries({ queryKey });
@@ -5962,7 +6024,9 @@ export const CatalogueSection = () => {
     onError: (error) => setActionError(apiErrorMessage(error)),
   });
 
-  const parentOptions = tab.parent === 'brands' ? (brands.data ?? []) : (alcoholTypes.data ?? []);
+  const parentOptions = tab.parent === 'brands'
+    ? [...(defaultBrands.data ?? []), ...(userBrands.data ?? [])]
+    : [...(defaultAlcoholTypes.data ?? []), ...(userAlcoholTypes.data ?? [])];
   const parentLabel = tab.parent === 'brands' ? 'Brand' : 'Alcohol type';
 
   return (
@@ -5971,8 +6035,8 @@ export const CatalogueSection = () => {
         Catalogue
       </Typography>
       <Typography color="text.secondary">
-        Everything users have created, plus what has been published. Publishing makes an entry
-        available to every user; the author is kept either way.
+        Review user-defined entries, including published ones, or switch to defaults.
+        Publishing makes an entry available to every user and keeps its original author.
       </Typography>
 
       {actionError && <Alert severity="error">{actionError}</Alert>}
@@ -5982,6 +6046,7 @@ export const CatalogueSection = () => {
         onChange={(_event, next: number) => {
           setTabIndex(next);
           setParentId(undefined);
+          if (CATALOGUE_TABS[next].defaultOnly) setSource('default');
         }}
         variant="scrollable"
         allowScrollButtonsMobile
@@ -5992,6 +6057,17 @@ export const CatalogueSection = () => {
       </Tabs>
 
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
+        {!tab.defaultOnly && (
+          <TextField
+            select
+            label="Catalogue source"
+            value={source}
+            onChange={(event) => setSource(event.target.value as CatalogueSource)}
+          >
+            <MenuItem value="user-defined">User-defined</MenuItem>
+            <MenuItem value="default">Defaults</MenuItem>
+          </TextField>
+        )}
         {tab.parent && (
           <TextField
             select
@@ -6014,15 +6090,6 @@ export const CatalogueSection = () => {
           onChange={(event) => setSearch(event.target.value)}
           sx={{ minWidth: 220 }}
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={userDefinedOnly}
-              onChange={(event) => setUserDefinedOnly(event.target.checked)}
-            />
-          }
-          label="User-defined only"
-        />
         <Typography variant="body2" color="text.secondary">
           {rows.length} of {list.data?.length ?? 0}
         </Typography>
@@ -6044,13 +6111,13 @@ export const CatalogueSection = () => {
           onRename={(id, name) => patch.mutate({ id, changes: { name } })}
           onAssign={(id, changes) => patch.mutate({ id, changes })}
           emptyMessage={
-            search.trim() !== '' || userDefinedOnly
+            search.trim() !== ''
               ? 'Nothing matches the current filters.'
               : 'Nothing to review here.'
           }
-          onTogglePublish={(row) =>
+          onTogglePublish={source === 'user-defined' ? (row) =>
             row.shared ? publish.mutate({ id: row.id, publish: false }) : setPublishing(row)
-          }
+          : undefined}
         />
       )}
 
