@@ -12,7 +12,7 @@ final class ThemeTests: XCTestCase {
         XCTAssertEqual(theme.ink, InkTokens(
             primary: .init(hex: 0xF2E4CE), secondary: .init(hex: 0xF2E4CE, opacity: 0.70),
             tertiary: .init(hex: 0xF2E4CE, opacity: 0.52), onPaper: .init(hex: 0x2B1A14),
-            onAccent: .init(hex: 0xF2E4CE)
+            onAccent: .init(hex: 0xFFFFFF)
         ))
         XCTAssertEqual(theme.line, LineTokens(hairline: .init(hex: 0xF2E4CE, opacity: 0.14)))
         XCTAssertEqual(theme.accent, AccentTokens(
@@ -73,6 +73,8 @@ final class ThemeTests: XCTestCase {
         }
 
         let light = DrinkSaverTheme.light
+        let dark = DrinkSaverTheme.dark
+        XCTAssertGreaterThanOrEqual(contrast(dark.ink.onAccent, dark.accent.primary), 4.5)
         XCTAssertGreaterThanOrEqual(contrast(light.ink.onAccent, light.accent.primary), 4.5)
         XCTAssertGreaterThanOrEqual(contrast(light.ink.onAccent, light.accent.active), 4.5)
     }
