@@ -1,0 +1,96 @@
+import Foundation
+import Observation
+
+@MainActor
+@Observable
+final class CurrentDrinkingDayStore {
+    enum State: Equatable {
+        case idle
+        case loading
+        case ready
+        case failed
+    }
+
+    private(set) var date: String
+    private(set) var serverDrinks: [EditableDrink] = []
+    private(set) var state: State = .idle
+
+    var visibleCount: Int {
+        let suppressed = queueStore.suppressedDrinkIDs(for: date)
+        var ids = Set(serverDrinks.lazy.map(\.id).filter { !suppressed.contains($0) })
+        ids.formUnion(queueStore.pendingInsertions(for: date).lazy.map(\.id).filter { !suppressed.contains($0) })
+        return ids.count
+    }
+
+    private let api: (any DrinkQueueAPI)?
+    private let queueStore: SaveQueueStore
+    private let sessionStore: SessionStore
+    private let clock: any Clock
+    private var calendar: Calendar
+    private var generation = 0
+    private var loadedSubject: String?
+
+    init(
+        api: (any DrinkQueueAPI)?,
+        queueStore: SaveQueueStore,
+        sessionStore: SessionStore,
+        clock: any Clock = SystemClock(),
+        calendar: Calendar = .autoupdatingCurrent
+    ) {
+        self.api = api
+        self.queueStore = queueStore
+        self.sessionStore = sessionStore
+        self.clock = clock
+        self.calendar = calendar
+        date = DrinkingDay.isoString(for: clock.now, calendar: calendar)
+    }
+
+    func load() async {
+        guard let subject = sessionStore.userID else {
+            sessionDidSignOut()
+            return
+        }
+        if loadedSubject != subject {
+            serverDrinks = []
+            loadedSubject = nil
+        }
+        guard let api else {
+            serverDrinks = []
+            state = .failed
+            return
+        }
+
+        generation += 1
+        let requestGeneration = generation
+        let requestedDate = date
+        state = .loading
+        do {
+            let rows = try await api.drinks(date: requestedDate)
+            guard generation == requestGeneration, sessionStore.userID == subject, date == requestedDate else { return }
+            serverDrinks = rows
+            loadedSubject = subject
+            _ = queueStore.merge(rows, for: requestedDate)
+            state = .ready
+        } catch {
+            guard generation == requestGeneration, sessionStore.userID == subject, date == requestedDate else { return }
+            state = .failed
+        }
+    }
+
+    func clockDidCrossDrinkingDayBoundary() async {
+        let newDate = DrinkingDay.isoString(for: clock.now, calendar: calendar)
+        guard newDate != date else { return }
+        generation += 1
+        date = newDate
+        serverDrinks = []
+        state = .idle
+        await load()
+    }
+
+    func sessionDidSignOut() {
+        generation += 1
+        serverDrinks = []
+        loadedSubject = nil
+        state = .idle
+    }
+}
