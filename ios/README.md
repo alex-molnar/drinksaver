@@ -70,3 +70,13 @@ The item is accessible only while unlocked and does not migrate to another devic
 through iCloud Keychain. Reads return `nil` when no state exists; writes replace the existing item,
 and clearing is safe to repeat. The store keeps authorization bytes out of preferences and error
 messages.
+
+## Sign-in and session gate
+
+The app uses AppAuth-iOS 2.1.0 for system-browser authorization with the public Keycloak client,
+Authorization Code flow, and S256 PKCE. On launch, `SessionStore` restores the secure AppAuth state;
+the root view keeps the signed-in screen hidden until restoration succeeds. Sign-in requests
+`openid`, `profile`, and `offline_access`. Callback URLs use the registered
+`im.kak.drinksaver:/oauth2redirect` scheme. Fresh API tokens are obtained through AppAuth and the
+resulting rotated authorization state is saved before the token is returned. Logout clears local
+Keychain state before attempting the provider end-session flow.
