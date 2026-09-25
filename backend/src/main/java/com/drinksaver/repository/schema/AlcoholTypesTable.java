@@ -11,4 +11,6 @@ import java.util.UUID;
 @Repository
 public interface AlcoholTypesTable extends JpaRepository<AlcoholType, Integer> {
     List<AlcoholType> findAllByUserIdInOrderByNameAsc(Collection<UUID> userIds);
+    long countByColorPaletteId(Integer colorPaletteId);
+    int countByGlasswareId(Integer glasswareId);
 }

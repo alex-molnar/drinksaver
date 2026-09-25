@@ -44,7 +44,7 @@ public class DesignRepository {
         Optional<ColorPalette> existingColorPaletteOption = colorPalettesTable.findById(colorPaletteId);
 
         return existingColorPaletteOption
-            .map(existingColorPalette -> existingColorPalette.withOptionalUpdate(updateColorPalette));
+            .map(existingColorPalette -> colorPalettesTable.save(existingColorPalette.withOptionalUpdate(updateColorPalette)));
     }
 
     public boolean deleteColorPalette(Integer colorPaletteId) {
@@ -74,10 +74,10 @@ public class DesignRepository {
         Optional<Glassware> existingGlasswareOption = glasswareTable.findById(glasswareId);
 
         return existingGlasswareOption
-            .map(existingGlassware -> existingGlassware.withOptionalUpdate(updateGlassware));
+            .map(existingGlassware -> glasswareTable.save(existingGlassware.withOptionalUpdate(updateGlassware)));
     }
 
-    public  boolean deleteGlassware(Integer glasswareId) {
+    public boolean deleteGlassware(Integer glasswareId) {
         if (glasswareTable.existsById(glasswareId)) {
             glasswareTable.deleteById(glasswareId);
             return true;

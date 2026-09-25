@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface AlcoholSubtypesTable extends JpaRepository<AlcoholSubtype, Integer> {
     List<AlcoholSubtype> findAllByAlcoholTypeIdAndUserIdInOrderByNameAsc(Integer alcoholTypeId, List<UUID> userId);
+    long countByColorPaletteId(Integer colorPaletteId);
+    long countByGlasswareId(Integer glasswareId);
 }

@@ -19,4 +19,6 @@ public interface SavedDrinksTable extends JpaRepository<SavedDrink, Integer> {
     @Modifying
     @Query("delete from SavedDrink s where s.id in :ids")
     int deleteAndCountByIds(@Param("ids") List<Integer> ids);
+    long countByColorPaletteId(Integer colorPaletteId);
+    long countByGlasswareId(Integer glasswareId);
 }

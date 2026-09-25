@@ -11,4 +11,5 @@ import java.util.UUID;
 @Repository
 public interface BrandsTable extends JpaRepository<Brand, Integer> {
     List<Brand> findAllByUserIdInOrderByName(Collection<UUID> userIds);
+    long countByColorPaletteId(Integer colorPaletteId);
 }

@@ -34,18 +34,10 @@ public class Glassware {
     }
 
     public Glassware withOptionalUpdate(UpdateGlassware updateGlassware) {
-        if (updateGlassware.name() != null) {
-            this.name = updateGlassware.name();
-        }
-        if (updateGlassware.g() != null) {
-            this.g = updateGlassware.g();
-        }
-        if (updateGlassware.l() != null) {
-            this.l = updateGlassware.l();
-        }
-        if (updateGlassware.f() != null) {
-            this.f = updateGlassware.f();
-        }
+        this.name = updateGlassware.name();
+        this.g = updateGlassware.g();
+        this.l = updateGlassware.l();
+        this.f = updateGlassware.f();
         return this;
     }
 }

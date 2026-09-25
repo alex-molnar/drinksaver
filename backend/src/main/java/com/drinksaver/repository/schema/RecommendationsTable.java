@@ -47,4 +47,7 @@ public interface RecommendationsTable extends JpaRepository<Recommendation, Inte
             WHERE ordered.id = r.id
             """, nativeQuery = true)
     int updateRecommendationsOrderArray(@Param("recommendationIds") Integer[] recommendationIds, @Param("recommendationNames") String[] recommendationNames);
+
+    long countByColorPaletteId(Integer colorPaletteId);
+    long countByGlasswareId(Integer glasswareId);
 }

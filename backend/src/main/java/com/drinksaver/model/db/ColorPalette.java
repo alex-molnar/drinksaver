@@ -32,18 +32,10 @@ public class ColorPalette {
     }
 
     public ColorPalette withOptionalUpdate(UpdateColorPalette updateColorPalette) {
-        if (updateColorPalette.name() != null) {
-            this.name = updateColorPalette.name();
-        }
-        if (updateColorPalette.field() != null) {
-            this.field = updateColorPalette.field();
-        }
-        if (updateColorPalette.inkLight() != null) {
-            this.inkLight = updateColorPalette.inkLight();
-        }
-        if (updateColorPalette.inkDark() != null) {
-            this.inkDark = updateColorPalette.inkDark();
-        }
+        this.name = updateColorPalette.name();
+        this.field = updateColorPalette.field();
+        this.inkLight = updateColorPalette.inkLight();
+        this.inkDark = updateColorPalette.inkDark();
         return this;
     }
 }
