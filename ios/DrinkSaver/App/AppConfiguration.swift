@@ -1,7 +1,7 @@
 import Foundation
 
 struct AppConfiguration: Equatable, Sendable {
-    enum Environment: String, Sendable {
+    enum Environment: String, Codable, Sendable {
         case local
         case test
         case production

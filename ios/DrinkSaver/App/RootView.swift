@@ -4,6 +4,7 @@ struct RootView: View {
     @Environment(ThemeStore.self) private var themeStore
     @Environment(SessionStore.self) private var sessionStore
     @Environment(DesignCatalogueStore.self) private var designCatalogueStore
+    @Environment(SaveQueueStore.self) private var saveQueueStore: SaveQueueStore?
 #if UI_TESTING
     @Environment(\.uiFixtureIdentifier) private var uiFixtureIdentifier
 #endif
@@ -47,8 +48,10 @@ struct RootView: View {
         .task(id: sessionStore.userID) {
             if sessionStore.userID == nil {
                 designCatalogueStore.sessionDidSignOut()
+                saveQueueStore?.sessionDidSignOut()
             } else {
                 await designCatalogueStore.load()
+                await saveQueueStore?.reconcilePersistedDeletes()
             }
         }
     }

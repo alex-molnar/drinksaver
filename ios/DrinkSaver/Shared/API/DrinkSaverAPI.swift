@@ -10,8 +10,13 @@ protocol DesignCatalogueLoading: Sendable {
     func glassware() async throws -> [Glassware]
 }
 
-protocol DrinkSaverAPI: DesignCatalogueLoading {
+protocol DrinkQueueAPI: Sendable {
     func saveDrink(_ request: DrinkSaveRequest) async throws -> [SavedDrink]
+    func drinks(date: String) async throws -> [EditableDrink]
+    func deleteDrinks(ids: [Int]) async throws -> Int
+}
+
+protocol DrinkSaverAPI: DesignCatalogueLoading, DrinkQueueAPI {
     func recommendations() async throws -> [Recommendation]
     func editRecommendations(_ edits: [RecommendationEdit]) async throws -> [Recommendation]
     func deleteRecommendation(id: Int) async throws
@@ -26,6 +31,4 @@ protocol DrinkSaverAPI: DesignCatalogueLoading {
     func createBrand(_ entry: NewBeerBrand) async throws -> Brand
     func flavours(brandID: Int) async throws -> [BeerFlavour]
     func createFlavour(brandID: Int, entry: NewBeerFlavour) async throws -> BeerFlavour
-    func drinks(date: String) async throws -> [EditableDrink]
-    func deleteDrinks(ids: [Int]) async throws -> Int
 }
