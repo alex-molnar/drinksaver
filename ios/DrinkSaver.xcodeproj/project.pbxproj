@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A00900000000000000000001 /* KeychainAuthorizationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000002 /* KeychainAuthorizationStore.swift */; };
+		A00900000000000000000003 /* KeychainAuthorizationStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000004 /* KeychainAuthorizationStoreTests.swift */; };
+		A00900000000000000000005 /* InMemoryAuthorizationDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000006 /* InMemoryAuthorizationDataStore.swift */; };
 		A00800000000000000000001 /* DrinkSaverAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00800000000000000000002 /* DrinkSaverAPI.swift */; };
 		A00800000000000000000003 /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00800000000000000000004 /* APIError.swift */; };
 		A00800000000000000000005 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00800000000000000000006 /* APIClient.swift */; };
@@ -76,6 +79,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A00900000000000000000002 /* KeychainAuthorizationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainAuthorizationStore.swift; sourceTree = "<group>"; };
+		A00900000000000000000004 /* KeychainAuthorizationStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainAuthorizationStoreTests.swift; sourceTree = "<group>"; };
+		A00900000000000000000006 /* InMemoryAuthorizationDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemoryAuthorizationDataStore.swift; sourceTree = "<group>"; };
 		A00800000000000000000002 /* DrinkSaverAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkSaverAPI.swift; sourceTree = "<group>"; };
 		A00800000000000000000004 /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIError.swift; sourceTree = "<group>"; };
 		A00800000000000000000006 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
@@ -148,6 +154,8 @@
 		4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */ = {
 			isa = PBXGroup;
 			children = (
+				A00900000000000000000004 /* KeychainAuthorizationStoreTests.swift */,
+				A00900000000000000000006 /* InMemoryAuthorizationDataStore.swift */,
 				A00800000000000000000008 /* APIClientTests.swift */,
 				A0080000000000000000000A /* URLProtocolStub.swift */,
 				A00700000000000000000004 /* APIModelTests.swift */,
@@ -231,12 +239,21 @@
 		AE5E9CD6FB62921779A34391 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				A00900000000000000000007 /* Auth */,
 				A00700000000000000000013 /* API */,
 				7CE830F330EFB2C1944D2200 /* Design */,
 				7F8A12936E40DEE71F82599E /* Domain */,
 				9605CFC3A7D5C4F295276B14 /* UI */,
 			);
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		A00900000000000000000007 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				A00900000000000000000002 /* KeychainAuthorizationStore.swift */,
+			);
+			path = Auth;
 			sourceTree = "<group>";
 		};
 		A00700000000000000000013 /* API */ = {
@@ -462,6 +479,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A00900000000000000000001 /* KeychainAuthorizationStore.swift in Sources */,
 				A00800000000000000000001 /* DrinkSaverAPI.swift in Sources */,
 				A00800000000000000000003 /* APIError.swift in Sources */,
 				A00800000000000000000005 /* APIClient.swift in Sources */,
@@ -495,6 +513,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A00900000000000000000003 /* KeychainAuthorizationStoreTests.swift in Sources */,
+				A00900000000000000000005 /* InMemoryAuthorizationDataStore.swift in Sources */,
 				A00800000000000000000007 /* APIClientTests.swift in Sources */,
 				A00800000000000000000009 /* URLProtocolStub.swift in Sources */,
 				A00700000000000000000003 /* APIModelTests.swift in Sources */,

@@ -62,3 +62,11 @@ refreshes and retries a request once after a 401. It uses a 10-second request ti
 status, authentication, decoding, timeout, and connection failures without retaining response
 bodies or credentials. `DrinkSaverTests/APIClientTests.swift` verifies endpoint requests and retry
 behavior with a stub URL protocol.
+
+## Authorization state persistence
+
+`KeychainAuthorizationStore` stores serialized authorization state as a generic-password item.
+The item is accessible only while unlocked and does not migrate to another device or synchronize
+through iCloud Keychain. Reads return `nil` when no state exists; writes replace the existing item,
+and clearing is safe to repeat. The store keeps authorization bytes out of preferences and error
+messages.
