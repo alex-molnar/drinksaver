@@ -18,6 +18,23 @@ final class GlassShapeTests: XCTestCase {
         }
     }
 
+    func testGlassLayersKeepTheirSharedWebViewBoxPositions() throws {
+        let scale = min(box.width / 34, box.height / 50)
+        let highball = DesignCatalogue.fallbackGlass
+        let outline = GlassShape(pathData: highball.g).path(in: box).boundingRect
+        let liquid = GlassShape(pathData: highball.l).path(in: box).boundingRect
+        XCTAssertEqual(liquid.minY - outline.minY, (13.6 - 4) * scale, accuracy: 0.001)
+        XCTAssertEqual(liquid.minX - outline.minX, (11.4 - 10) * scale, accuracy: 0.001)
+
+        let pint = DesignResolverTests.glasswareFixtures[0]
+        let pintOutline = GlassShape(pathData: pint.g).path(in: box).boundingRect
+        let pintLiquid = GlassShape(pathData: pint.l).path(in: box).boundingRect
+        let foamPath = try XCTUnwrap(pint.f)
+        let foam = GlassShape(pathData: foamPath).path(in: box).boundingRect
+        XCTAssertEqual(pintLiquid.minY - pintOutline.minY, (15 - 5) * scale, accuracy: 0.001)
+        XCTAssertEqual(foam.minY - pintOutline.minY, (8.4 - 5) * scale, accuracy: 0.001)
+    }
+
     func testRelativeAndSmoothCurvesAndEllipticalArcsRender() {
         let data = "M2 2 c2 0 3 2 4 4 s2 4 4 4 a4 2 0 0 1 8 0 z"
         XCTAssertFalse(GlassShape(pathData: data).path(in: box).boundingRect.isEmpty)

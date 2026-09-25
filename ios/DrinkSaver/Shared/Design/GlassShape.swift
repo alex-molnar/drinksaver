@@ -2,6 +2,8 @@ import SwiftUI
 import CoreGraphics
 
 struct GlassShape: Shape {
+    private static let sourceViewBox = CGRect(x: 0, y: 0, width: 34, height: 50)
+
     let pathData: String
     let fallbackPathData: String
 
@@ -23,14 +25,17 @@ struct GlassShape: Shape {
 
     private static func fit(_ path: CGPath, in rect: CGRect) -> Path? {
         let bounds = path.boundingBoxOfPath
-        guard !bounds.isEmpty, bounds.width > 0, bounds.height > 0 else { return nil }
-        let scale = min(rect.width / bounds.width, rect.height / bounds.height)
+        let viewBox = sourceViewBox
+        guard !bounds.isEmpty,
+              bounds.minX >= viewBox.minX, bounds.minY >= viewBox.minY,
+              bounds.maxX <= viewBox.maxX, bounds.maxY <= viewBox.maxY else { return nil }
+        let scale = min(rect.width / viewBox.width, rect.height / viewBox.height)
         guard scale.isFinite, scale > 0 else { return nil }
-        let x = rect.minX + (rect.width - bounds.width * scale) / 2
-        let y = rect.minY + (rect.height - bounds.height * scale) / 2
+        let x = rect.minX + (rect.width - viewBox.width * scale) / 2
+        let y = rect.minY + (rect.height - viewBox.height * scale) / 2
         var transform = CGAffineTransform(translationX: x, y: y)
             .scaledBy(x: scale, y: scale)
-            .translatedBy(x: -bounds.minX, y: -bounds.minY)
+            .translatedBy(x: -viewBox.minX, y: -viewBox.minY)
         guard let fitted = path.copy(using: &transform) else { return nil }
         return Path(fitted)
     }
