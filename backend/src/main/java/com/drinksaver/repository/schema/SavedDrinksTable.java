@@ -1,9 +1,7 @@
 package com.drinksaver.repository.schema;
 
 import com.drinksaver.model.db.SavedDrink;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,8 +19,4 @@ public interface SavedDrinksTable extends JpaRepository<SavedDrink, Integer> {
     @Modifying
     @Query("delete from SavedDrink s where s.id in :ids")
     int deleteAndCountByIds(@Param("ids") List<Integer> ids);
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    long countByColorPaletteId(Integer colorPaletteId);
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    long countByGlasswareId(Integer glasswareId);
 }

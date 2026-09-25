@@ -1,9 +1,7 @@
 package com.drinksaver.repository.schema;
 
 import com.drinksaver.model.db.AlcoholType;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -13,8 +11,4 @@ import java.util.UUID;
 @Repository
 public interface AlcoholTypesTable extends JpaRepository<AlcoholType, Integer> {
     List<AlcoholType> findAllByUserIdInOrderByNameAsc(Collection<UUID> userIds);
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    long countByColorPaletteId(Integer colorPaletteId);
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    int countByGlasswareId(Integer glasswareId);
 }
