@@ -3,6 +3,7 @@ import SwiftUI
 struct RootView: View {
     @Environment(ThemeStore.self) private var themeStore
     @Environment(SessionStore.self) private var sessionStore
+    @Environment(DesignCatalogueStore.self) private var designCatalogueStore
 #if UI_TESTING
     @Environment(\.uiFixtureIdentifier) private var uiFixtureIdentifier
 #endif
@@ -43,6 +44,13 @@ struct RootView: View {
         .preferredColorScheme(themeStore.mode == .dark ? .dark : .light)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("app.root")
+        .task(id: sessionStore.userID) {
+            if sessionStore.userID == nil {
+                designCatalogueStore.sessionDidSignOut()
+            } else {
+                await designCatalogueStore.load()
+            }
+        }
     }
 
     private func sessionGate(title: String, button: String, action: @escaping () async -> Void) -> some View {
@@ -59,7 +67,9 @@ struct RootView: View {
 }
 
 #Preview {
+    let sessionStore = SessionStore(authorizationProvider: nil)
     RootView()
         .environment(ThemeStore())
-        .environment(SessionStore(authorizationProvider: nil))
+        .environment(sessionStore)
+        .environment(DesignCatalogueStore(api: nil, sessionStore: sessionStore))
 }

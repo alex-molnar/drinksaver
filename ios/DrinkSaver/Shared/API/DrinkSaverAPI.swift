@@ -5,7 +5,12 @@ protocol AccessTokenProviding: Sendable {
     func accessToken(forceRefresh: Bool) async throws -> String
 }
 
-protocol DrinkSaverAPI: Sendable {
+protocol DesignCatalogueLoading: Sendable {
+    func palettes() async throws -> [Palette]
+    func glassware() async throws -> [Glassware]
+}
+
+protocol DrinkSaverAPI: DesignCatalogueLoading {
     func saveDrink(_ request: DrinkSaveRequest) async throws -> [SavedDrink]
     func recommendations() async throws -> [Recommendation]
     func editRecommendations(_ edits: [RecommendationEdit]) async throws -> [Recommendation]
@@ -21,8 +26,6 @@ protocol DrinkSaverAPI: Sendable {
     func createBrand(_ entry: NewBeerBrand) async throws -> Brand
     func flavours(brandID: Int) async throws -> [BeerFlavour]
     func createFlavour(brandID: Int, entry: NewBeerFlavour) async throws -> BeerFlavour
-    func palettes() async throws -> [Palette]
-    func glassware() async throws -> [Glassware]
     func drinks(date: String) async throws -> [EditableDrink]
     func deleteDrinks(ids: [Int]) async throws -> Int
 }
