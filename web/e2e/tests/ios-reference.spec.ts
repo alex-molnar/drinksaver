@@ -6,25 +6,19 @@ import path from 'node:path';
  * IOS-002: freeze the visual reference catalogue for the native iOS parity work.
  *
  * Drives the frozen web baseline (served by the isolated `drinksaver-ios-ref` compose
- * project built from commit 28c33fde) through a real Keycloak session and captures every
- * state/theme/viewport combination into `ios/Reference/web/` as 3x sRGB PNGs. Data is made
- * deterministic with request interception and a fixed clock rather than by writing to the
- * backend, so nothing here mutates records.
- *
- * Red/green: run once with `IOS_REFERENCE_SKIP_CAPTURE=1` to see the completeness check fail
- * against an empty catalogue, then run again without it to capture and pass. See
- * `ios/Reference/README.md` for the exact commands and provenance.
+ * project built from commit 28c33fde) through a real Keycloak session. Captures each
+ * state/theme/viewport as a 3x sRGB PNG only with IOS_REFERENCE_REGENERATE=1; ordinary runs
+ * validate the committed catalogue without changing it. API fixtures and a fixed clock keep
+ * the data deterministic without writing to the backend. See ios/Reference/README.md.
  */
 
-// 3x raster: the reference catalogue feeds native simulator comparison, which runs at 3x
-// scale on every accepted device. See ios/Reference/README.md.
-test.use({ deviceScaleFactor: 3 });
+// Freeze browser formatting and rasterization to match the committed catalogue.
+test.use({ deviceScaleFactor: 3, locale: 'en-GB', timezoneId: 'Europe/Amsterdam' });
 
 const DEV_USER_ID = '423c91e4-491f-4f82-aba6-3c982857e0e4';
 
-// Pinned to a mid-afternoon moment so the drinking day is unambiguously the calendar date
-// (no 06:00 rollover edge) and the Quick Save header reads "Today".
-const FIXED_TIME = new Date(2026, 8, 10, 14, 0, 0);
+// 14:00 in Amsterdam (UTC+02:00), safely after the 06:00 drinking-day rollover.
+const FIXED_TIME = new Date('2026-09-10T12:00:00.000Z');
 
 const VIEWPORTS = [
   { width: 375, height: 667 },
@@ -292,6 +286,8 @@ const arrange = async (page: Page, referenceCase: ReferenceCase) => {
   await page.evaluate(() => document.fonts.ready);
   // Let any enter transition reach its resting position before freezing the frame.
   await page.waitForTimeout(state === 'add-root' ? 400 : 150);
+  // MUI's loading skeleton pulse can otherwise be frozen at different opacity frames.
+  await page.addStyleTag({ content: '*, *::before, *::after { animation: none !important; transition: none !important; }' });
 };
 
 test('reference manifest covers both themes and the three reference widths', () => {
@@ -302,11 +298,14 @@ test('reference manifest covers both themes and the three reference widths', () 
   );
 });
 
-const captureDisabled = process.env.IOS_REFERENCE_SKIP_CAPTURE === '1';
+const regenerateReferences = process.env.IOS_REFERENCE_REGENERATE === '1';
 
 for (const referenceCase of referenceCases) {
   test(`capture ${referenceCase.id}`, async ({ page }, testInfo) => {
-    test.skip(captureDisabled, 'IOS_REFERENCE_SKIP_CAPTURE=1: manifest-only run');
+    test.skip(
+      !regenerateReferences,
+      'Committed references are immutable by default; set IOS_REFERENCE_REGENERATE=1 to replace them.',
+    );
     await arrange(page, referenceCase);
     await page.screenshot({
       path: path.join(referenceDir(testInfo), `${referenceCase.id}.png`),

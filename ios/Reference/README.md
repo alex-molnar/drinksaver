@@ -19,10 +19,10 @@ frozen commit.
 | Alpha | Opaque — the app paints the full viewport; no transparent pixels are produced. |
 | Locale | `en-GB` (set via Playwright context option) |
 | Time zone | `Europe/Amsterdam` (set via Playwright context option) |
-| Fixed clock | 2026-09-10 14:00 local (via `page.clock.setFixedTime`; after the 06:00 rollover so the drinking day equals the calendar date) |
+| Fixed clock | `2026-09-10T12:00:00.000Z` (14:00 in `Europe/Amsterdam`, after the 06:00 rollover) |
 | Data source | All `/v1/**` API responses intercepted with fixed fixtures; no production or seeded data is read or written during capture. |
 | Font loading | `document.fonts.ready` awaited before every screenshot. |
-| Animations | Disabled at capture time via Playwright `animations: 'disabled'` to guarantee a stable frame. |
+| Animations | CSS animations/transitions are disabled after entry settles; Playwright screenshot animation handling is also disabled. |
 
 ## Safe-area crop
 
@@ -51,7 +51,9 @@ Example: `quick-ready-dark-375x812.png`
 
 ## Rebuild commands
 
-To regenerate the catalogue from scratch:
+Ordinary Playwright runs check the committed catalogue's completeness and 3× dimensions without
+writing to it. Capture tests are skipped unless `IOS_REFERENCE_REGENERATE=1` is set. To
+intentionally regenerate the catalogue from the frozen baseline:
 
 ```bash
 # 1. Create the frozen worktree (never check out the frozen SHA in the implementation worktree)
@@ -68,24 +70,24 @@ docker-compose -p drinksaver-ios-ref up -d --build
 docker-compose -p drinksaver-ios-ref ps
 
 # 5. Install the frozen web dependencies and its pinned browser
-cd web && npm ci && npx playwright install chromium
+cd /path/to/worktree/web && npm ci && npx playwright install chromium
 
 # 6. Run the capture (state assertions must pass before each screenshot is written)
-cd web && npm run e2e -- ios-reference.spec.ts
+cd /path/to/worktree/web && IOS_REFERENCE_REGENERATE=1 npm run e2e -- ios-reference.spec.ts
 
 # 7. Copy the captures back to the implementation worktree
 cp -r /path/to/worktree/ios/Reference/web/ /path/to/implementation/ios/Reference/web/
 
 # 8. Teardown
-docker-compose -p drinksaver-ios-ref down -v
-git worktree remove /path/to/worktree
+cd /path/to/worktree && docker-compose -p drinksaver-ios-ref down -v
+cd /path/to/implementation && git worktree remove /path/to/worktree
 ```
 
 ## Teardown
 
 ```bash
-docker-compose -p drinksaver-ios-ref down -v
-git worktree remove /path/to/worktree
+cd /path/to/worktree && docker-compose -p drinksaver-ios-ref down -v
+cd /path/to/implementation && git worktree remove /path/to/worktree
 ```
 
 ## Port isolation note
