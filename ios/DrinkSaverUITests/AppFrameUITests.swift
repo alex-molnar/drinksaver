@@ -76,6 +76,31 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Drink, Choose"].waitForExistence(timeout: 3))
     }
 
+    func testAddDrinkHandsSaveToQueue() {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.add"].tap()
+        app.buttons["Drink, Choose"].tap()
+        app.buttons["Wine"].tap()
+        app.buttons["Size, Choose"].tap()
+        app.buttons.matching(NSPredicate(format: "label CONTAINS 'Glass'")).firstMatch.tap()
+        app.buttons["add.save"].tap()
+        XCTAssertTrue(app.staticTexts["frame.subtitle"].waitForExistence(timeout: 5))
+    }
+
+    func testAddSaveFromHistoryKeepsUndoReachable() {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.history"].tap()
+        app.buttons["frame.tab.add"].tap()
+        app.buttons["Drink, Choose"].tap()
+        app.buttons["Wine"].tap()
+        app.buttons["Size, Choose"].tap()
+        app.buttons.matching(NSPredicate(format: "label CONTAINS 'Glass'")).firstMatch.tap()
+        app.buttons["add.save"].tap()
+        let undo = app.buttons["frame.queue.undo"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 5))
+        undo.tap()
+    }
+
     private func launchSignedIn() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [

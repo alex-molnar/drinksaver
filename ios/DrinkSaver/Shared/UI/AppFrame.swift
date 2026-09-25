@@ -305,7 +305,6 @@ struct AppFrame: View {
                     .disabled(addDrinkStore.draft.alcoholType == nil || addDrinkStore.draft.volume == nil || (addDrinkStore.draft.isBeer && addDrinkStore.draft.consumptionType == nil) || addDrinkStore.isSaving)
                     .accessibilityIdentifier("add.save")
             }
-            .task { await addDrinkStore.loadAlcoholTypes() }
         case .option(let field): optionPanel(field)
         case .create(let field): createPanel(field)
         }
@@ -388,7 +387,7 @@ struct AppFrame: View {
         case .subtype: if case .loaded(let items) = addDrinkStore.subtypes { addDrinkStore.draft.subtype = items.first(where:{$0.id == id}) }
         case .consumptionType: if case .loaded(let items) = addDrinkStore.consumptionTypes { addDrinkStore.draft.consumptionType = items.first(where:{$0.id == id}) }
         case .brand: if case .loaded(let items) = addDrinkStore.brands, let item = items.first(where:{$0.id == id}) { addDrinkStore.selectBrand(item) }
-        case .flavour: if case .loaded(let items) = addDrinkStore.flavours { addDrinkStore.draft.flavour = items.first(where:{$0.id == id}) }
+        case .flavour: if case .loaded(let items) = addDrinkStore.flavours, let item = items.first(where:{$0.id == id}) { addDrinkStore.draft.select(item) }
         default: break
         }
     }
