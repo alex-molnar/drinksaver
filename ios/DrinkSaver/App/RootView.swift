@@ -26,6 +26,10 @@ struct RootView: View {
                 sessionGate(title: message, button: "Sign in") {
                     await sessionStore.signIn()
                 }
+            case .signOutFailed(let message):
+                sessionGate(title: message, button: "Retry sign out") {
+                    await sessionStore.signOut()
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

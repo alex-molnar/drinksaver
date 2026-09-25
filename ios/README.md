@@ -79,4 +79,5 @@ the root view keeps the signed-in screen hidden until restoration succeeds. Sign
 `openid`, `profile`, and `offline_access`. Callback URLs use the registered
 `im.kak.drinksaver:/oauth2redirect` scheme. Fresh API tokens are obtained through AppAuth and the
 resulting rotated authorization state is saved before the token is returned. Logout clears local
-Keychain state before attempting the provider end-session flow.
+Keychain state before attempting the provider end-session flow. If secure local clearing fails, the
+session gate stays closed and offers a retry action.

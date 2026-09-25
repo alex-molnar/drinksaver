@@ -18,6 +18,7 @@ final class AppAuthClient: AuthorizationProviding {
     private let driver: any AppAuthDriving
     private var authorizationState: OIDAuthState?
     private var authorizationSubject: String?
+    private var pendingSignOutState: OIDAuthState?
     private var stateGeneration = 0
     var onAuthorizationInvalidated: (@MainActor () -> Void)?
 
@@ -36,6 +37,8 @@ final class AppAuthClient: AuthorizationProviding {
     func restore() async throws -> Bool {
         guard let data = try store.read() else { return false }
         guard let state = Self.unarchive(data), state.isAuthorized,
+              state.lastAuthorizationResponse.request.clientID == configuration.clientID,
+              state.lastAuthorizationResponse.request.configuration.issuer == configuration.issuerURL,
               let subject = Self.subject(in: state) else {
             try store.clear()
             return false
@@ -73,12 +76,14 @@ final class AppAuthClient: AuthorizationProviding {
     }
 
     func signOut() async throws {
-        let state = authorizationState
+        let state = pendingSignOutState ?? authorizationState
+        pendingSignOutState = state
         authorizationState = nil
         authorizationSubject = nil
         stateGeneration += 1
 
         try store.clear()
+        pendingSignOutState = nil
         if let state { try? await driver.endSession(state: state, redirectURL: configuration.redirectURL) }
     }
 

@@ -7,6 +7,7 @@ enum SessionState: Equatable {
     case authorizing
     case signedIn
     case failed(String)
+    case signOutFailed(String)
 }
 
 @MainActor
@@ -61,7 +62,7 @@ final class SessionStore {
             try await authorizationProvider?.signOut()
             state = .signedOut
         } catch {
-            state = .failed("Unable to clear your local session securely.")
+            state = .signOutFailed("Unable to clear your local session securely.")
         }
     }
 

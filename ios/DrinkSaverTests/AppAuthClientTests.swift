@@ -35,6 +35,39 @@ final class AppAuthClientTests: XCTestCase {
         XCTAssertEqual(client.subject, "user-123")
     }
 
+    func testRestoreClearsAuthorizationFromAnotherIssuerOrClient() async throws {
+        let archivedState = try NSKeyedArchiver.archivedData(
+            withRootObject: makeAuthorizedState(),
+            requiringSecureCoding: true
+        )
+        let configurations = [
+            AppConfiguration(
+                environment: .test,
+                apiBaseURL: testConfiguration.apiBaseURL,
+                issuerURL: URL(string: "https://auth.other.example/realm")!,
+                clientID: testConfiguration.clientID,
+                redirectURL: testConfiguration.redirectURL
+            ),
+            AppConfiguration(
+                environment: .test,
+                apiBaseURL: testConfiguration.apiBaseURL,
+                issuerURL: testConfiguration.issuerURL,
+                clientID: "another-client",
+                redirectURL: testConfiguration.redirectURL
+            )
+        ]
+
+        for configuration in configurations {
+            let store = AuthorizationStateMemoryStore(data: archivedState)
+            let client = AppAuthClient(configuration: configuration, store: store, driver: FakeAppAuthDriver())
+
+            let restored = try await client.restore()
+            XCTAssertFalse(restored)
+            XCTAssertNil(store.data)
+            XCTAssertNil(client.subject)
+        }
+    }
+
     func testAuthorizationCancellationUsesTheSignedOutOutcome() async throws {
         let driver = FakeAppAuthDriver(state: try makeAuthorizedState())
         driver.authorizationError = NSError(domain: OIDGeneralErrorDomain, code: -3)
@@ -108,6 +141,29 @@ final class AppAuthClientTests: XCTestCase {
         XCTAssertTrue(driver.endSessionCalled)
         XCTAssertNil(store.data)
         XCTAssertNil(client.subject)
+    }
+
+    func testLogoutCanRetryAfterKeychainClearFailure() async throws {
+        let driver = FakeAppAuthDriver(state: try makeAuthorizedState())
+        let store = AuthorizationStateMemoryStore()
+        let client = AppAuthClient(configuration: testConfiguration, store: store, driver: driver)
+        try await client.signIn()
+        store.clearFailuresRemaining = 1
+
+        do {
+            try await client.signOut()
+            XCTFail("Expected Keychain clear to fail")
+        } catch {
+            XCTAssertEqual(error as? FakeAuthorizationError, .unavailable)
+        }
+        XCTAssertNotNil(store.data)
+        XCTAssertFalse(driver.endSessionCalled)
+        XCTAssertNil(client.subject)
+
+        try await client.signOut()
+
+        XCTAssertNil(store.data)
+        XCTAssertTrue(driver.endSessionCalled)
     }
 
     private var testConfiguration: AppConfiguration {
@@ -213,6 +269,7 @@ private final class AuthorizationStateMemoryStore: AuthorizationDataStoring, @un
     private var storedData: Data?
     private var storedWriteCount = 0
     private var storedRequiresSecureCoding = false
+    var clearFailuresRemaining = 0
 
     var data: Data? { lock.withLock { storedData } }
     var writeCount: Int { lock.withLock { storedWriteCount } }
@@ -233,9 +290,17 @@ private final class AuthorizationStateMemoryStore: AuthorizationDataStoring, @un
             ], from: data)) != nil
         }
     }
-    func clear() throws { lock.withLock { storedData = nil } }
+    func clear() throws {
+        try lock.withLock {
+            if clearFailuresRemaining > 0 {
+                clearFailuresRemaining -= 1
+                throw FakeAuthorizationError.unavailable
+            }
+            storedData = nil
+        }
+    }
 }
 
-private enum FakeAuthorizationError: Error {
+private enum FakeAuthorizationError: Error, Equatable {
     case unavailable
 }

@@ -78,6 +78,22 @@ final class SessionStoreTests: XCTestCase {
         XCTAssertEqual(provider.signOutCount, 1)
     }
 
+    func testSignOutClearFailureOffersRetryAndCanRecover() async {
+        let provider = FakeAuthorizationProvider(restored: true, subject: "user-123")
+        let store = SessionStore(authorizationProvider: provider)
+        await store.restore()
+        provider.signOutError = FakeAuthorizationError.unavailable
+
+        await store.signOut()
+
+        XCTAssertEqual(store.state, .signOutFailed("Unable to clear your local session securely."))
+        provider.signOutError = nil
+        await store.signOut()
+
+        XCTAssertEqual(store.state, .signedOut)
+        XCTAssertEqual(provider.signOutCount, 2)
+    }
+
     func testOpenURLIsForwardedToAuthorizationProvider() {
         let provider = FakeAuthorizationProvider()
         let store = SessionStore(authorizationProvider: provider)
@@ -94,6 +110,7 @@ private final class FakeAuthorizationProvider: AuthorizationProviding {
     var restored: Bool
     var restoreError: (any Error)?
     var signInError: (any Error)?
+    var signOutError: (any Error)?
     var onSignIn: (() -> Void)?
     private(set) var restoreCount = 0
     private(set) var signOutCount = 0
@@ -115,11 +132,15 @@ private final class FakeAuthorizationProvider: AuthorizationProviding {
         if let signInError { throw signInError }
     }
 
-    func signOut() async throws { signOutCount += 1; subject = nil }
+    func signOut() async throws {
+        signOutCount += 1
+        if let signOutError { throw signOutError }
+        subject = nil
+    }
     func resume(url: URL) -> Bool { resumedURLs.append(url); return true }
     func accessToken(forceRefresh: Bool) async throws -> String { "test-token" }
 }
 
-private enum FakeAuthorizationError: Error {
+private enum FakeAuthorizationError: Error, Equatable {
     case unavailable
 }
