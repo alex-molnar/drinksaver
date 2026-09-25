@@ -4,6 +4,8 @@ struct HistoryView: View {
     @Environment(HistoryStore.self) private var store
     @Environment(ThemeStore.self) private var themeStore
     @Environment(CurrentDrinkingDayStore.self) private var drinkingDay
+    @Environment(SaveQueueStore.self) private var queueStore
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.locale) private var locale
     @State private var presentsCalendar = false
     @State private var calendarSelection = Date()
@@ -100,6 +102,7 @@ struct HistoryView: View {
 
     private var paperTab: some View {
         VStack(spacing: 0) {
+            queueFeedback
             HStack(alignment: .firstTextBaseline) {
                 Text(selectedLabel).font(theme.type.displayM.font)
                 Spacer()
@@ -129,6 +132,11 @@ struct HistoryView: View {
                 }
             }
 
+            if !store.selectedIDs.isEmpty {
+                Button("Cross off \(store.selectedIDs.count) selected") { store.crossOff(reduceMotion: reduceMotion) }
+                    .buttonStyle(.borderedProminent).frame(maxWidth: .infinity).padding(12)
+                    .accessibilityIdentifier("history.cross-off.selected")
+            }
         }
         .padding(.horizontal, 8)
         .background(theme.surface.paper.color)
@@ -137,12 +145,58 @@ struct HistoryView: View {
     }
 
     private func historyRow(_ row: HistoryRow) -> some View {
-        Text(row.drink.name).font(theme.type.body.font).foregroundStyle(theme.ink.onPaper.color)
-            .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true)
+        HStack(spacing: 10) {
+            Button { store.toggleSelection(id: row.id) } label: {
+                Image(systemName: row.isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(row.isSelected ? theme.accent.active.color : theme.ink.tertiary.color)
+                    .frame(width: 40, height: 44).contentShape(Rectangle())
+            }.buttonStyle(.plain).accessibilityLabel(row.isSelected ? "Deselect \(row.drink.name)" : "Select \(row.drink.name)")
+                .accessibilityValue(row.isSelected ? "Selected" : "Not selected")
+            Text(row.drink.name).font(theme.type.body.font).foregroundStyle(theme.ink.onPaper.color)
+                .strikethrough(row.exitingToken != nil).opacity(row.exitingToken == nil ? 1 : 0.35)
+                .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true)
+            Button { store.crossOff(ids: [row.id], reduceMotion: reduceMotion) } label: { Image(systemName: "xmark").frame(width: 44, height: 44) }
+                .buttonStyle(.plain).accessibilityLabel("Cross off \(row.drink.name)")
+                .disabled(row.exitingToken != nil)
+        }
         .listRowBackground(Color.clear)
         .listRowSeparatorTint(theme.ink.onPaper.color.opacity(0.12))
         .accessibilityIdentifier("history.row.\(row.id)")
         .transition(.opacity.combined(with: .move(edge: .trailing)))
-        .animation(.easeInOut(duration: 0.25), value: row.exitingToken)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: row.exitingToken)
+    }
+
+    @ViewBuilder
+    private var queueFeedback: some View {
+        if let entry = queueStore.currentFeedback, case .delete(let operation) = entry.kind {
+            HStack(spacing: 12) {
+                Text(queueMessage(entry.status, label: operation.label))
+                    .font(theme.type.body.font).foregroundStyle(theme.ink.primary.color)
+                    .accessibilityIdentifier("history.queue.message")
+                Spacer(minLength: 4)
+                switch entry.status {
+                case .undoable:
+                    Button("Undo") { queueStore.undoCurrent() }.accessibilityIdentifier("history.queue.undo")
+                case .failed:
+                    Button("Retry") { queueStore.retryCurrent() }.accessibilityIdentifier("history.queue.retry")
+                case .undoing:
+                    ProgressView().accessibilityLabel("Undoing")
+                case .saving, .committed:
+                    EmptyView()
+                }
+            }
+            .buttonStyle(.bordered).padding(.horizontal, 16).padding(.vertical, 10)
+            .background(theme.surface.panel.color)
+            .overlay(alignment: .bottom) { Rectangle().fill(theme.line.hairline.color).frame(height: 1) }
+        }
+    }
+
+    private func queueMessage(_ status: QueueStatus, label: String) -> String {
+        switch status {
+        case .undoable: "Crossed off \(label)"
+        case .undoing: "Undoing \(label)…"
+        case .failed(let failure): failure.message
+        case .saving, .committed: ""
+        }
     }
 }

@@ -36,7 +36,10 @@ recommendation refresh until queued saves or undo operations finish.
 loads and caches independently; selecting an earlier date opens the native calendar picker, while
 future dates are unavailable. Loading, retryable error, empty, and populated states are local to
 the selected date. The current drinking date reads from the same `CurrentDrinkingDayStore` as Quick,
-and pending queue inserts and deletions are reflected in the visible rows and counts.
+and pending queue inserts and deletions are reflected in the visible rows and counts. Rows support
+individual or selected bulk cross-off through `SaveQueueStore`; the row remains during the exit
+motion, and the screen exposes Undo or Retry feedback. Reduce Motion removes the row immediately
+while keeping the same queue and Undo behavior.
 
 ## Add a drink
 
