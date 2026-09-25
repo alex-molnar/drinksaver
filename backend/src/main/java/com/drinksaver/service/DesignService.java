@@ -10,7 +10,6 @@ import com.drinksaver.repository.schema.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -48,10 +47,10 @@ public class DesignService {
             .map(existingColorPalette -> colorPalettesTable.save(existingColorPalette.withOptionalUpdate(updateColorPalette)));
     }
 
-    @Transactional
     public int deleteColorPalette(Integer colorPaletteId) {
         if (colorPalettesTable.existsById(colorPaletteId)) {
             try {
+                // Repository transaction commits before this call returns, so FK errors reach this catch.
                 colorPalettesTable.deleteById(colorPaletteId);
                 return 204;
             } catch (DataIntegrityViolationException e) {
@@ -84,7 +83,6 @@ public class DesignService {
             .map(existingGlassware -> glasswareTable.save(existingGlassware.withOptionalUpdate(updateGlassware)));
     }
 
-    @Transactional
     public int deleteGlassware(Integer glasswareId) {
         if (glasswareTable.existsById(glasswareId)) {
             try {

@@ -1,3 +1,5 @@
+BEGIN;
+
 --- Alcohol subtypes
 alter table alcohol_subtypes
     add constraint alcohol_subtypes_color_palettes_id_fk
@@ -70,3 +72,5 @@ alter table saved_drinks
     add constraint saved_drinks_glassware_id_fk
         foreign key (glassware_id) references glassware
             on delete restrict;
+
+COMMIT;

@@ -8,20 +8,13 @@ import com.drinksaver.model.dto.UpdateColorPalette;
 import com.drinksaver.model.dto.UpdateGlassware;
 import com.drinksaver.repository.schema.ColorPalettesTable;
 import com.drinksaver.repository.schema.GlasswareTable;
-import com.drinksaver.repository.schema.AlcoholTypesTable;
-import com.drinksaver.repository.schema.AlcoholSubtypesTable;
-import com.drinksaver.repository.schema.BrandsTable;
-import com.drinksaver.repository.schema.BeerFlavoursTable;
-import com.drinksaver.repository.schema.ConsumptionTypesTable;
-import com.drinksaver.repository.schema.RecommendationsTable;
-import com.drinksaver.repository.schema.SavedDrinksTable;
-import com.drinksaver.repository.schema.admin.DefaultRecommendationsTable;
 import com.drinksaver.service.DesignService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +22,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,22 +34,6 @@ class DesignServiceTest {
     private ColorPalettesTable colorPalettesTable;
     @Mock
     private GlasswareTable glasswareTable;
-    @Mock
-    private AlcoholTypesTable alcoholTypesTable;
-    @Mock
-    private AlcoholSubtypesTable alcoholSubtypesTable;
-    @Mock
-    private BrandsTable brandsTable;
-    @Mock
-    private BeerFlavoursTable beerFlavoursTable;
-    @Mock
-    private ConsumptionTypesTable consumptionTypesTable;
-    @Mock
-    private RecommendationsTable recommendationsTable;
-    @Mock
-    private DefaultRecommendationsTable defaultRecommendationsTable;
-    @Mock
-    private SavedDrinksTable savedDrinksTable;
     @InjectMocks
     private DesignService designService;
 
@@ -100,14 +78,16 @@ class DesignServiceTest {
         when(colorPalettesTable.existsById(3)).thenReturn(true);
         when(colorPalettesTable.existsById(8)).thenReturn(true);
         when(colorPalettesTable.existsById(9)).thenReturn(false);
-        when(savedDrinksTable.countByColorPaletteId(anyInt()))
-            .thenAnswer(invocation -> invocation.<Integer>getArgument(0) == 8 ? 1L : 0L);
+        doAnswer(invocation -> {
+            if (invocation.<Integer>getArgument(0) == 8) throw new DataIntegrityViolationException("palette in use");
+            return null;
+        }).when(colorPalettesTable).deleteById(anyInt());
 
         assertThat(designService.deleteColorPalette(3)).isEqualTo(204);
         assertThat(designService.deleteColorPalette(8)).isEqualTo(409);
         assertThat(designService.deleteColorPalette(9)).isEqualTo(404);
         verify(colorPalettesTable).deleteById(3);
-        verify(colorPalettesTable, never()).deleteById(8);
+        verify(colorPalettesTable).deleteById(8);
         verify(colorPalettesTable, never()).deleteById(9);
     }
 
@@ -152,14 +132,16 @@ class DesignServiceTest {
         when(glasswareTable.existsById(4)).thenReturn(true);
         when(glasswareTable.existsById(8)).thenReturn(true);
         when(glasswareTable.existsById(9)).thenReturn(false);
-        when(defaultRecommendationsTable.countByGlasswareId(anyInt()))
-            .thenAnswer(invocation -> invocation.<Integer>getArgument(0) == 8 ? 1L : 0L);
+        doAnswer(invocation -> {
+            if (invocation.<Integer>getArgument(0) == 8) throw new DataIntegrityViolationException("glassware in use");
+            return null;
+        }).when(glasswareTable).deleteById(anyInt());
 
         assertThat(designService.deleteGlassware(4)).isEqualTo(204);
         assertThat(designService.deleteGlassware(8)).isEqualTo(409);
         assertThat(designService.deleteGlassware(9)).isEqualTo(404);
         verify(glasswareTable).deleteById(4);
-        verify(glasswareTable, never()).deleteById(8);
+        verify(glasswareTable).deleteById(8);
         verify(glasswareTable, never()).deleteById(9);
     }
 }
