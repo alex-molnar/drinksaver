@@ -8,6 +8,7 @@ import com.drinksaver.model.dto.UpdateColorPalette;
 import com.drinksaver.model.dto.UpdateGlassware;
 import com.drinksaver.repository.schema.ColorPalettesTable;
 import com.drinksaver.repository.schema.GlasswareTable;
+import com.drinksaver.service.DesignService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,21 +25,21 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class DesignRepositoryTest {
+class DesignServiceTest {
 
     @Mock
     private ColorPalettesTable colorPalettesTable;
     @Mock
     private GlasswareTable glasswareTable;
     @InjectMocks
-    private DesignRepository designRepository;
+    private DesignService designService;
 
     @Test
     void listsColorPalettes() {
         List<ColorPalette> palettes = List.of(new ColorPalette());
         when(colorPalettesTable.findAll()).thenReturn(palettes);
 
-        assertThat(designRepository.getAvailableColorPalettes()).isSameAs(palettes);
+        assertThat(designService.getAvailableColorPalettes()).isSameAs(palettes);
     }
 
     @Test
@@ -46,7 +47,7 @@ class DesignRepositoryTest {
         NewColorPalette request = new NewColorPalette("Dusk", "#111", "#eee", "#000");
         when(colorPalettesTable.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ColorPalette saved = designRepository.saveColorPalette(request);
+        ColorPalette saved = designService.saveColorPalette(request);
 
         assertThat(saved.getName()).isEqualTo("Dusk");
         assertThat(saved.getField()).isEqualTo("#111");
@@ -61,10 +62,10 @@ class DesignRepositoryTest {
         when(colorPalettesTable.findById(3)).thenReturn(Optional.of(palette));
         when(colorPalettesTable.findById(9)).thenReturn(Optional.empty());
 
-        assertThat(designRepository.updateColorPalette(3, new UpdateColorPalette("Night", null, null, null)))
+        assertThat(designService.updateColorPalette(3, new UpdateColorPalette("Night", null, null, null)))
             .containsSame(palette);
         assertThat(palette.getName()).isEqualTo("Night");
-        assertThat(designRepository.updateColorPalette(9, new UpdateColorPalette(null, null, null, null))).isEmpty();
+        assertThat(designService.updateColorPalette(9, new UpdateColorPalette(null, null, null, null))).isEmpty();
         verify(colorPalettesTable, never()).save(any());
     }
 
@@ -73,8 +74,8 @@ class DesignRepositoryTest {
         when(colorPalettesTable.existsById(3)).thenReturn(true);
         when(colorPalettesTable.existsById(9)).thenReturn(false);
 
-        assertThat(designRepository.deleteColorPalette(3)).isTrue();
-        assertThat(designRepository.deleteColorPalette(9)).isFalse();
+        assertThat(designService.deleteColorPalette(3)).isTrue();
+        assertThat(designService.deleteColorPalette(9)).isFalse();
         verify(colorPalettesTable).deleteById(3);
         verify(colorPalettesTable, never()).deleteById(9);
     }
@@ -84,7 +85,7 @@ class DesignRepositoryTest {
         List<Glassware> items = List.of(new Glassware());
         when(glasswareTable.findAll()).thenReturn(items);
 
-        assertThat(designRepository.getAvailableGlasswareIcons()).isSameAs(items);
+        assertThat(designService.getAvailableGlasswareIcons()).isSameAs(items);
     }
 
     @Test
@@ -92,7 +93,7 @@ class DesignRepositoryTest {
         NewGlassware request = new NewGlassware("Pint", "<g/>", "<l/>", "<f/>");
         when(glasswareTable.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Glassware saved = designRepository.saveGlassware(request);
+        Glassware saved = designService.saveGlassware(request);
 
         assertThat(saved.getName()).isEqualTo("Pint");
         assertThat(saved.getG()).isEqualTo("<g/>");
@@ -107,10 +108,10 @@ class DesignRepositoryTest {
         when(glasswareTable.findById(4)).thenReturn(Optional.of(glassware));
         when(glasswareTable.findById(9)).thenReturn(Optional.empty());
 
-        assertThat(designRepository.updateGlassware(4, new UpdateGlassware(null, null, null, "<f/>")))
+        assertThat(designService.updateGlassware(4, new UpdateGlassware(null, null, null, "<f/>")))
             .containsSame(glassware);
         assertThat(glassware.getF()).isEqualTo("<f/>");
-        assertThat(designRepository.updateGlassware(9, new UpdateGlassware(null, null, null, null))).isEmpty();
+        assertThat(designService.updateGlassware(9, new UpdateGlassware(null, null, null, null))).isEmpty();
         verify(glasswareTable, never()).save(any());
     }
 
@@ -119,8 +120,8 @@ class DesignRepositoryTest {
         when(glasswareTable.existsById(4)).thenReturn(true);
         when(glasswareTable.existsById(9)).thenReturn(false);
 
-        assertThat(designRepository.deleteGlassware(4)).isTrue();
-        assertThat(designRepository.deleteGlassware(9)).isFalse();
+        assertThat(designService.deleteGlassware(4)).isTrue();
+        assertThat(designService.deleteGlassware(9)).isFalse();
         verify(glasswareTable).deleteById(4);
         verify(glasswareTable, never()).deleteById(9);
     }

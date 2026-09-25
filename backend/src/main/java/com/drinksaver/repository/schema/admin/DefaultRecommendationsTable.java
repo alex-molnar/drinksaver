@@ -42,4 +42,7 @@ public interface DefaultRecommendationsTable extends JpaRepository<DefaultRecomm
             WHERE ordered.id = r.id
             """, nativeQuery = true)  // TODO return result
     int updateDefaultRecommendationsOrderArray(@Param("recommendationIds") Integer[] recommendationIds, @Param("recommendationNames") String[] recommendationNames);
+
+    long countByColorPaletteId(Integer colorPaletteId);
+    long countByGlasswareId(Integer glasswareId);
 }

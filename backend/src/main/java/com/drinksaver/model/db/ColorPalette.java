@@ -1,6 +1,5 @@
 package com.drinksaver.model.db;
 
-import com.drinksaver.model.dto.NewColorPalette;
 import com.drinksaver.model.dto.UpdateColorPalette;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -32,10 +31,22 @@ public class ColorPalette {
     }
 
     public ColorPalette withOptionalUpdate(UpdateColorPalette updateColorPalette) {
-        this.name = updateColorPalette.name();
-        this.field = updateColorPalette.field();
-        this.inkLight = updateColorPalette.inkLight();
-        this.inkDark = updateColorPalette.inkDark();
+        if (updateColorPalette.name() != null) {
+            this.name = updateColorPalette.name();
+        }
+        if (updateColorPalette.field() != null) {
+            this.field = updateColorPalette.field();
+        }
+        if (updateColorPalette.inkLight() != null && updateColorPalette.inkLight().isEmpty()) {
+            this.inkLight = null;
+        } else if(updateColorPalette.inkLight() != null) {
+            this.inkLight = updateColorPalette.inkLight();
+        }
+        if (updateColorPalette.inkDark() != null && updateColorPalette.inkDark().isEmpty()) {
+            this.inkDark = null;
+        } else if (updateColorPalette.inkDark() != null) {
+            this.inkDark = updateColorPalette.inkDark();
+        }
         return this;
     }
 }
