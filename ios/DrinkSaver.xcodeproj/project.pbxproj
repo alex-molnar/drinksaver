@@ -10,6 +10,13 @@
 		A00900000000000000000001 /* KeychainAuthorizationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000002 /* KeychainAuthorizationStore.swift */; };
 		A00900000000000000000003 /* KeychainAuthorizationStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000004 /* KeychainAuthorizationStoreTests.swift */; };
 		A00900000000000000000005 /* InMemoryAuthorizationDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00900000000000000000006 /* InMemoryAuthorizationDataStore.swift */; };
+		A01000000000000000000001 /* AppAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A01000000000000000000008 /* AppAuth */; };
+		A01000000000000000000010 /* SessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01000000000000000000011 /* SessionStoreTests.swift */; };
+		A01000000000000000000012 /* AuthorizationProviding.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01000000000000000000013 /* AuthorizationProviding.swift */; };
+		A01000000000000000000014 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01000000000000000000015 /* SessionStore.swift */; };
+		A01000000000000000000016 /* AppAuthClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01000000000000000000017 /* AppAuthClient.swift */; };
+		A01000000000000000000018 /* AppAuthClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01000000000000000000019 /* AppAuthClientTests.swift */; };
+		A01000000000000000000021 /* AppAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A01000000000000000000020 /* AppAuth */; };
 		A00800000000000000000001 /* DrinkSaverAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00800000000000000000002 /* DrinkSaverAPI.swift */; };
 		A00800000000000000000003 /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00800000000000000000004 /* APIError.swift */; };
 		A00800000000000000000005 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00800000000000000000006 /* APIClient.swift */; };
@@ -79,6 +86,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A01000000000000000000011 /* SessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoreTests.swift; sourceTree = "<group>"; };
+		A01000000000000000000013 /* AuthorizationProviding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizationProviding.swift; sourceTree = "<group>"; };
+		A01000000000000000000015 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
+		A01000000000000000000017 /* AppAuthClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAuthClient.swift; sourceTree = "<group>"; };
+		A01000000000000000000019 /* AppAuthClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAuthClientTests.swift; sourceTree = "<group>"; };
 		A00900000000000000000002 /* KeychainAuthorizationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainAuthorizationStore.swift; sourceTree = "<group>"; };
 		A00900000000000000000004 /* KeychainAuthorizationStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainAuthorizationStoreTests.swift; sourceTree = "<group>"; };
 		A00900000000000000000006 /* InMemoryAuthorizationDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemoryAuthorizationDataStore.swift; sourceTree = "<group>"; };
@@ -154,6 +166,8 @@
 		4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */ = {
 			isa = PBXGroup;
 			children = (
+				A01000000000000000000019 /* AppAuthClientTests.swift */,
+				A01000000000000000000011 /* SessionStoreTests.swift */,
 				A00900000000000000000004 /* KeychainAuthorizationStoreTests.swift */,
 				A00900000000000000000006 /* InMemoryAuthorizationDataStore.swift */,
 				A00800000000000000000008 /* APIClientTests.swift */,
@@ -251,6 +265,9 @@
 		A00900000000000000000007 /* Auth */ = {
 			isa = PBXGroup;
 			children = (
+				A01000000000000000000017 /* AppAuthClient.swift */,
+				A01000000000000000000013 /* AuthorizationProviding.swift */,
+				A01000000000000000000015 /* SessionStore.swift */,
 				A00900000000000000000002 /* KeychainAuthorizationStore.swift */,
 			);
 			path = Auth;
@@ -368,6 +385,7 @@
 			buildConfigurationList = 920117F9ECB576EF24EF9338 /* Build configuration list for PBXNativeTarget "DrinkSaver" */;
 			buildPhases = (
 				0FB68DEB996931938D5907E3 /* Sources */,
+				A01000000000000000000009 /* Frameworks */,
 				0EC21C9471A921CD5F9F3BC1 /* Resources */,
 			);
 			buildRules = (
@@ -376,6 +394,7 @@
 			);
 			name = DrinkSaver;
 			packageProductDependencies = (
+				A01000000000000000000008 /* AppAuth */,
 			);
 			productName = DrinkSaver;
 			productReference = FE1EE1EA4717F66BA70DCC39 /* DrinkSaver.app */;
@@ -386,6 +405,7 @@
 			buildConfigurationList = 1BFFB21DAC097EDF8B722685 /* Build configuration list for PBXNativeTarget "DrinkSaverTests" */;
 			buildPhases = (
 				CBED85C9E44991D8B5EA2A14 /* Sources */,
+				A01000000000000000000022 /* Frameworks */,
 				9053FBC6D0C32F126D28E332 /* Resources */,
 			);
 			buildRules = (
@@ -395,6 +415,7 @@
 			);
 			name = DrinkSaverTests;
 			packageProductDependencies = (
+				A01000000000000000000020 /* AppAuth */,
 			);
 			productName = DrinkSaverTests;
 			productReference = 6249F444B47593A4E53A8431 /* DrinkSaverTests.xctest */;
@@ -430,6 +451,9 @@
 			productRefGroup = 1B722D7851D8AAF271BDF66A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
+			packageReferences = (
+				A01000000000000000000007 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */,
+			);
 			targets = (
 				DBCB89BB37C2FEC5C6894FD8 /* DrinkSaver */,
 				F3A1B47D3802FD2149479EC6 /* DrinkSaverTests */,
@@ -437,6 +461,25 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A01000000000000000000009 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A01000000000000000000001 /* AppAuth in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A01000000000000000000022 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A01000000000000000000021 /* AppAuth in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXResourcesBuildPhase section */
 		0EC21C9471A921CD5F9F3BC1 /* Resources */ = {
@@ -479,6 +522,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A01000000000000000000016 /* AppAuthClient.swift in Sources */,
+				A01000000000000000000012 /* AuthorizationProviding.swift in Sources */,
+				A01000000000000000000014 /* SessionStore.swift in Sources */,
 				A00900000000000000000001 /* KeychainAuthorizationStore.swift in Sources */,
 				A00800000000000000000001 /* DrinkSaverAPI.swift in Sources */,
 				A00800000000000000000003 /* APIError.swift in Sources */,
@@ -513,6 +559,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A01000000000000000000018 /* AppAuthClientTests.swift in Sources */,
+				A01000000000000000000010 /* SessionStoreTests.swift in Sources */,
 				A00900000000000000000003 /* KeychainAuthorizationStoreTests.swift in Sources */,
 				A00900000000000000000005 /* InMemoryAuthorizationDataStore.swift in Sources */,
 				A00800000000000000000007 /* APIClientTests.swift in Sources */,
@@ -960,6 +1008,30 @@
 			defaultConfigurationName = Local;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A01000000000000000000007 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/openid/AppAuth-iOS.git";
+			requirement = {
+				kind = exactVersion;
+				version = 2.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A01000000000000000000008 /* AppAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A01000000000000000000007 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */;
+			productName = AppAuth;
+		};
+		A01000000000000000000020 /* AppAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A01000000000000000000007 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */;
+			productName = AppAuth;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = BA5F042B9F30E169B630AFBE /* Project object */;
 }
