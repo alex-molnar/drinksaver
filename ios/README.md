@@ -30,6 +30,14 @@ queue-backed saving and saved feedback with an accessible status. `QuickSaveStor
 through `SaveQueueStore`, uses the current drinking-day date and selected design, and delays a
 recommendation refresh until queued saves or undo operations finish.
 
+## History
+
+`HistoryView` shows an oldest-first seven-day strip and a paper-style selected-day view. Each date
+loads and caches independently; selecting an earlier date opens the native calendar picker, while
+future dates are unavailable. Loading, retryable error, empty, and populated states are local to
+the selected date. The current drinking date reads from the same `CurrentDrinkingDayStore` as Quick,
+and pending queue inserts and deletions are reflected in the visible rows and counts.
+
 ## Add a drink
 
 The Add sheet retains one draft across its nested drink, size, subtype, serving, brand, and flavour

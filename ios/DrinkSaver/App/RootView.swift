@@ -8,6 +8,7 @@ struct RootView: View {
     @Environment(CurrentDrinkingDayStore.self) private var currentDrinkingDayStore
     @Environment(QuickSaveStore.self) private var quickSaveStore
     @Environment(AddDrinkStore.self) private var addDrinkStore
+    @Environment(HistoryStore.self) private var historyStore
     @Environment(AppCoordinator.self) private var appCoordinator
 
     var body: some View {
@@ -38,7 +39,10 @@ struct RootView: View {
         .preferredColorScheme(themeStore.mode == .dark ? .dark : .light)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("app.root")
-        .onChange(of: saveQueueStore?.state) { _, _ in quickSaveStore.queueDidChange() }
+        .onChange(of: saveQueueStore?.state) { _, _ in
+            quickSaveStore.queueDidChange()
+            historyStore.queueDidChange()
+        }
         .task(id: sessionStore.userID) {
             if sessionStore.userID == nil {
                 appCoordinator.sessionDidSignOut()
@@ -47,6 +51,7 @@ struct RootView: View {
                 currentDrinkingDayStore.sessionDidSignOut()
                 quickSaveStore.sessionDidSignOut()
                 addDrinkStore.sessionDidSignOut()
+                historyStore.sessionDidSignOut()
             } else {
                 await designCatalogueStore.load()
                 await currentDrinkingDayStore.load()
@@ -79,6 +84,7 @@ struct RootView: View {
     let coordinator = AppCoordinator()
     let addDrinkStore = AddDrinkStore(api: nil, queue: queueStore, day: drinkingDayStore,
                                       designs: catalogueStore, session: sessionStore, coordinator: coordinator)
+    let historyStore = HistoryStore(api: nil, queue: queueStore, drinkingDay: drinkingDayStore, session: sessionStore)
     RootView()
         .environment(ThemeStore())
         .environment(sessionStore)
@@ -88,4 +94,5 @@ struct RootView: View {
         .environment(quickSaveStore)
         .environment(coordinator)
         .environment(addDrinkStore)
+        .environment(historyStore)
 }

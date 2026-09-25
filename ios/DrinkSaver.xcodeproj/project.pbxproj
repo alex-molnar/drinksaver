@@ -17,6 +17,10 @@
 		A01300000000000000000015 /* PlateGridSkeleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000005 /* PlateGridSkeleton.swift */; };
 		A01300000000000000000016 /* QuickSaveStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000006 /* QuickSaveStoreTests.swift */; };
 		A01400000000000000000011 /* AddDrinkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01400000000000000000001 /* AddDrinkStore.swift */; };
+		A01700000000000000000011 /* HistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01700000000000000000001 /* HistoryStore.swift */; };
+		A01700000000000000000012 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01700000000000000000002 /* HistoryView.swift */; };
+		A01700000000000000000013 /* HistoryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01700000000000000000003 /* HistoryStoreTests.swift */; };
+		A01700000000000000000014 /* HistoryReadUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01700000000000000000004 /* HistoryReadUITests.swift */; };
 		A01300000000000000000017 /* QuickSaveLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000007 /* QuickSaveLayoutTests.swift */; };
 		A01300000000000000000018 /* QuickSaveUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000008 /* QuickSaveUITests.swift */; };
 		A01200000000000000000007 /* AppCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01200000000000000000008 /* AppCoordinatorTests.swift */; };
@@ -127,6 +131,10 @@
 		A01300000000000000000007 /* QuickSaveLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickSaveLayoutTests.swift; sourceTree = "<group>"; };
 		A01300000000000000000008 /* QuickSaveUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickSaveUITests.swift; sourceTree = "<group>"; };
 		A01400000000000000000001 /* AddDrinkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddDrinkStore.swift; sourceTree = "<group>"; };
+		A01700000000000000000001 /* HistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryStore.swift; sourceTree = "<group>"; };
+		A01700000000000000000002 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		A01700000000000000000003 /* HistoryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryStoreTests.swift; sourceTree = "<group>"; };
+		A01700000000000000000004 /* HistoryReadUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryReadUITests.swift; sourceTree = "<group>"; };
 		A01200000000000000000008 /* AppCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinatorTests.swift; sourceTree = "<group>"; };
 		A01200000000000000000010 /* AppFrameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFrameTests.swift; sourceTree = "<group>"; };
 		A01200000000000000000012 /* AppFrameUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFrameUITests.swift; sourceTree = "<group>"; };
@@ -233,6 +241,7 @@
 		4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */ = {
 			isa = PBXGroup;
 			children = (
+				A01700000000000000000003 /* HistoryStoreTests.swift */,
 				A01300000000000000000006 /* QuickSaveStoreTests.swift */,
 				A01300000000000000000007 /* QuickSaveLayoutTests.swift */,
 				A01200000000000000000008 /* AppCoordinatorTests.swift */,
@@ -413,6 +422,7 @@
 		CB37CFD8A3EF0482029730F5 /* DrinkSaverUITests */ = {
 			isa = PBXGroup;
 			children = (
+				A01700000000000000000004 /* HistoryReadUITests.swift */,
 				A01300000000000000000008 /* QuickSaveUITests.swift */,
 				A01200000000000000000012 /* AppFrameUITests.swift */,
 				A003A000000000000000000A /* FixtureHarnessUITests.swift */,
@@ -424,6 +434,7 @@
 		EB017125E6B6546232F6720C /* DrinkSaver */ = {
 			isa = PBXGroup;
 			children = (
+				A01700000000000000000020 /* History */,
 				A01400000000000000000020 /* AddDrink */,
 				A01300000000000000000020 /* QuickSave */,
 				414A53BECCA22B346362E0C7 /* Info-Local.plist */,
@@ -432,6 +443,12 @@
 				AE5E9CD6FB62921779A34391 /* Shared */,
 			);
 			path = DrinkSaver;
+			sourceTree = "<group>";
+		};
+		A01700000000000000000020 /* History */ = {
+			isa = PBXGroup;
+			children = (A01700000000000000000001 /* HistoryStore.swift */, A01700000000000000000002 /* HistoryView.swift */ ,);
+			path = Features/History;
 			sourceTree = "<group>";
 		};
 		A01400000000000000000020 /* AddDrink */ = {
@@ -644,6 +661,8 @@
 				A01200000000000000000005 /* AppFrame.swift in Sources */,
 				A01300000000000000000011 /* QuickSaveStore.swift in Sources */,
 				A01400000000000000000011 /* AddDrinkStore.swift in Sources */,
+				A01700000000000000000011 /* HistoryStore.swift in Sources */,
+				A01700000000000000000012 /* HistoryView.swift in Sources */,
 				A01300000000000000000012 /* QuickSaveView.swift in Sources */,
 				A01300000000000000000013 /* PlateView.swift in Sources */,
 				A01300000000000000000014 /* PlateGridView.swift in Sources */,
@@ -684,6 +703,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A01700000000000000000014 /* HistoryReadUITests.swift in Sources */,
 				A01200000000000000000011 /* AppFrameUITests.swift in Sources */,
 				A01300000000000000000018 /* QuickSaveUITests.swift in Sources */,
 				A003A0000000000000000009 /* FixtureHarnessUITests.swift in Sources */,
@@ -695,6 +715,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A01700000000000000000013 /* HistoryStoreTests.swift in Sources */,
 				A01200000000000000000007 /* AppCoordinatorTests.swift in Sources */,
 				A01200000000000000000009 /* AppFrameTests.swift in Sources */,
 				A01300000000000000000016 /* QuickSaveStoreTests.swift in Sources */,

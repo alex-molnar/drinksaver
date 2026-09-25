@@ -101,7 +101,7 @@ struct AppFrame: View {
         case .quick:
             QuickSaveView()
         case .history:
-            Color.clear.accessibilityLabel("History screen")
+            HistoryView()
         case .recommendations:
             Color.clear.accessibilityLabel("Recommendations screen")
         }
