@@ -6,6 +6,7 @@ struct RootView: View {
     @Environment(DesignCatalogueStore.self) private var designCatalogueStore
     @Environment(SaveQueueStore.self) private var saveQueueStore: SaveQueueStore?
     @Environment(CurrentDrinkingDayStore.self) private var currentDrinkingDayStore
+    @Environment(QuickSaveStore.self) private var quickSaveStore
     @Environment(AppCoordinator.self) private var appCoordinator
 
     var body: some View {
@@ -42,6 +43,7 @@ struct RootView: View {
                 designCatalogueStore.sessionDidSignOut()
                 saveQueueStore?.sessionDidSignOut()
                 currentDrinkingDayStore.sessionDidSignOut()
+                quickSaveStore.sessionDidSignOut()
             } else {
                 await designCatalogueStore.load()
                 await currentDrinkingDayStore.load()
@@ -66,11 +68,17 @@ struct RootView: View {
 #Preview {
     let sessionStore = SessionStore(authorizationProvider: nil)
     let queueStore = SaveQueueStore(api: nil, sessionStore: sessionStore, configuration: nil)
+    let catalogueStore = DesignCatalogueStore(api: nil, sessionStore: sessionStore)
+    let drinkingDayStore = CurrentDrinkingDayStore(api: nil, queueStore: queueStore, sessionStore: sessionStore)
+    let quickSaveStore = QuickSaveStore(api: nil, sessionStore: sessionStore, designCatalogueStore: catalogueStore,
+                                        queueStore: queueStore, drinkingDayStore: drinkingDayStore,
+                                        coordinator: AppCoordinator())
     RootView()
         .environment(ThemeStore())
         .environment(sessionStore)
-        .environment(DesignCatalogueStore(api: nil, sessionStore: sessionStore))
+        .environment(catalogueStore)
         .environment(queueStore)
-        .environment(CurrentDrinkingDayStore(api: nil, queueStore: queueStore, sessionStore: sessionStore))
+        .environment(drinkingDayStore)
+        .environment(quickSaveStore)
         .environment(AppCoordinator())
 }

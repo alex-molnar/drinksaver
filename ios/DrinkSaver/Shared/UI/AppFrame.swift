@@ -89,7 +89,7 @@ struct AppFrame: View {
     private var content: some View {
         switch coordinator.currentScreen {
         case .quick:
-            Color.clear.accessibilityLabel("Quick screen")
+            QuickSaveView()
         case .history:
             Color.clear.accessibilityLabel("History screen")
         case .recommendations:

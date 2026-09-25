@@ -45,6 +45,7 @@ private final class FixtureAuthorizationProvider: AuthorizationProviding {
 
 private actor FixtureAPI: DrinkSaverAPI {
     private let fails: Bool
+    private var nextDrinkID = 401
 
     init(fails: Bool) { self.fails = fails }
 
@@ -65,6 +66,30 @@ private actor FixtureAPI: DrinkSaverAPI {
             EditableDrink(id: 302, name: "Fixture drink two", alcoholTypeId: 1)
         ]
     }
+
+    func recommendations() async throws -> [Recommendation] {
+        if fails { throw FixtureAPIError.unavailable }
+        return [
+            Recommendation(id: nil, userId: "ui-fixture-user", name: "Golden lager", alcoholTypeId: 4,
+                           alcoholSubtypeId: nil, alcoholVolumeId: 6, brandId: nil, beerFlavourId: nil,
+                           consumptionTypeId: nil, endDate: nil, colorPaletteId: 101, glasswareId: 201, orderNumber: 0),
+            Recommendation(id: 9, userId: "ui-fixture-user", name: "House pilsner", alcoholTypeId: 3,
+                           alcoholSubtypeId: nil, alcoholVolumeId: 5, brandId: 7, beerFlavourId: nil,
+                           consumptionTypeId: nil, endDate: nil, colorPaletteId: 101, glasswareId: 201, orderNumber: 1)
+        ]
+    }
+
+    func saveDrink(_ request: DrinkSaveRequest) async throws -> [SavedDrink] {
+        if fails { throw FixtureAPIError.unavailable }
+        defer { nextDrinkID += 1 }
+        return [SavedDrink(id: nextDrinkID, userId: "ui-fixture-user", date: request.date ?? "",
+                           alcoholTypeId: request.alcoholTypeId, alcoholSubtypeId: request.alcoholSubtypeId,
+                           alcoholVolumeId: request.alcoholVolumeId, brandId: request.brandId,
+                           beerFlavourId: request.beerFlavourId, consumptionTypeId: request.consumptionTypeId,
+                           colorPaletteId: request.colorPaletteId, glasswareId: request.glasswareId, comments: nil)]
+    }
+
+    func deleteDrinks(ids: [Int]) async throws -> Int { ids.count }
 }
 
 private enum FixtureAPIError: Error {
