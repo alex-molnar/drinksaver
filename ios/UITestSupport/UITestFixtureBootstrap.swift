@@ -23,7 +23,8 @@ struct UITestFixtureBootstrap {
         self.fixture = fixture
         let authorization = FixtureAuthorizationProvider()
         sessionStore = SessionStore(authorizationProvider: authorization)
-        api = FixtureAPI(fails: fixture.identifier == "signed-in-api-failure")
+        api = FixtureAPI(fails: fixture.identifier == "signed-in-api-failure",
+                         saveFails: fixture.identifier == "signed-in-save-failure")
         clock = FixtureClock(now: fixture.fixedNow)
     }
 }
@@ -45,9 +46,13 @@ private final class FixtureAuthorizationProvider: AuthorizationProviding {
 
 private actor FixtureAPI: DrinkSaverAPI {
     private let fails: Bool
+    private let saveFails: Bool
     private var nextDrinkID = 401
 
-    init(fails: Bool) { self.fails = fails }
+    init(fails: Bool, saveFails: Bool) {
+        self.fails = fails
+        self.saveFails = saveFails
+    }
 
     func palettes() async throws -> [Palette] {
         if fails { throw FixtureAPIError.unavailable }
@@ -80,7 +85,7 @@ private actor FixtureAPI: DrinkSaverAPI {
     }
 
     func saveDrink(_ request: DrinkSaveRequest) async throws -> [SavedDrink] {
-        if fails { throw FixtureAPIError.unavailable }
+        if fails || saveFails { throw FixtureAPIError.unavailable }
         defer { nextDrinkID += 1 }
         return [SavedDrink(id: nextDrinkID, userId: "ui-fixture-user", date: request.date ?? "",
                            alcoholTypeId: request.alcoholTypeId, alcoholSubtypeId: request.alcoholSubtypeId,

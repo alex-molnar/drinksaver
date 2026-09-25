@@ -24,15 +24,32 @@ final class QuickSaveUITests: XCTestCase {
         first.tap()
         XCTAssertTrue(first.waitForExistence(timeout: 3))
         XCTAssertEqual(first.value as? String, "Saved")
+        let undo = app.buttons["quick.queue.undo"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 3))
+        undo.tap()
+        XCTAssertFalse(undo.waitForExistence(timeout: 1))
 
         app.buttons["quick.plate.add"].tap()
         XCTAssertTrue(app.otherElements["frame.add-sheet"].waitForExistence(timeout: 3))
     }
 
-    private func launchSignedIn() -> XCUIApplication {
+    func testFailedSaveExposesRetryAction() {
+        let app = launchSignedIn(fixture: "signed-in-save-failure")
+        let first = app.buttons["quick.plate.null-4-6-null"]
+        XCTAssertTrue(first.waitForExistence(timeout: 5))
+        first.tap()
+
+        let retry = app.buttons["quick.queue.retry"]
+        XCTAssertTrue(retry.waitForExistence(timeout: 5))
+        retry.tap()
+        XCTAssertTrue(retry.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["quick.queue.message"].exists)
+    }
+
+    private func launchSignedIn(fixture: String = "signed-in") -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
-            "-ui-fixture", "signed-in",
+            "-ui-fixture", fixture,
             "-ui-fixed-now", "2026-01-02T03:04:05Z",
             "-ui-locale", "en-US",
             "-ui-content-size", "large",

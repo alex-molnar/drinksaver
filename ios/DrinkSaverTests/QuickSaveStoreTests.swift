@@ -71,7 +71,8 @@ final class QuickSaveStoreTests: XCTestCase {
     func testRecommendationRefreshWaitsForQueueSaveToFinish() async {
         let gate = QuickSaveGate()
         let api = QuickSaveTestAPI(saveGate: gate)
-        let graph = await makeGraph(api: api)
+        let clock = AdjustableQuickSaveClock(date(2026, 9, 25, 20))
+        let graph = await makeGraph(api: api, clock: clock)
         await graph.quick.load()
         graph.quick.save(rec)
 
@@ -83,8 +84,59 @@ final class QuickSaveStoreTests: XCTestCase {
         await gate.release()
         await waitUntil { graph.queue.currentFeedback != nil }
         graph.quick.queueDidChange()
+        try? await Task.sleep(for: .milliseconds(50))
+        let requestCountBeforeUndoExpires = await api.recommendationRequestCount()
+        XCTAssertEqual(requestCountBeforeUndoExpires, 1)
+
+        clock.now = clock.now.addingTimeInterval(7)
+        graph.queue.expireDueEntries()
+        graph.quick.queueDidChange()
         await waitUntil { await api.recommendationRequestCount() == 2 }
         XCTAssertEqual(graph.quick.state, .ready([rec]))
+    }
+
+    func testSaveUsesRawServerCountWhenPendingDeleteReducesVisibleCount() async {
+        let api = QuickSaveTestAPI(initialDrinks: [EditableDrink(id: 1, name: "One", alcoholTypeId: 4),
+                                                   EditableDrink(id: 2, name: "Two", alcoholTypeId: 4),
+                                                   EditableDrink(id: 3, name: "Three", alcoholTypeId: 4)])
+        let graph = await makeGraph(api: api)
+        await graph.day.load()
+        await graph.quick.load()
+        _ = graph.queue.delete(DeleteOperation(label: "One", date: graph.day.date, drinkIDs: [1]))
+
+        XCTAssertEqual(graph.day.visibleCount, 2)
+        XCTAssertEqual(graph.day.serverRowCount, 3)
+        graph.quick.save(rec)
+
+        guard case .save(let operation)? = graph.queue.state.entries.last?.kind else {
+            return XCTFail("Expected a queued recommendation save")
+        }
+        XCTAssertEqual(operation.rowCountBaseline, 3)
+    }
+
+    func testSuccessfulSavesRefreshServerSnapshotBeforeCommittedEntriesArePruned() async {
+        let api = QuickSaveTestAPI()
+        let clock = AdjustableQuickSaveClock(date(2026, 9, 25, 20))
+        let graph = await makeGraph(api: api, clock: clock)
+        await graph.day.load()
+        await graph.quick.load()
+
+        graph.quick.save(rec)
+        await waitUntil { graph.queue.currentFeedback != nil }
+        graph.quick.queueDidChange()
+        await waitUntil { graph.day.serverDrinks.contains { $0.id == 45 } }
+        XCTAssertEqual(graph.quick.currentDayCount, 1)
+
+        clock.now = clock.now.addingTimeInterval(7)
+        graph.queue.expireDueEntries()
+        graph.quick.queueDidChange()
+        graph.quick.save(rec)
+        await waitUntil { graph.queue.state.entries.contains { $0.drinkIDs == [46] } }
+        graph.quick.queueDidChange()
+        await waitUntil { graph.day.serverDrinks.contains { $0.id == 46 } }
+
+        XCTAssertEqual(graph.quick.currentDayCount, 2)
+        XCTAssertTrue(graph.day.serverDrinks.contains { $0.id == 45 })
     }
 
     func testSharedCountTracksUndoAndDrinkingDayRollover() async {
@@ -125,7 +177,7 @@ final class QuickSaveStoreTests: XCTestCase {
         await designs.load()
         let quick = QuickSaveStore(api: api, sessionStore: session, designCatalogueStore: designs,
                                    queueStore: queue, drinkingDayStore: day, coordinator: AppCoordinator())
-        return Graph(quick: quick, queue: queue, day: day)
+        return Graph(quick: quick, queue: queue, day: day, clock: clock)
     }
 
     private func date(_ year: Int, _ month: Int, _ day: Int, _ hour: Int, _ minute: Int = 0) -> Date {
@@ -152,6 +204,7 @@ final class QuickSaveStoreTests: XCTestCase {
         let quick: QuickSaveStore
         let queue: SaveQueueStore
         let day: CurrentDrinkingDayStore
+        let clock: AdjustableQuickSaveClock
     }
 }
 
@@ -186,9 +239,10 @@ private actor QuickSaveTestAPI: DrinkSaverAPI {
     private var drinks: [EditableDrink] = []
     private let saveGate: QuickSaveGate?
 
-    init(recommendationFailure: Bool = false, saveGate: QuickSaveGate? = nil) {
+    init(recommendationFailure: Bool = false, saveGate: QuickSaveGate? = nil, initialDrinks: [EditableDrink] = []) {
         self.recommendationFailure = recommendationFailure
         self.saveGate = saveGate
+        self.drinks = initialDrinks
     }
 
     func recommendations() async throws -> [Recommendation] {
@@ -204,12 +258,13 @@ private actor QuickSaveTestAPI: DrinkSaverAPI {
     func saveDrink(_ request: DrinkSaveRequest) async throws -> [SavedDrink] {
         saves.append(request)
         await saveGate?.arriveAndWait()
-        let row = SavedDrink(id: 44, userId: "user", date: request.date ?? "", alcoholTypeId: request.alcoholTypeId,
+        let id = 44 + saves.count
+        let row = SavedDrink(id: id, userId: "user", date: request.date ?? "", alcoholTypeId: request.alcoholTypeId,
                              alcoholSubtypeId: request.alcoholSubtypeId, alcoholVolumeId: request.alcoholVolumeId,
                              brandId: request.brandId, beerFlavourId: request.beerFlavourId,
                              consumptionTypeId: request.consumptionTypeId, colorPaletteId: request.colorPaletteId,
                              glasswareId: request.glasswareId, comments: nil)
-        drinks = [EditableDrink(id: row.id, name: "House pilsner", alcoholTypeId: row.alcoholTypeId)]
+        drinks.append(EditableDrink(id: row.id, name: "House pilsner", alcoholTypeId: row.alcoholTypeId))
         return [row]
     }
 

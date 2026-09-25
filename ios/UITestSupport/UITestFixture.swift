@@ -20,7 +20,7 @@ struct UITestFixture: Sendable {
         guard arguments.contains(where: fixtureArguments.contains) else { return nil }
 
         let identifier = try requiredValue(for: "-ui-fixture", in: arguments)
-        guard ["signed-in", "signed-in-api-failure"].contains(identifier) else {
+        guard ["signed-in", "signed-in-api-failure", "signed-in-save-failure"].contains(identifier) else {
             throw InvalidUITestFixtureArguments("Unknown UI fixture '\(identifier)'.")
         }
         let dateText = try requiredValue(for: "-ui-fixed-now", in: arguments)

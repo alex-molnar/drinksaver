@@ -35,6 +35,7 @@ final class QuickSaveStore {
     private var isLoading = false
     private var hasLoaded = false
     private var refreshWhenQueueIdle = false
+    private var refreshedDayAfterSaveIDs = Set<UUID>()
 
     init(
         api: (any DrinkSaverAPI)?,
@@ -99,10 +100,26 @@ final class QuickSaveStore {
         activeRecommendationKey = nil
         hasLoaded = false
         refreshWhenQueueIdle = false
+        refreshedDayAfterSaveIDs.removeAll()
         state = .loading
     }
 
     func queueDidChange() {
+        let queuedSaveIDs = Set(queueStore.state.entries.compactMap { entry -> UUID? in
+            guard case .save = entry.kind else { return nil }
+            return entry.id
+        })
+        refreshedDayAfterSaveIDs.formIntersection(queuedSaveIDs)
+        for entry in queueStore.state.entries where !refreshedDayAfterSaveIDs.contains(entry.id) {
+            guard case .save = entry.kind else { continue }
+            switch entry.status {
+            case .undoable, .committed:
+                refreshedDayAfterSaveIDs.insert(entry.id)
+                Task { await drinkingDayStore.load() }
+            case .saving, .undoing, .failed:
+                continue
+            }
+        }
         guard refreshWhenQueueIdle, !queueHasInFlightOperation, !isLoading else { return }
         Task { await load() }
     }
@@ -116,7 +133,7 @@ final class QuickSaveStore {
     }
 
     func save(_ recommendation: Recommendation) {
-        guard !queueHasInFlightOperation,
+        guard !queueHasNetworkOperation,
               case .ready(let recommendations) = state,
               recommendations.contains(where: { Self.key(for: $0) == Self.key(for: recommendation) }),
               let alcoholTypeID = recommendation.alcoholTypeId,
@@ -138,7 +155,7 @@ final class QuickSaveStore {
             date: drinkingDayStore.date,
             alcoholTypeID: alcoholTypeID,
             payload: request,
-            rowCountBaseline: drinkingDayStore.visibleCount
+            rowCountBaseline: drinkingDayStore.state == .ready ? drinkingDayStore.serverRowCount : nil
         ))
         activeRecommendationKey = Self.key(for: recommendation)
         activeQueueEntryID = entryID
@@ -155,6 +172,16 @@ final class QuickSaveStore {
     }
 
     private var queueHasInFlightOperation: Bool {
+        queueStore.state.entries.contains { entry in
+            switch entry.status {
+            case .saving, .undoing: true
+            case .failed, .committed: false
+            case .undoable: true
+            }
+        }
+    }
+
+    private var queueHasNetworkOperation: Bool {
         queueStore.state.entries.contains { entry in
             switch entry.status {
             case .saving, .undoing: true

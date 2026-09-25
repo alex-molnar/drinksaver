@@ -37,6 +37,7 @@ struct RootView: View {
         .preferredColorScheme(themeStore.mode == .dark ? .dark : .light)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("app.root")
+        .onChange(of: saveQueueStore?.state) { _, _ in quickSaveStore.queueDidChange() }
         .task(id: sessionStore.userID) {
             if sessionStore.userID == nil {
                 appCoordinator.sessionDidSignOut()
