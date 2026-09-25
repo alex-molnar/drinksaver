@@ -13,6 +13,8 @@
 		A003A000000000000000000B /* UITestFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003A000000000000000000C /* UITestFixtureTests.swift */; };
 		A010A0000000000000000001 /* DesignCatalogueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A010A0000000000000000002 /* DesignCatalogueStore.swift */; };
 		A010A0000000000000000003 /* DesignCatalogueStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A010A0000000000000000004 /* DesignCatalogueStoreTests.swift */; };
+		A011A0000000000000000001 /* CurrentDrinkingDayStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A011A0000000000000000002 /* CurrentDrinkingDayStore.swift */; };
+		A011A0000000000000000003 /* CurrentDrinkingDayStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A011A0000000000000000004 /* CurrentDrinkingDayStoreTests.swift */; };
 		704C47C324C94603969638EB /* SaveQueueReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CEB6D87B14F4E63BE9E4060 /* SaveQueueReducer.swift */; };
 		3DD7ECE6843441DF86E0D5D4 /* SaveQueueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 092CB91F54E64844A87654DC /* SaveQueueStore.swift */; };
 		ED49EA49518F4771AF8796C1 /* PendingDeleteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 064A1381C0C8414EB688FC34 /* PendingDeleteStore.swift */; };
@@ -104,6 +106,8 @@
 		A003A000000000000000000C /* UITestFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixtureTests.swift; sourceTree = "<group>"; };
 		A010A0000000000000000002 /* DesignCatalogueStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignCatalogueStore.swift; sourceTree = "<group>"; };
 		A010A0000000000000000004 /* DesignCatalogueStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignCatalogueStoreTests.swift; sourceTree = "<group>"; };
+		A011A0000000000000000002 /* CurrentDrinkingDayStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentDrinkingDayStore.swift; sourceTree = "<group>"; };
+		A011A0000000000000000004 /* CurrentDrinkingDayStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentDrinkingDayStoreTests.swift; sourceTree = "<group>"; };
 		9CEB6D87B14F4E63BE9E4060 /* SaveQueueReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveQueueReducer.swift; sourceTree = "<group>"; };
 		092CB91F54E64844A87654DC /* SaveQueueStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveQueueStore.swift; sourceTree = "<group>"; };
 		064A1381C0C8414EB688FC34 /* PendingDeleteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingDeleteStore.swift; sourceTree = "<group>"; };
@@ -199,6 +203,7 @@
 		4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */ = {
 			isa = PBXGroup;
 			children = (
+				A011A0000000000000000004 /* CurrentDrinkingDayStoreTests.swift */,
 				A23D4BF1577A44D1AAA1FAB3 /* SaveQueueReducerTests.swift */,
 				9DA5863CF8A34FCCB887964F /* SaveQueueStoreTests.swift */,
 				598C7941754A413C870F7699 /* PendingDeleteStoreTests.swift */,
@@ -273,6 +278,7 @@
 		7F8A12936E40DEE71F82599E /* Domain */ = {
 			isa = PBXGroup;
 			children = (
+				A011A0000000000000000002 /* CurrentDrinkingDayStore.swift */,
 				B2CE8C69FF67A744EEF90A85 /* Clock.swift */,
 				61C2E20947DEAA8D3058D670 /* DrinkingDay.swift */,
 				026CA577AB8FDFC7619CE33E /* HTTPStatusError.swift */,
@@ -574,6 +580,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A011A0000000000000000001 /* CurrentDrinkingDayStore.swift in Sources */,
 				704C47C324C94603969638EB /* SaveQueueReducer.swift in Sources */,
 				3DD7ECE6843441DF86E0D5D4 /* SaveQueueStore.swift in Sources */,
 				ED49EA49518F4771AF8796C1 /* PendingDeleteStore.swift in Sources */,
@@ -618,6 +625,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A011A0000000000000000003 /* CurrentDrinkingDayStoreTests.swift in Sources */,
 				3E60738684AB4670A2DBDF42 /* SaveQueueReducerTests.swift in Sources */,
 				A07E050527774678BA428199 /* SaveQueueStoreTests.swift in Sources */,
 				A2122E89779142C6A8D892BD /* PendingDeleteStoreTests.swift in Sources */,

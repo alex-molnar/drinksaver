@@ -24,6 +24,7 @@ final class SaveQueueStore {
     private var inFlightDeletes: Set<UUID> = []
     private var operationTasks: [UUID: Task<Void, Never>] = [:]
     private var accountGeneration = 0
+    private var undoneDrinkIDsByDate: [String: Set<Int>] = [:]
 
     init(
         api: (any DrinkQueueAPI)?,
@@ -105,6 +106,9 @@ final class SaveQueueStore {
             do {
                 if !entry.drinkIDs.isEmpty { _ = try await api.deleteDrinks(ids: entry.drinkIDs) }
                 guard generation == accountGeneration, sessionStore.userID != nil else { return }
+                if case .save(let operation) = entry.kind, !entry.drinkIDs.isEmpty {
+                    undoneDrinkIDsByDate[operation.date, default: []].formUnion(entry.drinkIDs)
+                }
                 dispatch(.undoSucceeded(id: entry.id))
                 dispatch(.remove(id: entry.id))
             } catch {
@@ -119,6 +123,7 @@ final class SaveQueueStore {
         expiryTasks.removeAll()
         operationTasks.values.forEach { $0.cancel() }
         operationTasks.removeAll()
+        undoneDrinkIDsByDate.removeAll()
         state = SaveQueueState()
     }
 
@@ -224,12 +229,16 @@ final class SaveQueueStore {
     }
 
     func suppressedDrinkIDs(for date: String) -> Set<Int> {
-        SaveQueueReducer.suppressedIDs(in: state, date: date)
+        SaveQueueReducer.suppressedIDs(in: state, date: date).union(undoneDrinkIDsByDate[date, default: []])
     }
 
     func merge(_ serverRows: [EditableDrink], for date: String) -> [EditableDrink] {
+        let serverIDs = Set(serverRows.map(\.id))
+        undoneDrinkIDsByDate[date]?.formIntersection(serverIDs)
+        if undoneDrinkIDsByDate[date]?.isEmpty == true { undoneDrinkIDsByDate[date] = nil }
         state = SaveQueueReducer.reduce(state, .cleanupAcknowledged(date: date, serverIDs: Set(serverRows.map(\.id))))
-        return SaveQueueReducer.merge(serverRows, with: state, date: date)
+        let merged = SaveQueueReducer.merge(serverRows, with: state, date: date)
+        return merged.filter { !undoneDrinkIDsByDate[date, default: []].contains($0.id) }
     }
 
     private func performSave(_ entry: QueueEntry, generation: Int) async {
