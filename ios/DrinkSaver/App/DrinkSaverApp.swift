@@ -45,7 +45,8 @@ struct DrinkSaverApp: App {
                 designs: catalogueStore, session: fixture.sessionStore, coordinator: coordinator))
             _historyStore = State(initialValue: HistoryStore(api: fixture.api, queue: queueStore,
                 drinkingDay: dayStore, session: fixture.sessionStore))
-            _recommendationsStore = State(initialValue: RecommendationsStore(api: fixture.api, session: fixture.sessionStore, coordinator: coordinator))
+            _recommendationsStore = State(initialValue: RecommendationsStore(api: fixture.api, session: fixture.sessionStore,
+                coordinator: coordinator, queue: RecommendationQueue(api: fixture.api, window: .seconds(2))))
             return
         }
 #endif

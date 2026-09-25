@@ -23,6 +23,9 @@ final class RecommendationQueue {
             switch entry.status { case .undoable, .undoing, .failed: true; case .undone, .sending, .committed: false }
         }
     }
+    var isSendingSave: Bool {
+        entries.contains { entry in if case .save = entry.kind, case .sending = entry.status { true } else { false } }
+    }
 
     var onSaveUndone: ((RecommendationSnapshot) -> Void)?
     var onSaveCommitted: (([Recommendation]) -> Void)?
@@ -63,8 +66,12 @@ final class RecommendationQueue {
     private func append(_ kind: Kind) {
         sequence += 1
         let entry = Entry(id: UUID(), sequence: sequence, kind: kind, status: .undoable)
-        for index in entries.indices where entries[index].status.isUndoable { entries[index].status = .sending }
+        var shouldPump = false
+        for index in entries.indices where entries[index].status.isUndoable {
+            entries[index].status = .sending; shouldPump = true
+        }
         entries.append(entry)
+        if shouldPump { pump() }
         Task { [sleep, window] in
             do { try await sleep(window) } catch { return }
             guard let index = entries.firstIndex(where: { $0.id == entry.id }), entries[index].status.isUndoable else { return }

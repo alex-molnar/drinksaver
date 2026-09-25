@@ -47,6 +47,10 @@ while keeping the same queue and Undo behavior.
 tracks names and order separately from the committed snapshot; hidden pending deletions retain
 their order slots. `RecommendationQueue` defers deletes and arrangement updates for 6.5 seconds,
 serializes network operations, restores a saved snapshot on Undo, and keeps failures retryable.
+`RecommendationTabView` presents loading, retryable error, empty, editing, reorder, cross-off, and
+dirty-draft states. Names edit inline; drag-and-drop and labeled Move Up/Move Down controls provide
+equivalent reorder paths. Cancel restores the latest committed arrangement, while a committed
+Save returns to Quick.
 
 ## Add a drink
 

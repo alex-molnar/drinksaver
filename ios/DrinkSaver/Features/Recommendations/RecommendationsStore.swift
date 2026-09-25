@@ -21,6 +21,7 @@ final class RecommendationsStore {
         }
     }
     var isDirty: Bool { RecommendationDraftLogic.isDirty(draft, hidden: queue.hiddenIDs) }
+    var isSaving: Bool { queue.isSendingSave }
 
     private let api: (any DrinkSaverAPI)?
     private let session: SessionStore
@@ -48,17 +49,17 @@ final class RecommendationsStore {
     func load() async { await load(force: false) }
 
     func rename(id: Int, to name: String) {
-        guard draft.names[id] != nil else { return }
+        guard !isSaving, draft.names[id] != nil else { return }
         draft.editingID = id; draft.editingValue = name
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty { draft.names[id] = trimmed }
         draft.editingID = nil; draft.editingValue = ""
     }
 
-    func beginRename(id: Int) { draft.editingID = id; draft.editingValue = draft.names[id] ?? "" }
-    func updateRename(_ value: String) { guard draft.isEditing else { return }; draft.editingValue = value }
+    func beginRename(id: Int) { guard !isSaving else { return }; draft.editingID = id; draft.editingValue = draft.names[id] ?? "" }
+    func updateRename(_ value: String) { guard draft.isEditing, !isSaving else { return }; draft.editingValue = value }
     func commitRename() {
-        guard let id = draft.editingID else { return }
+        guard let id = draft.editingID, !isSaving else { return }
         let value = draft.editingValue.trimmingCharacters(in: .whitespacesAndNewlines)
         if !value.isEmpty { draft.names[id] = value }
         draft.editingID = nil; draft.editingValue = ""
@@ -66,6 +67,7 @@ final class RecommendationsStore {
     func cancelRename() { draft.editingID = nil; draft.editingValue = "" }
 
     func reorder(visibleIDs: [Int]) {
+        guard !isSaving else { return }
         draft = RecommendationDraftLogic.reorder(draft, visibleOrder: visibleIDs, hidden: queue.hiddenIDs)
     }
 
@@ -86,7 +88,7 @@ final class RecommendationsStore {
     }
 
     func delete(id: Int, reduceMotion: Bool = false) {
-        guard let row = visibleRows.first(where: { $0.id == id }) else { return }
+        guard !isSaving, let row = visibleRows.first(where: { $0.id == id }) else { return }
         if !reduceMotion {
             let token = UUID()
             exitingRows[id] = row; exitTokens[id] = token
@@ -104,12 +106,13 @@ final class RecommendationsStore {
     }
 
     func cancel() {
+        guard !isSaving else { return }
         draft.order = draft.committed.order; draft.names = draft.committed.names
         draft.editingID = nil; draft.editingValue = ""
     }
 
     func save() {
-        guard isDirty, state == .ready else { return }
+        guard isDirty, state == .ready, !isSaving else { return }
         let undoSnapshot = draft.committed
         draft.committed = RecommendationSnapshot(order: draft.order, names: draft.names)
         queue.save(snapshot: undoSnapshot) { [weak self] in
