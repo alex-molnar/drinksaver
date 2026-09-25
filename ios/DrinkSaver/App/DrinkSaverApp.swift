@@ -57,14 +57,14 @@ struct DrinkSaverApp: App {
             rootView
                 .task(id: scenePhase == .active && sessionStore.userID != nil) {
                     guard scenePhase == .active, sessionStore.userID != nil else { return }
-                    await currentDrinkingDayStore.clockDidCrossDrinkingDayBoundary()
+                    await currentDrinkingDayStore.refreshClockState()
                     while !Task.isCancelled {
                         do {
-                            try await Task.sleep(for: .seconds(currentDrinkingDayStore.secondsUntilDrinkingDayBoundary))
+                            try await Task.sleep(for: .seconds(currentDrinkingDayStore.secondsUntilNextClockUpdate))
                         } catch {
                             return
                         }
-                        await currentDrinkingDayStore.clockDidCrossDrinkingDayBoundary()
+                        await currentDrinkingDayStore.refreshClockState()
                     }
                 }
                 .onChange(of: scenePhase) { _, newPhase in
