@@ -18,6 +18,18 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>APP_ENVIRONMENT</key>
+	<string>$(APP_ENVIRONMENT)</string>
+	<key>API_BASE_URL</key>
+	<string>$(API_BASE_URL)</string>
+	<key>OIDC_ISSUER_URL</key>
+	<string>$(OIDC_ISSUER_URL)</string>
+	<key>OIDC_CLIENT_ID</key>
+	<string>$(OIDC_CLIENT_ID)</string>
+	<key>OIDC_REDIRECT_URL</key>
+	<string>$(OIDC_REDIRECT_URL)</string>
+	<key>CFBundleURLTypes</key>
+	<array><dict><key>CFBundleURLSchemes</key><array><string>im.kak.drinksaver</string></array></dict></array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchScreen</key>

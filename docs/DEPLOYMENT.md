@@ -16,7 +16,7 @@ GitHub Actions. Nothing is built or pushed from a laptop.
 ## Versioning
 
 `VERSION` at the repo root is the single source of truth. It currently reads
-`3.0.0`.
+`4.3.0`.
 
 One computed version string is applied to the Maven project version, the web
 `package.json`, the Docker image tag, and both the Helm chart `version` and
@@ -39,6 +39,19 @@ both applications at `VERSION` in a single run. Production deploys from those
 artifacts, so production is always internally consistent.
 
 To release a new version, edit `VERSION` and merge to `main`.
+
+The native iPhone app reads the same `VERSION` through `ios/scripts/xcodebuild.sh`;
+for example:
+
+```bash
+ios/scripts/xcodebuild.sh -project ios/DrinkSaver.xcodeproj -scheme DrinkSaver build
+```
+
+The wrapper validates `VERSION` and passes it as the app marketing version.
+Apple build numbers use `DRINKSAVER_BUILD_NUMBER` (default `1`) and may increment
+independently without changing `VERSION`. Select the
+`Local`, `Test`, or `Release` Xcode configuration to use its checked-in API and
+Keycloak issuer; only Local permits cleartext HTTP to `localhost`.
 
 ## Registry
 
