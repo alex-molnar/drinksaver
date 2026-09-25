@@ -53,6 +53,15 @@ final class CurrentDrinkingDayStoreTests: XCTestCase {
         await store.load()
         XCTAssertEqual(store.visibleCount, 1)
         XCTAssertEqual(store.serverDrinks, [drink(41)])
+
+        await waitUntil {
+            guard let status = queue.currentFeedback?.status else { return false }
+            if case .undoable = status { return true }
+            return false
+        }
+        queue.undoCurrent()
+        await waitUntil { queue.state.entries.isEmpty }
+        XCTAssertEqual(store.visibleCount, 0)
     }
 
     func testDeleteSuppressionUndoAndCommittedRefetch() async {
