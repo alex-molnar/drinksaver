@@ -87,13 +87,16 @@ cd /path/to/implementation && git worktree remove /path/to/worktree
 With an iOS 27 Simulator runtime available in Xcode, run:
 
 ```bash
-ios/scripts/compare-reference-images.sh ios/Reference/web ios/Reference/native
+ios/scripts/compare-reference-images.sh
 ```
 
 The script captures all 10 states in dark and light on iPhone SE (3rd generation), iPhone 13
-mini, and iPhone 16 Pro Max. It creates and removes the SE 3 and Pro Max simulator profiles
-when they are not already present. It exports XCTest attachments, checks the 60 normalized
-native PNGs against the frozen web catalogue, then runs `VisualParityTests`. The test-only reference
+mini, and iPhone 16 Pro Max. Captures go to a temporary directory by default, so routine
+comparisons preserve the committed native catalogue. Set `IOS_REFERENCE_REGENERATE=1` only when
+intentionally replacing that catalogue. The script creates and removes simulator profiles when
+they are not already present, and uses the captured iPhone 13 mini simulator for the comparison
+test. It exports XCTest attachments, checks the 60 normalized native PNGs against the frozen web
+catalogue, then runs `VisualParityTests`. The test-only reference
 fixture mirrors the data in `web/e2e/tests/ios-reference.spec.ts`; it is compiled only into
 UI-testing builds and is excluded from Release. Captures fix the clock, `en-GB` locale, and
 `Europe/Amsterdam` time zone to match the web references.

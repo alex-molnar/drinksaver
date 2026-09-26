@@ -4,9 +4,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 WEB_DIR="${1:-$REPO_ROOT/ios/Reference/web}"
-NATIVE_DIR="${2:-$REPO_ROOT/ios/Reference/native}"
 TEMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/ios-visual-parity.XXXXXX")"
+NATIVE_DIR="$TEMP_DIR/native"
+if [[ "${IOS_REFERENCE_REGENERATE:-0}" == "1" ]]; then
+  NATIVE_DIR="$REPO_ROOT/ios/Reference/native"
+fi
 CREATED_SIMULATORS=()
+CAPTURE_DEVICE_IDS=()
 cleanup() {
   for simulator in "${CREATED_SIMULATORS[@]}"; do xcrun simctl delete "$simulator" >/dev/null 2>&1 || true; done
   rm -rf "$TEMP_DIR"
@@ -16,7 +20,6 @@ trap cleanup EXIT
 command -v jq >/dev/null || { echo "jq is required to read Xcode attachment manifests" >&2; exit 2; }
 mkdir -p "$NATIVE_DIR"
 WEB_DIR="$(cd "$WEB_DIR" && pwd)"
-NATIVE_DIR="$(cd "$NATIVE_DIR" && pwd)"
 
 capture_device() {
   local device="$1" viewport="$2" type="$3"
@@ -28,6 +31,7 @@ capture_device() {
     device_id="$(xcrun simctl create "DrinkSaver parity $viewport" "$type" "$runtime")"
     CREATED_SIMULATORS+=("$device_id")
   fi
+  CAPTURE_DEVICE_IDS+=("$device_id")
   echo "Capturing native references on $device ($viewport)"
   "$SCRIPT_DIR/xcodebuild.sh" test \
     -project "$REPO_ROOT/ios/DrinkSaver.xcodeproj" \
@@ -58,7 +62,7 @@ comparison_status=0
 "$SCRIPT_DIR/xcodebuild.sh" test \
   -project "$REPO_ROOT/ios/DrinkSaver.xcodeproj" \
   -scheme DrinkSaver \
-  -destination "platform=iOS Simulator,id=$(xcrun simctl list devices -j | jq -r --arg runtime 'com.apple.CoreSimulator.SimRuntime.iOS-27-0' '.devices[$runtime][]? | select(.name == "iPhone 13 mini" and .isAvailable) | .udid' | head -n 1)" \
+  -destination "platform=iOS Simulator,id=${CAPTURE_DEVICE_IDS[1]}" \
   -parallel-testing-enabled NO \
   -only-testing:DrinkSaverTests/VisualParityTests/testFrozenReferenceMatrixIsCompleteAndComparable \
   -resultBundlePath "$comparison_result" \
