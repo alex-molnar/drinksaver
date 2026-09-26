@@ -23,13 +23,15 @@ struct FeedbackStrip: View {
                     Spacer(minLength: 4)
                     switch item.state {
                     case .undoable:
-                        Button("Undo", action: performCurrentAction)
-                            .frame(minHeight: 44)
+                        Button(action: performCurrentAction) {
+                            Text("Undo").frame(minHeight: 44).contentShape(Rectangle())
+                        }
                             .accessibilityIdentifier(actionIdentifier("undo"))
                             .accessibilityFocused($focusedPart, equals: .action)
                     case .retryable:
-                        Button("Retry", action: performCurrentAction)
-                            .frame(minHeight: 44)
+                        Button(action: performCurrentAction) {
+                            Text("Retry").frame(minHeight: 44).contentShape(Rectangle())
+                        }
                             .accessibilityIdentifier(actionIdentifier("retry"))
                             .accessibilityFocused($focusedPart, equals: .action)
                     case .undoing:
