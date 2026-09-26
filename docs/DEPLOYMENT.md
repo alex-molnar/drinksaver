@@ -55,6 +55,22 @@ increment independently without changing `VERSION`. Select the
 Keycloak issuer; only Local permits cleartext HTTP to `localhost`. Run
 `ios/scripts/xcodebuild.test.sh` to check the wrapper's version handling.
 
+## Native iOS CI
+
+Pull requests and branch pushes that change `ios/**`, `docs/api-docs.yaml`, `VERSION`, or this
+workflow run the iOS smoke plan on a GitHub-hosted `macos-15` runner. CI selects Xcode 26.3 and
+creates an iPhone 17 simulator on iOS 26.2, matching the app's current iOS 26.0 deployment target.
+The runner and simulator identifiers are pinned in `.github/workflows/ios.yml` and
+`ios/scripts/create-pinned-simulator.sh`; the script fails with a clear error if either runtime
+component is unavailable. Review the [runner image inventory](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md)
+before changing these pins.
+
+The smoke plan builds and launches without signing or Apple Developer credentials. It is a CI
+health check; it does not configure Keycloak or run the credentialed live-environment journey.
+The job also validates all Xcode build configurations, inspects the Release app for UI-test
+fixtures, and retains the `.xcresult` bundle and simulator screenshot for failed runs. Ordinary
+successful runs upload no artifacts.
+
 ## Registry
 
 ```

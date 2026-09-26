@@ -38,6 +38,10 @@
             ReferencedContainer = "container:DrinkSaver.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
+      <TestPlans>
+         <TestPlanReference reference = "container:DrinkSaver.xctestplan" default = "YES">
+         </TestPlanReference>
+      </TestPlans>
       <Testables>
          <TestableReference
             skipped = "NO"
