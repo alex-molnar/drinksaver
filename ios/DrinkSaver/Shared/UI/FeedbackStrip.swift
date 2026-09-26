@@ -24,10 +24,12 @@ struct FeedbackStrip: View {
                     switch item.state {
                     case .undoable:
                         Button("Undo", action: performCurrentAction)
+                            .frame(minHeight: 44)
                             .accessibilityIdentifier(actionIdentifier("undo"))
                             .accessibilityFocused($focusedPart, equals: .action)
                     case .retryable:
                         Button("Retry", action: performCurrentAction)
+                            .frame(minHeight: 44)
                             .accessibilityIdentifier(actionIdentifier("retry"))
                             .accessibilityFocused($focusedPart, equals: .action)
                     case .undoing:

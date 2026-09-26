@@ -40,7 +40,9 @@ struct RecommendationRowView: View {
                     .labelStyle(.iconOnly)
                     .accessibilityLabel("Rename \(row.name)")
                     .accessibilityIdentifier("recommendations.rename-button.\(row.id)")
-                    Button { onDelete() } label: { Image(systemName: "xmark").frame(width: 44, height: 44) }
+                    Button { onDelete() } label: { Image(systemName: "xmark") }
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
                     .buttonStyle(.plain).accessibilityLabel("Cross off \(row.name)")
                     .accessibilityIdentifier("recommendations.delete.\(row.id)")
                 VStack(spacing: 0) {
