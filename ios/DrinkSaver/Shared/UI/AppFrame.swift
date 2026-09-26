@@ -101,7 +101,7 @@ struct AppFrame: View {
         case .quick:
             QuickSaveView()
         case .history:
-            Color.clear.accessibilityLabel("History screen")
+            HistoryView()
         case .recommendations:
             Color.clear.accessibilityLabel("Recommendations screen")
         }
@@ -162,7 +162,8 @@ struct AppFrame: View {
         .overlay(alignment: .bottom) { Rectangle().fill(theme.line.hairline.color).frame(height: 1) }
     }
     private func feedbackMessage(_ entry: QueueEntry, label: String) -> String {
-        switch entry.status { case .undoable: "Saved \(label)"; case .undoing: "Undoing \(label)…"; case .failed(let failure): failure.message; case .saving, .committed: "" }
+        let action = switch entry.kind { case .delete: "Crossed off"; case .save: "Saved" }
+        return switch entry.status { case .undoable: "\(action) \(label)"; case .undoing: "Undoing \(label)…"; case .failed(let failure): failure.message; case .saving, .committed: "" }
     }
 
     private var menuCard: some View {
