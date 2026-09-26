@@ -38,6 +38,16 @@
             ReferencedContainer = "container:DrinkSaver.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
+      <TestPlans>
+         <TestPlanReference reference = "container:DrinkSaver.xctestplan" default = "YES">
+         </TestPlanReference>
+         <TestPlanReference reference = "container:LiveEnvironment.xctestplan" default = "NO">
+         </TestPlanReference>
+         <TestPlanReference reference = "container:VisualCapture.xctestplan" default = "NO">
+         </TestPlanReference>
+         <TestPlanReference reference = "container:VisualParity.xctestplan" default = "NO">
+         </TestPlanReference>
+      </TestPlans>
       <Testables>
          <TestableReference
             skipped = "NO"

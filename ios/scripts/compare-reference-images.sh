@@ -36,6 +36,7 @@ capture_device() {
   "$SCRIPT_DIR/xcodebuild.sh" test \
     -project "$REPO_ROOT/ios/DrinkSaver.xcodeproj" \
     -scheme DrinkSaver \
+    -testPlan VisualCapture \
     -destination "platform=iOS Simulator,id=$device_id" \
     -parallel-testing-enabled NO \
     -only-testing:DrinkSaverUITests/VisualCaptureUITests/testCaptureReferenceMatrix \
@@ -62,6 +63,7 @@ comparison_status=0
 "$SCRIPT_DIR/xcodebuild.sh" test \
   -project "$REPO_ROOT/ios/DrinkSaver.xcodeproj" \
   -scheme DrinkSaver \
+  -testPlan VisualParity \
   -destination "platform=iOS Simulator,id=${CAPTURE_DEVICE_IDS[1]}" \
   -parallel-testing-enabled NO \
   -only-testing:DrinkSaverTests/VisualParityTests/testFrozenReferenceMatrixIsCompleteAndComparable \

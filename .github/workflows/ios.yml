@@ -1,0 +1,104 @@
+name: iOS CI
+
+on:
+  pull_request:
+    paths:
+      - 'ios/**'
+      - 'docs/api-docs.yaml'
+      - 'VERSION'
+      - '.github/workflows/ios.yml'
+  push:
+    paths:
+      - 'ios/**'
+      - 'docs/api-docs.yaml'
+      - 'VERSION'
+      - '.github/workflows/ios.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    name: iOS smoke tests
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate workflow and Xcode project settings
+        run: |
+          ios/scripts/validate-ios-workflow.sh
+          ios/scripts/validate-project-settings.sh
+
+      - name: Create pinned simulator
+        id: simulator
+        run: ios/scripts/create-pinned-simulator.sh
+
+      - name: Record toolchain and simulator
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          swift --version
+          xcrun simctl list devices available | grep -A 1 "$SIMULATOR_UDID"
+
+      - name: Run iOS smoke tests
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          set -euo pipefail
+          ios/scripts/xcodebuild.sh test \
+            -project ios/DrinkSaver.xcodeproj \
+            -scheme DrinkSaver \
+            -configuration Local \
+            -testPlan DrinkSaver \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+            -resultBundlePath "$RUNNER_TEMP/DrinkSaver.xcresult" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Check Release configuration
+        run: |
+          set -euo pipefail
+          ios/scripts/xcodebuild.sh build \
+            -project ios/DrinkSaver.xcodeproj \
+            -scheme DrinkSaver \
+            -configuration Release \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/release-derived-data" \
+            CODE_SIGNING_ALLOWED=NO
+          ios/scripts/assert-release-has-no-fixtures.sh \
+            "$RUNNER_TEMP/release-derived-data/Build/Products/Release-iphonesimulator/DrinkSaver.app"
+
+      - name: Capture simulator screenshot on failure
+        if: failure() && steps.simulator.outputs.udid != ''
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        run: xcrun simctl io "$SIMULATOR_UDID" screenshot "$RUNNER_TEMP/ios-failure.png"
+
+      - name: Upload Xcode result and screenshot on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ios-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/DrinkSaver.xcresult
+            ${{ runner.temp }}/ios-failure.png
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Remove simulator
+        if: always() && steps.simulator.outputs.udid != ''
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          xcrun simctl shutdown "$SIMULATOR_UDID" || true
+          xcrun simctl delete "$SIMULATOR_UDID" || true
