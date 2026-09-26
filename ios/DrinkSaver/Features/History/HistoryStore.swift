@@ -177,14 +177,15 @@ final class HistoryStore {
         guard let userID = session.userID else { return }
         requests[date, default: 0] += 1
         let request = requests[date]!
-        days[date] = .loading
+        let hasCachedRows = serverRows[date] != nil
+        if !hasCachedRows { days[date] = .loading }
         if date == drinkingDay.date {
             await drinkingDay.load()
             guard requests[date] == request, session.userID == userID else { return }
             switch drinkingDay.state {
             case .ready: serverRows[date] = drinkingDay.serverDrinks; days[date] = .ready
-            case .failed: days[date] = .failed
-            case .idle, .loading: days[date] = .loading
+            case .failed: days[date] = hasCachedRows ? .ready : .failed
+            case .idle, .loading: days[date] = hasCachedRows ? .ready : .loading
             }
             return
         }
@@ -195,7 +196,7 @@ final class HistoryStore {
             serverRows[date] = result; days[date] = .ready
         } catch {
             guard requests[date] == request, session.userID == userID else { return }
-            days[date] = .failed
+            days[date] = hasCachedRows ? .ready : .failed
         }
     }
 
