@@ -16,8 +16,8 @@ struct AddDrinkDraft: Equatable {
     var creationName = ""
     var recommendationName = ""
     var volumeLitres = "0.33"
-    var colorPaletteId: Int?
-    var glasswareId: Int?
+    var newEntryColorPaletteId: Int?
+    var newEntryGlasswareId: Int?
     var recommendationColorPaletteId: Int?
     var recommendationGlasswareId: Int?
 
@@ -25,15 +25,14 @@ struct AddDrinkDraft: Equatable {
     mutating func select(_ type: AlcoholType) {
         guard alcoholType?.id != type.id else { return }
         alcoholType = type; volume = nil; subtype = nil; consumptionType = nil
-        brand = nil; flavour = nil; colorPaletteId = type.colorPaletteId; glasswareId = type.glasswareId
+        brand = nil; flavour = nil
     }
     mutating func select(_ brand: Brand) {
         guard self.brand?.id != brand.id else { return }
-        self.brand = brand; flavour = nil; colorPaletteId = brand.colorPaletteId ?? alcoholType?.colorPaletteId
+        self.brand = brand; flavour = nil
     }
     mutating func select(_ flavour: BeerFlavour) {
         self.flavour = flavour
-        colorPaletteId = flavour.colorPaletteId ?? brand?.colorPaletteId ?? alcoholType?.colorPaletteId
     }
     mutating func setRecommend(_ enabled: Bool) {
         recommend = enabled
@@ -149,7 +148,7 @@ final class AddDrinkStore {
         do {
             switch field {
             case .alcoholType:
-                let value = try await api.createAlcoholType(NewAlcoholEntry(name: clean, colorPaletteId: draft.colorPaletteId, glasswareId: draft.glasswareId))
+                let value = try await api.createAlcoholType(NewAlcoholEntry(name: clean, colorPaletteId: draft.newEntryColorPaletteId, glasswareId: draft.newEntryGlasswareId))
                 guard requestGeneration == generation, requestRevision == selectionRevision else { return }
                 if case .loaded(let items) = alcoholTypes { alcoholTypes = .loaded(items + [value]) }
                 draft.select(value); selectionRevision += 1
@@ -160,20 +159,22 @@ final class AddDrinkStore {
                 if case .loaded(let items) = volumes { volumes = .loaded(items + [value]) }; draft.volume = value
             case .subtype:
                 guard let id = draft.alcoholType?.id else { return }
-                let value = try await api.createSubtype(alcoholTypeID: id, entry: NewAlcoholSubtype(alcoholTypeId: id, name: clean, colorPaletteId: draft.colorPaletteId, glasswareId: draft.glasswareId))
+                let value = try await api.createSubtype(alcoholTypeID: id, entry: NewAlcoholSubtype(alcoholTypeId: id, name: clean, colorPaletteId: draft.newEntryColorPaletteId, glasswareId: draft.newEntryGlasswareId))
                 guard requestGeneration == generation, requestRevision == selectionRevision, draft.alcoholType?.id == id else { return }
                 if case .loaded(let items) = subtypes { subtypes = .loaded(items + [value]) }; draft.subtype = value
             case .brand:
-                let value = try await api.createBrand(NewBeerBrand(name: clean, colorPaletteId: draft.colorPaletteId))
+                let value = try await api.createBrand(NewBeerBrand(name: clean, colorPaletteId: draft.newEntryColorPaletteId))
                 guard requestGeneration == generation, requestRevision == selectionRevision else { return }
                 if case .loaded(let items) = brands { brands = .loaded(items + [value]) }; draft.select(value)
             case .flavour:
                 guard let id = draft.brand?.id else { return }
-                let value = try await api.createFlavour(brandID: id, entry: NewBeerFlavour(name: clean, colorPaletteId: draft.colorPaletteId))
+                let value = try await api.createFlavour(brandID: id, entry: NewBeerFlavour(name: clean, colorPaletteId: draft.newEntryColorPaletteId))
                 guard requestGeneration == generation, requestRevision == selectionRevision, draft.brand?.id == id else { return }
                 if case .loaded(let items) = flavours { flavours = .loaded(items + [value]) }; draft.select(value)
             }
             draft.creationName = ""
+            draft.newEntryColorPaletteId = nil
+            draft.newEntryGlasswareId = nil
             selectionRevision += 1
             coordinator.popAddPanel(); errorMessage = nil
         } catch { errorMessage = "Couldn’t add it. Try again." }

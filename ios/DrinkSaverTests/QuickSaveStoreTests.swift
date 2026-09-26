@@ -114,6 +114,26 @@ final class QuickSaveStoreTests: XCTestCase {
         XCTAssertEqual(amount, 100)
     }
 
+    func testCreatedSubtypeInheritsParentDesignUnlessAnOverrideWasChosen() async {
+        let api = QuickSaveTestAPI()
+        let graph = await makeGraph(api: api)
+        let store = AddDrinkStore(api: api, queue: graph.queue, day: graph.day, designs: graph.designs,
+                                  session: graph.session, coordinator: AppCoordinator())
+        store.draft.alcoholType = AlcoholType(id: 4, userId: nil, name: "Wine", volumeIds: [], colorPaletteId: 10, glasswareId: 20)
+
+        await store.create(.subtype, name: "Red")
+        let inherited = await api.createdSubtypeEntries().last
+        XCTAssertNil(inherited?.colorPaletteId)
+        XCTAssertNil(inherited?.glasswareId)
+
+        store.draft.newEntryColorPaletteId = 11
+        store.draft.newEntryGlasswareId = 21
+        await store.create(.subtype, name: "White")
+        let explicit = await api.createdSubtypeEntries().last
+        XCTAssertEqual(explicit?.colorPaletteId, 11)
+        XCTAssertEqual(explicit?.glasswareId, 21)
+    }
+
     func testRecommendationRefreshWaitsForQueueSaveToFinish() async {
         let gate = QuickSaveGate()
         let api = QuickSaveTestAPI(saveGate: gate)
@@ -289,6 +309,7 @@ private actor QuickSaveTestAPI: DrinkSaverAPI {
     private let volumeCreateGate: AddDrinkCreateGate?
     private var volumeCreates = 0
     private var consumptionTypeAmount: Int?
+    private var subtypeEntries: [NewAlcoholSubtype] = []
 
     init(recommendationFailure: Bool = false, saveGate: QuickSaveGate? = nil, volumeCreateGate: AddDrinkCreateGate? = nil, initialDrinks: [EditableDrink] = []) {
         self.recommendationFailure = recommendationFailure
@@ -329,6 +350,11 @@ private actor QuickSaveTestAPI: DrinkSaverAPI {
         consumptionTypeAmount = amount
         return []
     }
+    func createSubtype(alcoholTypeID: Int, entry: NewAlcoholSubtype) async throws -> AlcoholSubtype {
+        subtypeEntries.append(entry)
+        return AlcoholSubtype(id: 60 + subtypeEntries.count, alcoholTypeId: alcoholTypeID, userId: nil,
+                              name: entry.name, colorPaletteId: entry.colorPaletteId, glasswareId: entry.glasswareId)
+    }
 
     func deleteDrinks(ids: [Int]) async throws -> Int {
         drinks.removeAll { ids.contains($0.id) }
@@ -340,6 +366,7 @@ private actor QuickSaveTestAPI: DrinkSaverAPI {
     func recommendationRequestCount() -> Int { requests }
     func volumeCreateCount() -> Int { volumeCreates }
     func lastConsumptionTypeAmount() -> Int? { consumptionTypeAmount }
+    func createdSubtypeEntries() -> [NewAlcoholSubtype] { subtypeEntries }
 }
 
 private actor AddDrinkCreateGate {

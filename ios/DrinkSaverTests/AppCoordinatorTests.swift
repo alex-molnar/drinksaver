@@ -66,18 +66,17 @@ final class AppCoordinatorTests: XCTestCase {
         XCTAssertNil(draft.flavour)
     }
 
-    func testBeerDesignInheritsFromFlavourThenBrandThenType() {
+    func testSelectingDesignSourcesDoesNotCreateCatalogueOverrides() {
         var draft = AddDrinkDraft()
         let beer = AlcoholType(id: 4, userId: nil, name: "Beer", volumeIds: [], colorPaletteId: 10, glasswareId: 20)
         draft.select(beer)
         let brand = Brand(id: 5, userId: nil, name: "House", colorPaletteId: 11)
         draft.select(brand)
-        XCTAssertEqual(draft.colorPaletteId, 11)
         draft.select(BeerFlavour(id: 6, brandId: 5, userId: nil, name: "Pilsner", colorPaletteId: 12))
-        XCTAssertEqual(draft.colorPaletteId, 12)
         draft.select(Brand(id: 7, userId: nil, name: "Other", colorPaletteId: nil))
         XCTAssertNil(draft.flavour)
-        XCTAssertEqual(draft.colorPaletteId, 10)
+        XCTAssertNil(draft.newEntryColorPaletteId)
+        XCTAssertNil(draft.newEntryGlasswareId)
     }
 
     func testAddDrinkRequestTrimsNotesOmitsDefaultsAndClampsQuantity() {

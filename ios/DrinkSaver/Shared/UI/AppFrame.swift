@@ -420,7 +420,7 @@ struct AppFrame: View {
             if field != .volume, field != .flavour {
                 let palettes = addDrinkStore.catalogue.palettes
                 if !palettes.isEmpty {
-                    Picker("Color", selection: Binding(get: { addDrinkStore.draft.colorPaletteId }, set: { addDrinkStore.draft.colorPaletteId = $0 })) {
+                    Picker("Color", selection: Binding(get: { addDrinkStore.draft.newEntryColorPaletteId }, set: { addDrinkStore.draft.newEntryColorPaletteId = $0 })) {
                         Text("Inherited").tag(Int?.none)
                         ForEach(palettes) { palette in Text(palette.name).tag(Optional(palette.id)) }
                     }.padding(.horizontal, 20)
@@ -428,7 +428,7 @@ struct AppFrame: View {
                 if field != .brand {
                     let glasses = addDrinkStore.catalogue.glassware
                     if !glasses.isEmpty {
-                        Picker("Glass", selection: Binding(get: { addDrinkStore.draft.glasswareId }, set: { addDrinkStore.draft.glasswareId = $0 })) {
+                        Picker("Glass", selection: Binding(get: { addDrinkStore.draft.newEntryGlasswareId }, set: { addDrinkStore.draft.newEntryGlasswareId = $0 })) {
                             Text("Inherited").tag(Int?.none)
                             ForEach(glasses) { glass in Text(glass.name).tag(Optional(glass.id)) }
                         }.padding(.horizontal, 20)
