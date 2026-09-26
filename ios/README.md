@@ -30,6 +30,19 @@ queue-backed saving and saved feedback with an accessible status. `QuickSaveStor
 through `SaveQueueStore`, uses the current drinking-day date and selected design, and delays a
 recommendation refresh until queued saves or undo operations finish.
 
+## Add a drink
+
+The Add sheet retains one draft across its nested drink, size, subtype, serving, brand, and flavour
+panels. Its date defaults to the current drinking day. Creating a catalogue entry selects it and
+returns to the prior panel; pending creation cannot be submitted twice, and a response is adopted
+only while the selection context still matches. Recommendation name and design overrides are
+separate from catalogue-creation fields; new catalogue design overrides remain unset until chosen,
+so entries inherit their parent design by default. Recommendation palette and glass overrides apply
+independently over the selected subtype or beer flavour/brand/serving design. Changing the drink or
+brand clears dependent selections. Quantity is limited to 1–24, notes are trimmed, and unset
+optional request fields are omitted. Saving hands the request to `SaveQueueStore`, closing the
+sheet while the shared Undo/Retry feedback remains available.
+
 The bundled Fraunces roles are static native instances at the frozen optical-size, weight,
 softness, and wonk values. Familjen Grotesk stays variable over weights 400–700. The source WOFF2
 files in `web/src/assets/fonts/` are never converted or shipped by iOS.

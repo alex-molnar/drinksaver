@@ -59,6 +59,48 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertEqual(app.buttons["frame.tab.quick"].value as? String, "Selected")
     }
 
+    func testAddDrinkSelectionPersistsAcrossNestedPanelsAndResetsForNewSheet() {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.add"].tap()
+        app.buttons["Drink, Choose"].tap()
+        let wine = app.buttons["Wine"]
+        XCTAssertTrue(wine.waitForExistence(timeout: 3))
+        wine.tap()
+        app.buttons["Size, Choose"].tap()
+        let glass = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Glass'")).firstMatch
+        XCTAssertTrue(glass.waitForExistence(timeout: 3))
+        glass.tap()
+        XCTAssertTrue(app.buttons["Size, Glass (0.25L)"].exists)
+        app.buttons["frame.add.close"].tap()
+        app.buttons["frame.tab.add"].tap()
+        XCTAssertTrue(app.buttons["Drink, Choose"].waitForExistence(timeout: 3))
+    }
+
+    func testAddDrinkHandsSaveToQueue() {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.add"].tap()
+        app.buttons["Drink, Choose"].tap()
+        app.buttons["Wine"].tap()
+        app.buttons["Size, Choose"].tap()
+        app.buttons.matching(NSPredicate(format: "label CONTAINS 'Glass'")).firstMatch.tap()
+        app.buttons["add.save"].tap()
+        XCTAssertTrue(app.staticTexts["frame.subtitle"].waitForExistence(timeout: 5))
+    }
+
+    func testAddSaveFromHistoryKeepsUndoReachable() {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.history"].tap()
+        app.buttons["frame.tab.add"].tap()
+        app.buttons["Drink, Choose"].tap()
+        app.buttons["Wine"].tap()
+        app.buttons["Size, Choose"].tap()
+        app.buttons.matching(NSPredicate(format: "label CONTAINS 'Glass'")).firstMatch.tap()
+        app.buttons["add.save"].tap()
+        let undo = app.buttons["frame.queue.undo"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 5))
+        undo.tap()
+    }
+
     private func launchSignedIn() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
