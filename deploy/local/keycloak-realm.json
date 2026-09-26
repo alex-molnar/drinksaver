@@ -25,6 +25,25 @@
         "post.logout.redirect.uris": "http://localhost:3000/*",
         "pkce.code.challenge.method": "S256"
       }
+    },
+    {
+      "clientId": "drinksaver-ios-local",
+      "name": "DrinkSaver iOS (local)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "im.kak.drinksaver:/oauth2redirect"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "im.kak.drinksaver:/oauth2redirect",
+        "pkce.code.challenge.method": "S256"
+      },
+      "optionalClientScopes": [
+        "offline_access"
+      ]
     }
   ],
   "users": [
