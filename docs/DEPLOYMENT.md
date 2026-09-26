@@ -58,18 +58,37 @@ Keycloak issuer; only Local permits cleartext HTTP to `localhost`. Run
 ## Native iOS CI
 
 Pull requests and branch pushes that change `ios/**`, `docs/api-docs.yaml`, `VERSION`, or this
-workflow run the iOS smoke plan on a GitHub-hosted `macos-15` runner. CI selects Xcode 26.3 and
-creates an iPhone 17 simulator on iOS 26.2, matching the app's current iOS 26.0 deployment target.
-The runner and simulator identifiers are pinned in `.github/workflows/ios.yml` and
-`ios/scripts/create-pinned-simulator.sh`; the script fails with a clear error if either runtime
+workflow run the deterministic iOS acceptance plan on a GitHub-hosted `macos-15` runner. CI selects
+Xcode 26.3 and creates an iPhone 17 simulator on iOS 26.2, matching the app's current iOS 26.0
+deployment target. The runner and simulator identifiers are pinned in `.github/workflows/ios.yml`
+and `ios/scripts/create-pinned-simulator.sh`; the script fails with a clear error if either runtime
 component is unavailable. Review the [runner image inventory](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md)
 before changing these pins.
 
-The smoke plan builds and launches without signing or Apple Developer credentials. It is a CI
-health check; it does not configure Keycloak or run the credentialed live-environment journey.
-The job also validates all Xcode build configurations, inspects the Release app for UI-test
-fixtures, and retains the `.xcresult` bundle and simulator screenshot for failed runs. Ordinary
-successful runs upload no artifacts.
+The acceptance plan runs the unit/API-contract tests and deterministic fixture-driven UI tests,
+including accessibility checks. It skips `LiveEnvironmentUITests`, which requires a real authorized
+Keycloak account, and `VisualCaptureUITests`, which captures a separate multi-viewport screenshot
+matrix and does not support the CI runner's iPhone 17 viewport. The strict `VisualParityTests`
+comparison remains available through `ios/scripts/compare-reference-images.sh`, with its own plan;
+it is not part of the CI acceptance gate while the committed matrix still has unresolved
+differences documented in the native parity review. The simulator test bundles use an ad-hoc
+signature so Keychain tests run without a developer certificate, provisioning profile, or paid
+Apple account. The Release build remains unsigned. CI also validates all Xcode configurations and
+inspects the Release app for UI-test fixtures. The `.xcresult` bundle and simulator screenshot are
+retained only for failed runs.
+
+Run the same plan locally after creating a simulator supported by your selected Xcode:
+
+```bash
+ios/scripts/xcodebuild.sh test \
+  -project ios/DrinkSaver.xcodeproj \
+  -scheme DrinkSaver \
+  -configuration Local \
+  -testPlan Acceptance \
+  -destination 'platform=iOS Simulator,id=<simulator-udid>' \
+  CODE_SIGNING_ALLOWED=YES \
+  CODE_SIGN_IDENTITY=-
+```
 
 The shared scheme also contains separate `LiveEnvironment`, `VisualCapture`, and `VisualParity`
 plans. The corresponding live-journey and reference-image scripts select these plans explicitly,

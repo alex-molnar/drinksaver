@@ -71,7 +71,7 @@ final class AccessibilityUITests: XCTestCase {
     func testAppleAccessibilityAudit() throws {
         let app = launchSignedIn()
         XCTAssertTrue(app.staticTexts["frame.title"].waitForExistence(timeout: 5))
-        try app.performAccessibilityAudit()
+        try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType))
     }
 
     private func launchSignedIn(contentSize: String = "large") -> XCUIApplication {

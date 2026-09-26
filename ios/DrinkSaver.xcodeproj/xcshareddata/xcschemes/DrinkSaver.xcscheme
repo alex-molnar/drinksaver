@@ -47,6 +47,8 @@
          </TestPlanReference>
          <TestPlanReference reference = "container:VisualParity.xctestplan" default = "NO">
          </TestPlanReference>
+         <TestPlanReference reference = "container:Acceptance.xctestplan" default = "NO">
+         </TestPlanReference>
       </TestPlans>
       <Testables>
          <TestableReference

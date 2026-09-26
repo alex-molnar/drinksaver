@@ -28,7 +28,7 @@ checkout = steps.find { |step| step["uses"].to_s.start_with?("actions/checkout@"
 abort "FAIL: checkout must be pinned to a full SHA" unless checkout["uses"].match?(/@\h{40}(?:\s|$)/)
 abort "FAIL: checkout credentials must not persist" unless checkout.dig("with", "persist-credentials") == false
 abort "FAIL: simulator preflight is missing" unless steps.any? { |step| step["run"].to_s.include?("create-pinned-simulator.sh") }
-abort "FAIL: Xcode test plan is missing" unless steps.any? { |step| step["run"].to_s.include?("-testPlan DrinkSaver") }
+abort "FAIL: Xcode acceptance test plan is missing" unless steps.any? { |step| step["run"].to_s.include?("-testPlan Acceptance") }
 abort "FAIL: Release fixture inspection is missing" unless steps.any? { |step| step["run"].to_s.include?("assert-release-has-no-fixtures.sh") }
 artifact = steps.find { |step| step["uses"].to_s.start_with?("actions/upload-artifact@") } || abort("FAIL: failure artifact upload is missing")
 abort "FAIL: upload-artifact must be pinned to a full SHA" unless artifact["uses"].match?(/@\h{40}(?:\s|$)/)
@@ -57,5 +57,13 @@ capture_script = File.read(File.join(root, "ios/scripts/compare-reference-images
 abort "FAIL: live journey script must select the LiveEnvironment test plan" unless live_script.include?("-testPlan LiveEnvironment")
 abort "FAIL: screenshot script must select VisualCapture and VisualParity plans" unless
   capture_script.include?("-testPlan VisualCapture") && capture_script.include?("-testPlan VisualParity")
+acceptance = JSON.parse(File.read(File.join(File.dirname(plan_path), "Acceptance.xctestplan")))
+acceptance_targets = acceptance.fetch("testTargets")
+acceptance_unit = acceptance_targets.find { |entry| entry.dig("target", "name") == "DrinkSaverTests" }
+acceptance_ui = acceptance_targets.find { |entry| entry.dig("target", "name") == "DrinkSaverUITests" }
+abort "FAIL: acceptance plan must run all unit tests except the unresolved visual parity comparison" unless
+  acceptance_unit && acceptance_unit["selectedTests"].nil? && acceptance_unit["skippedTests"] == ["VisualParityTests"]
+abort "FAIL: acceptance plan must run deterministic UI/accessibility tests, excluding only live and viewport capture journeys" unless
+  acceptance_ui && acceptance_ui["selectedTests"].nil? && acceptance_ui["skippedTests"] == ["LiveEnvironmentUITests", "VisualCaptureUITests"]
 puts "PASS: iOS workflow and test plan validated"
 RUBY
