@@ -81,10 +81,8 @@ final class RecommendationsStore {
     }
 
     func move(id: Int, before targetID: Int) {
-        var ids = visibleRows.map(\.id)
-        guard let source = ids.firstIndex(of: id), let target = ids.firstIndex(of: targetID), source != target else { return }
-        ids.remove(at: source); ids.insert(id, at: min(target, ids.count))
-        reorder(visibleIDs: ids)
+        guard !isSaving else { return }
+        draft = RecommendationDraftLogic.move(draft, id: id, before: targetID, hidden: queue.hiddenIDs)
     }
 
     func delete(id: Int, reduceMotion: Bool = false) {
@@ -125,6 +123,7 @@ final class RecommendationsStore {
     func retryCurrent() { queue.retryCurrent() }
 
     func sessionDidSignOut() {
+        queue.sessionDidSignOut()
         generation += 1; isLoading = false; rows = []; draft = RecommendationDraft(); exitingRows = [:]; exitTokens = [:]; state = .loading
     }
 
@@ -147,7 +146,7 @@ final class RecommendationsStore {
     private func sync(_ response: [Recommendation]) {
         guard let userID = session.userID else { return }
         rows = Self.savedRows(from: response, userID: userID)
-        draft = RecommendationDraftLogic.sync(draft, rows: rows)
+        draft = RecommendationDraftLogic.sync(draft, rows: rows, hidden: queue.hiddenIDs)
     }
 
     nonisolated static func savedRows(from response: [Recommendation], userID: String) -> [SavedRecommendation] {

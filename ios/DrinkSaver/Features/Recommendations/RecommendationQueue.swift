@@ -36,6 +36,9 @@ final class RecommendationQueue {
     private let sleep: @Sendable (Duration) async throws -> Void
     private var sequence = 0
     private var pumping = false
+    private var generation = 0
+    private var expiryTasks: [UUID: Task<Void, Never>] = [:]
+    private var operationTask: Task<Void, Never>?
 
     init(api: (any DrinkSaverAPI)?, window: Duration = .milliseconds(6500),
          sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }) {
@@ -52,6 +55,7 @@ final class RecommendationQueue {
 
     func undoCurrent() {
         guard let entry = currentFeedback, case .undoable = entry.status else { return }
+        expiryTasks.removeValue(forKey: entry.id)?.cancel()
         update(entry.id) { $0.status = .undoing }
         if case .save(let snapshot, _) = entry.kind { onSaveUndone?(snapshot) }
         update(entry.id) { $0.status = .undone }
@@ -63,6 +67,16 @@ final class RecommendationQueue {
         pump()
     }
 
+    func sessionDidSignOut() {
+        generation += 1
+        expiryTasks.values.forEach { $0.cancel() }
+        expiryTasks.removeAll()
+        operationTask?.cancel()
+        operationTask = nil
+        pumping = false
+        entries.removeAll()
+    }
+
     private func append(_ kind: Kind) {
         sequence += 1
         let entry = Entry(id: UUID(), sequence: sequence, kind: kind, status: .undoable)
@@ -72,37 +86,52 @@ final class RecommendationQueue {
         }
         entries.append(entry)
         if shouldPump { pump() }
-        Task { [sleep, window] in
+        let requestGeneration = generation
+        expiryTasks[entry.id] = Task { [weak self, sleep, window] in
             do { try await sleep(window) } catch { return }
-            guard let index = entries.firstIndex(where: { $0.id == entry.id }), entries[index].status.isUndoable else { return }
-            entries[index].status = .sending
-            pump()
+            guard let self, self.generation == requestGeneration else { return }
+            self.expiryTasks[entry.id] = nil
+            guard let index = self.entries.firstIndex(where: { $0.id == entry.id }),
+                  self.entries[index].status.isUndoable else { return }
+            self.entries[index].status = .sending
+            self.pump()
         }
     }
 
     private func pump() {
         guard !pumping else { return }
         pumping = true
-        Task {
-            defer { pumping = false }
-            while let index = entries.firstIndex(where: { $0.status.isSending }) {
-                let entry = entries[index]
+        let requestGeneration = generation
+        operationTask = Task { [weak self] in
+            guard let self else { return }
+            defer {
+                if self.generation == requestGeneration {
+                    self.pumping = false
+                    self.operationTask = nil
+                }
+            }
+            while self.generation == requestGeneration,
+                  let index = self.entries.firstIndex(where: { $0.status.isSending }) {
+                let entry = self.entries[index]
                 if case .save = entry.kind,
-                   entries[..<index].contains(where: { if case .delete = $0.kind { if case .failed = $0.status { return true } }; return false }) { return }
-                guard let api else { update(entry.id) { $0.status = .failed("Recommendations are unavailable.") }; continue }
+                   self.entries[..<index].contains(where: { if case .delete = $0.kind { if case .failed = $0.status { return true } }; return false }) { return }
+                guard let api = self.api else { self.update(entry.id) { $0.status = .failed("Recommendations are unavailable.") }; continue }
                 do {
                     switch entry.kind {
                     case .delete(let id, _):
                         try await api.deleteRecommendation(id: id)
-                        update(entry.id) { $0.status = .committed }
-                        await onDeleteCommitted?()
+                        guard self.generation == requestGeneration else { return }
+                        self.update(entry.id) { $0.status = .committed }
+                        await self.onDeleteCommitted?()
                     case .save(_, let payload):
                         let result = try await api.editRecommendations(payload())
-                        update(entry.id) { $0.status = .committed }
-                        onSaveCommitted?(result)
+                        guard self.generation == requestGeneration else { return }
+                        self.update(entry.id) { $0.status = .committed }
+                        self.onSaveCommitted?(result)
                     }
                 } catch {
-                    update(entry.id) { $0.status = .failed("Could not update recommendations. Try again.") }
+                    guard self.generation == requestGeneration else { return }
+                    self.update(entry.id) { $0.status = .failed("Could not update recommendations. Try again.") }
                 }
             }
         }

@@ -10,7 +10,7 @@ final class RecommendationDraftTests: XCTestCase {
         ], userID: "me"), [SavedRecommendation(id: 4, name: "Mine")])
     }
 
-    func testSyncPreservesNamesAndOrderAndAppendsNewIDs() {
+    func testSyncPreservesDirtyNamesAndOrderAndAppendsNewIDs() {
         let rows = [SavedRecommendation(id: 1, name: "Server one"), SavedRecommendation(id: 2, name: "Two"), SavedRecommendation(id: 3, name: "Three")]
         var draft = RecommendationDraft(order: [2, 1], names: [1: "Renamed", 2: "Two"],
             committed: RecommendationSnapshot(order: [2, 1], names: [1: "One", 2: "Two"]))
@@ -18,6 +18,18 @@ final class RecommendationDraftTests: XCTestCase {
         XCTAssertEqual(draft.order, [2, 1, 3])
         XCTAssertEqual(draft.names, [1: "Renamed", 2: "Two", 3: "Three"])
         XCTAssertEqual(draft.committed.names[1], "One")
+    }
+
+    func testCleanSyncUsesLatestServerNamesAndOrder() {
+        let initial = [SavedRecommendation(id: 1, name: "One"), SavedRecommendation(id: 2, name: "Two")]
+        let draft = RecommendationDraftLogic.sync(RecommendationDraft(), rows: initial)
+        let refreshed = RecommendationDraftLogic.sync(draft, rows: [
+            SavedRecommendation(id: 2, name: "Updated two"), SavedRecommendation(id: 1, name: "Updated one")
+        ])
+
+        XCTAssertEqual(refreshed.order, [2, 1])
+        XCTAssertEqual(refreshed.names, [2: "Updated two", 1: "Updated one"])
+        XCTAssertEqual(refreshed.committed, RecommendationSnapshot(order: [2, 1], names: [2: "Updated two", 1: "Updated one"]))
     }
 
     func testVisibleReorderKeepsHiddenSlotAndPayloadOmitsHiddenRow() {
@@ -31,6 +43,15 @@ final class RecommendationDraftTests: XCTestCase {
             RecommendationEdit(id: 3, name: "Third"), RecommendationEdit(id: 1, name: "First")
         ])
         XCTAssertEqual(RecommendationDraftLogic.reorder(draft, visibleOrder: [1], hidden: [2]), draft)
+    }
+
+    func testMoveBeforeTargetInsertsAtItsVisiblePosition() {
+        let draft = RecommendationDraft(order: [1, 2, 3], names: [1: "One", 2: "Two", 3: "Three"],
+            committed: RecommendationSnapshot(order: [1, 2, 3], names: [1: "One", 2: "Two", 3: "Three"]))
+
+        let moved = RecommendationDraftLogic.move(draft, id: 1, before: 3, hidden: [])
+
+        XCTAssertEqual(moved.order, [2, 1, 3])
     }
 
     private func recommendation(id: Int?, user: String, name: String) -> Recommendation {

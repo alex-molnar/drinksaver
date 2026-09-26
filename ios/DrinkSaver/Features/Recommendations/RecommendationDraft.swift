@@ -21,8 +21,14 @@ struct RecommendationDraft: Equatable {
 }
 
 enum RecommendationDraftLogic {
-    static func sync(_ draft: RecommendationDraft, rows: [SavedRecommendation]) -> RecommendationDraft {
+    static func sync(_ draft: RecommendationDraft, rows: [SavedRecommendation], hidden: Set<Int> = []) -> RecommendationDraft {
         let server = Dictionary(uniqueKeysWithValues: rows.map { ($0.id, $0.name) })
+        if !draft.isEditing && !isDirty(draft, hidden: hidden) {
+            let order = rows.map(\.id)
+            let names = Dictionary(uniqueKeysWithValues: rows.map { ($0.id, $0.name) })
+            return RecommendationDraft(order: order, names: names,
+                committed: RecommendationSnapshot(order: order, names: names))
+        }
         let oldIDs = Set(draft.order)
         let order = draft.order.filter { server[$0] != nil } + rows.map(\.id).filter { !oldIDs.contains($0) }
         let names = Dictionary(uniqueKeysWithValues: order.map { ($0, draft.names[$0] ?? server[$0]!) })
@@ -55,6 +61,14 @@ enum RecommendationDraftLogic {
         var next = draft
         next.order = draft.order.map { hidden.contains($0) ? $0 : iterator.next()! }
         return next
+    }
+
+    static func move(_ draft: RecommendationDraft, id: Int, before targetID: Int, hidden: Set<Int>) -> RecommendationDraft {
+        var ids = draft.order.filter { !hidden.contains($0) }
+        guard let source = ids.firstIndex(of: id), let target = ids.firstIndex(of: targetID), source != target else { return draft }
+        ids.remove(at: source)
+        ids.insert(id, at: source < target ? target - 1 : target)
+        return reorder(draft, visibleOrder: ids, hidden: hidden)
     }
 
     static func payload(_ draft: RecommendationDraft, rows: [SavedRecommendation], hidden: Set<Int>) -> [RecommendationEdit] {
