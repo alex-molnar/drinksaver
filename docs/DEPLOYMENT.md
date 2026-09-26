@@ -233,21 +233,26 @@ the app requests it during sign-in.
 
 ### Native live journey
 
-Start the local Compose stack, then run the repository-only live iOS journey:
+Run the live iOS journey against either configured environment:
 
 ```bash
+# Local disposable stack
 docker compose up --build -d
 ios/scripts/run-live-tests.sh local
+
+# Test realm configured by IOS-023B
+ios/scripts/run-live-tests.sh test
 ```
 
-The runner accepts only `local`, checks that the local backend and Keycloak are reachable, and
-launches the `Local` app configuration on an iPhone 16 simulator. The journey uses the disposable
-`dev` / `dev` local account, signs in through Keycloak when needed, checks Recommendations, saves
-and undoes a Quick entry, then creates a uniquely named recommendation from a detailed save. It
-renames and deletes that recommendation, deletes the test History row after checking Undo, and
-reloads History to verify the row stays deleted. It removes a simulator it created; an existing
-`DrinkSaver live local` simulator is reused. Run `IOS-023B` before adding any Test environment
-option to this runner.
+The runner accepts only `local` or `test`, checks the matching API and Keycloak endpoints, and
+launches the matching Xcode configuration on an iPhone 16 simulator. Production is not accepted.
+Sign in through the selected environment's Keycloak browser session when the simulator is not
+already authenticated. Use the disposable local account for Local and an authorized test account
+for Test. The journey checks Recommendations, saves and undoes a Quick entry, creates a uniquely
+named recommendation from a detailed save, renames and deletes that recommendation, then deletes
+the test History row after checking Undo and reloads both screens to verify cleanup. It removes a
+simulator it creates; existing `DrinkSaver live local` and `DrinkSaver live test` simulators are
+reused.
 
 `deploy/local/seed.sql` loads demo data. It runs as its own one-shot service that waits for
 the backend to report healthy, because Hibernate creates the schema on startup

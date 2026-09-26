@@ -2,7 +2,7 @@ import XCTest
 
 @MainActor
 final class LiveEnvironmentUITests: XCTestCase {
-    func testLocalReadSaveUndoEditDeleteJourneyCleansUpCreatedRecords() {
+    func testLiveEnvironmentReadSaveUndoEditDeleteJourneyCleansUpCreatedRecords() {
         let app = XCUIApplication()
         signInIfNeeded(app)
         XCTAssertTrue(app.staticTexts["frame.title"].waitForExistence(timeout: 30))
@@ -97,21 +97,12 @@ final class LiveEnvironmentUITests: XCTestCase {
 
     private func signInIfNeeded(_ app: XCUIApplication) {
         app.launch()
+        if app.staticTexts["frame.title"].waitForExistence(timeout: 5) { return }
         let signIn = app.buttons["Sign in"]
-        guard signIn.waitForExistence(timeout: 15) else { return }
+        XCTAssertTrue(signIn.waitForExistence(timeout: 15), "The app should reach the sign-in screen")
         signIn.tap()
-
-        let username = app.textFields["username"]
-        XCTAssertTrue(username.waitForExistence(timeout: 30), "Local Keycloak login should open")
-        username.tap()
-        username.typeText("dev")
-        let password = app.secureTextFields["password"]
-        XCTAssertTrue(password.waitForExistence(timeout: 5))
-        password.tap()
-        password.typeText("dev")
-        let submit = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'sign in'")).firstMatch
-        XCTAssertTrue(submit.waitForExistence(timeout: 5))
-        submit.tap()
+        XCTAssertTrue(app.staticTexts["frame.title"].waitForExistence(timeout: 120),
+                      "Complete sign-in in the selected environment's Keycloak browser session")
     }
 
     private func historyRowIDs(in app: XCUIApplication) -> [String] {
