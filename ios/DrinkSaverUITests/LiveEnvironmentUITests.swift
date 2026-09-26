@@ -2,15 +2,33 @@ import XCTest
 
 @MainActor
 final class LiveEnvironmentUITests: XCTestCase {
+    private var existingHistoryIDs = Set<String>()
+    private var historyBaselineCaptured = false
+    private var createdHistoryID: String?
+    private var createdRecommendationID: String?
+    private var createdRecommendationNames: [String] = []
+
     func testLiveEnvironmentReadSaveUndoEditDeleteJourneyCleansUpCreatedRecords() {
         let app = XCUIApplication()
+        existingHistoryIDs = []
+        historyBaselineCaptured = false
+        createdHistoryID = nil
+        createdRecommendationID = nil
+        createdRecommendationNames = []
+        addTeardownBlock { [weak self] in self?.cleanupCreatedRecords(in: app) }
+
         signInIfNeeded(app)
         XCTAssertTrue(app.staticTexts["frame.title"].waitForExistence(timeout: 30))
 
         app.buttons["frame.menu"].tap()
         app.buttons["Recommendations"].tap()
-        XCTAssertTrue(app.staticTexts["recommendations.count"].waitForExistence(timeout: 15))
-        XCTAssertFalse(app.staticTexts["recommendations.empty"].exists)
+        let recommendationsLoaded = app.descendants(matching: .any).matching(NSPredicate(
+            format: "identifier IN %@", ["recommendations.empty", "recommendations.rows", "recommendations.retry"]
+        )).firstMatch
+        guard recommendationsLoaded.waitForExistence(timeout: 15), !app.buttons["recommendations.retry"].exists else {
+            XCTFail("Recommendations should finish loading successfully")
+            return
+        }
         app.buttons["frame.tab.quick"].tap()
 
         let plate = app.buttons.matching(NSPredicate(
@@ -24,10 +42,18 @@ final class LiveEnvironmentUITests: XCTestCase {
         XCTAssertTrue(waitUntilAbsent(quickUndo, timeout: 10))
 
         app.buttons["frame.tab.history"].tap()
-        XCTAssertTrue(app.staticTexts["history.count"].waitForExistence(timeout: 15))
-        let existingHistoryIDs = Set(historyRowIDs(in: app))
+        let historyLoaded = app.descendants(matching: .any).matching(NSPredicate(
+            format: "identifier IN %@", ["history.empty", "history.rows", "history.retry"]
+        )).firstMatch
+        guard historyLoaded.waitForExistence(timeout: 15), !app.buttons["history.retry"].exists else {
+            XCTFail("History should finish loading successfully before recording the cleanup baseline")
+            return
+        }
+        existingHistoryIDs = Set(historyRowIDs(in: app))
+        historyBaselineCaptured = true
 
         let recommendationName = "Live 23C \(UUID().uuidString)"
+        createdRecommendationNames = [recommendationName]
         app.buttons["frame.tab.add"].tap()
         app.buttons["Drink, Choose"].tap()
         let wine = app.buttons["Wine"]
@@ -48,6 +74,7 @@ final class LiveEnvironmentUITests: XCTestCase {
 
         app.buttons["frame.tab.history"].tap()
         let createdRow = waitForNewHistoryRow(in: app, excluding: existingHistoryIDs, timeout: 25)
+        createdHistoryID = createdRow
         XCTAssertNotNil(createdRow, "The detailed save should appear in today's History")
         if let createdRow {
             let row = app.descendants(matching: .any).matching(identifier: createdRow).firstMatch
@@ -70,11 +97,13 @@ final class LiveEnvironmentUITests: XCTestCase {
         let createdRecommendation = app.staticTexts.matching(NSPredicate(format: "label == %@", recommendationName)).firstMatch
         XCTAssertTrue(createdRecommendation.waitForExistence(timeout: 15))
         let recommendationID = String(createdRecommendation.identifier.dropFirst("recommendations.row.name.".count))
+        createdRecommendationID = recommendationID
         app.buttons["recommendations.rename-button.\(recommendationID)"].tap()
         let renameField = app.textFields["recommendations.rename.\(recommendationID)"]
         XCTAssertTrue(renameField.waitForExistence(timeout: 5))
         renameField.tap()
         let replacementName = "\(recommendationName) edited"
+        createdRecommendationNames.append(replacementName)
         renameField.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: recommendationName.count))
         renameField.typeText(replacementName)
         app.buttons["Save name"].tap()
@@ -103,6 +132,64 @@ final class LiveEnvironmentUITests: XCTestCase {
         signIn.tap()
         XCTAssertTrue(app.staticTexts["frame.title"].waitForExistence(timeout: 120),
                       "Complete sign-in in the selected environment's Keycloak browser session")
+    }
+
+    private func cleanupCreatedRecords(in app: XCUIApplication) {
+        guard app.staticTexts["frame.title"].exists else { return }
+        if app.buttons["frame.add.close"].isHittable { app.buttons["frame.add.close"].tap() }
+        if app.buttons["Recommendations"].exists { app.buttons["frame.menu"].tap() }
+
+        if historyBaselineCaptured {
+            guard app.buttons["frame.tab.history"].isHittable else { return }
+            app.buttons["frame.tab.history"].tap()
+            let historyID = createdHistoryID ?? waitForNewHistoryRow(in: app, excluding: existingHistoryIDs, timeout: 3)
+            if let historyID {
+                let row = app.descendants(matching: .any).matching(identifier: historyID).firstMatch
+                if row.waitForExistence(timeout: 3) {
+                    let crossOff = row.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Cross off '")).firstMatch
+                    if app.buttons["frame.queue.undo"].exists {
+                        RunLoop.main.run(until: Date().addingTimeInterval(8))
+                    } else if crossOff.isHittable {
+                        crossOff.tap()
+                        RunLoop.main.run(until: Date().addingTimeInterval(8))
+                    }
+                    app.buttons["frame.tab.quick"].tap()
+                    app.buttons["frame.tab.history"].tap()
+                    _ = waitUntilAbsent(row, timeout: 5)
+                }
+            }
+        }
+
+        guard !createdRecommendationNames.isEmpty else { return }
+        let recommendationsMenuItem = app.buttons["Recommendations"]
+        if !recommendationsMenuItem.exists { app.buttons["frame.menu"].tap() }
+        guard recommendationsMenuItem.waitForExistence(timeout: 3) else { return }
+        recommendationsMenuItem.tap()
+        let recommendationsLoaded = app.descendants(matching: .any).matching(NSPredicate(
+            format: "identifier IN %@", ["recommendations.empty", "recommendations.rows", "recommendations.retry"]
+        )).firstMatch
+        guard recommendationsLoaded.waitForExistence(timeout: 10) else { return }
+
+        var recommendationIDs = createdRecommendationID.map { [$0] } ?? []
+        for name in createdRecommendationNames {
+            let rowName = app.staticTexts.matching(NSPredicate(format: "label == %@", name)).firstMatch
+            if rowName.waitForExistence(timeout: 3) {
+                let id = String(rowName.identifier.dropFirst("recommendations.row.name.".count))
+                if id != rowName.identifier && !recommendationIDs.contains(id) { recommendationIDs.append(id) }
+            }
+        }
+
+        for id in recommendationIDs {
+            let delete = app.buttons["recommendations.delete.\(id)"]
+            guard delete.isHittable else { continue }
+            delete.tap()
+            RunLoop.main.run(until: Date().addingTimeInterval(8))
+            app.buttons["frame.tab.quick"].tap()
+            let menuItem = app.buttons["Recommendations"]
+            if !menuItem.exists { app.buttons["frame.menu"].tap() }
+            guard menuItem.waitForExistence(timeout: 3) else { return }
+            menuItem.tap()
+        }
     }
 
     private func historyRowIDs(in app: XCUIApplication) -> [String] {
