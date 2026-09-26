@@ -99,7 +99,11 @@ final class FeedbackArbiter {
             message = failure.message
             state = .retryable
         case .saving:
-            message = "Saving \(label)…"
+            if case .delete = entry.kind {
+                message = "Deleting \(label)…"
+            } else {
+                message = "Saving \(label)…"
+            }
             state = .progress
         case .committed:
             message = ""

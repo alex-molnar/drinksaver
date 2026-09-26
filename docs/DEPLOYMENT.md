@@ -231,6 +231,29 @@ client secret or password grant. Validate this checked-in client configuration w
 `python3 deploy/local/validate-ios-client.py`. `offline_access` is an optional client scope because
 the app requests it during sign-in.
 
+### Native live journey
+
+Run the live iOS journey against either configured environment:
+
+```bash
+# Local disposable stack
+docker compose up --build -d
+ios/scripts/run-live-tests.sh local
+
+# Test realm configured by IOS-023B
+ios/scripts/run-live-tests.sh test
+```
+
+The runner accepts only `local` or `test`, checks the matching API and Keycloak endpoints, and
+launches the matching Xcode configuration on an iPhone 16 simulator. Production is not accepted.
+Sign in through the selected environment's Keycloak browser session when the simulator is not
+already authenticated. Use the disposable local account for Local and an authorized test account
+for Test. The journey checks Recommendations, saves and undoes a Quick entry, creates a uniquely
+named recommendation from a detailed save, renames and deletes that recommendation, then deletes
+the test History row after checking Undo and reloads both screens to verify cleanup. It removes a
+simulator it creates; existing `DrinkSaver live local` and `DrinkSaver live test` simulators are
+reused.
+
 `deploy/local/seed.sql` loads demo data. It runs as its own one-shot service that waits for
 the backend to report healthy, because Hibernate creates the schema on startup
 (`ddl-auto=update`) and there is nothing to insert into before that. It is idempotent and

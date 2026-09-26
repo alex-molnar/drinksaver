@@ -34,6 +34,7 @@ struct FeedbackStrip: View {
                         ProgressView().accessibilityLabel("Undoing")
                     case .progress:
                         ProgressView().accessibilityLabel("In progress")
+                            .accessibilityIdentifier(actionIdentifier("progress"))
                     }
                 }
                 .accessibilityElement(children: .contain)
