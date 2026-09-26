@@ -84,6 +84,12 @@ final class AddDrinkStore {
         errorMessage = nil; isSaving = false
         Task { await loadAlcoholTypes() }
     }
+    func cancelCreation() {
+        selectionRevision += 1; activeCreateID = nil
+        draft.creationName = ""; draft.volumeLitres = "0.33"
+        draft.newEntryColorPaletteId = nil; draft.newEntryGlasswareId = nil
+        errorMessage = nil
+    }
     func setQuantity(_ value: Int) { draft.quantity = Self.clampedQuantity(value) }
     func setRecommend(_ value: Bool) { draft.setRecommend(value) }
     func selectAlcoholType(_ value: AlcoholType) {
@@ -177,7 +183,9 @@ final class AddDrinkStore {
             draft.newEntryGlasswareId = nil
             selectionRevision += 1
             coordinator.popAddPanel(); errorMessage = nil
-        } catch { errorMessage = "Couldn’t add it. Try again." }
+        } catch {
+            if requestGeneration == generation, requestRevision == selectionRevision { errorMessage = "Couldn’t add it. Try again." }
+        }
     }
 
     func save() {

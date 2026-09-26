@@ -233,7 +233,10 @@ struct AppFrame: View {
         VStack(spacing: 16) {
             HStack {
                 if coordinator.addPanels.count > 1 {
-                    Button { coordinator.popAddPanel() } label: {
+                    Button {
+                        if let route = coordinator.addPanels.last, case .create = route { addDrinkStore.cancelCreation() }
+                        coordinator.popAddPanel()
+                    } label: {
                         Image(systemName: "chevron.left").frame(width: 44, height: 44)
                     }
                     .accessibilityLabel("Back")

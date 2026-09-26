@@ -100,6 +100,37 @@ final class QuickSaveStoreTests: XCTestCase {
         XCTAssertEqual(addStore.draft.recommendationName, "Saved name")
     }
 
+    func testCancelCreationClearsPanelValuesAndRejectsLateResponse() async {
+        let gate = AddDrinkCreateGate()
+        let api = QuickSaveTestAPI(volumeCreateGate: gate)
+        let graph = await makeGraph(api: api)
+        let coordinator = AppCoordinator()
+        let store = AddDrinkStore(api: api, queue: graph.queue, day: graph.day, designs: graph.designs,
+                                  session: graph.session, coordinator: coordinator)
+        store.draft.alcoholType = AlcoholType(id: 4, userId: nil, name: "Beer", volumeIds: [], colorPaletteId: 1, glasswareId: 2)
+        store.draft.creationName = "Old size"
+        store.draft.volumeLitres = "0.5"
+        store.draft.newEntryColorPaletteId = 11
+        store.draft.newEntryGlasswareId = 21
+        coordinator.presentAdd()
+        coordinator.push(.option(.volume))
+        coordinator.push(.create(.volume))
+
+        let createTask = Task { await store.create(.volume, name: store.draft.creationName, litres: 0.5) }
+        await gate.waitForCreate()
+        store.cancelCreation()
+        coordinator.popAddPanel()
+        await gate.releaseCreate()
+        await createTask.value
+
+        XCTAssertEqual(store.draft.creationName, "")
+        XCTAssertEqual(store.draft.volumeLitres, "0.33")
+        XCTAssertNil(store.draft.newEntryColorPaletteId)
+        XCTAssertNil(store.draft.newEntryGlasswareId)
+        XCTAssertNil(store.draft.volume)
+        XCTAssertFalse(store.isCreating)
+    }
+
     func testAddDrinkLoadsConsumptionTypesWithFixedPageSize() async {
         let api = QuickSaveTestAPI()
         let graph = await makeGraph(api: api)
