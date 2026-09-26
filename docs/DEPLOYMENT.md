@@ -83,9 +83,11 @@ Run the same plan locally after creating a simulator supported by your selected 
 ios/scripts/xcodebuild.sh test \
   -project ios/DrinkSaver.xcodeproj \
   -scheme DrinkSaver \
-  -testPlan DrinkSaver \
+  -configuration Local \
+  -testPlan Acceptance \
   -destination 'platform=iOS Simulator,id=<simulator-udid>' \
-  CODE_SIGNING_ALLOWED=NO
+  CODE_SIGNING_ALLOWED=YES \
+  CODE_SIGN_IDENTITY=-
 ```
 
 The shared scheme also contains separate `LiveEnvironment`, `VisualCapture`, and `VisualParity`

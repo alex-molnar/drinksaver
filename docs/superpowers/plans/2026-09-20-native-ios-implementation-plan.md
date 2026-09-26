@@ -2177,8 +2177,14 @@ and device type in job output.
 - [ ] **Step 4: Validate locally and on the branch**
 
 ```bash
-ios/scripts/xcodebuild.sh test -project ios/DrinkSaver.xcodeproj -scheme DrinkSaver \
-  -testPlan DrinkSaver -destination 'platform=iOS Simulator,id=<created-udid>'
+ios/scripts/xcodebuild.sh test \
+  -project ios/DrinkSaver.xcodeproj \
+  -scheme DrinkSaver \
+  -configuration Local \
+  -testPlan Acceptance \
+  -destination 'platform=iOS Simulator,id=<created-udid>' \
+  CODE_SIGNING_ALLOWED=YES \
+  CODE_SIGN_IDENTITY=-
 ```
 
 Expected: the revised deterministic acceptance suite passes locally and on the hosted runner. The
