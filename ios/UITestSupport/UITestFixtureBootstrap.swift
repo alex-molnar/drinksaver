@@ -92,6 +92,9 @@ private actor FixtureAPI: DrinkSaverAPI {
 
     func palettes() async throws -> [Palette] {
         if fails { throw FixtureAPIError.unavailable }
+        if referenceState == nil {
+            return [Palette(id: 101, name: "fixture-cream", field: "#DFD1B0", inkLight: nil, inkDark: "#2B1A14")]
+        }
         return [
             Palette(id: 1, name: "green", field: "#2B7454", inkLight: "#FFF6E3", inkDark: "#F4E9CE"),
             Palette(id: 2, name: "brown", field: "#2B1A13", inkLight: "#FFF3DA", inkDark: "#EBD9B4"),
@@ -106,6 +109,9 @@ private actor FixtureAPI: DrinkSaverAPI {
 
     func glassware() async throws -> [Glassware] {
         if fails { throw FixtureAPIError.unavailable }
+        if referenceState == nil {
+            return [Glassware(id: 201, name: "fixture-highball", g: "M10 4h14v39H10Z", l: "M11 13h12v29H11Z", f: nil)]
+        }
         return [
             Glassware(id: 1, name: "pint", g: "M8 5h18l-2.2 40a3 3 0 0 1-3 2.6h-7.6a3 3 0 0 1-3-2.6Z", l: "M9.5 15h15l-1.85 29.4a1.5 1.5 0 0 1-1.5 1.3h-8.3a1.5 1.5 0 0 1-1.5-1.3Z", f: "M8.7 8.4h16.6l-.42 6.6H9.12Z"),
             Glassware(id: 3, name: "wine", g: "M8 5c0 12 2 17.2 9 19.6 7-2.4 9-7.6 9-19.6Z M16.1 24.6h1.8v16.6h-1.8Z M9.8 43.9h14.4v3H9.8Z", l: "M9.7 12.6c.75 6.5 2.7 9.9 7.3 11.7 4.6-1.8 6.55-5.2 7.3-11.7Z", f: nil),
@@ -169,6 +175,10 @@ private actor FixtureAPI: DrinkSaverAPI {
 
     func alcoholTypes() async throws -> [AlcoholType] {
         if fails { throw FixtureAPIError.unavailable }
+        if referenceState == nil {
+            return [AlcoholType(id: 1, userId: nil, name: "Wine", volumeIds: [2], colorPaletteId: 101, glasswareId: 201),
+                    AlcoholType(id: 4, userId: nil, name: "Beer", volumeIds: [6], colorPaletteId: 101, glasswareId: 201)]
+        }
         return [AlcoholType(id: 1, userId: nil, name: "Spirits", volumeIds: [1, 2], colorPaletteId: 1, glasswareId: 4),
                 AlcoholType(id: 2, userId: nil, name: "Wine", volumeIds: [3, 4, 7], colorPaletteId: 4, glasswareId: 3),
                 AlcoholType(id: 3, userId: nil, name: "Cocktail", volumeIds: [2, 4], colorPaletteId: 6, glasswareId: 4),
@@ -176,27 +186,34 @@ private actor FixtureAPI: DrinkSaverAPI {
     }
     func volumes(alcoholTypeID: Int) async throws -> [AlcoholVolume] {
         if fails { throw FixtureAPIError.unavailable }
+        if referenceState == nil {
+            return [AlcoholVolume(id: alcoholTypeID == 4 ? 6 : 2, name: "Glass", volume: 0.25)]
+        }
         return [AlcoholVolume(id: 1, name: "Shot", volume: 0.04), AlcoholVolume(id: 2, name: "Long drink", volume: 0.25),
                 AlcoholVolume(id: 3, name: "Small glass", volume: 0.2), AlcoholVolume(id: 4, name: "Large glass", volume: 0.3),
                 AlcoholVolume(id: 5, name: "Small bottle", volume: 0.33), AlcoholVolume(id: 6, name: "Pint", volume: 0.5),
                 AlcoholVolume(id: 7, name: "Bottle", volume: 0.75)]
     }
     func subtypes(alcoholTypeID: Int) async throws -> [AlcoholSubtype] {
-        [AlcoholSubtype(id: 1, alcoholTypeId: 1, userId: nil, name: "Gin", colorPaletteId: nil, glasswareId: nil),
+        if referenceState == nil { return [] }
+        return [AlcoholSubtype(id: 1, alcoholTypeId: 1, userId: nil, name: "Gin", colorPaletteId: nil, glasswareId: nil),
          AlcoholSubtype(id: 2, alcoholTypeId: 1, userId: nil, name: "Whisky", colorPaletteId: nil, glasswareId: nil),
          AlcoholSubtype(id: 4, alcoholTypeId: 2, userId: nil, name: "Red", colorPaletteId: 4, glasswareId: 3),
          AlcoholSubtype(id: 5, alcoholTypeId: 2, userId: nil, name: "White", colorPaletteId: nil, glasswareId: 3)]
     }
     func consumptionTypes(amount: Int) async throws -> [ConsumptionType] {
-        [ConsumptionType(id: 1, name: "Bottle", glasswareId: 11), ConsumptionType(id: 2, name: "Can", glasswareId: 1),
+        if referenceState == nil { return [ConsumptionType(id: 3, name: "Served", glasswareId: 201)] }
+        return [ConsumptionType(id: 1, name: "Bottle", glasswareId: 11), ConsumptionType(id: 2, name: "Can", glasswareId: 1),
          ConsumptionType(id: 3, name: "Draft/Tap", glasswareId: 1)]
     }
     func brands() async throws -> [Brand] {
-        [Brand(id: 1, userId: nil, name: "Heineken", colorPaletteId: 1), Brand(id: 2, userId: nil, name: "Guinness", colorPaletteId: 2),
+        if referenceState == nil { return [Brand(id: 7, userId: nil, name: "Fixture brand", colorPaletteId: 101)] }
+        return [Brand(id: 1, userId: nil, name: "Heineken", colorPaletteId: 1), Brand(id: 2, userId: nil, name: "Guinness", colorPaletteId: 2),
          Brand(id: 3, userId: nil, name: "Duvel", colorPaletteId: 7), Brand(id: 4, userId: nil, name: "La Chouffe", colorPaletteId: 4)]
     }
     func flavours(brandID: Int) async throws -> [BeerFlavour] {
-        [BeerFlavour(id: 1, brandId: 1, userId: nil, name: "Original", colorPaletteId: nil),
+        if referenceState == nil { return [BeerFlavour(id: 8, brandId: brandID, userId: nil, name: "Pilsner", colorPaletteId: 101)] }
+        return [BeerFlavour(id: 1, brandId: 1, userId: nil, name: "Original", colorPaletteId: nil),
          BeerFlavour(id: 3, brandId: 2, userId: nil, name: "Draught", colorPaletteId: nil),
          BeerFlavour(id: 4, brandId: 3, userId: nil, name: "Blond", colorPaletteId: nil),
          BeerFlavour(id: 5, brandId: 4, userId: nil, name: "Blonde", colorPaletteId: nil)]
