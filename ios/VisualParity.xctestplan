@@ -1,0 +1,30 @@
+{
+  "configurations": [
+    {
+      "id": "B0C4361F-AFB5-4B62-B03C-71930B24D5D4",
+      "name": "Visual reference parity",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {
+    "codeCoverage": false,
+    "targetForVariableExpansion": {
+      "containerPath": "container:DrinkSaver.xcodeproj",
+      "identifier": "DBCB89BB37C2FEC5C6894FD8",
+      "name": "DrinkSaver"
+    }
+  },
+  "testTargets": [
+    {
+      "target": {
+        "containerPath": "container:DrinkSaver.xcodeproj",
+        "identifier": "F3A1B47D3802FD2149479EC6",
+        "name": "DrinkSaverTests"
+      },
+      "selectedTests": [
+        "VisualParityTests/testFrozenReferenceMatrixIsCompleteAndComparable()"
+      ]
+    }
+  ],
+  "version": 1
+}

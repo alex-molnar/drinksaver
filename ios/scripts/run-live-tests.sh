@@ -58,6 +58,7 @@ fi
   -project "$REPO_ROOT/ios/DrinkSaver.xcodeproj" \
   -scheme DrinkSaver \
   -configuration "$build_configuration" \
+  -testPlan LiveEnvironment \
   -destination "platform=iOS Simulator,id=$simulator_id" \
   -parallel-testing-enabled NO \
   -only-testing:DrinkSaverUITests/LiveEnvironmentUITests/testLiveEnvironmentReadSaveUndoEditDeleteJourneyCleansUpCreatedRecords \
