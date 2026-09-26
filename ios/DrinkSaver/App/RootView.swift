@@ -9,6 +9,7 @@ struct RootView: View {
     @Environment(QuickSaveStore.self) private var quickSaveStore
     @Environment(AddDrinkStore.self) private var addDrinkStore
     @Environment(HistoryStore.self) private var historyStore
+    @Environment(RecommendationsStore.self) private var recommendationsStore
     @Environment(AppCoordinator.self) private var appCoordinator
 
     var body: some View {
@@ -52,6 +53,7 @@ struct RootView: View {
                 quickSaveStore.sessionDidSignOut()
                 addDrinkStore.sessionDidSignOut()
                 historyStore.sessionDidSignOut()
+                recommendationsStore.sessionDidSignOut()
             } else {
                 await designCatalogueStore.load()
                 await currentDrinkingDayStore.load()
@@ -85,6 +87,7 @@ struct RootView: View {
     let addDrinkStore = AddDrinkStore(api: nil, queue: queueStore, day: drinkingDayStore,
                                       designs: catalogueStore, session: sessionStore, coordinator: coordinator)
     let historyStore = HistoryStore(api: nil, queue: queueStore, drinkingDay: drinkingDayStore, session: sessionStore)
+    let recommendationsStore = RecommendationsStore(api: nil, session: sessionStore, coordinator: coordinator)
     RootView()
         .environment(ThemeStore())
         .environment(sessionStore)
@@ -95,4 +98,5 @@ struct RootView: View {
         .environment(coordinator)
         .environment(addDrinkStore)
         .environment(historyStore)
+        .environment(recommendationsStore)
 }

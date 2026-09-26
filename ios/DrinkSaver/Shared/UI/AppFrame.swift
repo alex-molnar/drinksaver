@@ -103,7 +103,7 @@ struct AppFrame: View {
         case .history:
             HistoryView()
         case .recommendations:
-            Color.clear.accessibilityLabel("Recommendations screen")
+            RecommendationTabView()
         }
     }
 

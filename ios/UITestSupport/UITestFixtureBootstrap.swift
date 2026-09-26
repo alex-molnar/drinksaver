@@ -49,10 +49,22 @@ private actor FixtureAPI: DrinkSaverAPI {
     private let saveFails: Bool
     private var nextDrinkID = 401
     private var nextCatalogueID = 20
+    private var recommendationRows: [Recommendation] = []
 
     init(fails: Bool, saveFails: Bool) {
         self.fails = fails
         self.saveFails = saveFails
+        recommendationRows = [
+            Recommendation(id: nil, userId: "ui-fixture-user", name: "Golden lager", alcoholTypeId: 4,
+                           alcoholSubtypeId: nil, alcoholVolumeId: 6, brandId: nil, beerFlavourId: nil,
+                           consumptionTypeId: nil, endDate: nil, colorPaletteId: 101, glasswareId: 201, orderNumber: 0),
+            Recommendation(id: 9, userId: "ui-fixture-user", name: "House pilsner", alcoholTypeId: 3,
+                           alcoholSubtypeId: nil, alcoholVolumeId: 5, brandId: 7, beerFlavourId: nil,
+                           consumptionTypeId: nil, endDate: nil, colorPaletteId: 101, glasswareId: 201, orderNumber: 1),
+            Recommendation(id: 10, userId: "ui-fixture-user", name: "Amber ale", alcoholTypeId: 4,
+                           alcoholSubtypeId: nil, alcoholVolumeId: 6, brandId: nil, beerFlavourId: nil,
+                           consumptionTypeId: nil, endDate: nil, colorPaletteId: 101, glasswareId: 201, orderNumber: 2)
+        ]
     }
 
     func palettes() async throws -> [Palette] {
@@ -75,14 +87,26 @@ private actor FixtureAPI: DrinkSaverAPI {
 
     func recommendations() async throws -> [Recommendation] {
         if fails { throw FixtureAPIError.unavailable }
-        return [
-            Recommendation(id: nil, userId: "ui-fixture-user", name: "Golden lager", alcoholTypeId: 4,
-                           alcoholSubtypeId: nil, alcoholVolumeId: 6, brandId: nil, beerFlavourId: nil,
-                           consumptionTypeId: nil, endDate: nil, colorPaletteId: 101, glasswareId: 201, orderNumber: 0),
-            Recommendation(id: 9, userId: "ui-fixture-user", name: "House pilsner", alcoholTypeId: 3,
-                           alcoholSubtypeId: nil, alcoholVolumeId: 5, brandId: 7, beerFlavourId: nil,
-                           consumptionTypeId: nil, endDate: nil, colorPaletteId: 101, glasswareId: 201, orderNumber: 1)
-        ]
+        return recommendationRows
+    }
+
+    func editRecommendations(_ edits: [RecommendationEdit]) async throws -> [Recommendation] {
+        if fails { throw FixtureAPIError.unavailable }
+        for (index, edit) in edits.enumerated() {
+            guard let row = recommendationRows.firstIndex(where: { $0.id == edit.id }) else { continue }
+            let existing = recommendationRows[row]
+            recommendationRows[row] = Recommendation(id: existing.id, userId: existing.userId, name: edit.name,
+                alcoholTypeId: existing.alcoholTypeId, alcoholSubtypeId: existing.alcoholSubtypeId,
+                alcoholVolumeId: existing.alcoholVolumeId, brandId: existing.brandId, beerFlavourId: existing.beerFlavourId,
+                consumptionTypeId: existing.consumptionTypeId, endDate: existing.endDate,
+                colorPaletteId: existing.colorPaletteId, glasswareId: existing.glasswareId, orderNumber: index)
+        }
+        return recommendationRows
+    }
+
+    func deleteRecommendation(id: Int) async throws {
+        if fails { throw FixtureAPIError.unavailable }
+        recommendationRows.removeAll { $0.id == id }
     }
 
     func saveDrink(_ request: DrinkSaveRequest) async throws -> [SavedDrink] {
@@ -138,8 +162,6 @@ private enum FixtureAPIError: Error {
 private extension DrinkSaverAPI {
     func saveDrink(_ request: DrinkSaveRequest) async throws -> [SavedDrink] { throw FixtureAPIError.endpointNotConfigured }
     func recommendations() async throws -> [Recommendation] { throw FixtureAPIError.endpointNotConfigured }
-    func editRecommendations(_ edits: [RecommendationEdit]) async throws -> [Recommendation] { throw FixtureAPIError.endpointNotConfigured }
-    func deleteRecommendation(id: Int) async throws { throw FixtureAPIError.endpointNotConfigured }
     func alcoholTypes() async throws -> [AlcoholType] { throw FixtureAPIError.endpointNotConfigured }
     func createAlcoholType(_ entry: NewAlcoholEntry) async throws -> AlcoholType { throw FixtureAPIError.endpointNotConfigured }
     func volumes(alcoholTypeID: Int) async throws -> [AlcoholVolume] { throw FixtureAPIError.endpointNotConfigured }
