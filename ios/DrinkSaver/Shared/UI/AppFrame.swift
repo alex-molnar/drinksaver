@@ -6,7 +6,6 @@ struct AppFrame: View {
     @Environment(CurrentDrinkingDayStore.self) private var drinkingDay
     @Environment(AppCoordinator.self) private var coordinator
     @Environment(AddDrinkStore.self) private var addDrinkStore
-    @Environment(SaveQueueStore.self) private var saveQueueStore: SaveQueueStore?
     @State private var menuIsOpen = false
 
     private var theme: DrinkSaverTheme { themeStore.theme }
@@ -27,8 +26,8 @@ struct AppFrame: View {
             VStack(spacing: 0) {
                 headerBar
                 VStack(spacing: 0) {
-                    if coordinator.currentScreen != .quick, let entry = saveQueueStore?.currentFeedback {
-                        queueFeedback(entry)
+                    if !coordinator.isAddPresented {
+                        FeedbackStrip(placement: coordinator.feedbackPlacement)
                     }
                     content
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -144,28 +143,6 @@ struct AppFrame: View {
         .contentShape(Rectangle())
     }
 
-    @ViewBuilder private func queueFeedback(_ entry: QueueEntry) -> some View {
-        let title: String = switch entry.kind { case .save(let operation): operation.label; case .delete(let operation): operation.label }
-        HStack(spacing: 12) {
-            Text(feedbackMessage(entry, label: title)).font(theme.type.body.font).foregroundStyle(theme.ink.primary.color)
-                .accessibilityIdentifier("frame.queue.message")
-            Spacer(minLength: 4)
-            switch entry.status {
-            case .undoable: Button("Undo") { saveQueueStore?.undoCurrent() }.accessibilityIdentifier("frame.queue.undo")
-            case .failed: Button("Retry") { saveQueueStore?.retryCurrent() }.accessibilityIdentifier("frame.queue.retry")
-            case .undoing: ProgressView().accessibilityLabel("Undoing")
-            case .saving, .committed: EmptyView()
-            }
-        }
-        .buttonStyle(.bordered).padding(.horizontal, 16).padding(.vertical, 10)
-        .background(theme.surface.panel.color)
-        .overlay(alignment: .bottom) { Rectangle().fill(theme.line.hairline.color).frame(height: 1) }
-    }
-    private func feedbackMessage(_ entry: QueueEntry, label: String) -> String {
-        let action = switch entry.kind { case .delete: "Crossed off"; case .save: "Saved" }
-        return switch entry.status { case .undoable: "\(action) \(label)"; case .undoing: "Undoing \(label)…"; case .failed(let failure): failure.message; case .saving, .committed: "" }
-    }
-
     private var menuCard: some View {
         VStack(spacing: 0) {
             menuAction("Recommendations") {
@@ -232,6 +209,7 @@ struct AppFrame: View {
 
     private var addSheet: some View {
         VStack(spacing: 16) {
+            FeedbackStrip(placement: .addSheet)
             HStack {
                 if coordinator.addPanels.count > 1 {
                     Button {

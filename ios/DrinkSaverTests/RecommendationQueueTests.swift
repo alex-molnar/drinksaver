@@ -15,6 +15,23 @@ final class RecommendationQueueTests: XCTestCase {
         if case .undone? = queue.entries.first?.status {} else { XCTFail("Delete should be marked undone") }
     }
 
+    func testAccessibilityFocusPausesRecommendationUndoExpiry() async {
+        let queue = RecommendationQueue(api: nil, window: .zero, sleep: { _ in try await Task.sleep(for: .seconds(3600)) })
+        queue.delete(id: 17, label: "Pale Ale")
+        queue.setFeedbackInteractionActive(true)
+
+        queue.expireDueEntries(now: .distantFuture)
+
+        XCTAssertEqual(queue.feedbackSnapshot?.state, .undoable)
+        queue.setFeedbackInteractionActive(false)
+        queue.expireDueEntries(now: .distantFuture)
+
+        for _ in 0..<100 where queue.feedbackSnapshot?.state != .failed("Recommendations are unavailable.") {
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+        XCTAssertEqual(queue.feedbackSnapshot?.state, .failed("Recommendations are unavailable."))
+    }
+
     func testSignOutClearsQueueAndIgnoresAnInFlightDeleteCompletion() async {
         let api = DeferredDeleteAPI()
         let queue = RecommendationQueue(api: api, window: .zero, sleep: { _ in })

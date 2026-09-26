@@ -54,6 +54,7 @@ enum SaveQueueAction: Sendable {
     case undoRequested(id: UUID)
     case undoSucceeded(id: UUID)
     case retryRequested(id: UUID)
+    case extendUndoWindow(id: UUID, until: Date)
     case expire(now: Date)
     case commit(id: UUID)
     case remove(id: UUID)
@@ -97,6 +98,11 @@ enum SaveQueueReducer {
             return updating(state, id: id) {
                 guard case .failed = $0.status else { return }
                 $0.status = .saving
+            }
+        case .extendUndoWindow(let id, let until):
+            return updating(state, id: id) {
+                guard case .undoable = $0.status else { return }
+                $0.status = .undoable(until: until)
             }
         case .expire(let now):
             var next = state
