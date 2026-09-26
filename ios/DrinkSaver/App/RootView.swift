@@ -11,6 +11,7 @@ struct RootView: View {
     @Environment(HistoryStore.self) private var historyStore
     @Environment(RecommendationsStore.self) private var recommendationsStore
     @Environment(AppCoordinator.self) private var appCoordinator
+    @Environment(FeedbackArbiter.self) private var feedbackArbiter
 
     var body: some View {
         Group {
@@ -54,11 +55,16 @@ struct RootView: View {
                 addDrinkStore.sessionDidSignOut()
                 historyStore.sessionDidSignOut()
                 recommendationsStore.sessionDidSignOut()
+                feedbackArbiter.refresh(drinks: nil, recommendations: nil)
             } else {
                 await designCatalogueStore.load()
                 await currentDrinkingDayStore.load()
                 await saveQueueStore?.reconcilePersistedDeletes()
             }
+        }
+        .onChange(of: feedbackArbiter.isInteractionActive) { _, active in
+            saveQueueStore?.setFeedbackInteractionActive(active)
+            recommendationsStore.queue.setFeedbackInteractionActive(active)
         }
     }
 
@@ -99,4 +105,5 @@ struct RootView: View {
         .environment(addDrinkStore)
         .environment(historyStore)
         .environment(recommendationsStore)
+        .environment(FeedbackArbiter())
 }

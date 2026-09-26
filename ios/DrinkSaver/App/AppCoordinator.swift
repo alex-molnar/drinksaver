@@ -6,6 +6,8 @@ enum AppScreen: Equatable {
     case recommendations
 }
 
+enum FeedbackPlacement { case quick, page, addSheet }
+
 enum AddRoute: Equatable {
     case menu
     case option(AddRouteField)
@@ -27,6 +29,10 @@ final class AppCoordinator {
     var addPanels: [AddRoute] = []
 
     var isAddPresented: Bool { !addPanels.isEmpty }
+    var feedbackPlacement: FeedbackPlacement {
+        if isAddPresented { return .addSheet }
+        return currentScreen == .quick ? .quick : .page
+    }
 
     func navigate(to screen: AppScreen) { currentScreen = screen }
 

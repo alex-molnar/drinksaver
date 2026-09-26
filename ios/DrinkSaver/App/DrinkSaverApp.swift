@@ -13,6 +13,8 @@ struct DrinkSaverApp: App {
     @State private var historyStore: HistoryStore
     @State private var recommendationsStore: RecommendationsStore
     @State private var appCoordinator: AppCoordinator
+    @State private var feedbackArbiter: FeedbackArbiter
+    @State private var sceneLifecycleHandler: SceneLifecycleHandler
     @Environment(\.scenePhase) private var scenePhase
 #if UI_TESTING
     private let uiFixtureBootstrap: UITestFixtureBootstrap?
@@ -31,6 +33,11 @@ struct DrinkSaverApp: App {
             let configuration = try? AppConfiguration.load()
             let queueStore = SaveQueueStore(api: fixture.api, sessionStore: fixture.sessionStore, configuration: configuration, clock: fixture.clock)
             _saveQueueStore = State(initialValue: queueStore)
+            let feedbackWindow: Duration = ProcessInfo.processInfo.arguments.contains("-ui-feedback-window-long")
+                ? .seconds(30) : .seconds(2)
+            let recommendationQueue = RecommendationQueue(api: fixture.api, window: feedbackWindow)
+            _feedbackArbiter = State(initialValue: FeedbackArbiter())
+            _sceneLifecycleHandler = State(initialValue: SceneLifecycleHandler(saveQueueStore: queueStore, recommendationQueue: recommendationQueue))
             let dayStore = CurrentDrinkingDayStore(api: fixture.api, queueStore: queueStore, sessionStore: fixture.sessionStore, clock: fixture.clock)
             _currentDrinkingDayStore = State(initialValue: dayStore)
             _quickSaveStore = State(initialValue: QuickSaveStore(
@@ -46,7 +53,7 @@ struct DrinkSaverApp: App {
             _historyStore = State(initialValue: HistoryStore(api: fixture.api, queue: queueStore,
                 drinkingDay: dayStore, session: fixture.sessionStore))
             _recommendationsStore = State(initialValue: RecommendationsStore(api: fixture.api, session: fixture.sessionStore,
-                coordinator: coordinator, queue: RecommendationQueue(api: fixture.api, window: .seconds(2))))
+                coordinator: coordinator, queue: recommendationQueue))
             return
         }
 #endif
@@ -70,6 +77,9 @@ struct DrinkSaverApp: App {
         _appCoordinator = State(initialValue: coordinator)
         let queueStore = SaveQueueStore(api: api, sessionStore: sessionStore, configuration: configuration)
         _saveQueueStore = State(initialValue: queueStore)
+        let recommendationQueue = RecommendationQueue(api: api)
+        _feedbackArbiter = State(initialValue: FeedbackArbiter())
+        _sceneLifecycleHandler = State(initialValue: SceneLifecycleHandler(saveQueueStore: queueStore, recommendationQueue: recommendationQueue))
         let dayStore = CurrentDrinkingDayStore(api: api, queueStore: queueStore, sessionStore: sessionStore)
         _currentDrinkingDayStore = State(initialValue: dayStore)
         let catalogueStore = DesignCatalogueStore(api: api, sessionStore: sessionStore)
@@ -86,7 +96,8 @@ struct DrinkSaverApp: App {
             designs: catalogueStore, session: sessionStore, coordinator: coordinator))
         _historyStore = State(initialValue: HistoryStore(api: api, queue: queueStore,
             drinkingDay: dayStore, session: sessionStore))
-        _recommendationsStore = State(initialValue: RecommendationsStore(api: api, session: sessionStore, coordinator: coordinator))
+        _recommendationsStore = State(initialValue: RecommendationsStore(api: api, session: sessionStore,
+            coordinator: coordinator, queue: recommendationQueue))
     }
 
     var body: some Scene {
@@ -106,8 +117,9 @@ struct DrinkSaverApp: App {
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .background {
-                        let pendingDeletes = saveQueueStore.applicationWillEnterBackground()
-                        Task { await saveQueueStore.flushBackgroundDeletes(pendingDeletes) }
+                        sceneLifecycleHandler.didEnterBackground()
+                    } else if newPhase == .active {
+                        Task { await sceneLifecycleHandler.didBecomeActive() }
                     }
                 }
         }
@@ -144,7 +156,15 @@ struct DrinkSaverApp: App {
             .environment(historyStore)
             .environment(recommendationsStore)
             .environment(appCoordinator)
+            .environment(feedbackArbiter)
+            .onChange(of: saveQueueStore.state) { _, _ in refreshFeedback() }
+            .onChange(of: recommendationsStore.queue.feedbackSnapshot) { _, _ in refreshFeedback() }
             .task { await sessionStore.restore() }
             .onOpenURL { _ = sessionStore.handleOpenURL($0) }
+    }
+
+    private func refreshFeedback() {
+        feedbackArbiter.refresh(drinks: saveQueueStore.currentFeedback,
+                                recommendations: recommendationsStore.queue.feedbackSnapshot)
     }
 }

@@ -5,8 +5,16 @@ import Observation
 @Observable
 final class RecommendationQueue {
     enum Status { case undoable, undoing, undone, sending, committed, failed(String) }
+    enum FeedbackState: Equatable { case undoable, undoing, sending, failed(String) }
     enum Kind { case delete(id: Int, label: String), save(snapshot: RecommendationSnapshot, payload: () -> [RecommendationEdit]) }
     struct Entry: Identifiable { let id: UUID; let sequence: Int; let kind: Kind; var status: Status }
+    struct FeedbackSnapshot: Equatable {
+        let id: UUID
+        let sequence: Int
+        let label: String
+        let isDelete: Bool
+        let state: FeedbackState
+    }
 
     private(set) var entries: [Entry] = []
     var hiddenIDs: Set<Int> {
@@ -23,6 +31,24 @@ final class RecommendationQueue {
             switch entry.status { case .undoable, .undoing, .failed: true; case .undone, .sending, .committed: false }
         }
     }
+    var feedbackSnapshot: FeedbackSnapshot? {
+        guard let entry = currentFeedback else { return nil }
+        let label: String
+        let isDelete: Bool
+        switch entry.kind {
+        case .delete(_, let value): label = value; isDelete = true
+        case .save: label = ""; isDelete = false
+        }
+        let state: FeedbackState
+        switch entry.status {
+        case .undoable: state = .undoable
+        case .undoing: state = .undoing
+        case .failed(let message): state = .failed(message)
+        case .sending: state = .sending
+        case .undone, .committed: return nil
+        }
+        return FeedbackSnapshot(id: entry.id, sequence: entry.sequence, label: label, isDelete: isDelete, state: state)
+    }
     var isSendingSave: Bool {
         entries.contains { entry in if case .save = entry.kind, case .sending = entry.status { true } else { false } }
     }
@@ -38,6 +64,9 @@ final class RecommendationQueue {
     private var pumping = false
     private var generation = 0
     private var expiryTasks: [UUID: Task<Void, Never>] = [:]
+    private var expiryDeadlines: [UUID: Date] = [:]
+    private var pausedExpiries: [UUID: TimeInterval] = [:]
+    private var interactionActive = false
     private var operationTask: Task<Void, Never>?
 
     init(api: (any DrinkSaverAPI)?, window: Duration = .milliseconds(6500),
@@ -56,6 +85,8 @@ final class RecommendationQueue {
     func undoCurrent() {
         guard let entry = currentFeedback, case .undoable = entry.status else { return }
         expiryTasks.removeValue(forKey: entry.id)?.cancel()
+        expiryDeadlines[entry.id] = nil
+        pausedExpiries[entry.id] = nil
         update(entry.id) { $0.status = .undoing }
         if case .save(let snapshot, _) = entry.kind { onSaveUndone?(snapshot) }
         update(entry.id) { $0.status = .undone }
@@ -67,10 +98,52 @@ final class RecommendationQueue {
         pump()
     }
 
+    func setFeedbackInteractionActive(_ active: Bool) {
+        guard interactionActive != active else { return }
+        interactionActive = active
+        if active {
+            for (id, task) in expiryTasks {
+                let remaining = max(0, expiryDeadlines[id, default: Date()].timeIntervalSinceNow)
+                pausedExpiries[id] = remaining
+                expiryDeadlines[id] = Date().addingTimeInterval(remaining)
+                task.cancel()
+            }
+            expiryTasks.removeAll()
+            expiryDeadlines.removeAll()
+        } else {
+            let remaining = pausedExpiries
+            pausedExpiries.removeAll()
+            for (id, seconds) in remaining { scheduleExpiry(for: id, after: seconds) }
+        }
+    }
+
+    func expireDueEntries(now: Date = Date()) {
+        for index in entries.indices where entries[index].status.isUndoable {
+            let id = entries[index].id
+            guard !interactionActive, expiryDeadlines[id].map({ $0 <= now }) == true else { continue }
+            expiryTasks.removeValue(forKey: id)?.cancel()
+            expiryDeadlines[id] = nil
+            entries[index].status = .sending
+        }
+        pump()
+    }
+
+    func applicationWillEnterBackground() {
+        for index in entries.indices where entries[index].status.isUndoable {
+            entries[index].status = .sending
+            expiryTasks.removeValue(forKey: entries[index].id)?.cancel()
+        }
+        expiryDeadlines.removeAll()
+        pausedExpiries.removeAll()
+        pump()
+    }
+
     func sessionDidSignOut() {
         generation += 1
         expiryTasks.values.forEach { $0.cancel() }
         expiryTasks.removeAll()
+        expiryDeadlines.removeAll()
+        pausedExpiries.removeAll()
         operationTask?.cancel()
         operationTask = nil
         pumping = false
@@ -86,16 +159,28 @@ final class RecommendationQueue {
         }
         entries.append(entry)
         if shouldPump { pump() }
+        scheduleExpiry(for: entry.id, after: timeInterval(window))
+    }
+
+    private func scheduleExpiry(for id: UUID, after seconds: TimeInterval) {
+        guard !interactionActive else { pausedExpiries[id] = seconds; return }
+        expiryDeadlines[id] = Date().addingTimeInterval(seconds)
         let requestGeneration = generation
-        expiryTasks[entry.id] = Task { [weak self, sleep, window] in
-            do { try await sleep(window) } catch { return }
+        expiryTasks[id] = Task { [weak self, sleep] in
+            do { try await sleep(.seconds(max(0, seconds))) } catch { return }
             guard let self, self.generation == requestGeneration else { return }
-            self.expiryTasks[entry.id] = nil
-            guard let index = self.entries.firstIndex(where: { $0.id == entry.id }),
+            self.expiryTasks[id] = nil
+            self.expiryDeadlines[id] = nil
+            guard let index = self.entries.firstIndex(where: { $0.id == id }),
                   self.entries[index].status.isUndoable else { return }
             self.entries[index].status = .sending
             self.pump()
         }
+    }
+
+    private func timeInterval(_ duration: Duration) -> TimeInterval {
+        let components = duration.components
+        return Double(components.seconds) + Double(components.attoseconds) / 1_000_000_000_000_000_000
     }
 
     private func pump() {

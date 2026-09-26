@@ -21,6 +21,10 @@ final class SaveQueueStore {
     private let backgroundWork: BackgroundWork
     private var sequence = 0
     private var expiryTasks: [UUID: Task<Void, Never>] = [:]
+    private var expiryDeadlines: [UUID: Date] = [:]
+    private var pausedExpiries: [UUID: TimeInterval] = [:]
+    private var interactionActive = false
+    private var backgrounded = false
     private var inFlightDeletes: Set<UUID> = []
     private var operationTasks: [UUID: Task<Void, Never>] = [:]
     private var accountGeneration = 0
@@ -91,6 +95,8 @@ final class SaveQueueStore {
     func undoCurrent() {
         guard let entry = currentFeedback, case .undoable = entry.status else { return }
         expiryTasks.removeValue(forKey: entry.id)?.cancel()
+        expiryDeadlines[entry.id] = nil
+        pausedExpiries[entry.id] = nil
         dispatch(.undoRequested(id: entry.id))
         guard case .save = entry.kind else {
             dispatch(.undoSucceeded(id: entry.id))
@@ -121,8 +127,11 @@ final class SaveQueueStore {
         accountGeneration += 1
         expiryTasks.values.forEach { $0.cancel() }
         expiryTasks.removeAll()
+        expiryDeadlines.removeAll()
+        pausedExpiries.removeAll()
         operationTasks.values.forEach { $0.cancel() }
         operationTasks.removeAll()
+        backgrounded = false
         undoneDrinkIDsByDate.removeAll()
         state = SaveQueueState()
     }
@@ -160,6 +169,12 @@ final class SaveQueueStore {
 
     @discardableResult
     func applicationWillEnterBackground() -> [UUID] {
+        backgrounded = true
+        expiryTasks.values.forEach { $0.cancel() }
+        expiryTasks.removeAll()
+        expiryDeadlines.removeAll()
+        pausedExpiries.removeAll()
+        interactionActive = false
         let deletes = state.entries.filter { entry in
             guard case .delete = entry.kind else { return false }
             if case .undoable = entry.status { return true }
@@ -220,8 +235,34 @@ final class SaveQueueStore {
     }
 
     func expireDueEntries() {
+        guard !interactionActive else { return }
         state = SaveQueueReducer.sweep(state, now: clock.now)
         flushReadyDeletes()
+    }
+
+    func applicationDidBecomeActive() { backgrounded = false }
+
+    func setFeedbackInteractionActive(_ active: Bool) {
+        guard interactionActive != active else { return }
+        interactionActive = active
+        if active {
+            for (id, task) in expiryTasks {
+                let remaining = max(0, expiryDeadlines[id, default: clock.now].timeIntervalSince(clock.now))
+                pausedExpiries[id] = remaining
+                dispatch(.extendUndoWindow(id: id, until: clock.now.addingTimeInterval(remaining)))
+                task.cancel()
+            }
+            expiryTasks.removeAll()
+            expiryDeadlines.removeAll()
+        } else {
+            let remaining = pausedExpiries
+            pausedExpiries.removeAll()
+            for (id, seconds) in remaining {
+                let until = clock.now.addingTimeInterval(seconds)
+                dispatch(.extendUndoWindow(id: id, until: until))
+                scheduleExpiry(for: id, until: until)
+            }
+        }
     }
 
     func pendingInsertions(for date: String) -> [EditableDrink] {
@@ -246,9 +287,9 @@ final class SaveQueueStore {
         do {
             let saved = try await api.saveDrink(operation.payload)
             guard generation == accountGeneration, sessionStore.userID != nil else { return }
-            let until = clock.now.addingTimeInterval(undoWindow)
+            let until = backgrounded ? clock.now : clock.now.addingTimeInterval(undoWindow)
             dispatch(.saveSucceeded(id: entry.id, drinkIDs: saved.map(\.id), undoUntil: until))
-            scheduleExpiry(for: entry.id, until: until)
+            if backgrounded { expireDueEntries() } else { scheduleExpiry(for: entry.id, until: until) }
             flushReadyDeletes()
         } catch {
             guard generation == accountGeneration, sessionStore.userID != nil else { return }
@@ -285,6 +326,9 @@ final class SaveQueueStore {
 
     private func scheduleExpiry(for id: UUID, until: Date) {
         expiryTasks[id]?.cancel()
+        let remaining = max(0, until.timeIntervalSince(clock.now))
+        guard !interactionActive else { pausedExpiries[id] = remaining; return }
+        expiryDeadlines[id] = until
         expiryTasks[id] = Task { [weak self] in
             guard let self else { return }
             let seconds = max(0, until.timeIntervalSince(clock.now))
@@ -292,6 +336,7 @@ final class SaveQueueStore {
             guard !Task.isCancelled else { return }
             expireDueEntries()
             expiryTasks[id] = nil
+            expiryDeadlines[id] = nil
         }
     }
 

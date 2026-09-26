@@ -10,6 +10,11 @@
 		A01200000000000000000001 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01200000000000000000002 /* AppCoordinator.swift */; };
 		A01200000000000000000003 /* ViewState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01200000000000000000004 /* ViewState.swift */; };
 		A01200000000000000000005 /* AppFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01200000000000000000006 /* AppFrame.swift */; };
+		F02100000000000000000001 /* SceneLifecycleHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02100000000000000000011 /* SceneLifecycleHandler.swift */; };
+		F02100000000000000000002 /* FeedbackArbiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02100000000000000000012 /* FeedbackArbiter.swift */; };
+		F02100000000000000000003 /* FeedbackStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02100000000000000000013 /* FeedbackStrip.swift */; };
+		F02100000000000000000004 /* SceneLifecycleHandlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02100000000000000000014 /* SceneLifecycleHandlerTests.swift */; };
+		F02100000000000000000005 /* LifecycleRecoveryUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02100000000000000000015 /* LifecycleRecoveryUITests.swift */; };
 		A01300000000000000000011 /* QuickSaveStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000001 /* QuickSaveStore.swift */; };
 		A01300000000000000000012 /* QuickSaveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000002 /* QuickSaveView.swift */; };
 		A01300000000000000000013 /* PlateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000003 /* PlateView.swift */; };
@@ -28,7 +33,6 @@
 		A01900000000000000000015 /* RecommendationQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01900000000000000000005 /* RecommendationQueueTests.swift */; };
 		A02000000000000000000011 /* RecommendationTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000001 /* RecommendationTabView.swift */; };
 		A02000000000000000000012 /* RecommendationRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000002 /* RecommendationRowView.swift */; };
-		A02000000000000000000013 /* RecommendationFeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000003 /* RecommendationFeedbackView.swift */; };
 		A02000000000000000000014 /* RecommendationsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000004 /* RecommendationsUITests.swift */; };
 		A01300000000000000000017 /* QuickSaveLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000007 /* QuickSaveLayoutTests.swift */; };
 		A01300000000000000000018 /* QuickSaveUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000008 /* QuickSaveUITests.swift */; };
@@ -151,11 +155,15 @@
 		A01900000000000000000005 /* RecommendationQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationQueueTests.swift; sourceTree = "<group>"; };
 		A02000000000000000000001 /* RecommendationTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationTabView.swift; sourceTree = "<group>"; };
 		A02000000000000000000002 /* RecommendationRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationRowView.swift; sourceTree = "<group>"; };
-		A02000000000000000000003 /* RecommendationFeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationFeedbackView.swift; sourceTree = "<group>"; };
 		A02000000000000000000004 /* RecommendationsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationsUITests.swift; sourceTree = "<group>"; };
 		A01200000000000000000008 /* AppCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinatorTests.swift; sourceTree = "<group>"; };
 		A01200000000000000000010 /* AppFrameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFrameTests.swift; sourceTree = "<group>"; };
 		A01200000000000000000012 /* AppFrameUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFrameUITests.swift; sourceTree = "<group>"; };
+		F02100000000000000000011 /* SceneLifecycleHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneLifecycleHandler.swift; sourceTree = "<group>"; };
+		F02100000000000000000012 /* FeedbackArbiter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackArbiter.swift; sourceTree = "<group>"; };
+		F02100000000000000000013 /* FeedbackStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackStrip.swift; sourceTree = "<group>"; };
+		F02100000000000000000014 /* SceneLifecycleHandlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneLifecycleHandlerTests.swift; sourceTree = "<group>"; };
+		F02100000000000000000015 /* LifecycleRecoveryUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifecycleRecoveryUITests.swift; sourceTree = "<group>"; };
 		A003A0000000000000000003 /* UITestFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixture.swift; sourceTree = "<group>"; };
 		A003A0000000000000000004 /* UITestFixtureBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixtureBootstrap.swift; sourceTree = "<group>"; };
 		A003A000000000000000000A /* FixtureHarnessUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixtureHarnessUITests.swift; sourceTree = "<group>"; };
@@ -259,6 +267,7 @@
 		4753CA0EA1AC0570BEFDFAE4 /* DrinkSaverTests */ = {
 			isa = PBXGroup;
 			children = (
+				F02100000000000000000014 /* SceneLifecycleHandlerTests.swift */,
 				A01700000000000000000003 /* HistoryStoreTests.swift */,
 				A01900000000000000000004 /* RecommendationDraftTests.swift */,
 				A01900000000000000000005 /* RecommendationQueueTests.swift */,
@@ -353,6 +362,7 @@
 		902F5B0264EEB68A8333745C /* App */ = {
 			isa = PBXGroup;
 			children = (
+				F02100000000000000000011 /* SceneLifecycleHandler.swift */,
 				A01200000000000000000002 /* AppCoordinator.swift */,
 				97FFB415DD8F55C0F6D6D058 /* AppConfiguration.swift */,
 				ED1AA4A25AEBB8D765D97C15 /* DrinkSaverApp.swift */,
@@ -364,6 +374,8 @@
 		9605CFC3A7D5C4F295276B14 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				F02100000000000000000012 /* FeedbackArbiter.swift */,
+				F02100000000000000000013 /* FeedbackStrip.swift */,
 				A01200000000000000000006 /* AppFrame.swift */,
 				A01200000000000000000004 /* ViewState.swift */,
 				5595726C335D0B61A093D5E7 /* PlasterBackground.swift */,
@@ -442,6 +454,7 @@
 		CB37CFD8A3EF0482029730F5 /* DrinkSaverUITests */ = {
 			isa = PBXGroup;
 			children = (
+				F02100000000000000000015 /* LifecycleRecoveryUITests.swift */,
 				A01700000000000000000004 /* HistoryReadUITests.swift */,
 				A02000000000000000000004 /* RecommendationsUITests.swift */,
 				A01300000000000000000008 /* QuickSaveUITests.swift */,
@@ -475,7 +488,7 @@
 		};
 		A01900000000000000000020 /* Recommendations */ = {
 			isa = PBXGroup;
-			children = (A01900000000000000000001 /* RecommendationDraft.swift */, A01900000000000000000002 /* RecommendationQueue.swift */, A01900000000000000000003 /* RecommendationsStore.swift */, A02000000000000000000001 /* RecommendationTabView.swift */, A02000000000000000000002 /* RecommendationRowView.swift */, A02000000000000000000003 /* RecommendationFeedbackView.swift */,);
+			children = (A01900000000000000000001 /* RecommendationDraft.swift */, A01900000000000000000002 /* RecommendationQueue.swift */, A01900000000000000000003 /* RecommendationsStore.swift */, A02000000000000000000001 /* RecommendationTabView.swift */, A02000000000000000000002 /* RecommendationRowView.swift */,);
 			path = Features/Recommendations;
 			sourceTree = "<group>";
 		};
@@ -696,7 +709,9 @@
 				A01900000000000000000013 /* RecommendationsStore.swift in Sources */,
 				A02000000000000000000011 /* RecommendationTabView.swift in Sources */,
 				A02000000000000000000012 /* RecommendationRowView.swift in Sources */,
-				A02000000000000000000013 /* RecommendationFeedbackView.swift in Sources */,
+				F02100000000000000000001 /* SceneLifecycleHandler.swift in Sources */,
+				F02100000000000000000002 /* FeedbackArbiter.swift in Sources */,
+				F02100000000000000000003 /* FeedbackStrip.swift in Sources */,
 				A01300000000000000000012 /* QuickSaveView.swift in Sources */,
 				A01300000000000000000013 /* PlateView.swift in Sources */,
 				A01300000000000000000014 /* PlateGridView.swift in Sources */,
@@ -738,6 +753,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A01700000000000000000014 /* HistoryReadUITests.swift in Sources */,
+				F02100000000000000000005 /* LifecycleRecoveryUITests.swift in Sources */,
 				A02000000000000000000014 /* RecommendationsUITests.swift in Sources */,
 				A01200000000000000000011 /* AppFrameUITests.swift in Sources */,
 				A01300000000000000000018 /* QuickSaveUITests.swift in Sources */,
@@ -751,6 +767,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A01700000000000000000013 /* HistoryStoreTests.swift in Sources */,
+				F02100000000000000000004 /* SceneLifecycleHandlerTests.swift in Sources */,
 				A01900000000000000000014 /* RecommendationDraftTests.swift in Sources */,
 				A01900000000000000000015 /* RecommendationQueueTests.swift in Sources */,
 				A01200000000000000000007 /* AppCoordinatorTests.swift in Sources */,

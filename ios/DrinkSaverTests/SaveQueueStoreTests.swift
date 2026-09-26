@@ -39,6 +39,31 @@ final class SaveQueueStoreTests: XCTestCase {
         store.sessionDidSignOut()
     }
 
+    func testAccessibilityInteractionPausesAndExtendsUndoWindow() async {
+        let clock = AdjustableQueueClock(Date(timeIntervalSince1970: 100))
+        let (store, _, _) = await makeStore(api: QueueTestAPI(), clock: clock)
+        let id = store.delete(deleteOperation([8]))!
+
+        store.setFeedbackInteractionActive(true)
+        clock.now = Date(timeIntervalSince1970: 120)
+        store.expireDueEntries()
+        if case .undoable? = store.state.entries.first(where: { $0.id == id })?.status {} else {
+            XCTFail("Undo should remain available while feedback has accessibility focus")
+        }
+
+        store.setFeedbackInteractionActive(false)
+        clock.now = Date(timeIntervalSince1970: 126.49)
+        store.expireDueEntries()
+        if case .undoable? = store.state.entries.first(where: { $0.id == id })?.status {} else {
+            XCTFail("Resuming interaction should retain the remaining Undo time")
+        }
+
+        clock.now = Date(timeIntervalSince1970: 126.5)
+        store.expireDueEntries()
+        await waitUntil { store.state.entries.first(where: { $0.id == id })?.status == .committed }
+        store.sessionDidSignOut()
+    }
+
     func testTimedOutSaveRetrySkipsPostWhenServerRowCountIncreased() async {
         let api = QueueTestAPI(savedIDs: [], saveErrors: [.timeout], drinkRows: [drink(1), drink(2), drink(3)])
         let (store, _, _) = await makeStore(api: api)

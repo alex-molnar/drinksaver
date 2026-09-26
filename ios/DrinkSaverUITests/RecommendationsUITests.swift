@@ -48,7 +48,7 @@ final class RecommendationsUITests: XCTestCase {
         let house = app.staticTexts["recommendations.row.name.9"]
         XCTAssertTrue(house.waitForExistence(timeout: 5))
         app.buttons["recommendations.delete.9"].tap()
-        let undo = app.buttons["recommendations.feedback.undo"]
+        let undo = app.buttons["frame.queue.undo"]
         XCTAssertTrue(undo.waitForExistence(timeout: 3))
         undo.tap()
         XCTAssertTrue(house.waitForExistence(timeout: 3))

@@ -13,7 +13,11 @@ the numeral role also uses tabular digits.
 
 `RootView` shows the signed-in frame only after session restoration succeeds. `AppFrame` owns the
 Today/Tonight header, Recommendations/Add new type/Logout menu, Quick/Add/History navigation, and
-the single Add sheet host; feature interiors remain owned by their feature tasks. Quick header
+the single Add sheet host; feature interiors remain owned by their feature tasks. One
+`FeedbackStrip` is hosted by the frame or the Add sheet, and `FeedbackArbiter` chooses the most
+recent drink or recommendation queue message while routing Undo and Retry back to that queue.
+Its Undo and Retry buttons keep their exact labels, failures remain visible until retried, and
+accessibility focus pauses queue expiry. Quick header
 counts come from the injected `CurrentDrinkingDayStore` (`Nothing yet` or `N so far` after its
 first successful load); its Today/Tonight label refreshes at local midnight, and the current
 drinking day refreshes on foreground and at the next local 06:00 boundary. `AppCoordinator`
@@ -51,6 +55,11 @@ serializes network operations, restores a saved snapshot on Undo, and keeps fail
 dirty-draft states. Names edit inline; drag-and-drop and labeled Move Up/Move Down controls provide
 equivalent reorder paths. Cancel restores the latest committed arrangement, while a committed
 Save returns to Quick.
+
+`SceneLifecycleHandler` commits Undo windows when the scene backgrounds, persists queued drink
+deletes before starting their background request, then sweeps expired entries and reconciles saved
+deletes when the scene becomes active. A save that completes while backgrounded is committed without
+showing an Undo action. Session expiry follows the existing session gate and clears both queues.
 
 ## Add a drink
 

@@ -67,8 +67,6 @@ struct RecommendationTabView: View {
                 }
             }
 
-            RecommendationFeedbackView()
-
             if store.isDirty {
                 HStack(spacing: 12) {
                     Button("Cancel") { store.cancel() }
