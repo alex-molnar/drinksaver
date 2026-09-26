@@ -1,6 +1,8 @@
 import Foundation
+import OSLog
 
 actor APIClient: DrinkSaverAPI {
+    private let logger = Logger(subsystem: "im.kak.drinksaver", category: "API")
     private let baseURL: URL
     private let accessTokenProvider: any AccessTokenProviding
     private let session: URLSession
@@ -105,11 +107,18 @@ actor APIClient: DrinkSaverAPI {
         let response = firstResponse.statusCode == 401
             ? try await perform(request, forceRefresh: true)
             : firstResponse
-        guard (200..<300).contains(response.statusCode) else { throw APIError.status(response.statusCode) }
+        guard (200..<300).contains(response.statusCode) else {
+            logger.error("API \(method, privacy: .public) \(Self.safeRoute(path), privacy: .public) on \(self.baseURL.host ?? "unknown", privacy: .public) returned HTTP \(response.statusCode)")
+            throw APIError.status(response.statusCode)
+        }
         if Response.self == EmptyAPIResponse.self, let empty = EmptyAPIResponse() as? Response { return empty }
         do {
             return try JSONDecoder().decode(Response.self, from: response.data)
+        } catch let error as DecodingError {
+            logger.error("API \(method, privacy: .public) \(Self.safeRoute(path), privacy: .public) response from \(self.baseURL.host ?? "unknown", privacy: .public) could not be decoded at \(Self.decodingPath(error), privacy: .public)")
+            throw APIError.decoding
         } catch {
+            logger.error("API \(method, privacy: .public) \(Self.safeRoute(path), privacy: .public) response from \(self.baseURL.host ?? "unknown", privacy: .public) could not be decoded")
             throw APIError.decoding
         }
     }
@@ -137,6 +146,7 @@ actor APIClient: DrinkSaverAPI {
             let token = try await accessTokenProvider.accessToken(forceRefresh: forceRefresh)
             authenticatedRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         } catch {
+            logger.error("API \(request.httpMethod ?? "?", privacy: .public) \(Self.safeRoute(request.url?.path ?? ""), privacy: .public) token acquisition failed for \(request.url?.host ?? "unknown", privacy: .public)")
             throw APIError.authentication
         }
 
@@ -146,7 +156,11 @@ actor APIClient: DrinkSaverAPI {
             return (data, response.statusCode)
         } catch let error as APIError {
             throw error
+        } catch let error as URLError {
+            logger.error("API \(request.httpMethod ?? "?", privacy: .public) \(Self.safeRoute(request.url?.path ?? ""), privacy: .public) request to \(request.url?.host ?? "unknown", privacy: .public) failed with URLError code \(error.code.rawValue)")
+            throw APIError.transport(error)
         } catch {
+            logger.error("API \(request.httpMethod ?? "?", privacy: .public) \(Self.safeRoute(request.url?.path ?? ""), privacy: .public) request to \(request.url?.host ?? "unknown", privacy: .public) failed with a non-URL transport error")
             throw APIError.transport(error)
         }
     }
@@ -157,6 +171,34 @@ actor APIClient: DrinkSaverAPI {
         } catch {
             throw APIError.encoding
         }
+    }
+
+    private static func safeRoute(_ path: String) -> String {
+        let segments = path.split(separator: "/").map { segment -> String in
+            if Int(segment) != nil { return "{id}" }
+            let characters = Array(segment)
+            if characters.count == 10,
+               characters[4] == "-", characters[7] == "-",
+               characters.enumerated().allSatisfy({ [4, 7].contains($0.offset) || $0.element.isNumber }) {
+                return "{date}"
+            }
+            return String(segment)
+        }
+        return "/" + segments.joined(separator: "/")
+    }
+
+    private static func decodingPath(_ error: DecodingError) -> String {
+        let context: DecodingError.Context
+        switch error {
+        case .keyNotFound(let key, let decodingContext):
+            context = decodingContext
+            return (context.codingPath + [key]).map(\.stringValue).joined(separator: ".")
+        case .typeMismatch(_, let decodingContext), .valueNotFound(_, let decodingContext), .dataCorrupted(let decodingContext):
+            context = decodingContext
+        @unknown default:
+            return "unknown"
+        }
+        return context.codingPath.map(\.stringValue).joined(separator: ".")
     }
 }
 

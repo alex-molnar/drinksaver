@@ -66,7 +66,7 @@ struct SavedDrink: Codable, Equatable, Sendable {
 
 struct Recommendation: Codable, Equatable, Sendable {
     let id: Int?
-    let userId: String
+    let userId: String?
     let name: String
     let alcoholTypeId: Int?
     let alcoholSubtypeId: Int?
@@ -78,6 +78,48 @@ struct Recommendation: Codable, Equatable, Sendable {
     let colorPaletteId: Int?
     let glasswareId: Int?
     let orderNumber: Int?
+
+    private enum CodingKeys: String, CodingKey {
+        case id, userId, name, alcoholTypeId, alcoholSubtypeId, alcoholVolumeId
+        case brandId, beerFlavourId, consumptionTypeId, endDate, colorPaletteId, glasswareId, orderNumber
+    }
+
+    init(
+        id: Int?, userId: String?, name: String, alcoholTypeId: Int?, alcoholSubtypeId: Int?,
+        alcoholVolumeId: Int?, brandId: Int?, beerFlavourId: Int?, consumptionTypeId: Int?,
+        endDate: String?, colorPaletteId: Int?, glasswareId: Int?, orderNumber: Int?
+    ) {
+        self.id = id
+        self.userId = userId
+        self.name = name
+        self.alcoholTypeId = alcoholTypeId
+        self.alcoholSubtypeId = alcoholSubtypeId
+        self.alcoholVolumeId = alcoholVolumeId
+        self.brandId = brandId
+        self.beerFlavourId = beerFlavourId
+        self.consumptionTypeId = consumptionTypeId
+        self.endDate = endDate
+        self.colorPaletteId = colorPaletteId
+        self.glasswareId = glasswareId
+        self.orderNumber = orderNumber
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decodeIfPresent(Int.self, forKey: .id)
+        userId = try values.decodeIfPresent(String.self, forKey: .userId)
+        name = (try? values.decode(String.self, forKey: .name)) ?? "Couldn't generate name"
+        alcoholTypeId = try values.decodeIfPresent(Int.self, forKey: .alcoholTypeId)
+        alcoholSubtypeId = try values.decodeIfPresent(Int.self, forKey: .alcoholSubtypeId)
+        alcoholVolumeId = try values.decodeIfPresent(Int.self, forKey: .alcoholVolumeId)
+        brandId = try values.decodeIfPresent(Int.self, forKey: .brandId)
+        beerFlavourId = try values.decodeIfPresent(Int.self, forKey: .beerFlavourId)
+        consumptionTypeId = try values.decodeIfPresent(Int.self, forKey: .consumptionTypeId)
+        endDate = try values.decodeIfPresent(String.self, forKey: .endDate)
+        colorPaletteId = try values.decodeIfPresent(Int.self, forKey: .colorPaletteId)
+        glasswareId = try values.decodeIfPresent(Int.self, forKey: .glasswareId)
+        orderNumber = try values.decodeIfPresent(Int.self, forKey: .orderNumber)
+    }
 }
 
 struct RecommendationEdit: Codable, Equatable, Sendable {
@@ -90,14 +132,14 @@ struct AlcoholType: Codable, Equatable, Sendable {
     let userId: String?
     let name: String
     let volumeIds: [Int]
-    let colorPaletteId: Int
-    let glasswareId: Int
+    let colorPaletteId: Int?
+    let glasswareId: Int?
 }
 
 struct AlcoholVolume: Codable, Equatable, Sendable {
     let id: Int
     let name: String
-    let volume: Float
+    let volume: Float?
 }
 
 struct AlcoholSubtype: Codable, Equatable, Sendable {
@@ -112,7 +154,7 @@ struct AlcoholSubtype: Codable, Equatable, Sendable {
 struct ConsumptionType: Codable, Equatable, Sendable {
     let id: Int
     let name: String
-    let glasswareId: Int
+    let glasswareId: Int?
 }
 
 struct Brand: Codable, Equatable, Sendable {

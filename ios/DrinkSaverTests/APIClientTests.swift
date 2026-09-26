@@ -3,6 +3,44 @@ import XCTest
 @testable import DrinkSaver
 
 final class APIClientTests: XCTestCase {
+    func testResponseModelsDecodeExpectedNullFields() throws {
+        func decode<Value: Decodable>(_ type: Value.Type, _ json: String) throws -> Value {
+            try JSONDecoder().decode(type, from: Data(json.utf8))
+        }
+
+        let recommendations: [Recommendation] = try decode([Recommendation].self, #"[{"id":null,"userId":null,"name":null,"alcoholTypeId":4,"alcoholSubtypeId":null,"alcoholVolumeId":5,"brandId":null,"beerFlavourId":null,"consumptionTypeId":null,"endDate":null,"colorPaletteId":null,"glasswareId":null,"orderNumber":null}]"#)
+        XCTAssertEqual(recommendations.first?.name, "Couldn't generate name")
+        XCTAssertNil(recommendations.first?.userId)
+        XCTAssertNil(recommendations.first?.brandId)
+        XCTAssertNil(recommendations.first?.alcoholSubtypeId)
+
+        let savedDrinks: [SavedDrink] = try decode([SavedDrink].self, #"[{"id":1,"userId":"u","date":"2026-09-26","alcoholTypeId":4,"alcoholSubtypeId":null,"alcoholVolumeId":5,"brandId":null,"beerFlavourId":null,"consumptionTypeId":null,"colorPaletteId":null,"glasswareId":null,"comments":null}]"#)
+        XCTAssertNil(savedDrinks.first?.alcoholSubtypeId)
+        XCTAssertNil(savedDrinks.first?.brandId)
+
+        let alcoholTypes: [AlcoholType] = try decode([AlcoholType].self, #"[{"id":1,"userId":null,"name":"Wine","volumeIds":[],"colorPaletteId":null,"glasswareId":null}]"#)
+        XCTAssertNil(alcoholTypes.first?.colorPaletteId)
+        XCTAssertNil(alcoholTypes.first?.glasswareId)
+        let volumes: [AlcoholVolume] = try decode([AlcoholVolume].self, #"[{"id":1,"name":"Tasting","volume":null}]"#)
+        XCTAssertNil(volumes.first?.volume)
+        let subtypes: [AlcoholSubtype] = try decode([AlcoholSubtype].self, #"[{"id":1,"alcoholTypeId":1,"userId":null,"name":"Dry","colorPaletteId":null,"glasswareId":null}]"#)
+        XCTAssertNil(subtypes.first?.colorPaletteId)
+        let consumptionTypes: [ConsumptionType] = try decode([ConsumptionType].self, #"[{"id":1,"name":"Bottle","glasswareId":null}]"#)
+        XCTAssertNil(consumptionTypes.first?.glasswareId)
+
+        let brands: [Brand] = try decode([Brand].self, #"[{"id":1,"userId":null,"name":"House","colorPaletteId":null}]"#)
+        XCTAssertNil(brands.first?.colorPaletteId)
+        let flavours: [BeerFlavour] = try decode([BeerFlavour].self, #"[{"id":1,"brandId":1,"userId":null,"name":"Stout","colorPaletteId":null}]"#)
+        XCTAssertNil(flavours.first?.colorPaletteId)
+
+        let palette: Palette = try decode(Palette.self, ##"{"id":1,"name":"cream","field":"#fff","inkLight":null,"inkDark":"#111"}"##)
+        XCTAssertNil(palette.inkLight)
+        let glassware: Glassware = try decode(Glassware.self, #"{"id":1,"name":"wine","g":"g","l":"l","f":null}"#)
+        XCTAssertNil(glassware.f)
+        let editableDrinks: [EditableDrink] = try decode([EditableDrink].self, #"[{"id":1,"name":"Unknown drink","alcoholTypeId":null}]"#)
+        XCTAssertNil(editableDrinks.first?.alcoholTypeId)
+    }
+
     @MainActor
     func testEveryEndpointUsesExpectedRequestContract() async throws {
         let tokens = TestAccessTokenProvider(tokens: ["test-access-token"])
