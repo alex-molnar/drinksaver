@@ -278,7 +278,7 @@ struct AppFrame: View {
                         }
                         HStack {
                             Text("Date"); Spacer()
-                            DatePicker("Date", selection: Binding(get: { addDrinkStore.draft.date ?? Date() }, set: { addDrinkStore.draft.date = $0 }), in: ...Date(), displayedComponents: .date)
+                            DatePicker("Date", selection: Binding(get: { addDrinkStore.draft.date ?? AddDrinkStore.date(forISODate: drinkingDay.date) ?? Date() }, set: { addDrinkStore.draft.date = $0 }), in: ...Date(), displayedComponents: .date)
                                 .labelsHidden().accessibilityLabel("Date")
                         }.padding(.horizontal, 20).frame(minHeight: 48)
                         HStack {
@@ -295,7 +295,19 @@ struct AppFrame: View {
                         Toggle("Add to recommendations", isOn: Binding(get: { addDrinkStore.draft.recommend }, set: { addDrinkStore.setRecommend($0) })).padding(.horizontal, 20).frame(minHeight: 48)
                         if addDrinkStore.draft.recommend {
                             Toggle("Temporary recommendation", isOn: Binding(get: { addDrinkStore.draft.onlyTemporarily }, set: { addDrinkStore.draft.onlyTemporarily = $0 })).padding(.horizontal, 20)
-                            TextField("Recommendation name", text: Binding(get: { addDrinkStore.draft.name }, set: { addDrinkStore.draft.name = $0 })).textFieldStyle(.roundedBorder).padding(.horizontal, 20)
+                            TextField("Recommendation name", text: Binding(get: { addDrinkStore.draft.recommendationName }, set: { addDrinkStore.draft.recommendationName = $0 })).textFieldStyle(.roundedBorder).padding(.horizontal, 20)
+                            if !addDrinkStore.catalogue.palettes.isEmpty {
+                                Picker("Recommendation color", selection: Binding(get: { addDrinkStore.draft.recommendationColorPaletteId }, set: { addDrinkStore.setRecommendationDesign(colorPaletteId: $0, glasswareId: addDrinkStore.draft.recommendationGlasswareId) })) {
+                                    Text("Inherited").tag(Int?.none)
+                                    ForEach(addDrinkStore.catalogue.palettes) { palette in Text(palette.name).tag(Optional(palette.id)) }
+                                }.padding(.horizontal, 20)
+                            }
+                            if !addDrinkStore.catalogue.glassware.isEmpty {
+                                Picker("Recommendation glass", selection: Binding(get: { addDrinkStore.draft.recommendationGlasswareId }, set: { addDrinkStore.setRecommendationDesign(colorPaletteId: addDrinkStore.draft.recommendationColorPaletteId, glasswareId: $0) })) {
+                                    Text("Inherited").tag(Int?.none)
+                                    ForEach(addDrinkStore.catalogue.glassware) { glass in Text(glass.name).tag(Optional(glass.id)) }
+                                }.padding(.horizontal, 20)
+                            }
                         }
                     }
                 }
@@ -383,11 +395,11 @@ struct AppFrame: View {
     private func select(_ id: Int, field: AddRouteField) {
         switch field {
         case .alcoholType: if case .loaded(let items) = addDrinkStore.alcoholTypes, let item = items.first(where:{$0.id == id}) { addDrinkStore.selectAlcoholType(item) }
-        case .volume: if case .loaded(let items) = addDrinkStore.volumes { addDrinkStore.draft.volume = items.first(where:{$0.id == id}) }
-        case .subtype: if case .loaded(let items) = addDrinkStore.subtypes { addDrinkStore.draft.subtype = items.first(where:{$0.id == id}) }
-        case .consumptionType: if case .loaded(let items) = addDrinkStore.consumptionTypes { addDrinkStore.draft.consumptionType = items.first(where:{$0.id == id}) }
+        case .volume: if case .loaded(let items) = addDrinkStore.volumes { addDrinkStore.selectVolume(items.first(where:{$0.id == id})) }
+        case .subtype: if case .loaded(let items) = addDrinkStore.subtypes { addDrinkStore.selectSubtype(items.first(where:{$0.id == id})) }
+        case .consumptionType: if case .loaded(let items) = addDrinkStore.consumptionTypes { addDrinkStore.selectConsumptionType(items.first(where:{$0.id == id})) }
         case .brand: if case .loaded(let items) = addDrinkStore.brands, let item = items.first(where:{$0.id == id}) { addDrinkStore.selectBrand(item) }
-        case .flavour: if case .loaded(let items) = addDrinkStore.flavours, let item = items.first(where:{$0.id == id}) { addDrinkStore.draft.select(item) }
+        case .flavour: if case .loaded(let items) = addDrinkStore.flavours, let item = items.first(where:{$0.id == id}) { addDrinkStore.selectFlavour(item) }
         default: break
         }
     }
@@ -399,7 +411,8 @@ struct AppFrame: View {
         VStack(alignment: .leading, spacing: 14) {
             Text("New \(field == .alcoholType ? "alcohol type" : String(describing: field))").font(theme.type.displayM.font).padding(.horizontal, 20)
                 .accessibilityIdentifier(field == .alcoholType ? "frame.add.create.alcoholType" : "add.create.title")
-            TextField("Name", text: Binding(get: { addDrinkStore.draft.name }, set: { addDrinkStore.draft.name = $0 })).textFieldStyle(.roundedBorder).padding(.horizontal, 20).accessibilityIdentifier("add.create.name")
+            TextField("Name", text: Binding(get: { addDrinkStore.draft.creationName }, set: { addDrinkStore.draft.creationName = $0 }))
+                .textFieldStyle(.roundedBorder).padding(.horizontal, 20).disabled(addDrinkStore.isCreating).accessibilityIdentifier("add.create.name")
             if field == .volume {
                 TextField("Litres", text: Binding(get: { addDrinkStore.draft.volumeLitres }, set: { addDrinkStore.draft.volumeLitres = $0 }))
                     .keyboardType(.decimalPad).textFieldStyle(.roundedBorder).padding(.horizontal, 20).accessibilityLabel("Litres")
@@ -422,8 +435,8 @@ struct AppFrame: View {
                     }
                 }
             }
-            Button("Add and use it") { Task { await addDrinkStore.create(field, name: addDrinkStore.draft.name, litres: field == .volume ? Double(addDrinkStore.draft.volumeLitres) : nil) } }
-                .buttonStyle(.borderedProminent).padding(.horizontal, 20).accessibilityIdentifier("add.create.submit")
+            Button(addDrinkStore.isCreating ? "Adding…" : "Add and use it") { Task { await addDrinkStore.create(field, name: addDrinkStore.draft.creationName, litres: field == .volume ? Double(addDrinkStore.draft.volumeLitres) : nil) } }
+                .buttonStyle(.borderedProminent).padding(.horizontal, 20).disabled(addDrinkStore.isCreating).accessibilityIdentifier("add.create.submit")
             if let error = addDrinkStore.errorMessage { Text(error).foregroundStyle(theme.accent.danger.color).padding(.horizontal, 20) }
         }
     }

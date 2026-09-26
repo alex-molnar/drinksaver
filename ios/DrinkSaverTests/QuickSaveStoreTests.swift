@@ -68,6 +68,52 @@ final class QuickSaveStoreTests: XCTestCase {
         XCTAssertNil(graph.quick.savingRecommendationKey)
     }
 
+    func testAddDrinkCreateDoesNotAdoptResultAfterParentSelectionChanges() async {
+        let gate = AddDrinkCreateGate()
+        let api = QuickSaveTestAPI(volumeCreateGate: gate)
+        let graph = await makeGraph(api: api)
+        let coordinator = AppCoordinator()
+        let addStore = AddDrinkStore(api: api, queue: graph.queue, day: graph.day, designs: graph.designs,
+                                     session: graph.session, coordinator: coordinator)
+        addStore.draft.alcoholType = AlcoholType(id: 4, userId: nil, name: "Beer", volumeIds: [], colorPaletteId: 1, glasswareId: 2)
+        coordinator.presentAdd()
+        coordinator.push(.option(.volume))
+        coordinator.push(.create(.volume))
+
+        let createTask = Task { await addStore.create(.volume, name: "Old size", litres: 0.33) }
+        await gate.waitForCreate()
+        await addStore.create(.volume, name: "Duplicate size", litres: 0.5)
+        addStore.selectAlcoholType(AlcoholType(id: 9, userId: nil, name: "Wine", volumeIds: [], colorPaletteId: 3, glasswareId: 4))
+        await gate.releaseCreate()
+        await createTask.value
+
+        XCTAssertNil(addStore.draft.volume)
+        XCTAssertFalse(addStore.isCreating)
+        let createCount = await api.volumeCreateCount()
+        XCTAssertEqual(createCount, 1)
+
+        addStore.draft.creationName = "New size"
+        addStore.setRecommend(true)
+        addStore.draft.recommendationName = "Saved name"
+        await addStore.create(.volume, name: addStore.draft.creationName, litres: 0.5)
+        XCTAssertEqual(addStore.draft.creationName, "")
+        XCTAssertEqual(addStore.draft.recommendationName, "Saved name")
+    }
+
+    func testAddDrinkLoadsConsumptionTypesWithFixedPageSize() async {
+        let api = QuickSaveTestAPI()
+        let graph = await makeGraph(api: api)
+        let store = AddDrinkStore(api: api, queue: graph.queue, day: graph.day, designs: graph.designs,
+                                  session: graph.session, coordinator: AppCoordinator())
+        store.reset()
+        XCTAssertEqual(store.draft.date.map(AddDrinkStore.apiDate), graph.day.date)
+        store.draft.volume = AlcoholVolume(id: 6, name: "Pint", volume: 0.568)
+        await store.loadConsumptionTypes()
+
+        let amount = await api.lastConsumptionTypeAmount()
+        XCTAssertEqual(amount, 100)
+    }
+
     func testRecommendationRefreshWaitsForQueueSaveToFinish() async {
         let gate = QuickSaveGate()
         let api = QuickSaveTestAPI(saveGate: gate)
@@ -177,7 +223,7 @@ final class QuickSaveStoreTests: XCTestCase {
         await designs.load()
         let quick = QuickSaveStore(api: api, sessionStore: session, designCatalogueStore: designs,
                                    queueStore: queue, drinkingDayStore: day, coordinator: AppCoordinator())
-        return Graph(quick: quick, queue: queue, day: day, clock: clock)
+        return Graph(quick: quick, queue: queue, day: day, clock: clock, session: session, designs: designs)
     }
 
     private func date(_ year: Int, _ month: Int, _ day: Int, _ hour: Int, _ minute: Int = 0) -> Date {
@@ -205,6 +251,8 @@ final class QuickSaveStoreTests: XCTestCase {
         let queue: SaveQueueStore
         let day: CurrentDrinkingDayStore
         let clock: AdjustableQuickSaveClock
+        let session: SessionStore
+        let designs: DesignCatalogueStore
     }
 }
 
@@ -238,10 +286,14 @@ private actor QuickSaveTestAPI: DrinkSaverAPI {
     private var saves: [DrinkSaveRequest] = []
     private var drinks: [EditableDrink] = []
     private let saveGate: QuickSaveGate?
+    private let volumeCreateGate: AddDrinkCreateGate?
+    private var volumeCreates = 0
+    private var consumptionTypeAmount: Int?
 
-    init(recommendationFailure: Bool = false, saveGate: QuickSaveGate? = nil, initialDrinks: [EditableDrink] = []) {
+    init(recommendationFailure: Bool = false, saveGate: QuickSaveGate? = nil, volumeCreateGate: AddDrinkCreateGate? = nil, initialDrinks: [EditableDrink] = []) {
         self.recommendationFailure = recommendationFailure
         self.saveGate = saveGate
+        self.volumeCreateGate = volumeCreateGate
         self.drinks = initialDrinks
     }
 
@@ -268,6 +320,16 @@ private actor QuickSaveTestAPI: DrinkSaverAPI {
         return [row]
     }
 
+    func createVolume(alcoholTypeID: Int, entry: NewVolumeEntry) async throws -> AlcoholVolume {
+        volumeCreates += 1
+        await volumeCreateGate?.arriveAndWait()
+        return AlcoholVolume(id: 55, name: entry.name, volume: entry.volume)
+    }
+    func consumptionTypes(amount: Int) async throws -> [ConsumptionType] {
+        consumptionTypeAmount = amount
+        return []
+    }
+
     func deleteDrinks(ids: [Int]) async throws -> Int {
         drinks.removeAll { ids.contains($0.id) }
         return ids.count
@@ -276,6 +338,34 @@ private actor QuickSaveTestAPI: DrinkSaverAPI {
     func setRecommendationFailure(_ fails: Bool) { recommendationFailure = fails }
     func savedRequests() -> [DrinkSaveRequest] { saves }
     func recommendationRequestCount() -> Int { requests }
+    func volumeCreateCount() -> Int { volumeCreates }
+    func lastConsumptionTypeAmount() -> Int? { consumptionTypeAmount }
+}
+
+private actor AddDrinkCreateGate {
+    private var createArrived = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+    private var releaseWaiters: [CheckedContinuation<Void, Never>] = []
+    private var isReleased = false
+
+    func arriveAndWait() async {
+        createArrived = true
+        waiters.forEach { $0.resume() }
+        waiters.removeAll()
+        if isReleased { return }
+        await withCheckedContinuation { releaseWaiters.append($0) }
+    }
+
+    func waitForCreate() async {
+        if createArrived { return }
+        await withCheckedContinuation { waiters.append($0) }
+    }
+
+    func releaseCreate() {
+        isReleased = true
+        releaseWaiters.forEach { $0.resume() }
+        releaseWaiters.removeAll()
+    }
 }
 
 private actor QuickSaveGate {
