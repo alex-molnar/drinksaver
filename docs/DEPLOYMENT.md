@@ -71,6 +71,11 @@ The job also validates all Xcode build configurations, inspects the Release app 
 fixtures, and retains the `.xcresult` bundle and simulator screenshot for failed runs. Ordinary
 successful runs upload no artifacts.
 
+The shared scheme also contains separate `LiveEnvironment`, `VisualCapture`, and `VisualParity`
+plans. The corresponding live-journey and reference-image scripts select these plans explicitly,
+so their `-only-testing` filters include the requested tests even while `DrinkSaver` remains the
+two-test smoke plan.
+
 ## Registry
 
 ```

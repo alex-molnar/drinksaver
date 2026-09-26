@@ -1,0 +1,30 @@
+{
+  "configurations": [
+    {
+      "id": "6D9042DB-5E78-432B-943D-3F7C26CC0CE6",
+      "name": "Live environment journey",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {
+    "codeCoverage": false,
+    "targetForVariableExpansion": {
+      "containerPath": "container:DrinkSaver.xcodeproj",
+      "identifier": "DBCB89BB37C2FEC5C6894FD8",
+      "name": "DrinkSaver"
+    }
+  },
+  "testTargets": [
+    {
+      "target": {
+        "containerPath": "container:DrinkSaver.xcodeproj",
+        "identifier": "BC7C14EA7E1050600BFFC2DE",
+        "name": "DrinkSaverUITests"
+      },
+      "selectedTests": [
+        "LiveEnvironmentUITests/testLiveEnvironmentReadSaveUndoEditDeleteJourneyCleansUpCreatedRecords()"
+      ]
+    }
+  ],
+  "version": 1
+}

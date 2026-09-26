@@ -37,10 +37,25 @@ plan = JSON.parse(File.read(plan_path))
 targets = plan.fetch("testTargets")
 unit_tests = targets.find { |entry| entry.dig("target", "name") == "DrinkSaverTests" } || abort("FAIL: unit test target is missing")
 ui_tests = targets.find { |entry| entry.dig("target", "name") == "DrinkSaverUITests" } || abort("FAIL: UI test target is missing")
-smoke_plan = unit_tests["selectedTests"] == ["ProjectSmokeTests/testRootViewInstantiates()"] &&
+abort "FAIL: default DrinkSaver plan must remain the explicit smoke plan" unless
+  unit_tests["selectedTests"] == ["ProjectSmokeTests/testRootViewInstantiates()"] &&
   ui_tests["selectedTests"] == ["ProjectSmokeUITests/testAppLaunches()"]
-full_plan = unit_tests["selectedTests"].nil? && ui_tests["selectedTests"].nil? &&
-  ui_tests["skippedTests"] == ["LiveEnvironmentUITests"]
-abort "FAIL: plan must select both smoke tests or run all suites except live-environment tests" unless smoke_plan || full_plan
+root = File.expand_path("..", File.dirname(plan_path))
+scheme = File.read(File.join(root, "ios/DrinkSaver.xcodeproj/xcshareddata/xcschemes/DrinkSaver.xcscheme"))
+{
+  "LiveEnvironment" => ["DrinkSaverUITests", "LiveEnvironmentUITests/testLiveEnvironmentReadSaveUndoEditDeleteJourneyCleansUpCreatedRecords()"],
+  "VisualCapture" => ["DrinkSaverUITests", "VisualCaptureUITests/testCaptureReferenceMatrix()"],
+  "VisualParity" => ["DrinkSaverTests", "VisualParityTests/testFrozenReferenceMatrixIsCompleteAndComparable()"]
+}.each do |name, (target_name, selected_test)|
+  abort "FAIL: shared scheme must include #{name} test plan" unless scheme.include?("container:#{name}.xctestplan")
+  supplemental = JSON.parse(File.read(File.join(File.dirname(plan_path), "#{name}.xctestplan")))
+  target = supplemental.fetch("testTargets").find { |entry| entry.dig("target", "name") == target_name }
+  abort "FAIL: #{name} plan must explicitly select #{selected_test}" unless target&.fetch("selectedTests", nil) == [selected_test]
+end
+live_script = File.read(File.join(root, "ios/scripts/run-live-tests.sh"))
+capture_script = File.read(File.join(root, "ios/scripts/compare-reference-images.sh"))
+abort "FAIL: live journey script must select the LiveEnvironment test plan" unless live_script.include?("-testPlan LiveEnvironment")
+abort "FAIL: screenshot script must select VisualCapture and VisualParity plans" unless
+  capture_script.include?("-testPlan VisualCapture") && capture_script.include?("-testPlan VisualParity")
 puts "PASS: iOS workflow and test plan validated"
 RUBY
