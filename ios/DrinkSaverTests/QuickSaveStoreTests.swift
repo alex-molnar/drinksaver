@@ -269,7 +269,9 @@ final class QuickSaveStoreTests: XCTestCase {
         await session.restore()
         let queue = SaveQueueStore(api: api, sessionStore: session, configuration: nil, clock: clock,
                                    sleep: { _ in try await Task.sleep(for: .seconds(3_600)) })
-        let day = CurrentDrinkingDayStore(api: api, queueStore: queue, sessionStore: session, clock: clock)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Europe/Amsterdam")!
+        let day = CurrentDrinkingDayStore(api: api, queueStore: queue, sessionStore: session, clock: clock, calendar: calendar)
         let designs = DesignCatalogueStore(api: api, sessionStore: session)
         await designs.load()
         let quick = QuickSaveStore(api: api, sessionStore: session, designCatalogueStore: designs,

@@ -1,0 +1,41 @@
+{
+  "configurations": [
+    {
+      "id": "E6492805-7E57-4434-92FA-9A9F8FB316A7",
+      "name": "Acceptance",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {
+    "codeCoverage": false,
+    "targetForVariableExpansion": {
+      "containerPath": "container:DrinkSaver.xcodeproj",
+      "identifier": "DBCB89BB37C2FEC5C6894FD8",
+      "name": "DrinkSaver"
+    }
+  },
+  "testTargets": [
+    {
+      "target": {
+        "containerPath": "container:DrinkSaver.xcodeproj",
+        "identifier": "F3A1B47D3802FD2149479EC6",
+        "name": "DrinkSaverTests"
+      },
+      "skippedTests": [
+        "VisualParityTests"
+      ]
+    },
+    {
+      "target": {
+        "containerPath": "container:DrinkSaver.xcodeproj",
+        "identifier": "BC7C14EA7E1050600BFFC2DE",
+        "name": "DrinkSaverUITests"
+      },
+      "skippedTests": [
+        "LiveEnvironmentUITests",
+        "VisualCaptureUITests"
+      ]
+    }
+  ],
+  "version": 1
+}

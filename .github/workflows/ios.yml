@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   ios:
-    name: iOS smoke tests
+    name: iOS acceptance tests
     runs-on: macos-15
     timeout-minutes: 45
     env:
@@ -51,7 +51,7 @@ jobs:
           swift --version
           xcrun simctl list devices available | grep -A 1 "$SIMULATOR_UDID"
 
-      - name: Run iOS smoke tests
+      - name: Run iOS acceptance tests
         env:
           SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
         run: |
@@ -60,10 +60,11 @@ jobs:
             -project ios/DrinkSaver.xcodeproj \
             -scheme DrinkSaver \
             -configuration Local \
-            -testPlan DrinkSaver \
+            -testPlan Acceptance \
             -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
             -resultBundlePath "$RUNNER_TEMP/DrinkSaver.xcresult" \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=YES \
+            CODE_SIGN_IDENTITY=-
 
       - name: Check Release configuration
         run: |

@@ -19,7 +19,9 @@ final class HistoryStoreTests: XCTestCase {
         let date = try XCTUnwrap(HistoryStore.parse("2026-09-10", calendar: calendar))
 
         XCTAssertEqual(HistoryStore.format(date, calendar: calendar), "2026-09-10")
-        XCTAssertEqual(Calendar(identifier: .gregorian).component(.weekday, from: date), 5)
+        var gregorian = Calendar(identifier: .gregorian)
+        gregorian.timeZone = calendar.timeZone
+        XCTAssertEqual(gregorian.component(.weekday, from: date), 5)
     }
 
     func testLoadStripRefreshesDatesThatWereAlreadyReady() async {

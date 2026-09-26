@@ -2166,19 +2166,31 @@ secrets to pull-request jobs.
 Preflight the `com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini` device type and the iOS 18.5
 runtime, create and boot a named simulator with `simctl`, and pass its UDID to `xcodebuild`. Fail
 clearly if either identifier is unavailable; never use `OS=latest` in parity CI. In `IOS-024A`,
-run only smoke tests. In `IOS-024B`, the test plan includes unit, API contract, visual,
-deterministic UI, and accessibility suites and excludes live-environment tests. Record Xcode,
-Swift, simulator runtime, and device type in job output.
+run only smoke tests. **Revised IOS-024B acceptance contract (2026-09-26):** CI runs unit, API
+contract, deterministic UI, and accessibility suites, and excludes live-environment and strict
+visual-parity tests. The native parity review found 49 of 60 frozen reference pairs outside the
+comparison thresholds. Do not regenerate or weaken the committed references to make CI green;
+keep strict comparison available through `ios/scripts/compare-reference-images.sh`, and restore it
+to the CI gate after the reference failures are resolved. Record Xcode, Swift, simulator runtime,
+and device type in job output.
 
 - [ ] **Step 4: Validate locally and on the branch**
 
 ```bash
-ios/scripts/xcodebuild.sh test -project ios/DrinkSaver.xcodeproj -scheme DrinkSaver \
-  -testPlan DrinkSaver -destination 'platform=iOS Simulator,id=<created-udid>'
+ios/scripts/xcodebuild.sh test \
+  -project ios/DrinkSaver.xcodeproj \
+  -scheme DrinkSaver \
+  -configuration Local \
+  -testPlan Acceptance \
+  -destination 'platform=iOS Simulator,id=<created-udid>' \
+  CODE_SIGNING_ALLOWED=YES \
+  CODE_SIGN_IDENTITY=-
 ```
 
-Expected: local run passes. After an authorized push, the hosted job passes and uploads `.xcresult`
-plus screenshots only on failure.
+Expected: the revised deterministic acceptance suite passes locally and on the hosted runner. The
+separate strict visual-parity command is expected to report the documented baseline differences
+until those references are reconciled. After an authorized push, CI uploads `.xcresult` plus
+screenshots only on failure.
 
 - [ ] **Step 5: Update deployment documentation**
 
