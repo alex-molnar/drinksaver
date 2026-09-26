@@ -17,6 +17,7 @@
 		F02100000000000000000005 /* LifecycleRecoveryUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02100000000000000000015 /* LifecycleRecoveryUITests.swift */; };
 		F022A0000000000000000001 /* VisualParityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F022A0000000000000000003 /* VisualParityTests.swift */; };
 		F022A0000000000000000002 /* VisualCaptureUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F022A0000000000000000004 /* VisualCaptureUITests.swift */; };
+		F022B0000000000000000001 /* AccessibilityUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F022B0000000000000000002 /* AccessibilityUITests.swift */; };
 		A01300000000000000000011 /* QuickSaveStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000001 /* QuickSaveStore.swift */; };
 		A01300000000000000000012 /* QuickSaveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000002 /* QuickSaveView.swift */; };
 		A01300000000000000000013 /* PlateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01300000000000000000003 /* PlateView.swift */; };
@@ -168,6 +169,7 @@
 		F02100000000000000000015 /* LifecycleRecoveryUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifecycleRecoveryUITests.swift; sourceTree = "<group>"; };
 		F022A0000000000000000003 /* VisualParityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualParityTests.swift; sourceTree = "<group>"; };
 		F022A0000000000000000004 /* VisualCaptureUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualCaptureUITests.swift; sourceTree = "<group>"; };
+		F022B0000000000000000002 /* AccessibilityUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityUITests.swift; sourceTree = "<group>"; };
 		A003A0000000000000000003 /* UITestFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixture.swift; sourceTree = "<group>"; };
 		A003A0000000000000000004 /* UITestFixtureBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixtureBootstrap.swift; sourceTree = "<group>"; };
 		A003A000000000000000000A /* FixtureHarnessUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixtureHarnessUITests.swift; sourceTree = "<group>"; };
@@ -460,6 +462,7 @@
 			isa = PBXGroup;
 			children = (
 				F02100000000000000000015 /* LifecycleRecoveryUITests.swift */,
+				F022B0000000000000000002 /* AccessibilityUITests.swift */,
 				F022A0000000000000000004 /* VisualCaptureUITests.swift */,
 				A01700000000000000000004 /* HistoryReadUITests.swift */,
 				A02000000000000000000004 /* RecommendationsUITests.swift */,
@@ -760,6 +763,7 @@
 			files = (
 				A01700000000000000000014 /* HistoryReadUITests.swift in Sources */,
 				F02100000000000000000005 /* LifecycleRecoveryUITests.swift in Sources */,
+				F022B0000000000000000001 /* AccessibilityUITests.swift in Sources */,
 				F022A0000000000000000002 /* VisualCaptureUITests.swift in Sources */,
 				A02000000000000000000014 /* RecommendationsUITests.swift in Sources */,
 				A01200000000000000000011 /* AppFrameUITests.swift in Sources */,
