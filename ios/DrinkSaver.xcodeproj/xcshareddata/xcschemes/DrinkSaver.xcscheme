@@ -62,6 +62,10 @@
             </BuildableReference>
          </TestableReference>
       </Testables>
+      <EnvironmentVariables>
+         <EnvironmentVariable key="WEB_REFERENCE_DIR" value="$(WEB_REFERENCE_DIR)" isEnabled="YES"/>
+         <EnvironmentVariable key="NATIVE_REFERENCE_DIR" value="$(NATIVE_REFERENCE_DIR)" isEnabled="YES"/>
+      </EnvironmentVariables>
       <CommandLineArguments>
       </CommandLineArguments>
    </TestAction>
