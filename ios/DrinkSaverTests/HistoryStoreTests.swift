@@ -13,6 +13,37 @@ final class HistoryStoreTests: XCTestCase {
         XCTAssertEqual(HistoryDayCount(state: .ready, count: 7).pipCount, 4)
     }
 
+    func testAPIStringsUseGregorianCalendarAndSuppliedTimezone() throws {
+        var calendar = Calendar(identifier: .buddhist)
+        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Europe/Amsterdam"))
+        let date = try XCTUnwrap(HistoryStore.parse("2026-09-10", calendar: calendar))
+
+        XCTAssertEqual(HistoryStore.format(date, calendar: calendar), "2026-09-10")
+        XCTAssertEqual(Calendar(identifier: .gregorian).component(.weekday, from: date), 5)
+    }
+
+    func testLoadStripRefreshesDatesThatWereAlreadyReady() async {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let clock = HistoryClock(now: calendar.date(from: DateComponents(year: 2026, month: 9, day: 25, hour: 18))!)
+        let oldDrink = EditableDrink(id: 42, name: "Old name", alcoholTypeId: 4)
+        let newDrink = EditableDrink(id: 42, name: "Updated name", alcoholTypeId: 4)
+        let api = HistoryAPI(rows: ["2026-09-24": [oldDrink]])
+        let session = SessionStore(authorizationProvider: HistoryAuthorization())
+        await session.restore()
+        let queue = SaveQueueStore(api: api, sessionStore: session, configuration: nil, clock: clock,
+            sleep: { _ in try await Task.sleep(for: .seconds(3600)) }, backgroundWork: { work in await work() })
+        let day = CurrentDrinkingDayStore(api: api, queueStore: queue, sessionStore: session, clock: clock, calendar: calendar)
+        let history = HistoryStore(api: api, queue: queue, drinkingDay: day, session: session, calendar: calendar)
+
+        await history.select(date: "2026-09-24")
+        XCTAssertEqual(history.visibleRows.map(\.drink), [oldDrink])
+        await api.setRows([newDrink], for: "2026-09-24")
+        await history.loadStrip()
+
+        XCTAssertEqual(history.visibleRows.map(\.drink), [newDrink])
+    }
+
     func testArbitraryDateDeleteRetainsExitThenUndoRestoresCachedRow() async {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!
@@ -78,9 +109,10 @@ private final class HistoryAuthorization: AuthorizationProviding {
 }
 
 private actor HistoryAPI: DrinkSaverAPI {
-    private let rowsByDate: [String: [EditableDrink]]
+    private var rowsByDate: [String: [EditableDrink]]
     init(rows: [String: [EditableDrink]]) { rowsByDate = rows }
     func drinks(date: String) async throws -> [EditableDrink] { rowsByDate[date] ?? [] }
+    func setRows(_ rows: [EditableDrink], for date: String) { rowsByDate[date] = rows }
     func deleteDrinks(ids: [Int]) async throws -> Int { ids.count }
     func saveDrink(_ request: DrinkSaveRequest) async throws -> [SavedDrink] { [] }
     func recommendations() async throws -> [Recommendation] { [] }

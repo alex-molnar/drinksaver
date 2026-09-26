@@ -153,7 +153,9 @@ final class HistoryStore {
     static func format(_ date: Date, calendar: Calendar = .current) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.calendar = calendar
+        var gregorianCalendar = Calendar(identifier: .gregorian)
+        gregorianCalendar.timeZone = calendar.timeZone
+        formatter.calendar = gregorianCalendar
         formatter.timeZone = calendar.timeZone
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: date)
@@ -165,12 +167,14 @@ final class HistoryStore {
     static func parse(_ value: String, calendar: Calendar = .current) -> Date? {
         let parts = value.split(separator: "-").compactMap { Int($0) }
         guard parts.count == 3 else { return nil }
-        return calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2])).map(calendar.startOfDay(for:))
+        var gregorianCalendar = Calendar(identifier: .gregorian)
+        gregorianCalendar.timeZone = calendar.timeZone
+        return gregorianCalendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2]))
+            .map(gregorianCalendar.startOfDay(for:))
     }
 
     private func load(date: String) async {
         guard let userID = session.userID else { return }
-        if days[date] == .ready { return }
         requests[date, default: 0] += 1
         let request = requests[date]!
         days[date] = .loading
