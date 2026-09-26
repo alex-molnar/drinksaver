@@ -4,6 +4,7 @@ import XCTest
 final class LiveEnvironmentUITests: XCTestCase {
     private var existingHistoryIDs = Set<String>()
     private var historyBaselineCaptured = false
+    private var saveSubmitted = false
     private var createdHistoryID: String?
     private var createdRecommendationID: String?
     private var createdRecommendationNames: [String] = []
@@ -12,6 +13,7 @@ final class LiveEnvironmentUITests: XCTestCase {
         let app = XCUIApplication()
         existingHistoryIDs = []
         historyBaselineCaptured = false
+        saveSubmitted = false
         createdHistoryID = nil
         createdRecommendationID = nil
         createdRecommendationNames = []
@@ -70,6 +72,7 @@ final class LiveEnvironmentUITests: XCTestCase {
         XCTAssertTrue(nameField.waitForExistence(timeout: 5))
         nameField.tap()
         nameField.typeText(recommendationName)
+        saveSubmitted = true
         app.buttons["add.save"].tap()
 
         app.buttons["frame.tab.history"].tap()
@@ -135,40 +138,65 @@ final class LiveEnvironmentUITests: XCTestCase {
     }
 
     private func cleanupCreatedRecords(in app: XCUIApplication) {
-        guard app.staticTexts["frame.title"].exists else { return }
+        guard app.staticTexts["frame.title"].exists else {
+            if saveSubmitted { XCTFail("Teardown could not open the app to clean up created records") }
+            return
+        }
         if app.buttons["frame.add.close"].isHittable { app.buttons["frame.add.close"].tap() }
         if app.buttons["Recommendations"].exists { app.buttons["frame.menu"].tap() }
 
         if historyBaselineCaptured {
-            guard app.buttons["frame.tab.history"].isHittable else { return }
-            app.buttons["frame.tab.history"].tap()
-            let historyID = createdHistoryID ?? waitForNewHistoryRow(in: app, excluding: existingHistoryIDs, timeout: 3)
+            if app.buttons["frame.tab.history"].isHittable {
+                app.buttons["frame.tab.history"].tap()
+            } else {
+                XCTFail("Teardown could not open History to clean up the test drink")
+            }
+            let historyID = createdHistoryID ?? waitForNewHistoryRow(in: app, excluding: existingHistoryIDs, timeout: saveSubmitted ? 15 : 3)
             if let historyID {
                 let row = app.descendants(matching: .any).matching(identifier: historyID).firstMatch
                 if row.waitForExistence(timeout: 3) {
                     let crossOff = row.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Cross off '")).firstMatch
-                    if app.buttons["frame.queue.undo"].exists {
+                    if crossOff.waitForExistence(timeout: 3) {
+                        let drinkName = String(crossOff.label.dropFirst("Cross off ".count))
+                        let deleteIsPending = app.buttons["frame.queue.undo"].exists
+                            && app.staticTexts["frame.queue.message"].label == "Crossed off \(drinkName)"
+                        if !deleteIsPending {
+                            if crossOff.isHittable {
+                                crossOff.tap()
+                            } else {
+                                XCTFail("Teardown could not start deletion of the test drink")
+                            }
+                        }
                         RunLoop.main.run(until: Date().addingTimeInterval(8))
-                    } else if crossOff.isHittable {
-                        crossOff.tap()
-                        RunLoop.main.run(until: Date().addingTimeInterval(8))
+                    } else {
+                        XCTFail("Teardown could not find the test drink’s Cross off action")
                     }
-                    app.buttons["frame.tab.quick"].tap()
-                    app.buttons["frame.tab.history"].tap()
-                    _ = waitUntilAbsent(row, timeout: 5)
                 }
+                app.buttons["frame.tab.quick"].tap()
+                app.buttons["frame.tab.history"].tap()
+                if !waitUntilAbsent(row, timeout: 15) {
+                    XCTFail("The test drink remains in History after teardown cleanup")
+                }
+            } else if saveSubmitted {
+                XCTFail("Teardown could not identify the created History row to clean up")
             }
         }
 
         guard !createdRecommendationNames.isEmpty else { return }
         let recommendationsMenuItem = app.buttons["Recommendations"]
         if !recommendationsMenuItem.exists { app.buttons["frame.menu"].tap() }
-        guard recommendationsMenuItem.waitForExistence(timeout: 3) else { return }
+        guard recommendationsMenuItem.waitForExistence(timeout: 3) else {
+            XCTFail("Teardown could not open Recommendations to clean up the test entry")
+            return
+        }
         recommendationsMenuItem.tap()
         let recommendationsLoaded = app.descendants(matching: .any).matching(NSPredicate(
             format: "identifier IN %@", ["recommendations.empty", "recommendations.rows", "recommendations.retry"]
         )).firstMatch
-        guard recommendationsLoaded.waitForExistence(timeout: 10) else { return }
+        guard recommendationsLoaded.waitForExistence(timeout: 10), !app.buttons["recommendations.retry"].exists else {
+            XCTFail("Teardown could not load Recommendations to clean up the test entry")
+            return
+        }
 
         var recommendationIDs = createdRecommendationID.map { [$0] } ?? []
         for name in createdRecommendationNames {
@@ -178,17 +206,28 @@ final class LiveEnvironmentUITests: XCTestCase {
                 if id != rowName.identifier && !recommendationIDs.contains(id) { recommendationIDs.append(id) }
             }
         }
+        if recommendationIDs.isEmpty && saveSubmitted {
+            XCTFail("Teardown could not identify the created recommendation to clean up")
+        }
 
         for id in recommendationIDs {
             let delete = app.buttons["recommendations.delete.\(id)"]
-            guard delete.isHittable else { continue }
+            guard delete.isHittable else {
+                if delete.exists { XCTFail("Teardown could not delete recommendation \(id)") }
+                continue
+            }
             delete.tap()
             RunLoop.main.run(until: Date().addingTimeInterval(8))
             app.buttons["frame.tab.quick"].tap()
             let menuItem = app.buttons["Recommendations"]
             if !menuItem.exists { app.buttons["frame.menu"].tap() }
-            guard menuItem.waitForExistence(timeout: 3) else { return }
+            guard menuItem.waitForExistence(timeout: 3) else {
+                XCTFail("Teardown could not reload Recommendations to verify cleanup")
+                return
+            }
             menuItem.tap()
+            let deleted = waitUntilAbsent(app.buttons["recommendations.delete.\(id)"], timeout: 15)
+            if !deleted { XCTFail("Recommendation \(id) remains after teardown cleanup") }
         }
     }
 
