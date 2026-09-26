@@ -8,6 +8,7 @@ struct UITestFixture: Sendable {
     let localeIdentifier: String
     let contentSize: DynamicTypeSize
     let reduceMotion: Bool
+    let referenceState: String?
 
     static func parse(arguments: [String]) throws -> UITestFixture? {
         let fixtureArguments = [
@@ -15,7 +16,8 @@ struct UITestFixture: Sendable {
             "-ui-fixed-now",
             "-ui-locale",
             "-ui-content-size",
-            "-ui-reduce-motion"
+            "-ui-reduce-motion",
+            "-ui-reference-state"
         ]
         guard arguments.contains(where: fixtureArguments.contains) else { return nil }
 
@@ -38,12 +40,20 @@ struct UITestFixture: Sendable {
             throw InvalidUITestFixtureArguments("Invalid -ui-reduce-motion value '\(reduceMotionText)'.")
         }
 
+        let referenceState = arguments.contains("-ui-reference-state")
+            ? try requiredValue(for: "-ui-reference-state", in: arguments) : nil
+        if let referenceState,
+           !["quick-ready", "quick-loading", "quick-error", "history-populated", "history-empty", "history-error", "recs-ready", "recs-empty", "recs-error", "add-root"].contains(referenceState) {
+            throw InvalidUITestFixtureArguments("Unknown reference state '\(referenceState)'.")
+        }
+
         return UITestFixture(
             identifier: identifier,
             fixedNow: fixedNow,
             localeIdentifier: locale,
             contentSize: dynamicTypeSize,
-            reduceMotion: reduceMotion
+            reduceMotion: reduceMotion,
+            referenceState: referenceState
         )
     }
 
