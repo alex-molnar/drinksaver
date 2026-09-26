@@ -225,6 +225,12 @@ needed on the host is Docker.
 realm, the public `drinksaver-frontend` client, and one user with the fixed id
 `423c91e4-491f-4f82-aba6-3c982857e0e4`.
 
+The same import also creates the public `drinksaver-ios-local` client for the native app. It uses
+Authorization Code with S256 PKCE, permits only `im.kak.drinksaver:/oauth2redirect`, and has no
+client secret or password grant. Validate this checked-in client configuration with
+`python3 deploy/local/validate-ios-client.py`. `offline_access` is an optional client scope because
+the app requests it during sign-in.
+
 `deploy/local/seed.sql` loads demo data. It runs as its own one-shot service that waits for
 the backend to report healthy, because Hibernate creates the schema on startup
 (`ddl-auto=update`) and there is nothing to insert into before that. It is idempotent and
