@@ -20,7 +20,9 @@ final class SaveQueueReducerTests: XCTestCase {
         let queued = SaveQueueReducer.reduce(SaveQueueState(), .deleteStarted(entry))
         XCTAssertEqual(queued.entries[0].status, .undoable(until: now.addingTimeInterval(6.5)))
         XCTAssertEqual(SaveQueueReducer.sweep(queued, now: now.addingTimeInterval(6.499)), queued)
-        XCTAssertEqual(SaveQueueReducer.sweep(queued, now: now.addingTimeInterval(6.5)).entries[0].status, .saving)
+        let saving = SaveQueueReducer.sweep(queued, now: now.addingTimeInterval(6.5))
+        XCTAssertEqual(saving.entries[0].status, .saving)
+        XCTAssertEqual(SaveQueueReducer.currentFeedback(in: saving)?.id, entry.id)
     }
 
     func testNewUndoableOperationSupersedesOlderDeleteAndSave() {

@@ -144,7 +144,13 @@ enum SaveQueueReducer {
 
     static func currentFeedback(in state: SaveQueueState) -> QueueEntry? {
         state.entries
-            .filter { if case .undoable = $0.status { true } else if case .undoing = $0.status { true } else if case .failed = $0.status { true } else { false } }
+            .filter { entry in
+                switch entry.status {
+                case .undoable, .undoing, .failed: true
+                case .saving: if case .delete = entry.kind { true } else { false }
+                case .committed: false
+                }
+            }
             .max { $0.sequence < $1.sequence }
     }
 

@@ -156,6 +156,7 @@ final class LiveEnvironmentUITests: XCTestCase {
                 let row = app.descendants(matching: .any).matching(identifier: historyID).firstMatch
                 if row.waitForExistence(timeout: 3) {
                     let crossOff = row.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Cross off '")).firstMatch
+                    var deleteSettled = true
                     if crossOff.waitForExistence(timeout: 3) {
                         let drinkName = String(crossOff.label.dropFirst("Cross off ".count))
                         let deleteIsPending = app.buttons["frame.queue.undo"].exists
@@ -164,18 +165,32 @@ final class LiveEnvironmentUITests: XCTestCase {
                             if crossOff.isHittable {
                                 crossOff.tap()
                             } else {
+                                deleteSettled = false
                                 XCTFail("Teardown could not start deletion of the test drink")
                             }
                         }
                         RunLoop.main.run(until: Date().addingTimeInterval(8))
+                        let deleteProgress = app.descendants(matching: .any)
+                            .matching(identifier: "frame.queue.progress").firstMatch
+                        if app.staticTexts["frame.queue.message"].label == "Deleting \(drinkName)…" {
+                            deleteSettled = waitUntilAbsent(deleteProgress, timeout: 60)
+                        }
+                        if app.buttons["frame.queue.retry"].exists,
+                           app.staticTexts["frame.queue.message"].label == "Could not delete." {
+                            deleteSettled = false
+                        }
+                        if !deleteSettled {
+                            XCTFail("The test drink delete did not succeed before teardown verification")
+                        }
                     } else {
+                        deleteSettled = false
                         XCTFail("Teardown could not find the test drink’s Cross off action")
                     }
-                }
-                app.buttons["frame.tab.quick"].tap()
-                app.buttons["frame.tab.history"].tap()
-                if !waitUntilAbsent(row, timeout: 15) {
-                    XCTFail("The test drink remains in History after teardown cleanup")
+                    app.buttons["frame.tab.quick"].tap()
+                    app.buttons["frame.tab.history"].tap()
+                    if !deleteSettled || !waitUntilAbsent(row, timeout: 15) {
+                        XCTFail("The test drink remains in History after teardown cleanup")
+                    }
                 }
             } else if saveSubmitted {
                 XCTFail("Teardown could not identify the created History row to clean up")
