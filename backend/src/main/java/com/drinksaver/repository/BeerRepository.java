@@ -39,6 +39,14 @@ public class BeerRepository {
         return brandsTable.findAllByUserIdInOrderByName(List.of(userId, repositoryConfiguration.adminUserUUID()));
     }
 
+    public List<Brand> getAdminBrands() {
+        return brandsTable.findAllByUserIdOrderByNameAsc(repositoryConfiguration.adminUserUUID());
+    }
+
+    public List<Brand> getNonAdminBrands() {
+        return brandsTable.findAllByUserIdNotOrderByNameAsc(repositoryConfiguration.adminUserUUID());
+    }
+
     public List<ConsumptionType> getConsumptionTypes(Integer maxAmount) {
         return consumptionTypesTable.findAll(Pageable.ofSize(maxAmount)).toList();
     }
@@ -58,6 +66,14 @@ public class BeerRepository {
 
     public List<BeerFlavour> getBeerFlavours(Integer brandId, UUID userId) {
         return beerFlavoursTable.findAllByBrandIdAndUserIdIn(brandId, List.of(userId, repositoryConfiguration.adminUserUUID()));
+    }
+
+    public List<BeerFlavour> getAdminBeerFlavours(Integer brandId) {
+        return beerFlavoursTable.findAllByBrandIdAndUserId(brandId, repositoryConfiguration.adminUserUUID());
+    }
+
+    public List<BeerFlavour> getNonAdminBeerFlavours(Integer brandId) {
+        return beerFlavoursTable.findAllByBrandIdAndUserIdNot(brandId, repositoryConfiguration.adminUserUUID());
     }
 
     public BeerFlavour saveBeerFlavour(Integer brandId, UUID userId, String name, Integer colorPaletteId) {

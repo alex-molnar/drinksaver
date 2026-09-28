@@ -37,8 +37,24 @@ public class AlcoholRepository {
         return alcoholTypesTable.findAllByUserIdInOrderByNameAsc(List.of(userId, repositoryConfiguration.adminUserUUID()));
     }
 
+    public List<AlcoholType> getAdminAlcoholTypes() {
+        return alcoholTypesTable.findAllByUserIdOrderByNameAsc(repositoryConfiguration.adminUserUUID());
+    }
+
+    public List<AlcoholType> getNonAdminAlcoholTypes() {
+        return alcoholTypesTable.findAllByUserIdNot(repositoryConfiguration.adminUserUUID());
+    }
+
     public List<AlcoholSubtype> getSubtypesByAlcoholType(Integer alcoholTypeId, UUID userId) {
         return alcoholSubtypesTable.findAllByAlcoholTypeIdAndUserIdInOrderByNameAsc(alcoholTypeId, List.of(userId, repositoryConfiguration.adminUserUUID()));
+    }
+
+    public List<AlcoholSubtype> getAdminSubtypesByAlcoholType(Integer alcoholTypeId) {
+        return alcoholSubtypesTable.findAllByAlcoholTypeIdAndUserIdOrderByNameAsc(alcoholTypeId, repositoryConfiguration.adminUserUUID());
+    }
+
+    public List<AlcoholSubtype> getNonAdminSubtypesByAlcoholType(Integer alcoholTypeId) {
+        return alcoholSubtypesTable.findAllByAlcoholTypeIdAndUserIdNotOrderByNameAsc(alcoholTypeId, repositoryConfiguration.adminUserUUID());
     }
 
     public AlcoholSubtype saveSubtypeForAlcoholType(Integer alcoholTypeId, NewAlcoholSubtype newAlcoholSubtype) {
