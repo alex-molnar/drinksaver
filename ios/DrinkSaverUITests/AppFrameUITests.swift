@@ -23,7 +23,7 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["frame.title"].label, "History")
         add.tap()
         XCTAssertTrue(app.otherElements["frame.add-sheet"].waitForExistence(timeout: 3))
-        app.buttons["frame.add.close"].tap()
+        dismissAddSheet(app)
         XCTAssertEqual(app.staticTexts["frame.title"].label, "History")
 
         app.buttons["frame.menu"].tap()
@@ -46,7 +46,7 @@ final class AppFrameUITests: XCTestCase {
         app.buttons["frame.menu"].tap()
         app.buttons["Add new type"].tap()
         XCTAssertTrue(app.staticTexts["frame.add.create.alcoholType"].waitForExistence(timeout: 3))
-        app.buttons["frame.add.close"].tap()
+        dismissAddSheet(app)
         app.buttons["frame.menu"].tap()
         app.buttons["Recommendations"].tap()
         app.buttons["frame.menu"].tap()
@@ -71,7 +71,7 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertTrue(glass.waitForExistence(timeout: 3))
         glass.tap()
         XCTAssertTrue(app.buttons["Size, Glass (0.25L)"].exists)
-        app.buttons["frame.add.close"].tap()
+        dismissAddSheet(app)
         app.buttons["frame.tab.add"].tap()
         XCTAssertTrue(app.buttons["Drink, Choose"].waitForExistence(timeout: 3))
     }
@@ -91,6 +91,22 @@ final class AppFrameUITests: XCTestCase {
         app.buttons["add.date.another"].tap()
         XCTAssertTrue(app.buttons["add.date.set"].waitForExistence(timeout: 3))
         XCTAssertFalse(app.buttons["add.date.set"].isEnabled)
+    }
+
+    func testAddSheetHasNoCloseButtonAndOptionPanelPlusOpensCreate() {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.add"].tap()
+        XCTAssertTrue(app.buttons["Drink, Choose"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["frame.add.close"].exists)
+        XCTAssertFalse(app.buttons["frame.add.new"].exists)
+        app.buttons["Drink, Choose"].tap()
+        app.buttons["Wine"].tap()
+        app.buttons["Size, Choose"].tap()
+        let plus = app.buttons["frame.add.new"]
+        XCTAssertTrue(plus.waitForExistence(timeout: 3))
+        XCTAssertEqual(plus.label, "Add size")
+        plus.tap()
+        XCTAssertTrue(app.textFields["add.create.name"].waitForExistence(timeout: 3))
     }
 
     func testAddDrinkHandsSaveToQueue() {
@@ -159,6 +175,37 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertGreaterThan(row.frame.width, 300)
         row.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
         XCTAssertTrue(app.buttons["When, Yesterday"].waitForExistence(timeout: 3))
+    }
+
+    func testHeaderPlusAndBackAreTappableAtTheCornersOfTheirBox() {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.add"].tap()
+        // Full height, so the measured frames are not scaled by the half detent presentation on newer OSes.
+        app.otherElements["frame.add-sheet"].swipeUp(velocity: .fast)
+        app.buttons["Drink, Choose"].tap()
+        app.buttons["Wine"].tap()
+        app.buttons["Size, Choose"].tap()
+        let plus = app.buttons["frame.add.new"]
+        XCTAssertTrue(plus.waitForExistence(timeout: 3))
+        XCTAssertGreaterThanOrEqual(plus.frame.width, 43)
+        XCTAssertGreaterThanOrEqual(plus.frame.height, 43)
+        plus.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.9)).tap()
+        XCTAssertTrue(app.textFields["add.create.name"].waitForExistence(timeout: 3))
+        let back = app.buttons["frame.add.back"]
+        XCTAssertGreaterThanOrEqual(back.frame.width, 43)
+        XCTAssertGreaterThanOrEqual(back.frame.height, 43)
+        back.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.9)).tap()
+        XCTAssertTrue(plus.waitForExistence(timeout: 3))
+        back.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.9)).tap()
+        XCTAssertTrue(app.buttons["Size, Choose"].waitForExistence(timeout: 3))
+    }
+
+    /// Swipes the sheet down and waits until it is really gone, so later assertions run on the screen underneath.
+    private func dismissAddSheet(_ app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
+        let sheet = app.otherElements["frame.add-sheet"]
+        sheet.swipeDown(velocity: .fast)
+        let gone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: sheet)
+        XCTAssertEqual(XCTWaiter().wait(for: [gone], timeout: 5), .completed, "Add sheet should dismiss", file: file, line: line)
     }
 
     private func launchSignedIn(contentSize: String = "large", fixture: String = "signed-in") -> XCUIApplication {

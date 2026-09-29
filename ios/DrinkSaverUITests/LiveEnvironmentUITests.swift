@@ -142,7 +142,7 @@ final class LiveEnvironmentUITests: XCTestCase {
             if saveSubmitted { XCTFail("Teardown could not open the app to clean up created records") }
             return
         }
-        if app.buttons["frame.add.close"].isHittable { app.buttons["frame.add.close"].tap() }
+        if app.otherElements["frame.add-sheet"].isHittable { app.otherElements["frame.add-sheet"].swipeDown(velocity: .fast) }
         if app.buttons["Recommendations"].exists { app.buttons["frame.menu"].tap() }
 
         if historyBaselineCaptured {

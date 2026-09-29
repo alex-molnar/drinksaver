@@ -220,7 +220,7 @@ struct AppFrame: View {
                         if let route = coordinator.addPanels.last, case .create = route { addDrinkStore.cancelCreation() }
                         coordinator.popAddPanel()
                     } label: {
-                        Image(systemName: "chevron.left").frame(width: 44, height: 44)
+                        Image(systemName: "chevron.left").frame(width: 44, height: 44).contentShape(Rectangle())
                     }
                     .accessibilityLabel("Back")
                     .accessibilityIdentifier("frame.add.back")
@@ -228,11 +228,15 @@ struct AppFrame: View {
                 Spacer()
                 Text(sheetTitle).font(theme.type.displayS.font).foregroundStyle(theme.ink.primary.color)
                 Spacer()
-                Button { coordinator.dismissAdd() } label: {
-                    Image(systemName: "xmark").frame(width: 44, height: 44)
+                if case .option(let field) = coordinator.addPanels.last, let creatable = creatable(field) {
+                    Button { coordinator.push(.create(creatable)) } label: {
+                        Image(systemName: "plus").frame(width: 44, height: 44).contentShape(Rectangle())
+                    }
+                    .accessibilityLabel("Add \(fieldName(field))")
+                    .accessibilityIdentifier("frame.add.new")
+                } else {
+                    Color.clear.frame(width: 44, height: 44).accessibilityHidden(true)
                 }
-                .accessibilityLabel("Close")
-                .accessibilityIdentifier("frame.add.close")
             }
             .buttonStyle(.plain)
             .foregroundStyle(theme.ink.primary.color)
@@ -332,7 +336,7 @@ struct AppFrame: View {
             Text(optionTitle(field)).font(theme.type.displayM.font).padding(.horizontal, 20)
             if field == .date { datePanel }
             else if case .loading = state(for: field) { ProgressView("Loading…").padding() }
-            else if case .failed = state(for: field) { Text("Couldn’t load. Close and try again.").padding() }
+            else if case .failed = state(for: field) { Text("Couldn’t load. Go back and try again.").padding() }
             else {
                 ScrollView { VStack(spacing: 0) {
                     ForEach(optionValues(field), id: \.id) { item in
@@ -429,7 +433,10 @@ struct AppFrame: View {
     private func optionTitle(_ field: AddRouteField) -> String {
         switch field { case .alcoholType: "What are you drinking?"; case .volume: "What size?"; case .subtype: "Which kind?"; case .consumptionType: "How is it served?"; case .brand: "Which brand?"; case .flavour: "Which flavour?"; case .date: "When was it?"; case .notes: "Notes"; case .recommend: "Recommendations" }
     }
-    private func fieldName(_ field: AddRouteField) -> String { optionTitle(field).lowercased().replacingOccurrences(of: "which ", with: "") }
+    /// Mirrors web `CREATE_LABELS`.
+    private func fieldName(_ field: AddRouteField) -> String {
+        switch field { case .alcoholType: "drink type"; case .volume: "size"; case .subtype: "subtype"; case .brand: "brand"; case .flavour: "flavour"; default: "" }
+    }
     private func createPanel(_ field: AddCreatableField) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("New \(field == .alcoholType ? "alcohol type" : String(describing: field))").font(theme.type.displayM.font).padding(.horizontal, 20)
