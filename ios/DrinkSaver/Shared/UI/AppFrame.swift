@@ -7,6 +7,9 @@ struct AppFrame: View {
     @Environment(AppCoordinator.self) private var coordinator
     @Environment(AddDrinkStore.self) private var addDrinkStore
     @State private var menuIsOpen = false
+    @State private var showCustomDate = false
+    @State private var customDate = Date()
+    @State private var customDatePicked = false
 
     private var theme: DrinkSaverTheme { themeStore.theme }
     private var header: AppFrameHeader {
@@ -260,11 +263,7 @@ struct AppFrame: View {
                             addRow("Brand", value: addDrinkStore.draft.brand?.name, field: .brand)
                             if addDrinkStore.draft.brand != nil { addRow("Flavour", value: addDrinkStore.draft.flavour?.name, field: .flavour) }
                         }
-                        HStack {
-                            Text("Date"); Spacer()
-                            DatePicker("Date", selection: Binding(get: { addDrinkStore.draft.date ?? AddDrinkStore.date(forISODate: drinkingDay.date) ?? Date() }, set: { addDrinkStore.draft.date = $0 }), in: ...Date(), displayedComponents: .date)
-                                .labelsHidden().accessibilityLabel("Date")
-                        }.padding(.horizontal, 20).frame(minHeight: 48)
+                        addRow("When", value: AddDrinkStore.whenLabel(addDrinkStore.draft.date, today: todayDate), field: .date)
                         HStack {
                             Text("Notes"); Spacer()
                             TextField("Optional", text: Binding(get: { addDrinkStore.draft.notes }, set: { addDrinkStore.draft.notes = $0 }))
@@ -306,6 +305,8 @@ struct AppFrame: View {
         }
     }
 
+    private var todayDate: Date { AddDrinkStore.date(forISODate: drinkingDay.date) ?? Date() }
+
     private func addRow(_ title: String, value: String?, field: AddRouteField) -> some View {
         Button {
             coordinator.push(.option(field))
@@ -329,7 +330,8 @@ struct AppFrame: View {
     @ViewBuilder private func optionPanel(_ field: AddRouteField) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(optionTitle(field)).font(theme.type.displayM.font).padding(.horizontal, 20)
-            if case .loading = state(for: field) { ProgressView("Loading…").padding() }
+            if field == .date { datePanel }
+            else if case .loading = state(for: field) { ProgressView("Loading…").padding() }
             else if case .failed = state(for: field) { Text("Couldn’t load. Close and try again.").padding() }
             else {
                 ScrollView { VStack(spacing: 0) {
@@ -342,6 +344,43 @@ struct AppFrame: View {
                             .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).padding(.horizontal, 20)
                     }
                 } }
+            }
+        }
+    }
+
+    @ViewBuilder private var datePanel: some View {
+        let today = todayDate
+        let selected = addDrinkStore.draft.date ?? today
+        let yesterday = AddDrinkStore.previousDay(of: today)
+        let cal = Calendar.current
+        VStack(spacing: 0) {
+            Color.clear.frame(height: 0).onAppear { showCustomDate = false }
+            ForEach([("Today", today), ("Yesterday", yesterday)], id: \.0) { name, day in
+                Button { addDrinkStore.draft.date = day; coordinator.popAddPanel() } label: {
+                    Text(name).frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).contentShape(Rectangle())
+                }
+                    .padding(.horizontal, 20).buttonStyle(.plain)
+                    .accessibilityAddTraits(cal.isDate(selected, inSameDayAs: day) ? .isSelected : [])
+                    .accessibilityIdentifier("add.date.\(name.lowercased())")
+            }
+            if showCustomDate {
+                DatePicker("Choose a date", selection: $customDate, in: ...today, displayedComponents: .date)
+                    .onChange(of: customDate) { _, _ in customDatePicked = true }
+                    .padding(.horizontal, 20).accessibilityIdentifier("add.date.picker")
+                Button("Set date") { addDrinkStore.draft.date = customDate; coordinator.popAddPanel() }
+                    .buttonStyle(.borderedProminent).padding().disabled(!customDatePicked).accessibilityIdentifier("add.date.set")
+            } else {
+                Button {
+                    // Like web: seed only when the current date is neither Today nor Yesterday, and keep Set date disabled until a date is picked.
+                    let isPreset = cal.isDate(selected, inSameDayAs: today) || cal.isDate(selected, inSameDayAs: yesterday)
+                    customDate = isPreset ? today : selected
+                    customDatePicked = !isPreset
+                    showCustomDate = true
+                } label: {
+                    Text("Another day").frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).contentShape(Rectangle())
+                }
+                    .padding(.horizontal, 20).buttonStyle(.plain)
+                    .accessibilityIdentifier("add.date.another")
             }
         }
     }
@@ -388,7 +427,7 @@ struct AppFrame: View {
         }
     }
     private func optionTitle(_ field: AddRouteField) -> String {
-        switch field { case .alcoholType: "What are you drinking?"; case .volume: "What size?"; case .subtype: "Which kind?"; case .consumptionType: "How is it served?"; case .brand: "Which brand?"; case .flavour: "Which flavour?"; case .date: "Date"; case .notes: "Notes"; case .recommend: "Recommendations" }
+        switch field { case .alcoholType: "What are you drinking?"; case .volume: "What size?"; case .subtype: "Which kind?"; case .consumptionType: "How is it served?"; case .brand: "Which brand?"; case .flavour: "Which flavour?"; case .date: "When was it?"; case .notes: "Notes"; case .recommend: "Recommendations" }
     }
     private func fieldName(_ field: AddRouteField) -> String { optionTitle(field).lowercased().replacingOccurrences(of: "which ", with: "") }
     private func createPanel(_ field: AddCreatableField) -> some View {

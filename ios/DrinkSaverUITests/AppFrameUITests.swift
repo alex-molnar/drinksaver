@@ -76,6 +76,23 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Drink, Choose"].waitForExistence(timeout: 3))
     }
 
+    func testYesterdayCanBeChosenForTheDrink() {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.add"].tap()
+        app.buttons["When, Today"].tap()
+        app.buttons["add.date.yesterday"].tap()
+        XCTAssertTrue(app.buttons["When, Yesterday"].waitForExistence(timeout: 3))
+    }
+
+    func testSetDateIsDisabledUntilADateIsPicked() {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.add"].tap()
+        app.buttons["When, Today"].tap()
+        app.buttons["add.date.another"].tap()
+        XCTAssertTrue(app.buttons["add.date.set"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["add.date.set"].isEnabled)
+    }
+
     func testAddDrinkHandsSaveToQueue() {
         let app = launchSignedIn()
         app.buttons["frame.tab.add"].tap()
@@ -128,6 +145,20 @@ final class AppFrameUITests: XCTestCase {
         let save = app.buttons["add.save"]
         XCTAssertTrue(save.isHittable)
         XCTAssertFalse(save.frame.intersects(message.frame))
+    }
+
+    func testDateRowsAreTappableAcrossTheirWholeWidth() {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.add"].tap()
+        // Measure at full height: at the half detent newer OSes draw the sheet scaled (about 0.96), which shrinks every frame.
+        app.otherElements["frame.add-sheet"].swipeUp(velocity: .fast)
+        app.buttons["When, Today"].tap()
+        let row = app.buttons["add.date.yesterday"]
+        XCTAssertTrue(row.waitForExistence(timeout: 3))
+        XCTAssertGreaterThanOrEqual(row.frame.height, 47)
+        XCTAssertGreaterThan(row.frame.width, 300)
+        row.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        XCTAssertTrue(app.buttons["When, Yesterday"].waitForExistence(timeout: 3))
     }
 
     private func launchSignedIn(contentSize: String = "large", fixture: String = "signed-in") -> XCUIApplication {

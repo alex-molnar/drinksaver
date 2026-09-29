@@ -65,7 +65,7 @@ showing an Undo action. Session expiry follows the existing session gate and cle
 ## Add a drink
 
 The Add sheet retains one draft across its nested drink, size, subtype, serving, brand, and flavour
-panels. Its date defaults to the current drinking day. Creating a catalogue entry selects it and
+panels. Its "When" row defaults to the current drinking day and reads Today, Yesterday, or the chosen date; it opens a "When was it?" panel with Today, Yesterday, and Another day (native calendar plus Set date, no future dates), mirroring the web app. Creating a catalogue entry selects it and
 returns to the prior panel; pending creation cannot be submitted twice, and a response is adopted
 only while the selection context still matches. Recommendation name and design overrides are
 separate from catalogue-creation fields; new catalogue design overrides remain unset until chosen,
