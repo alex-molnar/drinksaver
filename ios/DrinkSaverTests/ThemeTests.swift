@@ -69,6 +69,8 @@ final class ThemeTests: XCTestCase {
                 XCTAssertGreaterThanOrEqual(contrast(foreground, theme.surface.ground), 4.5)
             }
             XCTAssertGreaterThanOrEqual(contrast(theme.ink.onPaper, theme.surface.paper), 4.5)
+            // `.text` buttons use these pairs (accent.primary is below AA on the dark panel and on paper).
+            XCTAssertGreaterThanOrEqual(contrast(theme.ink.primary, theme.surface.panel), 4.5)
             XCTAssertGreaterThanOrEqual(contrast(theme.surface.panel, theme.accent.active), 3)
         }
 

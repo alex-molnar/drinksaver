@@ -33,8 +33,7 @@ struct QuickSaveView: View {
                 .accessibilityIdentifier("quick.error")
 
             Button("Retry") { Task { await store.retry() } }
-                .font(themeStore.theme.type.body.font.weight(.semibold))
-                .foregroundStyle(themeStore.theme.accent.primary.color)
+                .buttonStyle(.drinkSaver(.text, fillsWidth: false))
                 .padding(.top, 8)
                 .accessibilityIdentifier("quick.retry")
 

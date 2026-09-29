@@ -26,8 +26,8 @@ struct RecommendationRowView: View {
                     .focused($nameFocused)
                     .onSubmit(onCommit)
                     .accessibilityIdentifier("recommendations.rename.\(row.id)")
-                Button("Done", action: onCommit).accessibilityLabel("Save name")
-                Button("Cancel", action: onCancel).accessibilityLabel("Cancel name")
+                Button("Done", action: onCommit).buttonStyle(.drinkSaver(.text, fillsWidth: false, onPaper: true)).accessibilityLabel("Save name")
+                Button("Cancel", action: onCancel).buttonStyle(.drinkSaver(.text, fillsWidth: false, onPaper: true)).accessibilityLabel("Cancel name")
             } else {
                 Text(row.name).font(themeStore.theme.type.body.font)
                     .foregroundStyle(themeStore.theme.ink.onPaper.color)

@@ -22,6 +22,42 @@ struct AddDrinkDraft: Equatable {
     var recommendationGlasswareId: Int?
 
     var isBeer: Bool { alcoholType?.name.caseInsensitiveCompare("Beer") == .orderedSame }
+    /// Web `isDraftReady`: type and size chosen, plus serving for beer.
+    var isReady: Bool { alcoholType != nil && volume != nil && (!isBeer || consumptionType != nil) }
+    /// Palette a new entry inherits when it has no palette of its own (web CreatePanel `inheritedColorPaletteId`).
+    func inheritedPaletteID(for field: AddCreatableField) -> Int? {
+        switch field {
+        case .subtype: alcoholType?.colorPaletteId
+        case .brand: isBeer ? alcoholType?.colorPaletteId : nil
+        case .flavour: brand?.colorPaletteId ?? (isBeer ? alcoholType?.colorPaletteId : nil)
+        case .alcoholType, .volume: nil
+        }
+    }
+    /// Glass a new entry inherits (web `inheritedGlasswareId`: only a subtype inherits, from its type).
+    func inheritedGlasswareID(for field: AddCreatableField) -> Int? {
+        field == .subtype ? alcoholType?.glasswareId : nil
+    }
+    /// Web CreatePanel `canSubmit`: a name, a parent where the entry nests, litres for a size, and a
+    /// palette (and glass for types and subtypes) either chosen or inherited. Flavours have no palette
+    /// selector on iOS, so they are not held to a palette choice.
+    func canCreate(_ field: AddCreatableField) -> Bool {
+        guard !creationName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
+        switch field {
+        case .volume:
+            guard alcoholType != nil, let litres = Double(volumeLitres.trimmingCharacters(in: .whitespaces)) else { return false }
+            return litres.isFinite && litres > 0
+        case .flavour:
+            return brand != nil
+        case .subtype:
+            return alcoholType != nil && hasPalette(for: field) && hasGlass(for: field)
+        case .alcoholType:
+            return hasPalette(for: field) && hasGlass(for: field)
+        case .brand:
+            return hasPalette(for: field)
+        }
+    }
+    private func hasPalette(for field: AddCreatableField) -> Bool { newEntryColorPaletteId != nil || inheritedPaletteID(for: field) != nil }
+    private func hasGlass(for field: AddCreatableField) -> Bool { newEntryGlasswareId != nil || inheritedGlasswareID(for: field) != nil }
     mutating func select(_ type: AlcoholType) {
         guard alcoholType?.id != type.id else { return }
         alcoholType = type; volume = nil; subtype = nil; consumptionType = nil

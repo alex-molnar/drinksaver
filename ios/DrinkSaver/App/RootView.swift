@@ -75,7 +75,7 @@ struct RootView: View {
                 .foregroundStyle(themeStore.theme.ink.primary.color)
                 .multilineTextAlignment(.center)
             Button(button) { Task { await action() } }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.drinkSaver(fillsWidth: false))
         }
         .padding(32)
     }

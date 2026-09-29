@@ -24,13 +24,13 @@ struct FeedbackStrip: View {
                     switch item.state {
                     case .undoable:
                         Button(action: performCurrentAction) {
-                            Text("Undo").frame(minHeight: 44).contentShape(Rectangle())
+                            Text("Undo").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
                         }
                             .accessibilityIdentifier(actionIdentifier("undo"))
                             .accessibilityFocused($focusedPart, equals: .action)
                     case .retryable:
                         Button(action: performCurrentAction) {
-                            Text("Retry").frame(minHeight: 44).contentShape(Rectangle())
+                            Text("Retry").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
                         }
                             .accessibilityIdentifier(actionIdentifier("retry"))
                             .accessibilityFocused($focusedPart, equals: .action)
@@ -42,10 +42,9 @@ struct FeedbackStrip: View {
                     }
                 }
                 .accessibilityElement(children: .contain)
-                .buttonStyle(.bordered)
-                .buttonBorderShape(.capsule)
-                .controlSize(.small)
-                .tint(isFailure(item) ? themeStore.theme.ink.onAccent.color : themeStore.theme.ink.primary.color)
+                .buttonStyle(.plain)
+                .font(themeStore.theme.type.body.font.weight(.semibold))
+                .foregroundStyle(isFailure(item) ? themeStore.theme.ink.onAccent.color : themeStore.theme.ink.primary.color)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(
