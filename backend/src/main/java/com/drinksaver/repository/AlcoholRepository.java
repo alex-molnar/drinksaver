@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 @Repository
 public class AlcoholRepository {
@@ -41,7 +40,7 @@ public class AlcoholRepository {
         return alcoholTypesTable.findAllByUserIdOrderByNameAsc(repositoryConfiguration.adminUserUUID());
     }
 
-    public List<AlcoholType> getNonAdminAlcoholTypes() {
+    public List<AlcoholType> getUserDefinedAlcoholTypes() {
         return alcoholTypesTable.findAllByUserIdNot(repositoryConfiguration.adminUserUUID());
     }
 
@@ -53,7 +52,7 @@ public class AlcoholRepository {
         return alcoholSubtypesTable.findAllByAlcoholTypeIdAndUserIdOrderByNameAsc(alcoholTypeId, repositoryConfiguration.adminUserUUID());
     }
 
-    public List<AlcoholSubtype> getNonAdminSubtypesByAlcoholType(Integer alcoholTypeId) {
+    public List<AlcoholSubtype> getUserDefinedSubtypesByAlcoholType(Integer alcoholTypeId) {
         return alcoholSubtypesTable.findAllByAlcoholTypeIdAndUserIdNotOrderByNameAsc(alcoholTypeId, repositoryConfiguration.adminUserUUID());
     }
 

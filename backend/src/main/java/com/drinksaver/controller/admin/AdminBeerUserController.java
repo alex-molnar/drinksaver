@@ -21,12 +21,12 @@ public class AdminBeerUserController {
 
     @GetMapping("/brands")
     public List<Brand> getUserDefinedBeerBrands() {
-        return beerRepository.getAdminBrands();
+        return beerRepository.getUserDefinedBrands();
     }
 
     @GetMapping("/brands/{brandId}/flavours")
     public List<BeerFlavour> getUserDefinedBeerFlavours(@PathVariable Integer brandId) {
-        return  beerRepository.getAdminBeerFlavours(brandId);
+        return  beerRepository.getUserDefinedBeerFlavours(brandId);
     }
 
     // TODO PATCH/POST

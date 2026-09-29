@@ -21,12 +21,12 @@ public class AdminAlcoholUserController {
 
     @GetMapping("/types")
     public List<AlcoholType> getUserDefinedAlcoholTypes() {
-        return alcoholRepository.getAdminAlcoholTypes();
+        return alcoholRepository.getUserDefinedAlcoholTypes();
     }
 
     @GetMapping("/types/{alcoholTypeId}/subtypes")
     public List<AlcoholSubtype> getUserDefinedSubtypesByAlcoholType(@PathVariable Integer alcoholTypeId) {
-        return alcoholRepository.getAdminSubtypesByAlcoholType(alcoholTypeId);
+        return alcoholRepository.getUserDefinedSubtypesByAlcoholType(alcoholTypeId);
     }
 
     //TODO Volumes + PATCH/POST

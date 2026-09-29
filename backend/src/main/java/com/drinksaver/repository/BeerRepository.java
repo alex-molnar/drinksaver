@@ -13,7 +13,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 @Repository
 public class BeerRepository {
@@ -43,7 +42,7 @@ public class BeerRepository {
         return brandsTable.findAllByUserIdOrderByNameAsc(repositoryConfiguration.adminUserUUID());
     }
 
-    public List<Brand> getNonAdminBrands() {
+    public List<Brand> getUserDefinedBrands() {
         return brandsTable.findAllByUserIdNotOrderByNameAsc(repositoryConfiguration.adminUserUUID());
     }
 
@@ -72,7 +71,7 @@ public class BeerRepository {
         return beerFlavoursTable.findAllByBrandIdAndUserId(brandId, repositoryConfiguration.adminUserUUID());
     }
 
-    public List<BeerFlavour> getNonAdminBeerFlavours(Integer brandId) {
+    public List<BeerFlavour> getUserDefinedBeerFlavours(Integer brandId) {
         return beerFlavoursTable.findAllByBrandIdAndUserIdNot(brandId, repositoryConfiguration.adminUserUUID());
     }
 
