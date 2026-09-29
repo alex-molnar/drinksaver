@@ -24,6 +24,8 @@ struct AddDrinkDraft: Equatable {
     var isBeer: Bool { alcoholType?.name.caseInsensitiveCompare("Beer") == .orderedSame }
     /// Web `isDraftReady`: type and size chosen, plus serving for beer.
     var isReady: Bool { alcoholType != nil && volume != nil && (!isBeer || consumptionType != nil) }
+    var canDecrementQuantity: Bool { quantity > 1 }
+    var canIncrementQuantity: Bool { quantity < 24 }
     /// Palette a new entry inherits when it has no palette of its own (web CreatePanel `inheritedColorPaletteId`).
     func inheritedPaletteID(for field: AddCreatableField) -> Int? {
         switch field {
@@ -238,12 +240,7 @@ final class AddDrinkStore {
     static func makeRequest(type: AlcoholType, volume: AlcoholVolume, draft: AddDrinkDraft, date: String) -> DrinkSaveRequest {
         let notes = draft.notes.trimmingCharacters(in: .whitespacesAndNewlines)
         let quantity = draft.quantity == 1 ? nil : draft.quantity
-        let inheritedPalette = draft.isBeer
-            ? draft.flavour?.colorPaletteId ?? draft.brand?.colorPaletteId ?? type.colorPaletteId
-            : draft.subtype?.colorPaletteId ?? type.colorPaletteId
-        let inheritedGlassware = draft.isBeer
-            ? draft.consumptionType?.glasswareId
-            : draft.subtype?.glasswareId ?? type.glasswareId
+        let (inheritedPalette, inheritedGlassware) = inheritedDesignIDs(draft: draft, type: type)
         let colorPaletteId = draft.recommend ? draft.recommendationColorPaletteId ?? inheritedPalette : inheritedPalette
         let glasswareId = draft.recommend ? draft.recommendationGlasswareId ?? inheritedGlassware : inheritedGlassware
         return DrinkSaveRequest(date: date, alcoholTypeId: type.id, alcoholSubtypeId: draft.subtype?.id,
@@ -254,6 +251,13 @@ final class AddDrinkStore {
             comments: notes.isEmpty ? nil : notes, quantity: quantity, addToRecommendations: draft.recommend ? true : nil,
             onlyTemporarily: draft.recommend && draft.onlyTemporarily ? true : nil,
             name: draft.recommend && !draft.recommendationName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? draft.recommendationName.trimmingCharacters(in: .whitespacesAndNewlines) : nil)
+    }
+    /// Palette and glass a drink inherits from its choices, used both for the request and for the
+    /// recommendation selector previews (web `selected ?? inherited`).
+    static func inheritedDesignIDs(draft: AddDrinkDraft, type: AlcoholType?) -> (palette: Int?, glass: Int?) {
+        draft.isBeer
+            ? (draft.flavour?.colorPaletteId ?? draft.brand?.colorPaletteId ?? type?.colorPaletteId, draft.consumptionType?.glasswareId)
+            : (draft.subtype?.colorPaletteId ?? type?.colorPaletteId, draft.subtype?.glasswareId ?? type?.glasswareId)
     }
     static func volumeLabel(_ v: AlcoholVolume) -> String {
         v.volume.map { "\(v.name) (\($0)L)" } ?? v.name

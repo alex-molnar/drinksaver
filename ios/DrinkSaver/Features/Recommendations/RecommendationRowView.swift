@@ -21,9 +21,8 @@ struct RecommendationRowView: View {
         HStack(spacing: 10) {
             if editing {
                 TextField("Recommendation name", text: $editValue)
-                    .textFieldStyle(.roundedBorder)
+                    .drinkSaverField(focus: $nameFocused)
                     .submitLabel(.done)
-                    .focused($nameFocused)
                     .onSubmit(onCommit)
                     .accessibilityIdentifier("recommendations.rename.\(row.id)")
                 Button("Done", action: onCommit).buttonStyle(.drinkSaver(.text, fillsWidth: false, onPaper: true)).accessibilityLabel("Save name")
@@ -33,11 +32,14 @@ struct RecommendationRowView: View {
                     .foregroundStyle(themeStore.theme.ink.onPaper.color)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
+                    .frame(minHeight: 44)
                     .contentShape(Rectangle())
                     .onTapGesture(perform: onEdit)
                     .accessibilityIdentifier("recommendations.row.name.\(row.id)")
                 Button("Rename", systemImage: "pencil", action: onEdit)
                     .labelStyle(.iconOnly)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
                     .accessibilityLabel("Rename \(row.name)")
                     .accessibilityIdentifier("recommendations.rename-button.\(row.id)")
                     Button { onDelete() } label: { Image(systemName: "xmark") }

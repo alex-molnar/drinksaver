@@ -305,3 +305,21 @@ private struct SVGPathParser {
         character.isASCII && character.isLetter
     }
 }
+
+/// One drawing of a glass (outline, liquid and foam layers), shared by the Quick plates and the design selector previews.
+struct GlassArtwork: View {
+    let glassware: Glassware
+    let outline: Color
+    var outlineWidth: CGFloat = 1.6
+    let liquid: Color
+    let foam: Color
+
+    var body: some View {
+        ZStack {
+            GlassShape(pathData: glassware.g)
+                .stroke(outline, style: StrokeStyle(lineWidth: outlineWidth, lineCap: .round, lineJoin: .round))
+            GlassShape(pathData: glassware.l).fill(liquid)
+            if let foamPath = glassware.f { GlassShape(pathData: foamPath).fill(foam) }
+        }
+    }
+}

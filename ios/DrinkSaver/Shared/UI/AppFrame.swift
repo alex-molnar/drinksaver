@@ -6,6 +6,7 @@ struct AppFrame: View {
     @Environment(CurrentDrinkingDayStore.self) private var drinkingDay
     @Environment(AppCoordinator.self) private var coordinator
     @Environment(AddDrinkStore.self) private var addDrinkStore
+    @Environment(DesignCatalogueStore.self) private var designs
     @State private var menuIsOpen = false
     @State private var showCustomDate = false
     @State private var customDate = Date()
@@ -60,6 +61,8 @@ struct AppFrame: View {
         }
         .sheet(isPresented: addPresented, onDismiss: { coordinator.dismissAdd() }) {
             addSheet
+                // The catalogue loads once per session, so a failed load would otherwise never recover. Once per sheet appearance, for every panel.
+                .task { if designs.state == .failed { await designs.retry() } }
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(theme.surface.panel.color)
@@ -256,39 +259,46 @@ struct AppFrame: View {
         case .menu:
             VStack(alignment: .leading, spacing: 0) {
                 Text("What are you having?").font(theme.type.displayM.font).foregroundStyle(theme.ink.primary.color).padding(.horizontal, 20)
-                Text("Drink and size are all it needs.").font(theme.type.caption.font).foregroundStyle(theme.ink.tertiary.color).padding(.horizontal, 20).padding(.top, 5).padding(.bottom, 8)
+                Text("Drink and size are all it needs.").font(theme.type.caption.font).foregroundStyle(theme.ink.secondary.color).padding(.horizontal, 20).padding(.top, 5).padding(.bottom, 8)
                 ScrollView {
                     VStack(spacing: 0) {
                         ForEach(AddDrinkStore.menuRows(hasType: addDrinkStore.draft.alcoholType != nil, isBeer: addDrinkStore.draft.isBeer, hasBrand: addDrinkStore.draft.brand != nil), id: \.self) { field in
                             addMenuRow(field)
                         }
-                        HStack {
-                            Text("Notes"); Spacer()
+                        HStack(spacing: 12) {
+                            Text("Notes"); Spacer(minLength: 0)
                             TextField("Optional", text: Binding(get: { addDrinkStore.draft.notes }, set: { addDrinkStore.draft.notes = $0 }))
-                                .multilineTextAlignment(.trailing).accessibilityLabel("Notes")
+                                .drinkSaverField().accessibilityLabel("Notes")
                         }.padding(.horizontal, 20).frame(minHeight: 48)
                         HStack {
-                            Text("Quantity"); Spacer()
-                            Button { addDrinkStore.setQuantity(addDrinkStore.draft.quantity - 1) } label: { Image(systemName: "minus.circle") }.accessibilityLabel("Decrease quantity")
-                            Text("\(addDrinkStore.draft.quantity)").frame(minWidth: 32).accessibilityIdentifier("add.quantity")
-                            Button { addDrinkStore.setQuantity(addDrinkStore.draft.quantity + 1) } label: { Image(systemName: "plus.circle") }.accessibilityLabel("Increase quantity")
+                            Text("Quantity").accessibilityHidden(true); Spacer()
+                            HStack(spacing: 8) {
+                                DrinkSaverStepperButton(systemImage: "minus", label: "Decrease quantity") { addDrinkStore.setQuantity(addDrinkStore.draft.quantity - 1) }
+                                    .disabled(!addDrinkStore.draft.canDecrementQuantity)
+                                Text("\(addDrinkStore.draft.quantity)")
+                                    .font(.custom(theme.type.numeral.postScriptName, size: 24, relativeTo: .title2).monospacedDigit())
+                                    .frame(minWidth: 44, minHeight: 44)
+                                    .contentShape(Rectangle())
+                                    // VoiceOver focuses this element and swipes up or down adjust it; the two buttons stay separate named elements.
+                                    .accessibilityElement()
+                                    .accessibilityLabel("Quantity")
+                                    .accessibilityValue("\(addDrinkStore.draft.quantity)")
+                                    .accessibilityAdjustableAction { direction in
+                                        let q = addDrinkStore.draft.quantity
+                                        addDrinkStore.setQuantity(direction == .increment ? q + 1 : q - 1)
+                                    }
+                                    .accessibilityIdentifier("add.quantity.value")
+                                DrinkSaverStepperButton(systemImage: "plus", label: "Increase quantity") { addDrinkStore.setQuantity(addDrinkStore.draft.quantity + 1) }
+                                    .disabled(!addDrinkStore.draft.canIncrementQuantity)
+                            }
                         }.padding(.horizontal, 20).frame(minHeight: 48)
                         Toggle("Add to recommendations", isOn: Binding(get: { addDrinkStore.draft.recommend }, set: { addDrinkStore.setRecommend($0) })).padding(.horizontal, 20).frame(minHeight: 48)
                         if addDrinkStore.draft.recommend {
                             Toggle("Temporary recommendation", isOn: Binding(get: { addDrinkStore.draft.onlyTemporarily }, set: { addDrinkStore.draft.onlyTemporarily = $0 })).padding(.horizontal, 20)
-                            TextField("Recommendation name", text: Binding(get: { addDrinkStore.draft.recommendationName }, set: { addDrinkStore.draft.recommendationName = $0 })).textFieldStyle(.roundedBorder).padding(.horizontal, 20)
-                            if !addDrinkStore.catalogue.palettes.isEmpty {
-                                Picker("Recommendation color", selection: Binding(get: { addDrinkStore.draft.recommendationColorPaletteId }, set: { addDrinkStore.setRecommendationDesign(colorPaletteId: $0, glasswareId: addDrinkStore.draft.recommendationGlasswareId) })) {
-                                    Text("Inherited").tag(Int?.none)
-                                    ForEach(addDrinkStore.catalogue.palettes) { palette in Text(palette.name).tag(Optional(palette.id)) }
-                                }.padding(.horizontal, 20)
-                            }
-                            if !addDrinkStore.catalogue.glassware.isEmpty {
-                                Picker("Recommendation glass", selection: Binding(get: { addDrinkStore.draft.recommendationGlasswareId }, set: { addDrinkStore.setRecommendationDesign(colorPaletteId: addDrinkStore.draft.recommendationColorPaletteId, glasswareId: $0) })) {
-                                    Text("Inherited").tag(Int?.none)
-                                    ForEach(addDrinkStore.catalogue.glassware) { glass in Text(glass.name).tag(Optional(glass.id)) }
-                                }.padding(.horizontal, 20)
-                            }
+                            TextField("Recommendation name", text: Binding(get: { addDrinkStore.draft.recommendationName }, set: { addDrinkStore.draft.recommendationName = $0 })).drinkSaverField().padding(.horizontal, 20)
+                            let inherited = AddDrinkStore.inheritedDesignIDs(draft: addDrinkStore.draft, type: addDrinkStore.draft.alcoholType)
+                                designRow("Recommendation color palette", glass: false, selection: Binding(get: { addDrinkStore.draft.recommendationColorPaletteId }, set: { addDrinkStore.setRecommendationDesign(colorPaletteId: $0, glasswareId: addDrinkStore.draft.recommendationGlasswareId) }), paletteSelection: addDrinkStore.draft.recommendationColorPaletteId, inheritedPalette: inherited.palette, inheritedGlass: inherited.glass)
+                                designRow("Recommendation glassware", glass: true, selection: Binding(get: { addDrinkStore.draft.recommendationGlasswareId }, set: { addDrinkStore.setRecommendationDesign(colorPaletteId: addDrinkStore.draft.recommendationColorPaletteId, glasswareId: $0) }), paletteSelection: addDrinkStore.draft.recommendationColorPaletteId, inheritedPalette: inherited.palette, inheritedGlass: inherited.glass)
                         }
                     }
                 }
@@ -334,7 +344,7 @@ struct AppFrame: View {
                 }
             }
         } label: {
-            HStack { Text(title).font(theme.type.displayS.font); Spacer(minLength: 18).overlay(alignment: .trailing) { Rectangle().stroke(style: StrokeStyle(lineWidth: 1, dash: [2, 4])).foregroundStyle(theme.line.hairline.color).frame(height: 1) }; Text(value ?? "Choose").font(theme.type.body.font).foregroundStyle(value == nil ? theme.ink.tertiary.color : theme.accent.active.color) }
+            HStack { Text(title).font(theme.type.displayS.font); Spacer(minLength: 18).overlay(alignment: .trailing) { Rectangle().stroke(style: StrokeStyle(lineWidth: 1, dash: [2, 4])).foregroundStyle(theme.line.hairline.color).frame(height: 1) }; Text(value ?? "Choose").font(theme.type.body.font).foregroundStyle(value == nil ? theme.ink.secondary.color : theme.accent.active.color) }
                 .padding(.horizontal, 20).frame(minHeight: 48).contentShape(Rectangle())
         }.buttonStyle(.plain).accessibilityLabel("\(title), \(value ?? "Choose")")
     }
@@ -365,6 +375,23 @@ struct AppFrame: View {
                 } }
             }
         }
+    }
+
+    /// Web `DesignSelector`: the preview is `selected ?? inherited`, and the glass is tinted with the resolved palette.
+    private func designRow(_ title: String, glass: Bool, selection: Binding<Int?>, paletteSelection: Int?, inheritedPalette: Int?, inheritedGlass: Int?) -> some View {
+        let catalogue = addDrinkStore.catalogue
+        let field = catalogue.palette(id: paletteSelection ?? inheritedPalette).field
+        let hasInherited = (glass ? inheritedGlass : inheritedPalette) != nil
+        let unavailable = glass ? catalogue.glassware.isEmpty : catalogue.palettes.isEmpty
+        return DesignPickerRow(
+            title: title,
+            options: glass ? catalogue.glassware.map { ($0.id, $0.name) } : catalogue.palettes.map { ($0.id, $0.name) },
+            selection: selection,
+            emptyLabel: DesignChoiceLabel.emptyLabel(hasInherited: hasInherited, prompt: glass ? "Choose glassware" : "Choose a color palette"),
+            hasInherited: hasInherited,
+            unavailableHelp: unavailable ? DesignChoiceLabel.unavailableHelp(glass: glass) : nil,
+            preview: glass ? .glass(catalogue.glass(id: selection.wrappedValue ?? inheritedGlass), chroma: field) : .palette(hex: field)
+        ).padding(.horizontal, 20)
     }
 
     private func paletteSwatch(_ id: Int?) -> some View {
@@ -455,36 +482,26 @@ struct AppFrame: View {
     private func optionTitle(_ field: AddRouteField) -> String {
         switch field { case .alcoholType: "What are you drinking?"; case .volume: "What size?"; case .subtype: "Which kind?"; case .consumptionType: "How is it served?"; case .brand: "Which brand?"; case .flavour: "Which flavour?"; case .date: "When was it?"; case .notes: "Notes"; case .recommend: "Recommendations" }
     }
-    /// Mirrors web `CREATE_LABELS`.
-    private func fieldName(_ field: AddRouteField) -> String {
-        switch field { case .alcoholType: "drink type"; case .volume: "size"; case .subtype: "subtype"; case .brand: "brand"; case .flavour: "flavour"; default: "" }
+    /// Mirrors web `CREATE_LABELS`; fields that cannot be created have no label.
+    private func fieldName(_ field: AddRouteField) -> String { creatable(field).map(fieldName) ?? "" }
+    /// Same names for a create panel heading, like web `CREATE_TITLES`.
+    private func fieldName(_ field: AddCreatableField) -> String {
+        switch field { case .alcoholType: "drink type"; case .volume: "size"; case .subtype: "subtype"; case .brand: "brand"; case .flavour: "flavour" }
     }
     private func createPanel(_ field: AddCreatableField) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("New \(field == .alcoholType ? "alcohol type" : String(describing: field))").font(theme.type.displayM.font).padding(.horizontal, 20)
+            Text("New \(fieldName(field))").font(theme.type.displayM.font).padding(.horizontal, 20)
                 .accessibilityIdentifier(field == .alcoholType ? "frame.add.create.alcoholType" : "add.create.title")
             TextField("Name", text: Binding(get: { addDrinkStore.draft.creationName }, set: { addDrinkStore.draft.creationName = $0 }))
-                .textFieldStyle(.roundedBorder).padding(.horizontal, 20).disabled(addDrinkStore.isCreating).accessibilityIdentifier("add.create.name")
+                .drinkSaverField().padding(.horizontal, 20).disabled(addDrinkStore.isCreating).accessibilityIdentifier("add.create.name")
             if field == .volume {
                 TextField("Litres", text: Binding(get: { addDrinkStore.draft.volumeLitres }, set: { addDrinkStore.draft.volumeLitres = $0 }))
-                    .keyboardType(.decimalPad).textFieldStyle(.roundedBorder).padding(.horizontal, 20).accessibilityLabel("Litres")
+                    .keyboardType(.decimalPad).drinkSaverField().padding(.horizontal, 20).accessibilityLabel("Litres")
             }
             if field != .volume, field != .flavour {
-                let palettes = addDrinkStore.catalogue.palettes
-                if !palettes.isEmpty {
-                    Picker("Color", selection: Binding(get: { addDrinkStore.draft.newEntryColorPaletteId }, set: { addDrinkStore.draft.newEntryColorPaletteId = $0 })) {
-                        Text("Inherited").tag(Int?.none)
-                        ForEach(palettes) { palette in Text(palette.name).tag(Optional(palette.id)) }
-                    }.padding(.horizontal, 20)
-                }
+                    designRow("Color palette", glass: false, selection: Binding(get: { addDrinkStore.draft.newEntryColorPaletteId }, set: { addDrinkStore.draft.newEntryColorPaletteId = $0 }), paletteSelection: addDrinkStore.draft.newEntryColorPaletteId, inheritedPalette: addDrinkStore.draft.inheritedPaletteID(for: field), inheritedGlass: nil)
                 if field != .brand {
-                    let glasses = addDrinkStore.catalogue.glassware
-                    if !glasses.isEmpty {
-                        Picker("Glass", selection: Binding(get: { addDrinkStore.draft.newEntryGlasswareId }, set: { addDrinkStore.draft.newEntryGlasswareId = $0 })) {
-                            Text("Inherited").tag(Int?.none)
-                            ForEach(glasses) { glass in Text(glass.name).tag(Optional(glass.id)) }
-                        }.padding(.horizontal, 20)
-                    }
+                        designRow("Glassware", glass: true, selection: Binding(get: { addDrinkStore.draft.newEntryGlasswareId }, set: { addDrinkStore.draft.newEntryGlasswareId = $0 }), paletteSelection: addDrinkStore.draft.newEntryColorPaletteId, inheritedPalette: addDrinkStore.draft.inheritedPaletteID(for: field), inheritedGlass: addDrinkStore.draft.inheritedGlasswareID(for: field))
                 }
             }
             Button(addDrinkStore.isCreating ? "Adding…" : "Add and use it") { Task { await addDrinkStore.create(field, name: addDrinkStore.draft.creationName, litres: field == .volume ? Double(addDrinkStore.draft.volumeLitres) : nil) } }

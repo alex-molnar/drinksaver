@@ -87,16 +87,7 @@ struct PlateView: View {
     }
 
     private var glass: some View {
-        ZStack {
-            GlassShape(pathData: design.glassware.g)
-                .stroke(ink.opacity(0.92), style: StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round))
-            GlassShape(pathData: design.glassware.l)
-                .fill(ink.opacity(0.22))
-            if let foam = design.glassware.f {
-                GlassShape(pathData: foam)
-                    .fill(ink.opacity(0.28))
-            }
-        }
+        GlassArtwork(glassware: design.glassware, outline: ink.opacity(0.92), liquid: ink.opacity(0.22), foam: ink.opacity(0.28))
         .frame(width: 42, height: 58)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 3)

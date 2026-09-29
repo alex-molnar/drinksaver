@@ -47,6 +47,21 @@ final class DesignCatalogueStoreTests: XCTestCase {
         XCTAssertEqual(store.catalogue.palette(id: 7), palette(7, "server"))
     }
 
+    func testRetryKeepsThePreviouslyLoadedEndpointOnASecondFailure() async {
+        let api = ControlledDesignAPI(glasswareFailure: true)
+        let store = await makeStore(api: api)
+        await store.load()
+        XCTAssertEqual(store.state, .failed)
+        XCTAssertEqual(store.catalogue.palettes, [palette(7, "server")])
+
+        await api.setFailures(palettes: true, glassware: true)
+        await store.retry()
+
+        XCTAssertEqual(store.state, .failed)
+        XCTAssertEqual(store.catalogue.palettes, [palette(7, "server")], "a second failure must not drop the good endpoint")
+        XCTAssertTrue(store.catalogue.glassware.isEmpty)
+    }
+
     func testUnknownIDsResolveToFrozenFallbackWhileLoading() async {
         let gate = FetchGate()
         let store = await makeStore(api: ControlledDesignAPI(gate: gate))
