@@ -17,7 +17,7 @@ struct FeedbackStrip: View {
                 HStack(spacing: 12) {
                     Text(item.message)
                         .font(themeStore.theme.type.body.font)
-                        .foregroundStyle(themeStore.theme.ink.primary.color)
+                        .foregroundStyle(isFailure(item) ? themeStore.theme.ink.onAccent.color : themeStore.theme.ink.primary.color)
                         .accessibilityIdentifier(messageIdentifier)
                         .accessibilityFocused($focusedPart, equals: .message)
                     Spacer(minLength: 4)
@@ -43,13 +43,20 @@ struct FeedbackStrip: View {
                 }
                 .accessibilityElement(children: .contain)
                 .buttonStyle(.bordered)
+                .buttonBorderShape(.capsule)
+                .controlSize(.small)
+                .tint(isFailure(item) ? themeStore.theme.ink.onAccent.color : themeStore.theme.ink.primary.color)
                 .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(themeStore.theme.surface.panel.color)
-                .overlay(alignment: .bottom) {
-                    Rectangle().fill(themeStore.theme.line.hairline.color).frame(height: 1)
-                }
-                .transition(.move(edge: .top).combined(with: .opacity))
+                .padding(.vertical, 8)
+                .background(
+                    isFailure(item) ? themeStore.theme.accent.danger.color : themeStore.theme.surface.panel.color,
+                    in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                )
+                .overlay { if !isFailure(item) { RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(themeStore.theme.line.hairline.color, lineWidth: 1) } }
+                .shadow(color: .black.opacity(0.22), radius: 12, y: 4)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 12)
+                .transition(reduceMotion ? .identity : .move(edge: .bottom).combined(with: .opacity))
                 .onChange(of: item.state) { _, state in
                     if state == .retryable { focusedPart = .action }
                 }
@@ -64,6 +71,8 @@ struct FeedbackStrip: View {
         .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: arbiter.current?.id)
         .allowsHitTesting(arbiter.current.map { !$0.message.isEmpty } ?? false)
     }
+
+    private func isFailure(_ item: FeedbackItem) -> Bool { item.state == .retryable }
 
     private var messageIdentifier: String {
         switch placement {

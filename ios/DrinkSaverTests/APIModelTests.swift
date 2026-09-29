@@ -76,6 +76,11 @@ final class APIModelTests: XCTestCase {
         XCTAssertEqual(try decoder.decode(NewVolumeEntry.self, from: JSONSerialization.data(withJSONObject: requests["volume"]!)).volume, 0.33)
     }
 
+    @MainActor func testVolumeLabelOmitsMissingLitresInsteadOfPrintingOptional() {
+        XCTAssertEqual(AddDrinkStore.volumeLabel(AlcoholVolume(id: 1, name: "Glass", volume: 0.25)), "Glass (0.25L)")
+        XCTAssertEqual(AddDrinkStore.volumeLabel(AlcoholVolume(id: 2, name: "Shot", volume: nil)), "Shot")
+    }
+
     func testMissingRequiredFieldFailsDecoding() throws {
         XCTAssertThrowsError(try JSONDecoder().decode(AlcoholType.self, from: Data(#"{"id":1,"name":"Beer"}"#.utf8)))
     }
