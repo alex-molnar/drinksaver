@@ -68,6 +68,8 @@ The Add sheet has no close button; tap outside or swipe down to dismiss it. On t
 subtype, brand, and flavour panels a "+" sits in the header (accessibility label "Add size" and so on,
 identifier `frame.add.new`), a duplicate of the "Add new ..." row that opens the same create panel,
 as on web.
+Drink type, subtype, brand, and flavour rows show a small palette swatch resolved like web
+(own palette, then parent brand or type) through `DesignResolver` and the design catalogue.
 
 The Add sheet retains one draft across its nested drink, size, subtype, serving, brand, and flavour
 panels. Its "When" row defaults to the current drinking day and reads Today, Yesterday, or the chosen date; it opens a "When was it?" panel with Today, Yesterday, and Another day (native calendar plus Set date, no future dates), mirroring the web app. Creating a catalogue entry selects it and

@@ -159,13 +159,3 @@ private struct PlatePressStyle: ButtonStyle {
             .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
-
-private extension Color {
-    init(hexString: String?, fallback: String) {
-        let value = hexString ?? fallback
-        let normalized = value.hasPrefix("#") ? String(value.dropFirst()) : value
-        let hex = UInt32(normalized, radix: 16) ?? 0x2B1A14
-        self.init(.sRGB, red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255,
-                  blue: Double(hex & 0xFF) / 255, opacity: 1)
-    }
-}
