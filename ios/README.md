@@ -68,6 +68,8 @@ The Add sheet has no close button; tap outside or swipe down to dismiss it. On t
 subtype, brand, and flavour panels a "+" sits in the header (accessibility label "Add size" and so on,
 identifier `frame.add.new`), a duplicate of the "Add new ..." row that opens the same create panel,
 as on web.
+Menu rows follow web's order: Drink, then for beer Brand, Flavour (once a brand is set), Served, Size, or for other
+drinks Subtype, and Size once a drink is chosen, then When, Notes, Quantity, Recommendations (`AddDrinkStore.menuRows`).
 Drink type, subtype, brand, and flavour rows show a small palette swatch resolved like web
 (own palette, then parent brand or type) through `DesignResolver` and the design catalogue.
 
