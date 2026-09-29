@@ -1,8 +1,6 @@
 package com.drinksaver.model.db;
 
-import com.drinksaver.config.RepositoryConfiguration;
-import com.drinksaver.model.db.admin.DefaultRecommendation;
-import com.drinksaver.model.dto.Drink;
+import com.drinksaver.model.dto.post.Drink;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

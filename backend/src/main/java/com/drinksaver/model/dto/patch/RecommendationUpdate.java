@@ -1,4 +1,4 @@
-package com.drinksaver.model.dto;
+package com.drinksaver.model.dto.patch;
 
 import jakarta.validation.constraints.NotNull;
 

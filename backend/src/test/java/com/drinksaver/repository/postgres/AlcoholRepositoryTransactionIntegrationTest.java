@@ -1,8 +1,8 @@
 package com.drinksaver.repository.postgres;
 
 import com.drinksaver.config.RepositoryConfiguration;
-import com.drinksaver.model.dto.NewAlcoholEntry;
-import com.drinksaver.model.dto.NewVolumeEntry;
+import com.drinksaver.model.dto.post.NewAlcoholEntry;
+import com.drinksaver.model.dto.post.NewVolumeEntry;
 import com.drinksaver.repository.AlcoholRepository;
 import com.drinksaver.repository.schema.AlcoholSubtypesTable;
 import com.drinksaver.repository.schema.AlcoholTypesTable;

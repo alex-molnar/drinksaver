@@ -4,7 +4,7 @@ import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.config.SecurityConfig;
 import com.drinksaver.controller.user.DrinksController;
 import com.drinksaver.model.db.SavedDrink;
-import com.drinksaver.model.dto.Drink;
+import com.drinksaver.model.dto.post.Drink;
 import com.drinksaver.service.DrinksService;
 import com.drinksaver.service.RecommendationCacheService;
 import com.drinksaver.service.model.DrinkKey;
@@ -27,7 +27,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;

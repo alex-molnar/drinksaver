@@ -1,4 +1,4 @@
-package com.drinksaver.model.dto;
+package com.drinksaver.model.dto.patch;
 
 public record UpdateGlassware (
     String name,

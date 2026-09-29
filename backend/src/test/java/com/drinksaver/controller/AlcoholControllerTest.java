@@ -1,13 +1,12 @@
 package com.drinksaver.controller;
 
-import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.config.SecurityConfig;
 import com.drinksaver.controller.user.AlcoholController;
 import com.drinksaver.model.db.AlcoholSubtype;
 import com.drinksaver.model.db.AlcoholType;
 import com.drinksaver.model.db.AlcoholVolume;
-import com.drinksaver.model.dto.NewAlcoholEntry;
-import com.drinksaver.model.dto.NewAlcoholSubtype;
+import com.drinksaver.model.dto.post.NewAlcoholEntry;
+import com.drinksaver.model.dto.post.NewAlcoholSubtype;
 import com.drinksaver.repository.AlcoholRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,16 +14,13 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 

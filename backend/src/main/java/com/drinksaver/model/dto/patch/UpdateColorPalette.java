@@ -1,6 +1,4 @@
-package com.drinksaver.model.dto;
-
-import jakarta.validation.constraints.NotNull;
+package com.drinksaver.model.dto.patch;
 
 public record UpdateColorPalette(
     String name,

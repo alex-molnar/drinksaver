@@ -1,7 +1,7 @@
 package com.drinksaver.controller.user;
 
 import com.drinksaver.model.db.Recommendation;
-import com.drinksaver.model.dto.RecommendationUpdate;
+import com.drinksaver.model.dto.patch.RecommendationUpdate;
 import com.drinksaver.security.AuthenticatedUser;
 import com.drinksaver.service.RecommendationCacheService;
 import com.drinksaver.service.RecommendationService;

@@ -1,6 +1,6 @@
 package com.drinksaver.model.db;
 
-import com.drinksaver.model.dto.UpdateGlassware;
+import com.drinksaver.model.dto.patch.UpdateGlassware;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

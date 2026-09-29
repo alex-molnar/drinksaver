@@ -2,10 +2,10 @@ package com.drinksaver.controller.admin;
 
 import com.drinksaver.model.db.ColorPalette;
 import com.drinksaver.model.db.Glassware;
-import com.drinksaver.model.dto.NewColorPalette;
-import com.drinksaver.model.dto.NewGlassware;
-import com.drinksaver.model.dto.UpdateColorPalette;
-import com.drinksaver.model.dto.UpdateGlassware;
+import com.drinksaver.model.dto.post.NewColorPalette;
+import com.drinksaver.model.dto.post.NewGlassware;
+import com.drinksaver.model.dto.patch.UpdateColorPalette;
+import com.drinksaver.model.dto.patch.UpdateGlassware;
 import com.drinksaver.service.DesignService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

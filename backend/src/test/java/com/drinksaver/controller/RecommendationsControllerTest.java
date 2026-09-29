@@ -3,7 +3,7 @@ package com.drinksaver.controller;
 import com.drinksaver.config.SecurityConfig;
 import com.drinksaver.controller.user.RecommendationsController;
 import com.drinksaver.model.db.Recommendation;
-import com.drinksaver.model.dto.RecommendationUpdate;
+import com.drinksaver.model.dto.patch.RecommendationUpdate;
 import com.drinksaver.service.RecommendationCacheService;
 import com.drinksaver.service.RecommendationService;
 import org.junit.jupiter.api.Test;

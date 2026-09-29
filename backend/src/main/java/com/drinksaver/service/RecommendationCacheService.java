@@ -1,7 +1,7 @@
 package com.drinksaver.service;
 
 import com.drinksaver.config.CacheConfig;
-import com.drinksaver.model.dto.Drink;
+import com.drinksaver.model.dto.post.Drink;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
