@@ -241,6 +241,23 @@ final class AddDrinkStore {
     static func whenLabel(_ date: Date?, today: Date, locale: Locale = .current) -> String {
         DrinkingDay.label(for: date ?? today, today: today, locale: locale, calendar: .current)
     }
+    /// Selection rows of the Add menu, exactly web `menuFields` (web/src/drink/draftFields.ts): Drink; once a
+    /// drink is chosen, beer shows Brand, Flavour (only with a brand) and Served while everything else shows
+    /// Subtype, then Size; then When.
+    static func menuRows(hasType: Bool, isBeer: Bool, hasBrand: Bool) -> [AddRouteField] {
+        var rows: [AddRouteField] = [.alcoholType]
+        if hasType {
+            if isBeer {
+                rows.append(.brand)
+                if hasBrand { rows.append(.flavour) }
+                rows.append(.consumptionType)
+            } else {
+                rows.append(.subtype)
+            }
+            rows.append(.volume)
+        }
+        return rows + [.date]
+    }
     static func clampedQuantity(_ value: Int) -> Int { min(24, max(1, value)) }
     static func apiDate(_ date: Date) -> String {
         let formatter = DateFormatter()

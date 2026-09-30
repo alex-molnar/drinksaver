@@ -259,15 +259,9 @@ struct AppFrame: View {
                 Text("Drink and size are all it needs.").font(theme.type.caption.font).foregroundStyle(theme.ink.tertiary.color).padding(.horizontal, 20).padding(.top, 5).padding(.bottom, 8)
                 ScrollView {
                     VStack(spacing: 0) {
-                        addRow("Drink", value: addDrinkStore.draft.alcoholType?.name, field: .alcoholType)
-                        addRow("Size", value: addDrinkStore.draft.volume.map(AddDrinkStore.volumeLabel), field: .volume)
-                        if hasOptions(addDrinkStore.subtypes) || addDrinkStore.draft.subtype != nil { addRow("Kind", value: addDrinkStore.draft.subtype?.name, field: .subtype) }
-                        if addDrinkStore.draft.isBeer {
-                            addRow("Served", value: addDrinkStore.draft.consumptionType?.name, field: .consumptionType)
-                            addRow("Brand", value: addDrinkStore.draft.brand?.name, field: .brand)
-                            if addDrinkStore.draft.brand != nil { addRow("Flavour", value: addDrinkStore.draft.flavour?.name, field: .flavour) }
+                        ForEach(AddDrinkStore.menuRows(hasType: addDrinkStore.draft.alcoholType != nil, isBeer: addDrinkStore.draft.isBeer, hasBrand: addDrinkStore.draft.brand != nil), id: \.self) { field in
+                            addMenuRow(field)
                         }
-                        addRow("When", value: AddDrinkStore.whenLabel(addDrinkStore.draft.date, today: todayDate), field: .date)
                         HStack {
                             Text("Notes"); Spacer()
                             TextField("Optional", text: Binding(get: { addDrinkStore.draft.notes }, set: { addDrinkStore.draft.notes = $0 }))
@@ -306,6 +300,20 @@ struct AppFrame: View {
             }
         case .option(let field): optionPanel(field)
         case .create(let field): createPanel(field)
+        }
+    }
+
+    @ViewBuilder private func addMenuRow(_ field: AddRouteField) -> some View {
+        let draft = addDrinkStore.draft
+        switch field {
+        case .alcoholType: addRow("Drink", value: draft.alcoholType?.name, field: field)
+        case .volume: addRow("Size", value: draft.volume.map(AddDrinkStore.volumeLabel), field: field)
+        case .subtype: addRow("Subtype", value: draft.subtype?.name, field: field)
+        case .consumptionType: addRow("Served", value: draft.consumptionType?.name, field: field)
+        case .brand: addRow("Brand", value: draft.brand?.name, field: field)
+        case .flavour: addRow("Flavour", value: draft.flavour?.name, field: field)
+        case .date: addRow("When", value: AddDrinkStore.whenLabel(draft.date, today: todayDate), field: field)
+        case .notes, .recommend: EmptyView()
         }
     }
 
@@ -430,7 +438,6 @@ struct AppFrame: View {
     private func mapState<T: Equatable>(_ state: AddDrinkStore.LoadState<T>, transform: (T) -> [AddOption]) -> AddDrinkStore.LoadState<[AddOption]> {
         switch state { case .idle: .idle; case .loading: .loading; case .failed: .failed; case .loaded(let value): .loaded(transform(value)) }
     }
-    private func hasOptions<T: Equatable>(_ value: AddDrinkStore.LoadState<[T]>) -> Bool { if case .loaded(let items) = value { !items.isEmpty } else { false } }
     private func creatable(_ field: AddRouteField) -> AddCreatableField? {
         switch field { case .alcoholType: .alcoholType; case .volume: .volume; case .subtype: .subtype; case .brand: .brand; case .flavour: .flavour; default: nil }
     }

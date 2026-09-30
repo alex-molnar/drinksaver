@@ -109,6 +109,18 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertTrue(app.textFields["add.create.name"].waitForExistence(timeout: 3))
     }
 
+    func testSizeAndSubtypeRowsAppearOnlyOnceADrinkIsChosen() {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.add"].tap()
+        XCTAssertTrue(app.buttons["Drink, Choose"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["Size, Choose"].exists)
+        XCTAssertFalse(app.buttons["Subtype, Choose"].exists)
+        app.buttons["Drink, Choose"].tap()
+        app.buttons["Wine"].tap()
+        XCTAssertTrue(app.buttons["Subtype, Choose"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["Size, Choose"].exists)
+    }
+
     func testAddDrinkHandsSaveToQueue() {
         let app = launchSignedIn()
         app.buttons["frame.tab.add"].tap()

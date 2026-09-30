@@ -96,6 +96,7 @@
 		679BDDB1CD1CAA85829F6233 /* RetryPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D11A6A4941263E547E0D5138 /* RetryPolicyTests.swift */; };
 		71AD9F9C7F5F6AA07D6DEE35 /* ThemeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 131DE07C906D317C18A91B84 /* ThemeTests.swift */; };
 		F02400000000000000000001 /* AddDrinkDateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02400000000000000000002 /* AddDrinkDateTests.swift */; };
+		F02900000000000000000001 /* AddMenuOrderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02900000000000000000002 /* AddMenuOrderTests.swift */; };
 		78E58F4CE6AACEAB9BEAEDA1 /* DrinkSaverTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1213899360D084D49C7B6F53 /* DrinkSaverTheme.swift */; };
 		7AEF518E4CFC815CEA535302 /* DrinkingDay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61C2E20947DEAA8D3058D670 /* DrinkingDay.swift */; };
 		86B731A1EDCBF3C0D0712030 /* ProjectSmokeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DFBB0972B91E0D1020DB99 /* ProjectSmokeUITests.swift */; };
@@ -214,6 +215,7 @@
 		1213899360D084D49C7B6F53 /* DrinkSaverTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkSaverTheme.swift; sourceTree = "<group>"; };
 		12525D71B60E607B8A427670 /* Local.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Local.plist; sourceTree = "<group>"; };
 		131DE07C906D317C18A91B84 /* ThemeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTests.swift; sourceTree = "<group>"; };
+		F02900000000000000000002 /* AddMenuOrderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddMenuOrderTests.swift; sourceTree = "<group>"; };
 		F02400000000000000000002 /* AddDrinkDateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddDrinkDateTests.swift; sourceTree = "<group>"; };
 		3D052A8B3B63233EC727E55D /* FrauncesDisplayM.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FrauncesDisplayM.ttf; sourceTree = "<group>"; };
 		4012A89C2E54E77CC5544015 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -305,6 +307,7 @@
 				D11A6A4941263E547E0D5138 /* RetryPolicyTests.swift */,
 				131DE07C906D317C18A91B84 /* ThemeTests.swift */,
 				F02400000000000000000002 /* AddDrinkDateTests.swift */,
+				F02900000000000000000002 /* AddMenuOrderTests.swift */,
 				5AC006A1000000000000000A /* DesignResolverTests.swift */,
 				5AC006A1000000000000000B /* GlassShapeTests.swift */,
 				F022A0000000000000000003 /* VisualParityTests.swift */,
@@ -812,6 +815,7 @@
 				679BDDB1CD1CAA85829F6233 /* RetryPolicyTests.swift in Sources */,
 				71AD9F9C7F5F6AA07D6DEE35 /* ThemeTests.swift in Sources */,
 				F02400000000000000000001 /* AddDrinkDateTests.swift in Sources */,
+				F02900000000000000000001 /* AddMenuOrderTests.swift in Sources */,
 				5AC006A10000000000000007 /* DesignResolverTests.swift in Sources */,
 				5AC006A10000000000000008 /* GlassShapeTests.swift in Sources */,
 				F022A0000000000000000001 /* VisualParityTests.swift in Sources */,
