@@ -47,6 +47,7 @@ motion, and the screen exposes Undo or Retry feedback. Reduce Motion removes the
 while keeping the same queue and Undo behavior.
 Each row shows a small flat-ink glass silhouette before the name, chosen like web's `drinkIdentity` (known drink name, then alcohol type, then highball) by `DesignResolver.historyGlassware`.
 Row checkbox and cross-off icons use the paper ink (`HistoryRowInk`), so they stay visible on the light paper in dark mode.
+A 2pt rule at 35% paper ink (`HistoryRowInk.headerRule`, as on web) separates the date header from the drink rows in both themes.
 Tapping anywhere on a row toggles its selection, like web; the checkbox and cross-off buttons keep their own behaviour.
 
 ## Recommendation editing state

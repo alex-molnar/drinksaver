@@ -12,4 +12,11 @@ final class HistoryRowInkTests: XCTestCase {
             }
         }
     }
+
+    func testHeaderRuleIsVisibleOnPaperInBothThemes() {
+        for theme in [DrinkSaverTheme.dark, .light] {
+            let rule = HistoryRowInk.headerRule(theme: theme)
+            XCTAssertGreaterThanOrEqual(contrastRatio(rule, theme.surface.paper), 1.5)
+        }
+    }
 }
