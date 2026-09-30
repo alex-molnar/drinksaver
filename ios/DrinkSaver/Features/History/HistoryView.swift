@@ -166,6 +166,9 @@ struct HistoryView: View {
                 .buttonStyle(.plain).accessibilityLabel("Cross off \(row.drink.name)")
                 .disabled(row.exitingToken != nil)
         }
+        // Whole row toggles selection like web; the checkbox and cross-off buttons keep their own taps.
+        .contentShape(Rectangle())
+        .onTapGesture { store.toggleSelection(id: row.id) }
         .listRowBackground(Color.clear)
         .listRowSeparatorTint(theme.ink.onPaper.color.opacity(0.12))
         .accessibilityIdentifier("history.row.\(row.id)")
