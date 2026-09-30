@@ -29,7 +29,7 @@ final class LifecycleRecoveryUITests: XCTestCase {
         undo.tap()
         XCTAssertTrue(undo.waitForNonExistence(timeout: 3))
 
-        app.buttons["frame.add.close"].tap()
+        app.otherElements["frame.add-sheet"].swipeDown(velocity: .fast)
         app.buttons["frame.menu"].tap()
         app.buttons["Recommendations"].tap()
         XCTAssertTrue(row.waitForExistence(timeout: 3))
