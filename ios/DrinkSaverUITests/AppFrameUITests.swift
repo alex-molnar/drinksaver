@@ -227,6 +227,47 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Size, Choose"].waitForExistence(timeout: 3))
     }
 
+    func testQuantityStepperKeepsNamedButtonsAndLimits() {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.add"].tap()
+        let value = app.descendants(matching: .any)["add.quantity.value"]
+        XCTAssertTrue(value.waitForExistence(timeout: 5))
+        let up = app.buttons["Increase quantity"], down = app.buttons["Decrease quantity"]
+        XCTAssertTrue(up.exists)
+        XCTAssertEqual(value.value as? String, "1")
+        XCTAssertFalse(down.isEnabled)
+        up.tap()
+        XCTAssertEqual(value.value as? String, "2")
+        down.tap()
+        XCTAssertEqual(value.value as? String, "1")
+        for _ in 1..<24 { up.tap() }
+        XCTAssertEqual(value.value as? String, "24")
+        XCTAssertEqual(value.label, "Quantity", "the count is the VoiceOver focus target and carries the adjustable action")
+        XCTAssertFalse(up.isEnabled)
+    }
+
+    func testRecommendationDesignRowsShowUnavailableAndSheetStaysResponsiveAfterFailedCatalogue() {
+        let app = launchSignedIn(fixture: "signed-in-api-failure")
+        app.buttons["frame.tab.add"].tap()
+        app.switches["Add to recommendations"].tap()
+        XCTAssertTrue(app.staticTexts["Color palette choices are unavailable. Try again shortly."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Glassware choices are unavailable. Try again shortly."].exists)
+        // The fixture keeps failing, so the retry must settle rather than loop: the sheet still responds.
+        app.switches["Add to recommendations"].tap()
+        XCTAssertFalse(app.textFields["Recommendation name"].exists)
+    }
+
+    func testCreatePanelExplainsWhenDesignChoicesAreUnavailable() {
+        let app = launchSignedIn(fixture: "signed-in-api-failure")
+        app.buttons["frame.menu"].tap()
+        app.buttons["Add new type"].tap()
+        XCTAssertTrue(app.staticTexts["Color palette choices are unavailable. Try again shortly."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Glassware choices are unavailable. Try again shortly."].exists)
+        app.textFields["add.create.name"].tap()
+        app.textFields["add.create.name"].typeText("Mead")
+        XCTAssertFalse(app.buttons["add.create.submit"].isEnabled)
+    }
+
     /// Swipes the sheet down and waits until it is really gone, so later assertions run on the screen underneath.
     private func dismissAddSheet(_ app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
         let sheet = app.otherElements["frame.add-sheet"]

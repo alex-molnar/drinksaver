@@ -74,6 +74,52 @@ final class AccessibilityUITests: XCTestCase {
         try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType))
     }
 
+    func testAddSheetPassesAccessibilityAudit() throws {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.add"].tap()
+        XCTAssertTrue(app.buttons["add.save"].waitForExistence(timeout: 5))
+        app.otherElements["frame.add-sheet"].swipeUp(velocity: .fast)
+        try audit(app)
+    }
+
+    func testAddSheetDatePanelPassesAccessibilityAudit() throws {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.add"].tap()
+        app.buttons["When, Today"].tap()
+        XCTAssertTrue(app.buttons["add.date.yesterday"].waitForExistence(timeout: 5))
+        app.otherElements["frame.add-sheet"].swipeUp(velocity: .fast)
+        try audit(app)
+    }
+
+    func testAddSheetCreatePanelPassesAccessibilityAudit() throws {
+        let app = launchSignedIn()
+        app.buttons["frame.menu"].tap()
+        app.buttons["Add new type"].tap()
+        XCTAssertTrue(app.textFields["add.create.name"].waitForExistence(timeout: 5))
+        app.otherElements["frame.add-sheet"].swipeUp(velocity: .fast)
+        try audit(app)
+    }
+
+    func testRecommendationsEditModePassesAccessibilityAudit() throws {
+        let app = launchSignedIn()
+        app.buttons["frame.menu"].tap()
+        app.buttons["Recommendations"].tap()
+        app.buttons["recommendations.rename-button.9"].tap()
+        XCTAssertTrue(app.textFields["recommendations.rename.9"].waitForExistence(timeout: 5))
+        try audit(app)
+    }
+
+    /// Runs the audit and fails with the offending element named, so a finding can be traced to a view.
+    private func audit(_ app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) throws {
+        try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType)) { issue in
+            let e = issue.element
+            // System keyboard and its prediction bar are not ours to label (the rename audit runs with the keyboard up).
+            if let e, e.identifier.isEmpty, e.label.isEmpty, e.frame.intersects(app.keyboards.firstMatch.frame.insetBy(dx: 0, dy: -44)) { return true }
+            XCTFail("\(issue.compactDescription) | \(e?.elementType.rawValue ?? 0) id=\(e?.identifier ?? "-") label=\(e?.label ?? "-") frame=\(e?.frame ?? .zero)", file: file, line: line)
+            return true
+        }
+    }
+
     private func launchSignedIn(contentSize: String = "large") -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [

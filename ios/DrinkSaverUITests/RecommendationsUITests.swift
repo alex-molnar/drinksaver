@@ -43,6 +43,13 @@ final class RecommendationsUITests: XCTestCase {
         waitForExpectations(timeout: 5)
     }
 
+    func testStartingRenameRaisesKeyboardWithoutTappingTheField() {
+        let app = openRecommendations()
+        app.buttons["recommendations.rename-button.9"].tap()
+        XCTAssertTrue(app.textFields["recommendations.rename.9"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "rename should focus its field")
+    }
+
     func testCrossOffCanBeUndone() {
         let app = openRecommendations()
         let house = app.staticTexts["recommendations.row.name.9"]

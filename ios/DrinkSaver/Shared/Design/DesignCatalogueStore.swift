@@ -17,6 +17,7 @@ final class DesignCatalogueStore {
     private let api: (any DesignCatalogueLoading)?
     private let sessionStore: SessionStore
     private var generation = 0
+    private var catalogueSubject: String?
 
     init(api: (any DesignCatalogueLoading)?, sessionStore: SessionStore) {
         self.api = api
@@ -34,6 +35,7 @@ final class DesignCatalogueStore {
     func sessionDidSignOut() {
         generation += 1
         catalogue = DesignCatalogue(palettes: [], glassware: [])
+        catalogueSubject = nil
         state = .idle
     }
 
@@ -50,7 +52,8 @@ final class DesignCatalogueStore {
 
         generation += 1
         let requestGeneration = generation
-        catalogue = DesignCatalogue(palettes: [], glassware: [])
+        // A retry keeps whatever endpoint already loaded, so one failure never discards the other; a new account starts empty.
+        if catalogueSubject != subject { catalogue = DesignCatalogue(palettes: [], glassware: []) }
         state = .loading
 
         async let paletteResponse = Self.fetchPalettes(from: api)
@@ -60,7 +63,8 @@ final class DesignCatalogueStore {
         guard generation == requestGeneration,
               sessionStore.userID == subject else { return }
 
-        catalogue = DesignCatalogue(palettes: palettes ?? [], glassware: glassware ?? [])
+        catalogueSubject = subject
+        catalogue = DesignCatalogue(palettes: palettes ?? catalogue.palettes, glassware: glassware ?? catalogue.glassware)
         state = palettes != nil && glassware != nil ? .ready : .failed
     }
 
