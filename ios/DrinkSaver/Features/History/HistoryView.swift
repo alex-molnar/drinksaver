@@ -146,14 +146,16 @@ struct HistoryView: View {
         HStack(spacing: 10) {
             Button { store.toggleSelection(id: row.id) } label: {
                 Image(systemName: row.isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(row.isSelected ? theme.accent.active.color : theme.ink.tertiary.color)
+                    .foregroundStyle(HistoryRowInk.checkbox(selected: row.isSelected, theme: theme).color)
                     .frame(width: 40, height: 44).contentShape(Rectangle())
             }.buttonStyle(.plain).accessibilityLabel(row.isSelected ? "Deselect \(row.drink.name)" : "Select \(row.drink.name)")
                 .accessibilityValue(row.isSelected ? "Selected" : "Not selected")
             Text(row.drink.name).font(theme.type.body.font).foregroundStyle(theme.ink.onPaper.color)
                 .strikethrough(row.exitingToken != nil).opacity(row.exitingToken == nil ? 1 : 0.35)
                 .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true)
-            Button { store.crossOff(ids: [row.id], reduceMotion: reduceMotion) } label: { Image(systemName: "xmark").frame(width: 44, height: 44) }
+            Button { store.crossOff(ids: [row.id], reduceMotion: reduceMotion) } label: {
+                Image(systemName: "xmark").foregroundStyle(HistoryRowInk.crossOff(theme: theme).color).frame(width: 44, height: 44)
+            }
                 .buttonStyle(.plain).accessibilityLabel("Cross off \(row.drink.name)")
                 .disabled(row.exitingToken != nil)
         }
@@ -164,4 +166,16 @@ struct HistoryView: View {
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: row.exitingToken)
     }
 
+}
+
+/// Row controls sit on the paper surface, which stays light in dark mode, so they take
+/// `ink.onPaper` like web rather than the ground-relative `ink.tertiary`.
+enum HistoryRowInk {
+    static func checkbox(selected: Bool, theme: DrinkSaverTheme) -> ThemeColor {
+        selected ? theme.ink.onPaper : ThemeColor(hex: theme.ink.onPaper.hex, opacity: 0.6)
+    }
+
+    static func crossOff(theme: DrinkSaverTheme) -> ThemeColor {
+        ThemeColor(hex: theme.ink.onPaper.hex, opacity: 0.6)
+    }
 }
