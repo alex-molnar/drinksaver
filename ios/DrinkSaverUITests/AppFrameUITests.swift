@@ -190,6 +190,26 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertFalse(save.frame.intersects(message.frame))
     }
 
+    func testNotesInputDoesNotCollideWithItsLabelOrNeighbours() {
+        for size in ["large", "accessibility3"] {
+            let app = launchSignedIn(contentSize: size)
+            app.buttons["frame.tab.add"].tap()
+            app.otherElements["frame.add-sheet"].swipeUp(velocity: .fast)
+            let field = app.textFields["Notes"]
+            let label = app.staticTexts["Notes"]
+            let minus = app.buttons["Decrease quantity"]
+            XCTAssertTrue(field.waitForExistence(timeout: 5), size)
+            field.tap()
+            field.typeText("A very long note that keeps going well past the width of the input field")
+            XCTAssertFalse(field.frame.intersects(label.frame), "\(size) field \(field.frame) label \(label.frame)")
+            XCTAssertGreaterThanOrEqual(field.frame.minY, label.frame.maxY, "\(size) label sits above the field")
+            XCTAssertGreaterThanOrEqual(field.frame.minX, 16, size)
+            XCTAssertLessThanOrEqual(field.frame.maxX, app.otherElements["frame.add-sheet"].frame.maxX - 16, size)
+            if minus.exists { XCTAssertFalse(field.frame.intersects(minus.frame), "\(size) field \(field.frame) minus \(minus.frame)") }
+            app.terminate()
+        }
+    }
+
     func testDateRowsAreTappableAcrossTheirWholeWidth() {
         let app = launchSignedIn()
         app.buttons["frame.tab.add"].tap()
