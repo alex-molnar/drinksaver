@@ -9,4 +9,10 @@ final class RecommendationRowStyleTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(contrastRatio(RecommendationRowStyle.grip(theme: theme), theme.surface.paper), 3)
         }
     }
+
+    func testEditActionIconsAreReadableOnPaperInBothThemes() {
+        for theme in [DrinkSaverTheme.dark, .light] {
+            XCTAssertGreaterThanOrEqual(contrastRatio(RecommendationRowStyle.editAction(theme: theme), theme.surface.paper), 4.5)
+        }
+    }
 }

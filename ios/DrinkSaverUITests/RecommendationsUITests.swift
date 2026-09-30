@@ -61,6 +61,23 @@ final class RecommendationsUITests: XCTestCase {
         waitForExpectations(timeout: 5)
     }
 
+    func testEditActionsAreIconButtonsWithNamesAndTargets() {
+        let app = openRecommendations()
+        let nameX = app.staticTexts["recommendations.row.name.9"].frame.minX
+        app.buttons["recommendations.rename-button.9"].tap()
+        XCTAssertEqual(app.textFields["recommendations.rename.9"].frame.minX, nameX, accuracy: 1, "field starts where the name did, no jump")
+        for id in ["recommendations.rename-done.9", "recommendations.rename-cancel.9"] {
+            let b = app.buttons[id]
+            XCTAssertTrue(b.waitForExistence(timeout: 3), id)
+            XCTAssertGreaterThanOrEqual(b.frame.width, 43.9)
+            XCTAssertGreaterThanOrEqual(b.frame.height, 43.9)
+        }
+        XCTAssertEqual(app.buttons["recommendations.rename-done.9"].label, "Save name")
+        XCTAssertEqual(app.buttons["recommendations.rename-cancel.9"].label, "Cancel name")
+        app.buttons["recommendations.rename-cancel.9"].tap()
+        XCTAssertTrue(app.buttons["recommendations.rename-button.9"].waitForExistence(timeout: 3))
+    }
+
     func testStartingRenameRaisesKeyboardWithoutTappingTheField() {
         let app = openRecommendations()
         app.buttons["recommendations.rename-button.9"].tap()
