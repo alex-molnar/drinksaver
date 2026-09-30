@@ -25,6 +25,14 @@ drinking day refreshes on foreground and at the next local 06:00 boundary. `AppC
 retains the selected tab while Add routes are presented and resets it to Quick on sign-out.
 The menu appearance control toggles the persisted `ThemeStore` choice, which defaults to dark and
 overrides system appearance. Stable `frame.*` accessibility identifiers support simulator UI tests.
+The frame has the web's two soft edges (`AppFrameEdges`): a 12% ink wash fading down from the
+header and an 18% ink fade rising above the bottom navigation (the web's `0 -6px 18px` shadow).
+Both are drawn outside the bars, over page content (the header wash lies over the top of the page
+content, and the nav fade over its bottom), so header and tab text keep a flat backing:
+the Apple contrast audit fails small text on a gradient. They are hit-test and accessibility
+hidden, so they never block taps. The header background also extends up under the status bar
+(`ignoresSafeArea(edges: .top)`), so the status bar area takes the raised surface colour like the
+header instead of the ground colour.
 
 ## Quick Save
 

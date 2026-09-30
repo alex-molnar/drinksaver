@@ -296,11 +296,45 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter().wait(for: [gone], timeout: 5), .completed, "Add sheet should dismiss", file: file, line: line)
     }
 
-    private func launchSignedIn(contentSize: String = "large", fixture: String = "signed-in") -> XCUIApplication {
+    /// The nav's 18pt edge fade is drawn over page content: it must neither sit over a bottom action bar
+    /// nor swallow taps on it.
+    func testNavFadeClearsAndDoesNotBlockHistoryCrossOffBar() {
+        let app = launchSignedIn(now: "2026-01-02T18:04:05Z")
+        app.buttons["frame.tab.history"].tap()
+        app.buttons["Select Fixture drink one"].tap()
+        let bar = app.buttons["history.cross-off.selected"]
+        XCTAssertTrue(bar.waitForExistence(timeout: 5))
+        assertClearOfNavFade(bar, in: app)
+        bar.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)).tap()
+        XCTAssertTrue(app.buttons["frame.queue.undo"].waitForExistence(timeout: 3), "a tap on the bar's lower edge still fires")
+    }
+
+    func testNavFadeClearsAndDoesNotBlockRecommendationsActionBar() {
+        let app = launchSignedIn(now: "2026-01-02T18:04:05Z")
+        app.buttons["frame.menu"].tap()
+        app.buttons["Recommendations"].tap()
+        let down = app.buttons["recommendations.move-down.9"]
+        XCTAssertTrue(down.waitForExistence(timeout: 5))
+        down.tap()
+        let save = app.buttons["recommendations.save"], cancel = app.buttons["recommendations.cancel"]
+        XCTAssertTrue(cancel.waitForExistence(timeout: 3))
+        assertClearOfNavFade(save, in: app)
+        assertClearOfNavFade(cancel, in: app)
+        cancel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)).tap()
+        XCTAssertTrue(cancel.waitForNonExistence(timeout: 3), "a tap on the bar's lower edge still fires")
+    }
+
+    private func assertClearOfNavFade(_ control: XCUIElement, in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
+        // Nav has 8pt top padding above its tab buttons; the fade is 18pt tall and sits above the nav.
+        let navTop = app.buttons["frame.tab.quick"].frame.minY - 8
+        XCTAssertLessThanOrEqual(control.frame.maxY, navTop - 18, "control \(control.frame) overlaps the nav fade", file: file, line: line)
+    }
+
+    private func launchSignedIn(contentSize: String = "large", fixture: String = "signed-in", now: String = "2026-01-02T03:04:05Z") -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
             "-ui-fixture", fixture,
-            "-ui-fixed-now", "2026-01-02T03:04:05Z",
+            "-ui-fixed-now", now,
             "-ui-locale", "en-US",
             "-ui-content-size", contentSize,
             "-ui-reduce-motion", "true"
