@@ -68,6 +68,13 @@ serializes network operations, restores a saved snapshot on Undo, and keeps fail
 dirty-draft states. Names edit inline; drag-and-drop and labeled Move Up/Move Down controls provide
 equivalent reorder paths. Cancel restores the latest committed arrangement, while a committed
 Save returns to Quick.
+Each row reads, left to right, like web: a six dot grip, the name, then the Move up/Move down
+arrows, the pencil and the trash can. The grip is decorative and hidden from VoiceOver (the row's
+Move up and Move down actions are the accessible reorder path) and about 20pt wide; the icons keep
+a 44pt minimum hit area that grows with Dynamic Type. Icons use the paper ink at 60%
+(`RecommendationRowStyle`), not the default blue tint, so they stay visible on the light paper in
+dark mode, and dim to 40% while a save is in flight, like web. The trash can is labelled
+"Delete NAME", as on web.
 
 `SceneLifecycleHandler` commits Undo windows when the scene backgrounds, persists queued drink
 deletes before starting their background request, then sweeps expired entries and reconciles saved
