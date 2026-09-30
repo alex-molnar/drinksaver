@@ -156,3 +156,14 @@ the root view keeps the signed-in screen hidden until restoration succeeds. Sign
 resulting rotated authorization state is saved before the token is returned. Logout clears local
 Keychain state before attempting the provider end-session flow. If secure local clearing fails, the
 session gate stays closed and offers a retry action.
+
+## Button styles
+
+The action buttons use `DrinkSaverButtonStyle` (`Shared/UI/DrinkSaverButtonStyle.swift`, applied as `.buttonStyle(.drinkSaver(kind, size:, fillsWidth:, onPaper:))`): Save drink, Add and use it, Set date, Save, Show day, Retry, the sign-in gate and the rename Done and Cancel. Tabs, menu rows, option rows, the header back and plus buttons and the quantity stepper are deliberately `.plain` and draw their own look. The style reads `ThemeStore` for dark and light and mirrors the web buttons: display type roles, 44 pt minimum height and press scale 0.98 on filled buttons. Corners are `radius.sm` (4 pt), which is the web Add sheet CTA. The web MUI `Button` is `radius.md` with a 48 pt minimum, which is not replicated here.
+
+- `.primary`: `accent.primary` fill with `ink.onAccent` text (Save drink, Add and use it, Set date, Save, Show day, sign-in gate).
+- `.secondary`: outlined, `ink.primary` text (Add new, recommendations Cancel).
+- `.text`: no fill, underlined `ink.primary` text (`ink.onPaper` with `onPaper: true` for rows on the paper surface). It is not accent coloured because 18 pt semibold text is not "large" under WCAG and `accent.primary` is only about 3.3:1 on the dark panel. Used by Retry and rename Done and Cancel.
+- Disabled: flat 8% ink fill with `ink.tertiary` text and no shadow, as on web. The visual comes from the style reading `isEnabled`; VoiceOver reports the button as dimmed because the call sites apply `.disabled(...)`, which also stops it being pressed.
+
+Enablement mirrors web: `AddDrinkDraft.isReady` (web `isDraftReady`: type and size, plus serving for beer) gates `add.save`; `AddDrinkDraft.canCreate(_:)` (web `canSubmit`: non-empty name; for a size a parent drink type and positive litres; for a subtype a parent drink type; for a drink type, subtype and brand a colour palette, and for a drink type and subtype a glass, each either chosen or inherited) gates `add.create.submit`. The feedback strip Undo and Retry are plain semibold text like the web strip. Accessibility identifiers and labels are unchanged.

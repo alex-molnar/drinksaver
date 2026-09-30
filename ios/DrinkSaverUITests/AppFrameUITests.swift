@@ -1,6 +1,21 @@
 import XCTest
 
 final class AppFrameUITests: XCTestCase {
+    func testAddSaveIsDisabledUntilDrinkAndSizeChosen() {
+        let app = launchSignedIn()
+        app.buttons["frame.tab.add"].tap()
+        let save = app.buttons["add.save"]
+        XCTAssertTrue(save.waitForExistence(timeout: 5))
+        XCTAssertFalse(save.isEnabled)
+        app.buttons["Drink, Choose"].tap()
+        app.buttons["Wine"].tap()
+        XCTAssertFalse(save.isEnabled)
+        app.buttons["Size, Choose"].tap()
+        app.buttons.matching(NSPredicate(format: "label CONTAINS 'Glass'")).firstMatch.tap()
+        XCTAssertTrue(save.waitForExistence(timeout: 3))
+        XCTAssertTrue(save.isEnabled)
+    }
+
     func testAuthenticatedFrameNavigationAndMenu() {
         let app = launchSignedIn()
         XCTAssertTrue(app.staticTexts["frame.title"].waitForExistence(timeout: 5))

@@ -26,7 +26,7 @@ struct RecommendationTabView: View {
                 case .failed:
                     VStack(spacing: 10) {
                         Text("Couldn’t load recommendations.").foregroundStyle(themeStore.theme.accent.danger.color)
-                        Button("Retry") { Task { await store.load() } }.accessibilityIdentifier("recommendations.retry")
+                        Button("Retry") { Task { await store.load() } }.buttonStyle(.drinkSaver(.text, fillsWidth: false)).accessibilityIdentifier("recommendations.retry")
                     }.frame(maxWidth: .infinity, maxHeight: .infinity)
                 case .ready where store.displayedRows.isEmpty:
                     Text("No saved recommendations.").font(themeStore.theme.type.body.font)
@@ -70,9 +70,9 @@ struct RecommendationTabView: View {
             if store.isDirty {
                 HStack(spacing: 12) {
                     Button("Cancel") { store.cancel() }
-                        .buttonStyle(.bordered).frame(minHeight: 44).disabled(store.isSaving).accessibilityIdentifier("recommendations.cancel")
+                        .buttonStyle(.drinkSaver(.secondary)).disabled(store.isSaving).accessibilityIdentifier("recommendations.cancel")
                     Button("Save") { store.save() }
-                        .buttonStyle(.borderedProminent).frame(minHeight: 44).disabled(store.isSaving).accessibilityIdentifier("recommendations.save")
+                        .buttonStyle(.drinkSaver()).disabled(store.isSaving).accessibilityIdentifier("recommendations.save")
                 }
                 .padding(.horizontal, 20).padding(.vertical, 12)
             }

@@ -35,7 +35,7 @@ struct HistoryView: View {
                 Button("Show day") {
                     Task { await store.select(date: calendarSelection) }
                     presentsCalendar = false
-                }.buttonStyle(.borderedProminent)
+                }.buttonStyle(.drinkSaver())
             }.padding().presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
         }
         .accessibilityElement(children: .contain)
@@ -116,7 +116,7 @@ struct HistoryView: View {
                 case .failed:
                     VStack(spacing: 10) {
                         Text("Couldn’t load this day.").foregroundStyle(theme.accent.danger.color)
-                        Button("Retry") { Task { await store.retrySelected() } }.accessibilityIdentifier("history.retry")
+                        Button("Retry") { Task { await store.retrySelected() } }.buttonStyle(.drinkSaver(.text, fillsWidth: false)).accessibilityIdentifier("history.retry")
                     }.frame(maxWidth: .infinity, maxHeight: .infinity)
                 case .ready where store.visibleRows.isEmpty:
                     Text("Nothing saved on this day.").font(theme.type.body.font).foregroundStyle(theme.ink.secondary.color)
@@ -132,7 +132,7 @@ struct HistoryView: View {
 
             if !store.selectedIDs.isEmpty {
                 Button("Cross off \(store.selectedIDs.count) selected") { store.crossOff(reduceMotion: reduceMotion) }
-                    .buttonStyle(.borderedProminent).frame(maxWidth: .infinity).padding(12)
+                    .buttonStyle(.drinkSaver()).padding(12)
                     .accessibilityIdentifier("history.cross-off.selected")
             }
         }

@@ -294,8 +294,8 @@ struct AppFrame: View {
                 }
                 if let error = addDrinkStore.errorMessage { Text(error).foregroundStyle(theme.accent.danger.color).padding(.horizontal, 20) }
                 Button(addDrinkStore.draft.quantity == 1 ? "Save drink" : "Save \(addDrinkStore.draft.quantity) drinks") { addDrinkStore.save() }
-                    .buttonStyle(.borderedProminent).frame(maxWidth: .infinity).padding()
-                    .disabled(addDrinkStore.draft.alcoholType == nil || addDrinkStore.draft.volume == nil || (addDrinkStore.draft.isBeer && addDrinkStore.draft.consumptionType == nil) || addDrinkStore.isSaving)
+                    .buttonStyle(.drinkSaver(size: .cta)).padding(.horizontal, 16).padding(.vertical, 8)
+                    .disabled(!addDrinkStore.draft.isReady || addDrinkStore.isSaving)
                     .accessibilityIdentifier("add.save")
             }
         case .option(let field): optionPanel(field)
@@ -360,7 +360,7 @@ struct AppFrame: View {
                     }
                     if let creatable = creatable(field) {
                         Button("＋ Add new \(fieldName(field))") { coordinator.push(.create(creatable)) }
-                            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).padding(.horizontal, 20)
+                            .buttonStyle(.drinkSaver(.secondary)).padding(.horizontal, 20).padding(.top, 8)
                     }
                 } }
             }
@@ -395,7 +395,7 @@ struct AppFrame: View {
                     .onChange(of: customDate) { _, _ in customDatePicked = true }
                     .padding(.horizontal, 20).accessibilityIdentifier("add.date.picker")
                 Button("Set date") { addDrinkStore.draft.date = customDate; coordinator.popAddPanel() }
-                    .buttonStyle(.borderedProminent).padding().disabled(!customDatePicked).accessibilityIdentifier("add.date.set")
+                    .buttonStyle(.drinkSaver()).disabled(!customDatePicked).padding(.horizontal, 20).padding(.vertical, 8).accessibilityIdentifier("add.date.set")
             } else {
                 Button {
                     // Like web: seed only when the current date is neither Today nor Yesterday, and keep Set date disabled until a date is picked.
@@ -488,7 +488,7 @@ struct AppFrame: View {
                 }
             }
             Button(addDrinkStore.isCreating ? "Adding…" : "Add and use it") { Task { await addDrinkStore.create(field, name: addDrinkStore.draft.creationName, litres: field == .volume ? Double(addDrinkStore.draft.volumeLitres) : nil) } }
-                .buttonStyle(.borderedProminent).padding(.horizontal, 20).disabled(addDrinkStore.isCreating).accessibilityIdentifier("add.create.submit")
+                .buttonStyle(.drinkSaver()).padding(.horizontal, 20).disabled(!addDrinkStore.draft.canCreate(field) || addDrinkStore.isCreating).accessibilityIdentifier("add.create.submit")
             if let error = addDrinkStore.errorMessage { Text(error).foregroundStyle(theme.accent.danger.color).padding(.horizontal, 20) }
         }
     }

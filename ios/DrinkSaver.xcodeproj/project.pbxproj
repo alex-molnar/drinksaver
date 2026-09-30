@@ -97,6 +97,7 @@
 		71AD9F9C7F5F6AA07D6DEE35 /* ThemeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 131DE07C906D317C18A91B84 /* ThemeTests.swift */; };
 		F02400000000000000000001 /* AddDrinkDateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02400000000000000000002 /* AddDrinkDateTests.swift */; };
 		F02900000000000000000001 /* AddMenuOrderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02900000000000000000002 /* AddMenuOrderTests.swift */; };
+		F0950000000000000000B001 /* AddEnablementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0950000000000000000B002 /* AddEnablementTests.swift */; };
 		78E58F4CE6AACEAB9BEAEDA1 /* DrinkSaverTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1213899360D084D49C7B6F53 /* DrinkSaverTheme.swift */; };
 		7AEF518E4CFC815CEA535302 /* DrinkingDay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61C2E20947DEAA8D3058D670 /* DrinkingDay.swift */; };
 		86B731A1EDCBF3C0D0712030 /* ProjectSmokeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DFBB0972B91E0D1020DB99 /* ProjectSmokeUITests.swift */; };
@@ -113,6 +114,7 @@
 		CBC280C9C90CE490B10C58EB /* ThemeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC83A16D20EA1FF7D66C8384 /* ThemeStore.swift */; };
 		D1006CD7A29F0404D62F5781 /* FrauncesDisplayL.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B230FF2E270307FB452A1ADF /* FrauncesDisplayL.ttf */; };
 		E56DEE83175A73DA6CF3DDA4 /* PlasterBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5595726C335D0B61A093D5E7 /* PlasterBackground.swift */; };
+		F0950000000000000000A001 /* DrinkSaverButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0950000000000000000A002 /* DrinkSaverButtonStyle.swift */; };
 		EC5270DB37D3CB168DB3D186 /* Test.plist in Resources */ = {isa = PBXBuildFile; fileRef = DCA916D18D6A35CC98AF57D7 /* Test.plist */; };
 		F313660F9E4208CF8F75BD8D /* RetryPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A60F8FD4EBD52CDABC252A /* RetryPolicy.swift */; };
 		F5EAFDFE183BEC739CCD976E /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80460F42E4C8F76BBACF7D6D /* Color+Hex.swift */; };
@@ -216,6 +218,7 @@
 		12525D71B60E607B8A427670 /* Local.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Local.plist; sourceTree = "<group>"; };
 		131DE07C906D317C18A91B84 /* ThemeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTests.swift; sourceTree = "<group>"; };
 		F02900000000000000000002 /* AddMenuOrderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddMenuOrderTests.swift; sourceTree = "<group>"; };
+		F0950000000000000000B002 /* AddEnablementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEnablementTests.swift; sourceTree = "<group>"; };
 		F02400000000000000000002 /* AddDrinkDateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddDrinkDateTests.swift; sourceTree = "<group>"; };
 		3D052A8B3B63233EC727E55D /* FrauncesDisplayM.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = FrauncesDisplayM.ttf; sourceTree = "<group>"; };
 		4012A89C2E54E77CC5544015 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -227,6 +230,7 @@
 		5AC006A1000000000000000A /* DesignResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignResolverTests.swift; sourceTree = "<group>"; };
 		5AC006A1000000000000000B /* GlassShapeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassShapeTests.swift; sourceTree = "<group>"; };
 		5595726C335D0B61A093D5E7 /* PlasterBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlasterBackground.swift; sourceTree = "<group>"; };
+		F0950000000000000000A002 /* DrinkSaverButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkSaverButtonStyle.swift; sourceTree = "<group>"; };
 		5F8814CA538CC4D2B8D3B845 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		61C2E20947DEAA8D3058D670 /* DrinkingDay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkingDay.swift; sourceTree = "<group>"; };
 		6249F444B47593A4E53A8431 /* DrinkSaverTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DrinkSaverTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -308,6 +312,7 @@
 				131DE07C906D317C18A91B84 /* ThemeTests.swift */,
 				F02400000000000000000002 /* AddDrinkDateTests.swift */,
 				F02900000000000000000002 /* AddMenuOrderTests.swift */,
+				F0950000000000000000B002 /* AddEnablementTests.swift */,
 				5AC006A1000000000000000A /* DesignResolverTests.swift */,
 				5AC006A1000000000000000B /* GlassShapeTests.swift */,
 				F022A0000000000000000003 /* VisualParityTests.swift */,
@@ -394,6 +399,7 @@
 				A01200000000000000000006 /* AppFrame.swift */,
 				A01200000000000000000004 /* ViewState.swift */,
 				5595726C335D0B61A093D5E7 /* PlasterBackground.swift */,
+				F0950000000000000000A002 /* DrinkSaverButtonStyle.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -760,6 +766,7 @@
 				7AEF518E4CFC815CEA535302 /* DrinkingDay.swift in Sources */,
 				560E2EE927D51E32FD8C9276 /* HTTPStatusError.swift in Sources */,
 				E56DEE83175A73DA6CF3DDA4 /* PlasterBackground.swift in Sources */,
+				F0950000000000000000A001 /* DrinkSaverButtonStyle.swift in Sources */,
 				F313660F9E4208CF8F75BD8D /* RetryPolicy.swift in Sources */,
 				FBE22C2DF1EDB1E6569482EF /* RootView.swift in Sources */,
 				CBC280C9C90CE490B10C58EB /* ThemeStore.swift in Sources */,
@@ -816,6 +823,7 @@
 				71AD9F9C7F5F6AA07D6DEE35 /* ThemeTests.swift in Sources */,
 				F02400000000000000000001 /* AddDrinkDateTests.swift in Sources */,
 				F02900000000000000000001 /* AddMenuOrderTests.swift in Sources */,
+				F0950000000000000000B001 /* AddEnablementTests.swift in Sources */,
 				5AC006A10000000000000007 /* DesignResolverTests.swift in Sources */,
 				5AC006A10000000000000008 /* GlassShapeTests.swift in Sources */,
 				F022A0000000000000000001 /* VisualParityTests.swift in Sources */,
