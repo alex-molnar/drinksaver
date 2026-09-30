@@ -190,7 +190,7 @@ final class AddDrinkStore {
 
     func save() {
         guard !isSaving, let type = draft.alcoholType, let volume = draft.volume else { errorMessage = "Choose a drink and size first."; return }
-        let date = draft.date.map(Self.apiDate) ?? day.date
+        let date = Self.saveDate(draft, currentDay: day.date)
         let request = Self.makeRequest(type: type, volume: volume, draft: draft, date: date)
         isSaving = true; errorMessage = nil
         _ = queue.save(SaveOperation(label: Self.provisionalLabel(draft, fallback: type.name), date: date, alcoholTypeID: type.id, payload: request,
@@ -231,6 +231,15 @@ final class AddDrinkStore {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = .current
         return calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2], hour: 12))
+    }
+    static func saveDate(_ draft: AddDrinkDraft, currentDay: String) -> String {
+        draft.date.map(apiDate) ?? currentDay
+    }
+    static func previousDay(of date: Date) -> Date {
+        Calendar.current.date(byAdding: .day, value: -1, to: date) ?? date
+    }
+    static func whenLabel(_ date: Date?, today: Date, locale: Locale = .current) -> String {
+        DrinkingDay.label(for: date ?? today, today: today, locale: locale, calendar: .current)
     }
     static func clampedQuantity(_ value: Int) -> Int { min(24, max(1, value)) }
     static func apiDate(_ date: Date) -> String {
