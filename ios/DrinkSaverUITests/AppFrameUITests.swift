@@ -246,7 +246,7 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertFalse(up.isEnabled)
     }
 
-    func testRecommendationDesignRowsRetryTheFailedCatalogueOnceWithoutHanging() {
+    func testRecommendationDesignRowsShowUnavailableAndSheetStaysResponsiveAfterFailedCatalogue() {
         let app = launchSignedIn(fixture: "signed-in-api-failure")
         app.buttons["frame.tab.add"].tap()
         app.switches["Add to recommendations"].tap()
