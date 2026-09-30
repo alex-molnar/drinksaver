@@ -18,6 +18,14 @@ final class DesignResolverTests: XCTestCase {
         XCTAssertEqual(catalogue.glass(id: 999).name, "highball")
     }
 
+    func testRowPalettesFallBackFromOwnToParent() {
+        XCTAssertEqual(DesignResolver.beerPaletteID(flavour: nil, brand: 3, alcoholType: 7), 3)
+        XCTAssertEqual(DesignResolver.beerPaletteID(flavour: nil, brand: nil, alcoholType: 7), 7)
+        XCTAssertEqual(DesignResolver.alcoholPaletteID(subtype: nil, alcoholType: 7), 7)
+        XCTAssertEqual(DesignResolver.beerPaletteID(flavour: nil, brand: nil, alcoholType: 7), 7)
+        XCTAssertEqual(DesignResolver.beerPaletteID(flavour: nil, brand: 3, alcoholType: 7), 3)
+    }
+
     func testEmptyCatalogueUsesFrozenFallbackDefinitions() {
         let empty = DesignCatalogue(palettes: [], glassware: [])
         XCTAssertEqual(empty.palette(id: nil), DesignCatalogue.fallbackPalette)

@@ -340,8 +340,15 @@ struct AppFrame: View {
             else {
                 ScrollView { VStack(spacing: 0) {
                     ForEach(optionValues(field), id: \.id) { item in
-                        Button(item.name) { select(item.id, field: field); coordinator.popAddPanel() }
-                            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).padding(.horizontal, 20).buttonStyle(.plain)
+                        Button { select(item.id, field: field); coordinator.popAddPanel() } label: {
+                            HStack(spacing: 13) {
+                                if item.showsSwatch { paletteSwatch(item.paletteID) }
+                                Text(item.name)
+                                Spacer(minLength: 0)
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).contentShape(Rectangle())
+                        }
+                        .padding(.horizontal, 20).buttonStyle(.plain).accessibilityLabel(item.name)
                     }
                     if let creatable = creatable(field) {
                         Button("＋ Add new \(fieldName(field))") { coordinator.push(.create(creatable)) }
@@ -350,6 +357,14 @@ struct AppFrame: View {
                 } }
             }
         }
+    }
+
+    private func paletteSwatch(_ id: Int?) -> some View {
+        Circle()
+            .fill(Color(hexString: addDrinkStore.catalogue.palette(id: id).field, fallback: DesignCatalogue.fallbackPalette.field))
+            .overlay(Circle().stroke(theme.ink.primary.color.opacity(0.32), lineWidth: 1))
+            .frame(width: 14, height: 14)
+            .accessibilityHidden(true)
     }
 
     @ViewBuilder private var datePanel: some View {
@@ -389,15 +404,15 @@ struct AppFrame: View {
         }
     }
 
-    private struct AddOption: Identifiable, Equatable { let id: Int; let name: String }
+    private struct AddOption: Identifiable, Equatable { let id: Int; let name: String; var paletteID: Int? = nil; var showsSwatch = false }
     private func optionValues(_ field: AddRouteField) -> [AddOption] {
         switch field {
-        case .alcoholType: if case .loaded(let values) = addDrinkStore.alcoholTypes { values.map { AddOption(id:$0.id,name:$0.name) } } else { [] }
+        case .alcoholType: if case .loaded(let values) = addDrinkStore.alcoholTypes { values.map { AddOption(id:$0.id,name:$0.name,paletteID:$0.colorPaletteId,showsSwatch:true) } } else { [] }
         case .volume: if case .loaded(let values) = addDrinkStore.volumes { values.map { AddOption(id:$0.id,name:AddDrinkStore.volumeLabel($0)) } } else { [] }
-        case .subtype: if case .loaded(let values) = addDrinkStore.subtypes { values.map { AddOption(id:$0.id,name:$0.name) } } else { [] }
+        case .subtype: if case .loaded(let values) = addDrinkStore.subtypes { values.map { AddOption(id:$0.id,name:$0.name,paletteID:DesignResolver.alcoholPaletteID(subtype:$0.colorPaletteId,alcoholType:addDrinkStore.draft.alcoholType?.colorPaletteId),showsSwatch:true) } } else { [] }
         case .consumptionType: if case .loaded(let values) = addDrinkStore.consumptionTypes { values.map { AddOption(id:$0.id,name:$0.name) } } else { [] }
-        case .brand: if case .loaded(let values) = addDrinkStore.brands { values.map { AddOption(id:$0.id,name:$0.name) } } else { [] }
-        case .flavour: if case .loaded(let values) = addDrinkStore.flavours { values.map { AddOption(id:$0.id,name:$0.name) } } else { [] }
+        case .brand: if case .loaded(let values) = addDrinkStore.brands { values.map { AddOption(id:$0.id,name:$0.name,paletteID:DesignResolver.beerPaletteID(flavour:nil,brand:$0.colorPaletteId,alcoholType:addDrinkStore.draft.alcoholType?.colorPaletteId),showsSwatch:true) } } else { [] }
+        case .flavour: if case .loaded(let values) = addDrinkStore.flavours { values.map { AddOption(id:$0.id,name:$0.name,paletteID:DesignResolver.beerPaletteID(flavour:$0.colorPaletteId,brand:addDrinkStore.draft.brand?.colorPaletteId,alcoholType:addDrinkStore.draft.alcoholType?.colorPaletteId),showsSwatch:true) } } else { [] }
         case .date, .notes, .recommend: []
         }
     }
