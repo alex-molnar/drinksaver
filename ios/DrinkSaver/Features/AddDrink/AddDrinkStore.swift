@@ -219,6 +219,9 @@ final class AddDrinkStore {
             onlyTemporarily: draft.recommend && draft.onlyTemporarily ? true : nil,
             name: draft.recommend && !draft.recommendationName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? draft.recommendationName.trimmingCharacters(in: .whitespacesAndNewlines) : nil)
     }
+    static func volumeLabel(_ v: AlcoholVolume) -> String {
+        v.volume.map { "\(v.name) (\($0)L)" } ?? v.name
+    }
     static func provisionalLabel(_ draft: AddDrinkDraft, fallback: String? = nil) -> String {
         [draft.brand?.name, draft.flavour?.name, draft.alcoholType?.name ?? fallback].compactMap { $0 }.joined(separator: " ")
     }

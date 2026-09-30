@@ -14,7 +14,8 @@ the numeral role also uses tabular digits.
 `RootView` shows the signed-in frame only after session restoration succeeds. `AppFrame` owns the
 Today/Tonight header, Recommendations/Add new type/Logout menu, Quick/Add/History navigation, and
 the single Add sheet host; feature interiors remain owned by their feature tasks. One
-`FeedbackStrip` is hosted by the frame or the Add sheet, and `FeedbackArbiter` chooses the most
+`FeedbackStrip` is hosted by the frame or the Add sheet as a compact floating toast at the bottom of
+the content area, like the web app. Page content and the Add sheet reserve its height with a bottom safe-area inset, so it never covers the Save button, a bulk action, or the end of a list (web floats it above the sheet CTA; here it sits below it). Failures use the theme danger colour with on-accent text, and Reduce Motion drops the slide, and `FeedbackArbiter` chooses the most
 recent drink or recommendation queue message while routing Undo and Retry back to that queue.
 Its Undo and Retry buttons keep their exact labels, failures remain visible until retried, and
 accessibility focus pauses queue expiry. Quick header

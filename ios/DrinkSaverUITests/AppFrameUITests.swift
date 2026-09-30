@@ -101,13 +101,42 @@ final class AppFrameUITests: XCTestCase {
         undo.tap()
     }
 
-    private func launchSignedIn() -> XCUIApplication {
+    func testAddSaveStaysHittableWhileToastShowsInSheet() {
+        assertSaveHittableWithToast(contentSize: "large")
+    }
+
+    func testAddSaveStaysHittableWithToastAtAccessibilityTextSize() {
+        assertSaveHittableWithToast(contentSize: "accessibility3")
+    }
+
+    private func assertSaveHittableWithToast(contentSize: String) {
+        let app = launchSignedIn(contentSize: contentSize)
+        app.buttons["frame.tab.add"].tap()
+        app.buttons["Drink, Choose"].tap()
+        app.buttons["Wine"].tap()
+        app.buttons["Size, Choose"].tap()
+        app.buttons.matching(NSPredicate(format: "label CONTAINS 'Glass'")).firstMatch.tap()
+        app.buttons["add.save"].tap()
+        XCTAssertTrue(app.buttons["quick.queue.undo"].waitForExistence(timeout: 5))
+        app.buttons["frame.tab.add"].tap()
+        app.buttons["Drink, Choose"].tap()
+        app.buttons["Wine"].tap()
+        app.buttons["Size, Choose"].tap()
+        app.buttons.matching(NSPredicate(format: "label CONTAINS 'Glass'")).firstMatch.tap()
+        let message = app.staticTexts["frame.add.feedback.message"]
+        XCTAssertTrue(message.waitForExistence(timeout: 3))
+        let save = app.buttons["add.save"]
+        XCTAssertTrue(save.isHittable)
+        XCTAssertFalse(save.frame.intersects(message.frame))
+    }
+
+    private func launchSignedIn(contentSize: String = "large", fixture: String = "signed-in") -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
-            "-ui-fixture", "signed-in",
+            "-ui-fixture", fixture,
             "-ui-fixed-now", "2026-01-02T03:04:05Z",
             "-ui-locale", "en-US",
-            "-ui-content-size", "large",
+            "-ui-content-size", contentSize,
             "-ui-reduce-motion", "true"
         ]
         app.launch()

@@ -26,12 +26,14 @@ struct AppFrame: View {
             VStack(spacing: 0) {
                 headerBar
                 VStack(spacing: 0) {
-                    if !coordinator.isAddPresented {
-                        FeedbackStrip(placement: coordinator.feedbackPlacement)
-                    }
                     content
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                         .accessibilityIdentifier("frame.content.\(screenName)")
+                        .safeAreaInset(edge: .bottom, spacing: 0) {
+                            if !coordinator.isAddPresented {
+                                FeedbackStrip(placement: coordinator.feedbackPlacement)
+                            }
+                        }
                 }
                 bottomNavigation
             }
@@ -209,7 +211,6 @@ struct AppFrame: View {
 
     private var addSheet: some View {
         VStack(spacing: 16) {
-            FeedbackStrip(placement: .addSheet)
             HStack {
                 if coordinator.addPanels.count > 1 {
                     Button {
@@ -240,6 +241,7 @@ struct AppFrame: View {
         }
         .padding(.top, 20)
         .background(theme.surface.panel.color)
+        .safeAreaInset(edge: .bottom, spacing: 0) { FeedbackStrip(placement: .addSheet) }
     }
 
     @ViewBuilder private var addPanel: some View {
@@ -251,7 +253,7 @@ struct AppFrame: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         addRow("Drink", value: addDrinkStore.draft.alcoholType?.name, field: .alcoholType)
-                        addRow("Size", value: addDrinkStore.draft.volume.map { "\($0.name) (\($0.volume)L)" }, field: .volume)
+                        addRow("Size", value: addDrinkStore.draft.volume.map(AddDrinkStore.volumeLabel), field: .volume)
                         if hasOptions(addDrinkStore.subtypes) || addDrinkStore.draft.subtype != nil { addRow("Kind", value: addDrinkStore.draft.subtype?.name, field: .subtype) }
                         if addDrinkStore.draft.isBeer {
                             addRow("Served", value: addDrinkStore.draft.consumptionType?.name, field: .consumptionType)
@@ -348,7 +350,7 @@ struct AppFrame: View {
     private func optionValues(_ field: AddRouteField) -> [AddOption] {
         switch field {
         case .alcoholType: if case .loaded(let values) = addDrinkStore.alcoholTypes { values.map { AddOption(id:$0.id,name:$0.name) } } else { [] }
-        case .volume: if case .loaded(let values) = addDrinkStore.volumes { values.map { AddOption(id:$0.id,name:"\($0.name) (\($0.volume)L)") } } else { [] }
+        case .volume: if case .loaded(let values) = addDrinkStore.volumes { values.map { AddOption(id:$0.id,name:AddDrinkStore.volumeLabel($0)) } } else { [] }
         case .subtype: if case .loaded(let values) = addDrinkStore.subtypes { values.map { AddOption(id:$0.id,name:$0.name) } } else { [] }
         case .consumptionType: if case .loaded(let values) = addDrinkStore.consumptionTypes { values.map { AddOption(id:$0.id,name:$0.name) } } else { [] }
         case .brand: if case .loaded(let values) = addDrinkStore.brands { values.map { AddOption(id:$0.id,name:$0.name) } } else { [] }
