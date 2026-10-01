@@ -15,4 +15,12 @@ final class RecommendationRowStyleTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(contrastRatio(RecommendationRowStyle.editAction(theme: theme), theme.surface.paper), 4.5)
         }
     }
+
+    @MainActor
+    func testSecondaryPaperActionIsReadableInBothThemes() {
+        for theme in [DrinkSaverTheme.dark, .light] {
+            let foreground = DrinkSaverButtonStyle.foreground(theme, kind: .secondary, onPaper: true)
+            XCTAssertGreaterThanOrEqual(contrastRatio(foreground, theme.surface.paper), 4.5)
+        }
+    }
 }

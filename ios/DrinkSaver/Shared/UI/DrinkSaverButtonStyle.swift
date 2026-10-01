@@ -10,7 +10,7 @@ struct DrinkSaverButtonStyle: ButtonStyle {
     var size: Size = .regular
     /// Fill the available width (CTAs); otherwise the button hugs its label.
     var fillsWidth = true
-    /// `.text` only: use paper ink for rows drawn on the paper surface instead of the panel ink.
+    /// Use paper ink when the button is drawn on the paper surface instead of the panel ink.
     var onPaper = false
 
     @Environment(ThemeStore.self) private var themeStore
@@ -24,7 +24,7 @@ struct DrinkSaverButtonStyle: ButtonStyle {
         configuration.label
             .underline(kind == .text)
             .font((size == .cta ? theme.type.displayM : theme.type.displayS).font)
-            .foregroundStyle(foreground(theme))
+            .foregroundStyle(Self.foreground(theme, kind: kind, onPaper: onPaper, enabled: isEnabled).color)
             .frame(maxWidth: fillsWidth ? .infinity : nil, minHeight: size == .cta ? 54 : 44)
             .padding(.horizontal, kind == .text ? theme.space.md : theme.space.lg)
             .background(fill(theme), in: RoundedRectangle(cornerRadius: theme.radius.sm))
@@ -45,13 +45,13 @@ struct DrinkSaverButtonStyle: ButtonStyle {
         return isEnabled ? theme.accent.primary.color : theme.ink.primary.color.opacity(0.08)
     }
 
-    private func foreground(_ theme: DrinkSaverTheme) -> Color {
-        guard isEnabled else { return theme.ink.tertiary.color }
+    static func foreground(_ theme: DrinkSaverTheme, kind: Kind, onPaper: Bool, enabled: Bool = true) -> ThemeColor {
+        guard enabled else { return theme.ink.tertiary }
         switch kind {
-        case .primary: return theme.ink.onAccent.color
-        case .secondary: return theme.ink.primary.color
+        case .primary: return theme.ink.onAccent
+        case .secondary: return onPaper ? theme.ink.onPaper : theme.ink.primary
         // Not accent.primary: 18pt semibold text is not "large", and the accent is about 3.3:1 on the panel.
-        case .text: return onPaper ? theme.ink.onPaper.color : theme.ink.primary.color
+        case .text: return onPaper ? theme.ink.onPaper : theme.ink.primary
         }
     }
 }

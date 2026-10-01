@@ -78,6 +78,9 @@ struct RecommendationRowView: View {
                     .contentShape(Rectangle())
                     .onTapGesture(perform: onEdit)
                     .accessibilityIdentifier("recommendations.row.name.\(row.id)")
+                iconButton("pencil", action: onEdit)
+                    .accessibilityLabel("Rename \(row.name)")
+                    .accessibilityIdentifier("recommendations.rename-button.\(row.id)")
                 VStack(spacing: 0) {
                     iconButton("arrow.up", action: onMoveUp)
                         .accessibilityLabel("Move up \(row.name)")
@@ -86,9 +89,6 @@ struct RecommendationRowView: View {
                         .accessibilityLabel("Move down \(row.name)")
                         .accessibilityIdentifier("recommendations.move-down.\(row.id)")
                 }
-                iconButton("pencil", action: onEdit)
-                    .accessibilityLabel("Rename \(row.name)")
-                    .accessibilityIdentifier("recommendations.rename-button.\(row.id)")
                 iconButton("trash", action: onDelete)
                     .accessibilityLabel("Delete \(row.name)")
                     .accessibilityIdentifier("recommendations.delete.\(row.id)")
