@@ -1,3 +1,5 @@
 package com.drinksaver.model.dto.patch;
 
-public record UpdateBeerBrand(String name, Integer colorPaletteId) {}
+import jakarta.validation.constraints.Size;
+
+public record UpdateBeerBrand(@Size(max = 100) String name, Integer colorPaletteId) {}

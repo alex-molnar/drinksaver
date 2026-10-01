@@ -94,9 +94,9 @@ class AdminAlcoholControllerTest {
         mockMvc.perform(post("/v1/admin/user-defined/alcohol/types/3/publish").with(admin()))
             .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Vodka"));
         mockMvc.perform(post("/v1/admin/user-defined/alcohol/types/9/publish").with(admin())).andExpect(status().isNotFound());
-        mockMvc.perform(post("/v1/admin/user-defined/alcohol/types/subtypes/4/publish").with(admin()))
+        mockMvc.perform(post("/v1/admin/user-defined/alcohol/subtypes/4/publish").with(admin()))
             .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Clear"));
-        mockMvc.perform(post("/v1/admin/user-defined/alcohol/types/subtypes/9/publish").with(admin())).andExpect(status().isNotFound());
+        mockMvc.perform(post("/v1/admin/user-defined/alcohol/subtypes/9/publish").with(admin())).andExpect(status().isNotFound());
     }
 
     private static RequestPostProcessor admin() {

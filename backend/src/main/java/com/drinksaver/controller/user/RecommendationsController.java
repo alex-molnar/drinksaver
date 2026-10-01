@@ -45,7 +45,7 @@ public class RecommendationsController {
                 .map(Recommendation::getId)
                 .toList();
 
-        recommendationCacheService.invalidateRecommendations(userId);
+        recommendationCacheService.invalidateRecommendationsForUser(userId);
         return recommendationService.updateRecommendationsOrder(
             userId,
             recommendationUpdates
@@ -60,7 +60,7 @@ public class RecommendationsController {
         UUID userId = AuthenticatedUser.id(jwt);
         if (recommendationService.isRecommendationOwnedByUser(id, userId)) {
             recommendationService.deleteRecommendation(id);
-            recommendationCacheService.invalidateRecommendations(userId);
+            recommendationCacheService.invalidateRecommendationsForUser(userId);
         } else {
             throw new IllegalArgumentException("That recommendation is not owned by the authenticated user");
         }

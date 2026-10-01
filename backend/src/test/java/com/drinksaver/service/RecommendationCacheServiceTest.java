@@ -91,7 +91,7 @@ class RecommendationCacheServiceTest {
 
         RecommendationCacheService service = new RecommendationCacheService(cacheManager);
 
-        service.invalidateRecommendations(USER);
+        service.invalidateRecommendationsForUser(USER);
 
         verify(cacheManager).getCache(RECOMMENDATIONS_CACHE);
     }
@@ -104,7 +104,7 @@ class RecommendationCacheServiceTest {
 
         RecommendationCacheService service = new RecommendationCacheService(cacheManager);
 
-        service.invalidateRecommendations(USER);
+        service.invalidateRecommendationsForUser(USER);
 
         verify(recCache).evict(USER);
     }
