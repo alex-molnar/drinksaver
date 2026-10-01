@@ -66,7 +66,8 @@ their order slots. `RecommendationQueue` defers deletes and arrangement updates 
 serializes network operations, restores a saved snapshot on Undo, and keeps failures retryable.
 `RecommendationTabView` presents loading, retryable error, empty, editing, reorder, cross-off, and
 dirty-draft states. Names edit inline; drag-and-drop and labeled Move Up/Move Down controls provide
-equivalent reorder paths. Cancel restores the latest committed arrangement, while a committed
+equivalent reorder paths. During a drag, rows change order without a separate layout animation so
+the finger-tracked row is drawn once. Cancel restores the latest committed arrangement, while a committed
 Save returns to Quick.
 The scroll view uses an eager `VStack` to retain the inline text field while keyboard avoidance
 shrinks the viewport. Focus belongs to the screen and is restored when returning to an active
@@ -194,7 +195,7 @@ session gate stays closed and offers a retry action.
 The action buttons use `DrinkSaverButtonStyle` (`Shared/UI/DrinkSaverButtonStyle.swift`, applied as `.buttonStyle(.drinkSaver(kind, size:, fillsWidth:, onPaper:))`): Save drink, Add and use it, Set date, Save, Show day, Retry, the sign-in gate and the rename Done and Cancel. Tabs, menu rows, option rows, the header back and plus buttons and the quantity stepper are deliberately `.plain` and draw their own look. The style reads `ThemeStore` for dark and light and mirrors the web buttons: display type roles, 44 pt minimum height and press scale 0.98 on filled buttons. Corners are `radius.sm` (4 pt), which is the web Add sheet CTA. The web MUI `Button` is `radius.md` with a 48 pt minimum, which is not replicated here.
 
 - `.primary`: `accent.primary` fill with `ink.onAccent` text (Save drink, Add and use it, Set date, Save, Show day, sign-in gate).
-- `.secondary`: outlined, `ink.primary` text (Add new, recommendations Cancel).
+- `.secondary`: outlined, `ink.primary` text (Add new, recommendations Cancel); on paper, it adds a subtle ink fill and uses paper ink for its border.
 - `.text`: no fill, underlined `ink.primary` text (`ink.onPaper` with `onPaper: true` for rows on the paper surface). It is not accent coloured because 18 pt semibold text is not "large" under WCAG and `accent.primary` is only about 3.3:1 on the dark panel. Used by Retry and rename Done and Cancel.
 - Disabled: flat 8% ink fill with `ink.tertiary` text and no shadow, as on web. The visual comes from the style reading `isEnabled`; VoiceOver reports the button as dimmed because the call sites apply `.disabled(...)`, which also stops it being pressed.
 

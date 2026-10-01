@@ -41,6 +41,8 @@ final class RecommendationsUITests: XCTestCase {
         )
 
         XCTAssertGreaterThan(house.frame.minY, amber.frame.minY)
+        XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "recommendations.row.9").count, 1)
+        XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "recommendations.row.10").count, 1)
         XCTAssertTrue(app.buttons["recommendations.save"].exists)
     }
 
