@@ -72,7 +72,8 @@ the finger-tracked row is drawn once. Cancel restores the latest committed arran
 Save returns to Quick.
 The scroll view uses an eager `VStack` to retain the inline text field while keyboard avoidance
 shrinks the viewport. Focus belongs to the screen and is restored when returning to an active
-rename. All recommendation rows are constructed together; the keyboard regressions cover both
+rename, including when a reload returns the store to its ready state while the editing ID stays
+unchanged. All recommendation rows are constructed together; the keyboard regressions cover both
 the six-row list and editing the final row of a scrolled twenty-row list.
 Each row reads, left to right, like web: a six dot grip, the name, the pencil, the Move up/Move down
 arrows and the trash can. The grip is decorative and hidden from VoiceOver (the row's
@@ -196,7 +197,7 @@ session gate stays closed and offers a retry action.
 The action buttons use `DrinkSaverButtonStyle` (`Shared/UI/DrinkSaverButtonStyle.swift`, applied as `.buttonStyle(.drinkSaver(kind, size:, fillsWidth:, onPaper:))`): Save drink, Add and use it, Set date, Save, Show day, Retry, the sign-in gate and the rename Done and Cancel. Tabs, menu rows, option rows, the header back and plus buttons and the quantity stepper are deliberately `.plain` and draw their own look. The style reads `ThemeStore` for dark and light and mirrors the web buttons: display type roles, 44 pt minimum height and press scale 0.98 on filled buttons. Corners are `radius.sm` (4 pt), which is the web Add sheet CTA. The web MUI `Button` is `radius.md` with a 48 pt minimum, which is not replicated here.
 
 - `.primary`: `accent.primary` fill with `ink.onAccent` text (Save drink, Add and use it, Set date, Save, Show day, sign-in gate).
-- `.secondary`: outlined, `ink.primary` text (Add new, recommendations Cancel); on paper, it adds a subtle ink fill and uses paper ink for its border.
+- `.secondary`: outlined, `ink.primary` text (Add new, recommendations Cancel); on paper, it adds a subtle ink fill and uses paper ink at 58% opacity for its enabled border to meet the 3:1 control contrast threshold in both themes.
 - `.text`: no fill, underlined `ink.primary` text (`ink.onPaper` with `onPaper: true` for rows on the paper surface). It is not accent coloured because 18 pt semibold text is not "large" under WCAG and `accent.primary` is only about 3.3:1 on the dark panel. Used by Retry and rename Done and Cancel.
 - Disabled: flat 8% ink fill with `ink.tertiary` text and no shadow, as on web. The visual comes from the style reading `isEnabled`; VoiceOver reports the button as dimmed because the call sites apply `.disabled(...)`, which also stops it being pressed.
 
@@ -209,3 +210,28 @@ Text inputs use `.drinkSaverField()` (`Shared/UI/DrinkSaverFieldStyle.swift`), w
 The quantity stepper uses `DrinkSaverStepperButton` (ink glyph in a 52 pt box, 1.4 pt border, 5% ink fill, dimmed to 28% when disabled). Minus disables at 1 and plus at 24 like the web. The count is its own accessibility element labelled "Quantity" with the count as its value, so VoiceOver focuses it and swiping up or down adjusts it (not verified on a device with VoiceOver running). The "Decrease quantity" and "Increase quantity" buttons are separate named elements, so Voice Control and Full Keyboard Access reach them by name. The recommendation and create panel design rows retry a failed catalogue load once each time the Add sheet opens, and a retry keeps any endpoint that already loaded.
 
 The colour and glass selectors in the create panel and the recommendation options use `DesignPickerRow`, like the web `DesignSelector`: a caption, a bordered menu trigger showing the chosen name, and the resolved swatch or glass on the right. The preview is the selection, else the inherited value (`AddDrinkDraft.inheritedPaletteID(for:)`, `inheritedGlasswareID(for:)` for new entries and `AddDrinkStore.inheritedDesignIDs` for recommendations, which `makeRequest` also uses), and the glass is tinted with the resolved palette. The empty choice reads "Use inherited default", or "Choose a color palette" or "Choose glassware" when there is no parent value (it is then not selectable). When the design catalogue is empty the trigger is disabled and the row shows "Color palette choices are unavailable. Try again shortly." (or the Glassware equivalent), like web, and opening the Add sheet retries a failed catalogue load once. The glass is drawn by `GlassArtwork`, shared with the Quick plates. Captions and accessibility labels follow web ("Color palette", "Glassware"; in the recommendation options "Recommendation color palette", "Recommendation glassware"), and the chosen name is exposed as the accessibility value.
+
+## 2026-10-01 compiler and acceptance fixes
+
+[PR #241](https://github.com/alex-molnar/drinksaver/pull/241), merged as `e8e0475`, contains four fixes:
+
+- `AddDrinkStore.inheritedDesignIDs(draft:type:)` splits a nested tuple conditional into explicit
+  beer and non-beer branches with local palette and glass values, resolving the Swift compiler's
+  type-check timeout. Beer keeps flavour → brand → type palette inheritance and serving-type
+  glassware; other drinks keep subtype → type inheritance for each design ID.
+- `RecommendationTabView` restores keyboard focus when the store returns to `.ready` with an
+  active rename, even when `editingID` has not changed.
+- `DrinkSaverButtonStyle` raises the on-paper secondary border opacity from 55% to 58%.
+  `RecommendationRowStyleTests.testSecondaryPaperActionIsReadableInBothThemes` checks its 3:1
+  contrast threshold alongside the row controls.
+- `AppFrameUITests.testHeaderPlusAndBackAreTappableAtTheCornersOfTheirBox` waits up to five
+  seconds for the Add sheet before swiping it to full height, so presentation timing does not
+  race the gesture.
+
+The original PR records local workflow validation, an Xcode 27.0 build for testing on arm64 and
+x86_64, and passing focused simulator checks for the contrast and rename failures. Its earlier
+full local Acceptance run encountered simulator Keychain status `-34018`.
+The final [hosted iOS CI run](https://github.com/alex-molnar/drinksaver/actions/runs/36898694453)
+for PR head `6db57360a54c3840189ba5801fb56b2700dd7ae0` passed workflow/project validation,
+Acceptance tests, and the Release configuration check. This records the Acceptance gate;
+live-environment and visual-parity results are separate.
