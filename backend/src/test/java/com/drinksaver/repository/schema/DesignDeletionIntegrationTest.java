@@ -1,5 +1,6 @@
 package com.drinksaver.repository.schema;
 
+import com.drinksaver.model.db.BeerFlavour;
 import com.drinksaver.model.db.Brand;
 import com.drinksaver.model.db.ColorPalette;
 import com.drinksaver.model.db.ConsumptionType;
@@ -11,6 +12,7 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,7 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Import(DesignService.class)
@@ -43,6 +46,8 @@ class DesignDeletionIntegrationTest {
     @Autowired
     private BrandsTable brandsTable;
     @Autowired
+    private BeerFlavoursTable beerFlavoursTable;
+    @Autowired
     private ConsumptionTypesTable consumptionTypesTable;
     @Autowired
     private DesignService designService;
@@ -54,7 +59,11 @@ class DesignDeletionIntegrationTest {
         }
 
         ColorPalette palette = colorPalettesTable.save(new ColorPalette("Dusk", "#111", null, "#fff"));
-        brandsTable.save(new Brand(UUID.randomUUID(), "Test brand", palette.getId()));
+        Brand brand = brandsTable.save(new Brand(UUID.randomUUID(), "Test brand", palette.getId()));
+        beerFlavoursTable.save(new BeerFlavour(brand.getId(), brand.getUserId(), "Lager"));
+        assertThatThrownBy(() -> brandsTable.deleteById(brand.getId()))
+                .isInstanceOf(DataIntegrityViolationException.class);
+        assertThat(brandsTable.existsById(brand.getId())).isTrue();
         assertThat(designService.deleteColorPalette(palette.getId())).isEqualTo(409);
         assertThat(colorPalettesTable.existsById(palette.getId())).isTrue();
 
