@@ -71,7 +71,6 @@ enum SaveQueueReducer {
             return next
         case .deleteStarted(let entry):
             var next = state
-            next.entries.removeAll { if case .committed = $0.status { true } else { false } }
             next.entries.append(entry)
             next.entries = supersedeUndoables(in: next.entries, olderThan: entry.sequence, keeping: entry.id)
             return next
