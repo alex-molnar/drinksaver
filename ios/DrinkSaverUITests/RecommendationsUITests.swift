@@ -104,17 +104,38 @@ final class RecommendationsUITests: XCTestCase {
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "rename should focus its field")
     }
 
-    func testStartingRenameOnBottomRowRaisesKeyboard() {
-        let app = openRecommendations(referenceState: "recs-long")
+    func testStartingRenameOnBottomRowKeepsKeyboardFocused() {
+        let app = openRecommendations(referenceState: "recs-ready", reduceMotion: false)
         let rows = app.scrollViews["recommendations.rows"]
-        let rename = app.buttons["recommendations.rename-button.120"]
+        let rename = app.buttons["recommendations.rename-button.6"]
         for _ in 0..<10 where !rename.isHittable { rows.swipeUp() }
         XCTAssertTrue(rename.isHittable)
         rename.tap()
-        let field = app.textFields["recommendations.rename.120"]
+        let field = app.textFields["recommendations.rename.6"]
         XCTAssertTrue(field.waitForExistence(timeout: 3))
-        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "bottom-row rename should focus its field")
-        XCTAssertTrue(field.isHittable)
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5), "bottom-row rename should focus its field")
+        for _ in 0..<6 {
+            XCTAssertTrue(keyboard.exists, "keyboard must stay open while the bottom row is edited")
+            XCTAssertTrue(field.isHittable)
+            Thread.sleep(forTimeInterval: 0.25)
+        }
+        let initialValue = field.value as? String ?? ""
+        app.typeText("x")
+        XCTAssertEqual(field.value as? String, initialValue + "x", "the bottom-row field must remain the active keyboard target")
+    }
+
+    func testReturningToActiveRenameRestoresKeyboardFocus() {
+        let app = openRecommendations(reduceMotion: false)
+        app.buttons["recommendations.rename-button.9"].tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+
+        app.buttons["frame.tab.quick"].tap()
+        app.buttons["frame.menu"].tap()
+        app.buttons["Recommendations"].tap()
+
+        XCTAssertTrue(app.textFields["recommendations.rename.9"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "an active rename should regain focus when Recommendations is recreated")
     }
 
     func testCrossOffCanBeUndone() {
@@ -136,14 +157,14 @@ final class RecommendationsUITests: XCTestCase {
         XCTAssertTrue(retry.waitForExistence(timeout: 3))
     }
 
-    private func openRecommendations(fixture: String = "signed-in", referenceState: String? = nil) -> XCUIApplication {
+    private func openRecommendations(fixture: String = "signed-in", referenceState: String? = nil, reduceMotion: Bool = true) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
             "-ui-fixture", fixture,
             "-ui-fixed-now", "2026-01-02T18:04:05Z",
             "-ui-locale", "en-US",
             "-ui-content-size", "large",
-            "-ui-reduce-motion", "true"
+            "-ui-reduce-motion", reduceMotion ? "true" : "false"
         ]
         if let referenceState { app.launchArguments += ["-ui-reference-state", referenceState] }
         app.launch()

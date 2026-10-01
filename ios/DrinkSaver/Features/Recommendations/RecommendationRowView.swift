@@ -8,6 +8,7 @@ struct RecommendationRowView: View {
     let reduceMotion: Bool
     let isSaving: Bool
     @Binding var editValue: String
+    @FocusState.Binding var nameFocused: Bool
     let onEdit: () -> Void
     let onCommit: () -> Void
     let onCancel: () -> Void
@@ -19,7 +20,6 @@ struct RecommendationRowView: View {
     let onReorderDragEnd: () -> Void
 
     @Environment(ThemeStore.self) private var themeStore
-    @FocusState private var nameFocused: Bool
     @GestureState private var reorderGestureActive = false
 
     private func iconButton(_ symbol: String, action: @escaping () -> Void) -> some View {
@@ -122,8 +122,6 @@ struct RecommendationRowView: View {
         .accessibilityAction(named: Text("Move down"), onMoveDown)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: exiting)
         .shadow(color: isDragging ? .black.opacity(0.2) : .clear, radius: 8, y: 3)
-        .onAppear { if editing { nameFocused = true } }
-        .onChange(of: editing) { _, value in nameFocused = value }
         .disabled(isSaving)
     }
 }
