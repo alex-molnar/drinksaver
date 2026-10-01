@@ -3,7 +3,10 @@
     {
       "id": "E6492805-7E57-4434-92FA-9A9F8FB316A7",
       "name": "Acceptance",
-      "options": {}
+      "options": {
+        "preferredScreenCaptureFormat": "video",
+        "uiTestingScreenshotsLifetime": "keepAlways"
+      }
     }
   ],
   "defaultOptions": {
