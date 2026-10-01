@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -93,6 +94,23 @@ class AdminBeerControllerTest {
         mockMvc.perform(post("/v1/admin/user-defined/beer/brands/flavours/2/publish").with(admin()))
             .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Amber"));
         mockMvc.perform(post("/v1/admin/user-defined/beer/brands/flavours/9/publish").with(admin())).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deletesBrandsFlavoursAndConsumptionTypes() throws Exception {
+        when(beerRepository.deleteBrandById(1)).thenReturn(204);
+        when(beerRepository.deleteBrandById(9)).thenReturn(404);
+        when(beerRepository.deleteBeerFlavourById(2)).thenReturn(409);
+        when(beerRepository.deleteConsumptionTypeById(3)).thenReturn(204);
+
+        mockMvc.perform(delete("/v1/admin/beer/brands/1").with(admin())).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/v1/admin/beer/brands/9").with(admin())).andExpect(status().isNotFound());
+        mockMvc.perform(delete("/v1/admin/beer/brands/flavours/2").with(admin())).andExpect(status().isConflict());
+        mockMvc.perform(delete("/v1/admin/beer/consumption-types/3").with(admin())).andExpect(status().isNoContent());
+        verify(beerRepository).deleteBrandById(1);
+        verify(beerRepository).deleteBrandById(9);
+        verify(beerRepository).deleteBeerFlavourById(2);
+        verify(beerRepository).deleteConsumptionTypeById(3);
     }
 
     private static RequestPostProcessor admin() {

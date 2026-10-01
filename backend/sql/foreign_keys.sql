@@ -73,4 +73,18 @@ alter table saved_drinks
         foreign key (glassware_id) references glassware
             on delete restrict;
 
+---------------------------------------------------------------------
+
+--- Alcohol subtypes
+alter table alcohol_subtypes
+    add constraint alcohol_subtypes_alcohol_type_id_fk
+        foreign key (alcohol_type_id) references alcohol_types
+            on delete restrict;
+
+-- Beer flavours
+alter table beer_flavours
+    add constraint beer_flavours_alcohol_type_id_fk
+        foreign key (alcohol_type_id) references alcohol_types
+            on delete restrict;
+
 COMMIT;

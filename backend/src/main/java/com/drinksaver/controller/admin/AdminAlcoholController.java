@@ -32,4 +32,14 @@ public class AdminAlcoholController {
                 .map(response -> ResponseEntity.ok().body(response))
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @DeleteMapping("/types/{id}")
+    public ResponseEntity<Void> deleteAlcoholType(@PathVariable Integer id) {
+        return ResponseEntity.status(alcoholRepository.deleteAlcoholType(id)).build();
+    }
+
+    @DeleteMapping("/subtypes/{id}")
+    public ResponseEntity<Void> deleteAlcoholSubtypeType(@PathVariable Integer id) {
+        return ResponseEntity.status(alcoholRepository.deleteAlcoholSubType(id)).build();
+    }
 }

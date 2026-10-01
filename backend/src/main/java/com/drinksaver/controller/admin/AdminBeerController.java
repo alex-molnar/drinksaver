@@ -40,4 +40,19 @@ public class AdminBeerController {
             .map(response -> ResponseEntity.ok().body(response))
             .orElse(ResponseEntity.notFound().build());
     }
+
+    @DeleteMapping("/brands/{brandId}")
+    public ResponseEntity<Void> deleteBrand(@PathVariable Integer brandId) {
+        return ResponseEntity.status(beerRepository.deleteBrandById(brandId)).build();
+    }
+
+    @DeleteMapping("/brands/flavours/{beerFlavourId}")
+    public ResponseEntity<Void> deleteBeerFlavour(@PathVariable Integer beerFlavourId) {
+        return ResponseEntity.status(beerRepository.deleteBeerFlavourById(beerFlavourId)).build();
+    }
+
+    @DeleteMapping("/consumption-types/{consumptionTypeId}")
+    public ResponseEntity<Void> deleteConsumptionType(@PathVariable Integer consumptionTypeId) {
+        return ResponseEntity.status(beerRepository.deleteConsumptionTypeById(consumptionTypeId)).build();
+    }
 }
