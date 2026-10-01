@@ -1,5 +1,6 @@
 package com.drinksaver.model.db;
 
+import com.drinksaver.model.dto.patch.UpdateAlcoholType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,5 +34,26 @@ public class AlcoholType {
         this.volumeIds = volumeIds;
         this.colorPaletteId = colorPaletteId;
         this.glasswareId = glasswareId;
+    }
+
+    public AlcoholType withUpdates(UpdateAlcoholType updateAlcoholType) {
+        if (updateAlcoholType.name() != null) {
+            this.name = updateAlcoholType.name();
+        }
+        if (updateAlcoholType.volumeIds() != null) {
+            this.volumeIds = updateAlcoholType.volumeIds();
+        }
+        if (updateAlcoholType.colorPaletteId() != null) {
+            this.colorPaletteId = updateAlcoholType.colorPaletteId();
+        }
+        if (updateAlcoholType.glasswareId() != null) {
+            this.glasswareId = updateAlcoholType.glasswareId();
+        }
+        return this;
+    }
+
+    public AlcoholType withUserId(UUID userId) {
+        this.userId = userId;
+        return this;
     }
 }

@@ -27,7 +27,7 @@ public class AdminBeerDefaultController {
 
     @GetMapping("/brands/{brandId}/flavours")
     public List<BeerFlavour> getDefaultBeerFlavours(@PathVariable Integer brandId) {
-        return  beerRepository.getAdminBeerFlavours(brandId);
+        return  beerRepository.getAdminBeerFlavoursByBrandId(brandId);
     }
 
     @GetMapping("/consumption-types")

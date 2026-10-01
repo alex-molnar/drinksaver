@@ -4,6 +4,8 @@ import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.db.AlcoholSubtype;
 import com.drinksaver.model.db.AlcoholType;
 import com.drinksaver.model.db.AlcoholVolume;
+import com.drinksaver.model.dto.patch.UpdateAlcoholSubtype;
+import com.drinksaver.model.dto.patch.UpdateAlcoholType;
 import com.drinksaver.model.dto.post.NewAlcoholEntry;
 import com.drinksaver.model.dto.post.NewAlcoholSubtype;
 import com.drinksaver.model.dto.post.NewVolumeEntry;
@@ -12,6 +14,7 @@ import com.drinksaver.repository.schema.AlcoholTypesTable;
 import com.drinksaver.repository.schema.AlcoholVolumeTable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.xml.sax.ext.LexicalHandler;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +47,14 @@ public class AlcoholRepository {
         return alcoholTypesTable.findAllByUserIdNot(repositoryConfiguration.adminUserUUID());
     }
 
+    public Optional<AlcoholType> editAlcoholType(Integer alcoholTypeId, UpdateAlcoholType updateAlcoholType) {
+        return alcoholTypesTable.findById(alcoholTypeId).map(existing -> alcoholTypesTable.save(existing.withUpdates(updateAlcoholType)));
+    }
+
+    public Optional<AlcoholType> publishAlcoholType(Integer id) {
+        return alcoholTypesTable.findById(id).map(existing -> alcoholTypesTable.save(existing.withUserId(repositoryConfiguration.adminUserUUID())));
+    }
+
     public List<AlcoholSubtype> getSubtypesByAlcoholType(Integer alcoholTypeId, UUID userId) {
         return alcoholSubtypesTable.findAllByAlcoholTypeIdAndUserIdInOrderByNameAsc(alcoholTypeId, List.of(userId, repositoryConfiguration.adminUserUUID()));
     }
@@ -58,6 +69,14 @@ public class AlcoholRepository {
 
     public AlcoholSubtype saveSubtypeForAlcoholType(Integer alcoholTypeId, NewAlcoholSubtype newAlcoholSubtype) {
         return alcoholSubtypesTable.save(new AlcoholSubtype(alcoholTypeId, newAlcoholSubtype.userId(), newAlcoholSubtype.name(), newAlcoholSubtype.colorPaletteId(), newAlcoholSubtype.glasswareId()));
+    }
+
+    public Optional<AlcoholSubtype> editAlcoholSubtype(Integer alcoholSubtypeId, UpdateAlcoholSubtype updateAlcoholSubtype) {
+        return alcoholSubtypesTable.findById(alcoholSubtypeId).map(existing -> alcoholSubtypesTable.save(existing.withUpdate(updateAlcoholSubtype)));
+    }
+
+    public Optional<AlcoholSubtype> publishAlcoholSubtype(Integer id) {
+        return alcoholSubtypesTable.findById(id).map(existing -> alcoholSubtypesTable.save(existing.withUserId(repositoryConfiguration.adminUserUUID())));
     }
 
     public List<AlcoholVolume> getVolumesByAlcoholType(Integer alcoholTypeId) {

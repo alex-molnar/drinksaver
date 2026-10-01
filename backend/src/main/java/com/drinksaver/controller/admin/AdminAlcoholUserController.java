@@ -3,10 +3,8 @@ package com.drinksaver.controller.admin;
 import com.drinksaver.model.db.AlcoholSubtype;
 import com.drinksaver.model.db.AlcoholType;
 import com.drinksaver.repository.AlcoholRepository;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -29,5 +27,17 @@ public class AdminAlcoholUserController {
         return alcoholRepository.getUserDefinedSubtypesByAlcoholType(alcoholTypeId);
     }
 
-    //TODO Volumes + PATCH/POST
+    @PostMapping("/types/{alcoholTypeId}/publish")
+    public ResponseEntity<AlcoholType> publishAlcoholType(@PathVariable Integer alcoholTypeId) {
+        return alcoholRepository.publishAlcoholType(alcoholTypeId)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/types/subtypes/{alcoholSubTypeId}/publish")
+    public ResponseEntity<AlcoholSubtype> publishAlcoholSubtype(@PathVariable Integer alcoholSubTypeId) {
+        return alcoholRepository.publishAlcoholSubtype(alcoholSubTypeId)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+    }
 }

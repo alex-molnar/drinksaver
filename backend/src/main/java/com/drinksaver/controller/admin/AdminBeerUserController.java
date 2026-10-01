@@ -3,10 +3,8 @@ package com.drinksaver.controller.admin;
 import com.drinksaver.model.db.BeerFlavour;
 import com.drinksaver.model.db.Brand;
 import com.drinksaver.repository.BeerRepository;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -26,8 +24,20 @@ public class AdminBeerUserController {
 
     @GetMapping("/brands/{brandId}/flavours")
     public List<BeerFlavour> getUserDefinedBeerFlavours(@PathVariable Integer brandId) {
-        return  beerRepository.getUserDefinedBeerFlavours(brandId);
+        return  beerRepository.getUserDefinedBeerFlavoursByBrandId(brandId);
     }
 
-    // TODO PATCH/POST
+    @PostMapping("/brands/{brandId}/publish")
+    public ResponseEntity<Brand> publishBrand(@PathVariable Integer brandId) {
+        return beerRepository.publishBrand(brandId)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/brands/flavours/{beerFlavourId}/publish")
+    public ResponseEntity<BeerFlavour> publishBeerFlavour(@PathVariable Integer beerFlavourId) {
+        return beerRepository.publishBeerFlavour(beerFlavourId)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+    }
 }

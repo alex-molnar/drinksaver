@@ -4,6 +4,9 @@ import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.db.BeerFlavour;
 import com.drinksaver.model.db.Brand;
 import com.drinksaver.model.db.ConsumptionType;
+import com.drinksaver.model.dto.patch.UpdateBeerBrand;
+import com.drinksaver.model.dto.patch.UpdateBeerFlavour;
+import com.drinksaver.model.dto.patch.UpdateConsumptionType;
 import com.drinksaver.repository.schema.BeerFlavoursTable;
 import com.drinksaver.repository.schema.BrandsTable;
 import com.drinksaver.repository.schema.ConsumptionTypesTable;
@@ -12,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -46,8 +50,8 @@ public class BeerRepository {
         return brandsTable.findAllByUserIdNotOrderByNameAsc(repositoryConfiguration.adminUserUUID());
     }
 
-    public List<ConsumptionType> getConsumptionTypes(Integer maxAmount) {
-        return consumptionTypesTable.findAll(Pageable.ofSize(maxAmount)).toList();
+    public Optional<Brand> editBrand(Integer id, UpdateBeerBrand updateBeerBrand) {
+        return brandsTable.findById(id).map(existing -> brandsTable.save(existing.withUpdate(updateBeerBrand)));
     }
 
     public Brand saveBrand(UUID userId, String name, List<String> flavours, Integer colorPaletteId) {
@@ -63,19 +67,39 @@ public class BeerRepository {
         return result;
     }
 
+    public Optional<Brand> publishBrand(Integer id) {
+        return brandsTable.findById(id).map(existing -> brandsTable.save(existing.withUserId(repositoryConfiguration.adminUserUUID())));
+    }
+
     public List<BeerFlavour> getBeerFlavours(Integer brandId, UUID userId) {
         return beerFlavoursTable.findAllByBrandIdAndUserIdIn(brandId, List.of(userId, repositoryConfiguration.adminUserUUID()));
     }
 
-    public List<BeerFlavour> getAdminBeerFlavours(Integer brandId) {
+    public List<BeerFlavour> getAdminBeerFlavoursByBrandId(Integer brandId) {
         return beerFlavoursTable.findAllByBrandIdAndUserId(brandId, repositoryConfiguration.adminUserUUID());
     }
 
-    public List<BeerFlavour> getUserDefinedBeerFlavours(Integer brandId) {
+    public List<BeerFlavour> getUserDefinedBeerFlavoursByBrandId(Integer brandId) {
         return beerFlavoursTable.findAllByBrandIdAndUserIdNot(brandId, repositoryConfiguration.adminUserUUID());
+    }
+
+    public Optional<BeerFlavour> editBeerFlavour(Integer id, UpdateBeerFlavour updateBeerFlavour) {
+        return beerFlavoursTable.findById(id).map(existing -> beerFlavoursTable.save(existing.withUpdate(updateBeerFlavour)));
     }
 
     public BeerFlavour saveBeerFlavour(Integer brandId, UUID userId, String name, Integer colorPaletteId) {
         return beerFlavoursTable.save(new BeerFlavour(brandId, userId, name, colorPaletteId));
+    }
+
+    public Optional<BeerFlavour> publishBeerFlavour(Integer id) {
+        return beerFlavoursTable.findById(id).map(existing -> beerFlavoursTable.save(existing.withUserId(repositoryConfiguration.adminUserUUID())));
+    }
+
+    public List<ConsumptionType> getConsumptionTypes(Integer maxAmount) {
+        return consumptionTypesTable.findAll(Pageable.ofSize(maxAmount)).toList();
+    }
+
+    public Optional<ConsumptionType> editConsumptionType(Integer id, UpdateConsumptionType updateConsumptionType) {
+        return consumptionTypesTable.findById(id).map(existing -> consumptionTypesTable.save(existing.withUpdate(updateConsumptionType)));
     }
 }
