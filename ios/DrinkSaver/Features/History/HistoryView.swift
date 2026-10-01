@@ -110,6 +110,10 @@ struct HistoryView: View {
             }
             .foregroundStyle(theme.ink.onPaper.color)
             .padding(.horizontal, 20).padding(.top, 22).padding(.bottom, 12)
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(HistoryRowInk.headerRule(theme: theme).color)
+                    .frame(height: HistoryRowInk.headerRuleHeight)
+            }
 
             Group {
                 switch store.dayCount(store.selectedDate).state {
@@ -183,6 +187,12 @@ struct HistoryView: View {
 enum HistoryRowInk {
     static func checkbox(selected: Bool, theme: DrinkSaverTheme) -> ThemeColor {
         selected ? theme.ink.onPaper : ThemeColor(hex: theme.ink.onPaper.hex, opacity: 0.6)
+    }
+
+    /// Rule under the date header: web's 2px `ink-on-paper` at 35%.
+    static let headerRuleHeight: CGFloat = 2
+    static func headerRule(theme: DrinkSaverTheme) -> ThemeColor {
+        ThemeColor(hex: theme.ink.onPaper.hex, opacity: 0.35)
     }
 
     static func crossOff(theme: DrinkSaverTheme) -> ThemeColor {
