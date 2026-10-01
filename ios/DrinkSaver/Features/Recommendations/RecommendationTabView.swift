@@ -57,24 +57,28 @@ struct RecommendationTabView: View {
                                         ? $0.origin.minY + $0.translationY - (rowFrames[row.id]?.minY ?? $0.origin.minY)
                                         : 0
                                 } ?? 0
-                                RecommendationRowView(
-                                    row: row,
-                                    editing: store.draft.editingID == row.id,
-                                    exiting: store.queue.hiddenIDs.contains(row.id) && store.exitTokens[row.id] != nil,
-                                    isDragging: isDragging,
-                                    reduceMotion: reduceMotion,
-                                    isSaving: store.isSaving,
-                                    editValue: Binding(get: { store.draft.editingValue }, set: { store.updateRename($0) }),
-                                    onEdit: { store.beginRename(id: row.id) },
-                                    onCommit: { store.commitRename() },
-                                    onCancel: { store.cancelRename() },
-                                    onDelete: { store.delete(id: row.id, reduceMotion: reduceMotion) },
-                                    onMoveUp: { store.move(id: row.id, by: -1) },
-                                    onMoveDown: { store.move(id: row.id, by: 1) },
-                                    onReorderDragStart: { beginReorder(id: row.id) },
-                                    onReorderDragChange: { updateReorder(id: row.id, translationY: $0) },
-                                    onReorderDragEnd: { endReorder(id: row.id) }
-                                )
+                                ZStack {
+                                    RecommendationRowView(
+                                        row: row,
+                                        editing: store.draft.editingID == row.id,
+                                        exiting: store.queue.hiddenIDs.contains(row.id) && store.exitTokens[row.id] != nil,
+                                        isDragging: isDragging,
+                                        reduceMotion: reduceMotion,
+                                        isSaving: store.isSaving,
+                                        editValue: Binding(get: { store.draft.editingValue }, set: { store.updateRename($0) }),
+                                        onEdit: { store.beginRename(id: row.id) },
+                                        onCommit: { store.commitRename() },
+                                        onCancel: { store.cancelRename() },
+                                        onDelete: { store.delete(id: row.id, reduceMotion: reduceMotion) },
+                                        onMoveUp: { store.move(id: row.id, by: -1) },
+                                        onMoveDown: { store.move(id: row.id, by: 1) },
+                                        onReorderDragStart: { beginReorder(id: row.id) },
+                                        onReorderDragChange: { updateReorder(id: row.id, translationY: $0) },
+                                        onReorderDragEnd: { endReorder(id: row.id) }
+                                    )
+                                    .offset(y: dragOffset)
+                                }
+                                .zIndex(isDragging ? 1 : 0)
                                 .background {
                                     GeometryReader { geometry in
                                         Color.clear.preference(
@@ -83,9 +87,8 @@ struct RecommendationTabView: View {
                                         )
                                     }
                                 }
-                                .offset(y: dragOffset)
-                                .zIndex(isDragging ? 1 : 0)
                                 .accessibilityIdentifier("recommendations.row.\(row.id)")
+                                .onDisappear { if isDragging { endReorder(id: row.id) } }
                             }
                         }
                     }

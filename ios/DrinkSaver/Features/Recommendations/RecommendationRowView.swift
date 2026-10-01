@@ -20,6 +20,7 @@ struct RecommendationRowView: View {
 
     @Environment(ThemeStore.self) private var themeStore
     @FocusState private var nameFocused: Bool
+    @GestureState private var reorderGestureActive = false
 
     private func iconButton(_ symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
@@ -62,11 +63,11 @@ struct RecommendationRowView: View {
 
     private var reorderGesture: some Gesture {
         DragGesture(minimumDistance: 4, coordinateSpace: .global)
+            .updating($reorderGestureActive) { _, active, _ in active = true }
             .onChanged { value in
                 onReorderDragStart()
                 onReorderDragChange(value.translation.height)
             }
-        .onEnded { _ in onReorderDragEnd() }
     }
 
     var body: some View {
@@ -114,6 +115,9 @@ struct RecommendationRowView: View {
         .strikethrough(exiting)
         .opacity(exiting ? 0.35 : 1)
         .accessibilityElement(children: .contain)
+        .onChange(of: reorderGestureActive) { wasActive, isActive in
+            if wasActive && !isActive { onReorderDragEnd() }
+        }
         .accessibilityAction(named: Text("Move up"), onMoveUp)
         .accessibilityAction(named: Text("Move down"), onMoveDown)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: exiting)
