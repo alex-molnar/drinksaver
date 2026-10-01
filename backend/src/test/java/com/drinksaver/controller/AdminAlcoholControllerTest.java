@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -80,6 +81,20 @@ class AdminAlcoholControllerTest {
             .andExpect(status().isNotFound());
         verify(alcoholRepository).editAlcoholSubtype(4, update);
         verify(alcoholRepository).editAlcoholSubtype(9, update);
+    }
+
+    @Test
+    void deletesAlcoholTypesAndSubtypes() throws Exception {
+        when(alcoholRepository.deleteAlcoholType(3)).thenReturn(204);
+        when(alcoholRepository.deleteAlcoholType(9)).thenReturn(404);
+        when(alcoholRepository.deleteAlcoholSubType(4)).thenReturn(409);
+
+        mockMvc.perform(delete("/v1/admin/alcohol/types/3").with(admin())).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/v1/admin/alcohol/types/9").with(admin())).andExpect(status().isNotFound());
+        mockMvc.perform(delete("/v1/admin/alcohol/subtypes/4").with(admin())).andExpect(status().isConflict());
+        verify(alcoholRepository).deleteAlcoholType(3);
+        verify(alcoholRepository).deleteAlcoholType(9);
+        verify(alcoholRepository).deleteAlcoholSubType(4);
     }
 
     @Test

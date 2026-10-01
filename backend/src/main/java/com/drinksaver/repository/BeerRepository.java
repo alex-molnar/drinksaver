@@ -11,6 +11,7 @@ import com.drinksaver.repository.schema.BeerFlavoursTable;
 import com.drinksaver.repository.schema.BrandsTable;
 import com.drinksaver.repository.schema.ConsumptionTypesTable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -54,6 +55,19 @@ public class BeerRepository {
         return brandsTable.findById(id).map(existing -> brandsTable.save(existing.withUpdate(updateBeerBrand)));
     }
 
+    public int deleteBrandById(Integer id) {
+        if (brandsTable.existsById(id)) {
+            try {
+                brandsTable.deleteById(id);
+                return 204;
+            } catch (DataIntegrityViolationException e) {
+                return 409;
+            }
+        } else {
+            return 404;
+        }
+    }
+
     public Brand saveBrand(UUID userId, String name, List<String> flavours, Integer colorPaletteId) {
         Brand result = brandsTable.save(new Brand(userId, name, colorPaletteId));
         if(flavours != null && !flavours.isEmpty()) {
@@ -95,11 +109,37 @@ public class BeerRepository {
         return beerFlavoursTable.findById(id).map(existing -> beerFlavoursTable.save(existing.withUserId(repositoryConfiguration.adminUserUUID())));
     }
 
+    public int deleteBeerFlavourById(Integer id) {
+        if (beerFlavoursTable.existsById(id)) {
+            try {
+                beerFlavoursTable.deleteById(id);
+                return 204;
+            } catch (DataIntegrityViolationException e) {
+                return 409;
+            }
+        } else {
+            return 404;
+        }
+    }
+
     public List<ConsumptionType> getConsumptionTypes(Integer maxAmount) {
         return consumptionTypesTable.findAll(Pageable.ofSize(maxAmount)).toList();
     }
 
     public Optional<ConsumptionType> editConsumptionType(Integer id, UpdateConsumptionType updateConsumptionType) {
         return consumptionTypesTable.findById(id).map(existing -> consumptionTypesTable.save(existing.withUpdate(updateConsumptionType)));
+    }
+
+    public int deleteConsumptionTypeById(Integer id) {
+        if (consumptionTypesTable.existsById(id)) {
+            try {
+                consumptionTypesTable.deleteById(id);
+                return 204;
+            } catch (DataIntegrityViolationException e) {
+                return 409;
+            }
+        } else {
+            return 404;
+        }
     }
 }

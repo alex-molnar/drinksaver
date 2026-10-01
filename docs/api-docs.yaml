@@ -677,6 +677,27 @@ paths:
           description: caller is not in the /admin group
         "404":
           description: no alcohol type with that id
+    delete:
+      tags:
+      - admin-alcohol-controller
+      operationId: deleteAlcoholType
+      description: Admin only. Deletes the alcohol type.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "204":
+          description: Alcohol type deleted
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no alcohol type with that id
+        "409":
+          description: alcohol type is referenced by other records
   /v1/admin/alcohol/subtypes/{id}:
     patch:
       tags:
@@ -707,6 +728,27 @@ paths:
           description: caller is not in the /admin group
         "404":
           description: no alcohol subtype with that id
+    delete:
+      tags:
+      - admin-alcohol-controller
+      operationId: deleteAlcoholSubtypeType
+      description: Admin only. Deletes the alcohol subtype.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "204":
+          description: Alcohol subtype deleted
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no alcohol subtype with that id
+        "409":
+          description: alcohol subtype is referenced by other records
   /v1/admin/beer/brands/{brandId}:
     patch:
       tags:
@@ -737,6 +779,27 @@ paths:
           description: caller is not in the /admin group
         "404":
           description: no brand with that id
+    delete:
+      tags:
+      - admin-beer-controller
+      operationId: deleteBrand
+      description: Admin only. Deletes the brand.
+      parameters:
+      - name: brandId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "204":
+          description: Brand deleted
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no brand with that id
+        "409":
+          description: brand is referenced by other records
   /v1/admin/beer/brands/flavours/{beerFlavourId}:
     patch:
       tags:
@@ -767,6 +830,27 @@ paths:
           description: caller is not in the /admin group
         "404":
           description: no beer flavour with that id
+    delete:
+      tags:
+      - admin-beer-controller
+      operationId: deleteBeerFlavour
+      description: Admin only. Deletes the beer flavour.
+      parameters:
+      - name: beerFlavourId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "204":
+          description: Beer flavour deleted
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no beer flavour with that id
+        "409":
+          description: beer flavour is referenced by other records
   /v1/admin/beer/consumption-types/{consumptionTypeId}:
     patch:
       tags:
@@ -797,6 +881,27 @@ paths:
           description: caller is not in the /admin group
         "404":
           description: no consumption type with that id
+    delete:
+      tags:
+      - admin-beer-controller
+      operationId: deleteConsumptionType
+      description: Admin only. Deletes the consumption type.
+      parameters:
+      - name: consumptionTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "204":
+          description: Consumption type deleted
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no consumption type with that id
+        "409":
+          description: consumption type is referenced by other records
   /v1/admin/user-defined/alcohol/types/{alcoholTypeId}/publish:
     post:
       tags:

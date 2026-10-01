@@ -12,6 +12,7 @@ import com.drinksaver.model.dto.post.NewVolumeEntry;
 import com.drinksaver.repository.schema.AlcoholSubtypesTable;
 import com.drinksaver.repository.schema.AlcoholTypesTable;
 import com.drinksaver.repository.schema.AlcoholVolumeTable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.xml.sax.ext.LexicalHandler;
@@ -55,6 +56,19 @@ public class AlcoholRepository {
         return alcoholTypesTable.findById(id).map(existing -> alcoholTypesTable.save(existing.withUserId(repositoryConfiguration.adminUserUUID())));
     }
 
+    public int deleteAlcoholType(Integer id) {
+        if (alcoholTypesTable.existsById(id)) {
+            try {
+                alcoholTypesTable.deleteById(id);
+                return 204;
+            } catch (DataIntegrityViolationException e) {
+                return 409;
+            }
+        } else {
+            return 404;
+        }
+    }
+
     public List<AlcoholSubtype> getSubtypesByAlcoholType(Integer alcoholTypeId, UUID userId) {
         return alcoholSubtypesTable.findAllByAlcoholTypeIdAndUserIdInOrderByNameAsc(alcoholTypeId, List.of(userId, repositoryConfiguration.adminUserUUID()));
     }
@@ -77,6 +91,19 @@ public class AlcoholRepository {
 
     public Optional<AlcoholSubtype> publishAlcoholSubtype(Integer id) {
         return alcoholSubtypesTable.findById(id).map(existing -> alcoholSubtypesTable.save(existing.withUserId(repositoryConfiguration.adminUserUUID())));
+    }
+
+    public int deleteAlcoholSubType(Integer id) {
+        if (alcoholSubtypesTable.existsById(id)) {
+            try {
+                alcoholSubtypesTable.deleteById(id);
+                return 204;
+            } catch (DataIntegrityViolationException e) {
+                return 409;
+            }
+        } else {
+            return 404;
+        }
     }
 
     public List<AlcoholVolume> getVolumesByAlcoholType(Integer alcoholTypeId) {
