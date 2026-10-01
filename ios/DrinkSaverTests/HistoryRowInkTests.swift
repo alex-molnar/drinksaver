@@ -19,4 +19,13 @@ final class HistoryRowInkTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(contrastRatio(rule, theme.surface.paper), 1.5)
         }
     }
+
+    func testRecommendationHeaderRuleUsesPaperRelativeInk() {
+        for theme in [DrinkSaverTheme.dark, .light] {
+            XCTAssertGreaterThanOrEqual(
+                contrastRatio(HistoryRowInk.headerRule(theme: theme), theme.surface.paper),
+                1.5
+            )
+        }
+    }
 }

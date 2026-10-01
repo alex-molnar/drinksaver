@@ -17,6 +17,10 @@ struct RecommendationTabView: View {
             }
             .foregroundStyle(themeStore.theme.ink.onPaper.color)
             .padding(.horizontal, 20).padding(.top, 22).padding(.bottom, 12)
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(HistoryRowInk.headerRule(theme: themeStore.theme).color)
+                    .frame(height: HistoryRowInk.headerRuleHeight)
+            }
 
             Group {
                 switch store.state {
@@ -70,7 +74,7 @@ struct RecommendationTabView: View {
             if store.isDirty {
                 HStack(spacing: 12) {
                     Button("Cancel") { store.cancel() }
-                        .buttonStyle(.drinkSaver(.secondary)).disabled(store.isSaving).accessibilityIdentifier("recommendations.cancel")
+                        .buttonStyle(.drinkSaver(.secondary, onPaper: true)).disabled(store.isSaving).accessibilityIdentifier("recommendations.cancel")
                     Button("Save") { store.save() }
                         .buttonStyle(.drinkSaver()).disabled(store.isSaving).accessibilityIdentifier("recommendations.save")
                 }
