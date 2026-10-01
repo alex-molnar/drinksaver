@@ -21,6 +21,11 @@ public class ConsumptionType {
     private String name;
     private Integer glasswareId;
 
+    public ConsumptionType(String name, Integer glasswareId) {
+        this.name = name;
+        this.glasswareId = glasswareId;
+    }
+
     public ConsumptionType withUpdate(UpdateConsumptionType updateConsumptionType) {
         if (updateConsumptionType.name() != null) {
             this.name = updateConsumptionType.name();

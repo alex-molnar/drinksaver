@@ -85,6 +85,10 @@ public class AlcoholRepository {
         return alcoholSubtypesTable.save(new AlcoholSubtype(alcoholTypeId, newAlcoholSubtype.userId(), newAlcoholSubtype.name(), newAlcoholSubtype.colorPaletteId(), newAlcoholSubtype.glasswareId()));
     }
 
+    public AlcoholSubtype saveAdminSubtypeForAlcoholType(Integer alcoholTypeId, NewAlcoholSubtype newAlcoholSubtype) {
+        return saveSubtypeForAlcoholType(alcoholTypeId, newAlcoholSubtype.withUserId(repositoryConfiguration.adminUserUUID()));
+    }
+
     public Optional<AlcoholSubtype> editAlcoholSubtype(Integer alcoholSubtypeId, UpdateAlcoholSubtype updateAlcoholSubtype) {
         return alcoholSubtypesTable.findById(alcoholSubtypeId).map(existing -> alcoholSubtypesTable.save(existing.withUpdate(updateAlcoholSubtype)));
     }
@@ -159,5 +163,10 @@ public class AlcoholRepository {
             );
         }
         return result;
+    }
+
+    @Transactional
+    public AlcoholType createAdminAlcoholType(NewAlcoholEntry newAlcoholEntry) {
+        return createAlcoholType(newAlcoholEntry.withUserId(repositoryConfiguration.adminUserUUID()));
     }
 }
