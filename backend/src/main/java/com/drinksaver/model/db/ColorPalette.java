@@ -1,6 +1,6 @@
 package com.drinksaver.model.db;
 
-import com.drinksaver.model.dto.patch.UpdateColorPalette;
+import com.drinksaver.model.dto.UpdateColorPalette;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

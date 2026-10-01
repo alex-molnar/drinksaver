@@ -1,7 +1,7 @@
 package com.drinksaver.model.db;
 
-import com.drinksaver.model.dto.patch.UpdateColorPalette;
-import com.drinksaver.model.dto.patch.UpdateGlassware;
+import com.drinksaver.model.dto.UpdateColorPalette;
+import com.drinksaver.model.dto.UpdateGlassware;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
