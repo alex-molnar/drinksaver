@@ -16,7 +16,7 @@ GitHub Actions. Nothing is built or pushed from a laptop.
 ## Versioning
 
 `VERSION` at the repo root is the single source of truth. It currently reads
-`3.0.0`.
+`4.3.0`.
 
 One computed version string is applied to the Maven project version, the web
 `package.json`, the Docker image tag, and both the Helm chart `version` and
@@ -39,6 +39,61 @@ both applications at `VERSION` in a single run. Production deploys from those
 artifacts, so production is always internally consistent.
 
 To release a new version, edit `VERSION` and merge to `main`.
+
+The native iPhone app reads the same `VERSION` through `ios/scripts/xcodebuild.sh`;
+for example:
+
+```bash
+ios/scripts/xcodebuild.sh -project ios/DrinkSaver.xcodeproj -scheme DrinkSaver build
+```
+
+The wrapper accepts the repository SemVer (including prerelease suffixes) and
+uses only its `major.minor.patch` components for Apple's three-integer marketing
+version. Apple build numbers use `DRINKSAVER_BUILD_NUMBER` (default `1`) and may
+increment independently without changing `VERSION`. Select the
+`Local`, `Test`, or `Release` Xcode configuration to use its checked-in API and
+Keycloak issuer; only Local permits cleartext HTTP to `localhost`. Run
+`ios/scripts/xcodebuild.test.sh` to check the wrapper's version handling.
+
+## Native iOS CI
+
+Pull requests and branch pushes that change `ios/**`, `docs/api-docs.yaml`, `VERSION`, or this
+workflow run the deterministic iOS acceptance plan on a GitHub-hosted `macos-15` runner. CI selects
+Xcode 26.3 and creates an iPhone 17 simulator on iOS 26.2, matching the app's current iOS 26.0
+deployment target. The runner and simulator identifiers are pinned in `.github/workflows/ios.yml`
+and `ios/scripts/create-pinned-simulator.sh`; the script fails with a clear error if either runtime
+component is unavailable. Review the [runner image inventory](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md)
+before changing these pins.
+
+The acceptance plan runs the unit/API-contract tests and deterministic fixture-driven UI tests,
+including accessibility checks. It skips `LiveEnvironmentUITests`, which requires a real authorized
+Keycloak account, and `VisualCaptureUITests`, which captures a separate multi-viewport screenshot
+matrix and does not support the CI runner's iPhone 17 viewport. The strict `VisualParityTests`
+comparison remains available through `ios/scripts/compare-reference-images.sh`, with its own plan;
+it is not part of the CI acceptance gate while the committed matrix still has unresolved
+differences documented in the native parity review. The simulator test bundles use an ad-hoc
+signature so Keychain tests run without a developer certificate, provisioning profile, or paid
+Apple account. The Release build remains unsigned. CI also validates all Xcode configurations and
+inspects the Release app for UI-test fixtures. The `.xcresult` bundle and simulator screenshot are
+retained only for failed runs.
+
+Run the same plan locally after creating a simulator supported by your selected Xcode:
+
+```bash
+ios/scripts/xcodebuild.sh test \
+  -project ios/DrinkSaver.xcodeproj \
+  -scheme DrinkSaver \
+  -configuration Local \
+  -testPlan Acceptance \
+  -destination 'platform=iOS Simulator,id=<simulator-udid>' \
+  CODE_SIGNING_ALLOWED=YES \
+  CODE_SIGN_IDENTITY=-
+```
+
+The shared scheme also contains separate `LiveEnvironment`, `VisualCapture`, and `VisualParity`
+plans. The corresponding live-journey and reference-image scripts select these plans explicitly,
+so their `-only-testing` filters include the requested tests even while `DrinkSaver` remains the
+two-test smoke plan.
 
 ## Registry
 
@@ -209,6 +264,35 @@ needed on the host is Docker.
 `deploy/local/keycloak-realm.json` is imported on first start. It creates the `drinksaver`
 realm, the public `drinksaver-frontend` client, and one user with the fixed id
 `423c91e4-491f-4f82-aba6-3c982857e0e4`.
+
+The same import also creates the public `drinksaver-ios-local` client for the native app. It uses
+Authorization Code with S256 PKCE, permits only `im.kak.drinksaver:/oauth2redirect`, and has no
+client secret or password grant. Validate this checked-in client configuration with
+`python3 deploy/local/validate-ios-client.py`. `offline_access` is an optional client scope because
+the app requests it during sign-in.
+
+### Native live journey
+
+Run the live iOS journey against either configured environment:
+
+```bash
+# Local disposable stack
+docker compose up --build -d
+ios/scripts/run-live-tests.sh local
+
+# Test realm configured by IOS-023B
+ios/scripts/run-live-tests.sh test
+```
+
+The runner accepts only `local` or `test`, checks the matching API and Keycloak endpoints, and
+launches the matching Xcode configuration on an iPhone 16 simulator. Production is not accepted.
+Sign in through the selected environment's Keycloak browser session when the simulator is not
+already authenticated. Use the disposable local account for Local and an authorized test account
+for Test. The journey checks Recommendations, saves and undoes a Quick entry, creates a uniquely
+named recommendation from a detailed save, renames and deletes that recommendation, then deletes
+the test History row after checking Undo and reloads both screens to verify cleanup. It removes a
+simulator it creates; existing `DrinkSaver live local` and `DrinkSaver live test` simulators are
+reused.
 
 `deploy/local/seed.sql` loads demo data. It runs as its own one-shot service that waits for
 the backend to report healthy, because Hibernate creates the schema on startup

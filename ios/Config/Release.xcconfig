@@ -1,0 +1,6 @@
+#include "Base.xcconfig"
+APP_ENVIRONMENT = production
+API_BASE_URL = https:/$()/api.drinksaver.kak.im
+OIDC_ISSUER_URL = https:/$()/auth.drinksaver.kak.im/auth/realms/drinksaver
+OIDC_CLIENT_ID = drinksaver-ios
+OIDC_REDIRECT_URL = im.kak.drinksaver:/oauth2redirect

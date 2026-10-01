@@ -1,0 +1,1 @@
+{"alcoholType":{"name":"Cider","volumes":[{"name":"Bottle","volume":0.33}],"alcoholSubtypes":["Dry"],"colorPaletteId":2,"glasswareId":4},"subtype":{"alcoholTypeId":4,"name":"Lager","colorPaletteId":3,"glasswareId":1},"brand":{"name":"House brand","flavours":["Stout"],"colorPaletteId":2},"flavour":{"name":"Stout","colorPaletteId":2},"volume":{"name":"Bottle","volume":0.33}}

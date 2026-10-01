@@ -2,3 +2,10 @@
 .metals/
 .bloop/
 .idea/
+.vscode/
+
+# Xcode developer-local state
+ios/DerivedData/
+*.xcuserstate
+xcuserdata/
+*.DS_Store

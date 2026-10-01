@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>APP_ENVIRONMENT</key><string>test</string>
+<key>API_BASE_URL</key><string>https://test.api.drinksaver.kak.im</string>
+<key>OIDC_ISSUER_URL</key><string>https://auth.drinksaver.kak.im/auth/realms/test-drinksaver</string>
+<key>OIDC_CLIENT_ID</key><string>drinksaver-ios-test</string>
+<key>OIDC_REDIRECT_URL</key><string>im.kak.drinksaver:/oauth2redirect</string>
+</dict></plist>

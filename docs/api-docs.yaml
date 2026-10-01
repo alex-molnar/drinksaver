@@ -443,28 +443,28 @@ components:
         date:
           type: string
         alcoholTypeId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         alcoholSubtypeId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         alcoholVolumeId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         brandId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         beerFlavourId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         consumptionTypeId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         colorPaletteId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         glasswareId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         comments:
           type: string
@@ -487,12 +487,12 @@ components:
           type: integer
           format: int32
         userId:
-          type: string
+          type: [string, "null"]
           format: uuid
         name:
           type: string
         colorPaletteId:
-          type: integer
+          type: [integer, "null"]
           format: int32
     NewBeerFlavour:
       type: object
@@ -512,12 +512,12 @@ components:
           type: integer
           format: int32
         userId:
-          type: string
+          type: [string, "null"]
           format: uuid
         name:
           type: string
         colorPaletteId:
-          type: integer
+          type: [integer, "null"]
           format: int32
     NewAlcoholEntry:
       type: object
@@ -575,10 +575,10 @@ components:
             type: integer
             format: int32
         colorPaletteId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         glasswareId:
-          type: integer
+          type: [integer, "null"]
           format: int32
     AlcoholVolume:
       type: object
@@ -589,7 +589,7 @@ components:
         name:
           type: string
         volume:
-          type: number
+          type: [number, "null"]
           format: float
     NewAlcoholSubtype:
       type: object
@@ -622,56 +622,56 @@ components:
           type: integer
           format: int32
         userId:
-          type: string
+          type: [string, "null"]
           format: uuid
         name:
           type: string
         colorPaletteId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         glasswareId:
-          type: integer
+          type: [integer, "null"]
           format: int32
     Recommendation:
       type: object
       properties:
         id:
-          type: integer
+          type: [integer, "null"]
           format: int32
         userId:
-          type: string
+          type: [string, "null"]
           format: uuid
         name:
-          type: string
+          type: [string, "null"]
         alcoholTypeId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         alcoholSubtypeId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         alcoholVolumeId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         brandId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         beerFlavourId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         consumptionTypeId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         endDate:
           type: string
           format: date-time
         colorPaletteId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         glasswareId:
-          type: integer
+          type: [integer, "null"]
           format: int32
         orderNumber:
-          type: integer
+          type: [integer, "null"]
           format: int32
     RecommendationUpdate:
       type: object
@@ -690,7 +690,7 @@ components:
         name:
           type: string
         alcoholTypeId:
-          type: integer
+          type: [integer, "null"]
           format: int32
     ConsumptionType:
       type: object
@@ -701,7 +701,7 @@ components:
         name:
           type: string
         glasswareId:
-          type: integer
+          type: [integer, "null"]
           format: int32
     ColorPalette:
       type: object
@@ -714,7 +714,7 @@ components:
         field:
           type: string
         inkLight:
-          type: string
+          type: [string, "null"]
         inkDark:
           type: string
     Glassware:
@@ -730,4 +730,4 @@ components:
         l:
           type: string
         f:
-          type: string
+          type: [string, "null"]
