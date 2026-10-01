@@ -50,7 +50,8 @@ struct RecommendationTabView: View {
                         .accessibilityIdentifier("recommendations.empty")
                 case .ready:
                     ScrollView {
-                        LazyVStack(spacing: 0) {
+                        // Keep the editing field alive when keyboard avoidance shrinks the viewport.
+                        VStack(spacing: 0) {
                             ForEach(store.displayedRows) { row in
                                 let isDragging = activeReorder?.id == row.id
                                 let dragOffset = activeReorder.map {

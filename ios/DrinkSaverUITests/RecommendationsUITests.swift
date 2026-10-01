@@ -138,6 +138,45 @@ final class RecommendationsUITests: XCTestCase {
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "an active rename should regain focus when Recommendations is recreated")
     }
 
+    func testTappingLowerRecommendationNamesKeepsKeyboardUsable() {
+        let app = openRecommendations(referenceState: "recs-ready", reduceMotion: false)
+        let rows = app.scrollViews["recommendations.rows"]
+        for id in [4, 5, 6] {
+            let name = app.staticTexts["recommendations.row.name.\(id)"]
+            for _ in 0..<6 where !name.isHittable { rows.swipeUp() }
+            XCTAssertTrue(name.isHittable)
+            name.tap()
+            let field = app.textFields["recommendations.rename.\(id)"]
+            XCTAssertTrue(field.waitForExistence(timeout: 3))
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            let original = field.value as? String ?? ""
+            for _ in 0..<8 {
+                XCTAssertTrue(app.keyboards.firstMatch.exists)
+                Thread.sleep(forTimeInterval: 0.25)
+            }
+            app.typeText("x")
+            XCTAssertEqual(field.value as? String, original + "x")
+            app.buttons["recommendations.rename-cancel.\(id)"].tap()
+        }
+    }
+
+    func testScrolledLastRecommendationKeepsKeyboardUsable() {
+        let app = openRecommendations(referenceState: "recs-long", reduceMotion: false)
+        let rows = app.scrollViews["recommendations.rows"]
+        let rename = app.buttons["recommendations.rename-button.120"]
+        for _ in 0..<12 where !rename.isHittable { rows.swipeUp() }
+        XCTAssertTrue(rename.isHittable)
+        rename.tap()
+        let field = app.textFields["recommendations.rename.120"]
+        XCTAssertTrue(field.waitForExistence(timeout: 3))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        let original = field.value as? String ?? ""
+        Thread.sleep(forTimeInterval: 2)
+        XCTAssertTrue(app.keyboards.firstMatch.exists)
+        app.typeText("x")
+        XCTAssertEqual(field.value as? String, original + "x")
+    }
+
     func testCrossOffCanBeUndone() {
         let app = openRecommendations()
         let house = app.staticTexts["recommendations.row.name.9"]
