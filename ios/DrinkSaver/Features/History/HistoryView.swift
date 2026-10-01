@@ -162,7 +162,6 @@ struct HistoryView: View {
             )
             .frame(width: 22, height: 32).accessibilityHidden(true)
             Text(row.drink.name).font(theme.type.body.font).foregroundStyle(theme.ink.onPaper.color)
-                .opacity(row.exitingToken == nil ? 1 : 0.35)
                 .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true)
             Button { store.crossOff(ids: [row.id], reduceMotion: reduceMotion) } label: {
                 Image(systemName: "xmark").foregroundStyle(HistoryRowInk.crossOff(theme: theme).color).frame(width: 44, height: 44)
@@ -181,17 +180,19 @@ struct HistoryView: View {
                     .rotationEffect(.degrees(-1.2))
                     .opacity(row.exitingToken == nil ? 0 : 0.9)
                     .frame(maxHeight: .infinity, alignment: .center)
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: row.exitingToken)
                     .accessibilityHidden(true)
                     .accessibilityIdentifier("history.cross-off-strike.\(row.id)")
             }
             .allowsHitTesting(false)
         }
+        .opacity(row.exitingToken == nil ? 1 : 0)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.12).delay(0.2), value: row.exitingToken)
         .onTapGesture { store.toggleSelection(id: row.id) }
         .listRowBackground(Color.clear)
         .listRowSeparatorTint(theme.ink.onPaper.color.opacity(0.12))
         .accessibilityIdentifier("history.row.\(row.id)")
         .transition(.opacity.combined(with: .move(edge: .trailing)))
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: row.exitingToken)
     }
 
 }
