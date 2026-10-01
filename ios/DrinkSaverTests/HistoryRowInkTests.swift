@@ -28,4 +28,9 @@ final class HistoryRowInkTests: XCTestCase {
             )
         }
     }
+
+    func testCrossOffStrikeUsesTheThemeDangerColor() {
+        XCTAssertEqual(HistoryRowInk.crossOffStrike(theme: .dark), DrinkSaverTheme.dark.accent.danger)
+        XCTAssertEqual(HistoryRowInk.crossOffStrike(theme: .light), DrinkSaverTheme.light.accent.danger)
+    }
 }
