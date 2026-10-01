@@ -30,7 +30,7 @@ class DynamicPersonalRecommendationSourceTest {
     private DynamicPersonalRecommendationSource sourceWith(double decayFactor, SavedDrinksTable table) {
         RepositoryConfiguration configuration = new RepositoryConfiguration(
                 "postgres", "postgres", "postgres", "postgres", "postgres",
-                List.of(), 4, 10, decayFactor
+                UUID.randomUUID(), 4, 10, decayFactor
         );
         DrinkNameCollector drinkNames = mock(DrinkNameCollector.class);
         when(drinkNames.withName(any(DrinkKey.class)))

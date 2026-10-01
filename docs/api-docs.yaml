@@ -645,6 +645,435 @@ paths:
           description: no glassware with that id
         "409":
           description: glassware is referenced by existing data
+  /v1/admin/alcohol/types/{id}:
+    patch:
+      tags:
+      - admin-alcohol-controller
+      operationId: patchAlcoholType
+      description: Admin only. Applies the supplied non-null fields.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAlcoholType"
+      responses:
+        "200":
+          description: Updated alcohol type
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AlcoholType"
+        "400":
+          description: name exceeds 100 characters or volumeIds contains more than 50 entries
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no alcohol type with that id
+  /v1/admin/alcohol/subtypes/{id}:
+    patch:
+      tags:
+      - admin-alcohol-controller
+      operationId: patchAlcoholSubtypeType
+      description: Admin only. Applies the supplied non-null fields.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAlcoholSubtype"
+      responses:
+        "200":
+          description: Updated alcohol subtype
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AlcoholSubtype"
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no alcohol subtype with that id
+  /v1/admin/beer/brands/{brandId}:
+    patch:
+      tags:
+      - admin-beer-controller
+      operationId: updateBrand
+      description: Admin only. Applies the supplied non-null fields.
+      parameters:
+      - name: brandId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBeerBrand"
+      responses:
+        "200":
+          description: Updated brand
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Brand"
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no brand with that id
+  /v1/admin/beer/brands/flavours/{beerFlavourId}:
+    patch:
+      tags:
+      - admin-beer-controller
+      operationId: updateBeerFlavour
+      description: Admin only. Applies the supplied non-null fields.
+      parameters:
+      - name: beerFlavourId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBeerFlavour"
+      responses:
+        "200":
+          description: Updated beer flavour
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/BeerFlavour"
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no beer flavour with that id
+  /v1/admin/beer/consumption-types/{consumptionTypeId}:
+    patch:
+      tags:
+      - admin-beer-controller
+      operationId: updateConsumptionType
+      description: Admin only. Applies the supplied non-null fields.
+      parameters:
+      - name: consumptionTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateConsumptionType"
+      responses:
+        "200":
+          description: Updated consumption type
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ConsumptionType"
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no consumption type with that id
+  /v1/admin/user-defined/alcohol/types/{alcoholTypeId}/publish:
+    post:
+      tags:
+      - admin-alcohol-user-controller
+      operationId: publishAlcoholType
+      description: Admin only. Publishes a user-defined alcohol type as an admin default.
+      parameters:
+      - name: alcoholTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Published alcohol type
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AlcoholType"
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no alcohol type with that id
+  /v1/admin/user-defined/alcohol/types/subtypes/{alcoholSubTypeId}/publish:
+    post:
+      tags:
+      - admin-alcohol-user-controller
+      operationId: publishAlcoholSubtype
+      description: Admin only. Publishes a user-defined alcohol subtype as an admin default.
+      parameters:
+      - name: alcoholSubTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Published alcohol subtype
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AlcoholSubtype"
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no alcohol subtype with that id
+  /v1/admin/user-defined/beer/brands/{brandId}/publish:
+    post:
+      tags:
+      - admin-beer-user-controller
+      operationId: publishBrand
+      description: Admin only. Publishes a user-defined beer brand as an admin default.
+      parameters:
+      - name: brandId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Published beer brand
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Brand"
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no brand with that id
+  /v1/admin/user-defined/beer/brands/flavours/{beerFlavourId}/publish:
+    post:
+      tags:
+      - admin-beer-user-controller
+      operationId: publishBeerFlavour
+      description: Admin only. Publishes a user-defined beer flavour as an admin default.
+      parameters:
+      - name: beerFlavourId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Published beer flavour
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/BeerFlavour"
+        "403":
+          description: caller is not in the /admin group
+        "404":
+          description: no beer flavour with that id
+  /v1/admin/default/alcohol/types:
+    get:
+      tags:
+      - admin-alcohol-default-controller
+      operationId: getDefaultAlcoholTypes
+      description: Admin only. Lists default alcohol types.
+      responses:
+        "200":
+          description: Default alcohol types
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlcoholType"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/default/alcohol/types/{alcoholTypeId}/subtypes:
+    get:
+      tags:
+      - admin-alcohol-default-controller
+      operationId: getDefaultSubtypesByAlcoholType
+      description: Admin only. Lists default subtypes for an alcohol type.
+      parameters:
+      - name: alcoholTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Default alcohol subtypes
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlcoholSubtype"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/default/beer/brands:
+    get:
+      tags:
+      - admin-beer-default-controller
+      operationId: getDefaultBeerBrands
+      description: Admin only. Lists default beer brands.
+      responses:
+        "200":
+          description: Default beer brands
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Brand"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/default/beer/brands/{brandId}/flavours:
+    get:
+      tags:
+      - admin-beer-default-controller
+      operationId: getDefaultBeerFlavours
+      description: Admin only. Lists default flavours for a beer brand.
+      parameters:
+      - name: brandId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Default beer flavours
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BeerFlavour"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/default/beer/consumption-types:
+    get:
+      tags:
+      - admin-beer-default-controller
+      operationId: getDefaultBeerConsumptionTypes
+      description: Admin only. Lists default beer consumption types.
+      responses:
+        "200":
+          description: Default beer consumption types
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConsumptionType"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/user-defined/alcohol/types:
+    get:
+      tags:
+      - admin-alcohol-user-controller
+      operationId: getUserDefinedAlcoholTypes
+      description: Admin only. Lists user-defined alcohol types awaiting moderation.
+      responses:
+        "200":
+          description: User-defined alcohol types
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlcoholType"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/user-defined/alcohol/types/{alcoholTypeId}/subtypes:
+    get:
+      tags:
+      - admin-alcohol-user-controller
+      operationId: getUserDefinedSubtypesByAlcoholType
+      description: Admin only. Lists user-defined subtypes for an alcohol type.
+      parameters:
+      - name: alcoholTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: User-defined alcohol subtypes
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlcoholSubtype"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/user-defined/beer/brands:
+    get:
+      tags:
+      - admin-beer-user-controller
+      operationId: getUserDefinedBeerBrands
+      description: Admin only. Lists user-defined beer brands awaiting moderation.
+      responses:
+        "200":
+          description: User-defined beer brands
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Brand"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/user-defined/beer/brands/{brandId}/flavours:
+    get:
+      tags:
+      - admin-beer-user-controller
+      operationId: getUserDefinedBeerFlavours
+      description: Admin only. Lists user-defined flavours for a beer brand.
+      parameters:
+      - name: brandId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: User-defined beer flavours
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BeerFlavour"
+        "403":
+          description: caller is not in the /admin group
 components:
   schemas:
     Drink:
@@ -750,6 +1179,15 @@ components:
         colorPaletteId:
           type: integer
           format: int32
+    UpdateBeerBrand:
+      type: object
+      description: Omitted or null fields are left unchanged.
+      properties:
+        name:
+          type: [string, "null"]
+        colorPaletteId:
+          type: [integer, "null"]
+          format: int32
     Brand:
       type: object
       properties:
@@ -788,6 +1226,15 @@ components:
           type: string
         colorPaletteId:
           type: integer
+          format: int32
+    UpdateBeerFlavour:
+      type: object
+      description: Omitted or null fields are left unchanged.
+      properties:
+        name:
+          type: [string, "null"]
+        colorPaletteId:
+          type: [integer, "null"]
           format: int32
     NewAlcoholEntry:
       type: object
@@ -850,6 +1297,25 @@ components:
         glasswareId:
           type: integer
           format: int32
+    UpdateAlcoholType:
+      type: object
+      description: Omitted or null fields are left unchanged.
+      properties:
+        name:
+          type: [string, "null"]
+          maxLength: 100
+        volumeIds:
+          type: [array, "null"]
+          maxItems: 50
+          items:
+            type: integer
+            format: int32
+        colorPaletteId:
+          type: [integer, "null"]
+          format: int32
+        glasswareId:
+          type: [integer, "null"]
+          format: int32
     AlcoholVolume:
       type: object
       properties:
@@ -901,6 +1367,18 @@ components:
           format: int32
         glasswareId:
           type: integer
+          format: int32
+    UpdateAlcoholSubtype:
+      type: object
+      description: Omitted or null fields are left unchanged.
+      properties:
+        name:
+          type: [string, "null"]
+        colorPaletteId:
+          type: [integer, "null"]
+          format: int32
+        glasswareId:
+          type: [integer, "null"]
           format: int32
     Recommendation:
       type: object
@@ -972,6 +1450,15 @@ components:
           type: string
         glasswareId:
           type: integer
+          format: int32
+    UpdateConsumptionType:
+      type: object
+      description: Omitted or null fields are left unchanged.
+      properties:
+        name:
+          type: [string, "null"]
+        glasswareId:
+          type: [integer, "null"]
           format: int32
     ColorPalette:
       type: object

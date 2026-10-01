@@ -1,0 +1,33 @@
+package com.drinksaver.controller.admin;
+
+import com.drinksaver.model.db.AlcoholSubtype;
+import com.drinksaver.model.db.AlcoholType;
+import com.drinksaver.repository.AlcoholRepository;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/v1/admin/default/alcohol")
+public class AdminAlcoholDefaultController {
+    private final AlcoholRepository alcoholRepository;
+
+    public AdminAlcoholDefaultController(AlcoholRepository alcoholRepository) {
+        this.alcoholRepository = alcoholRepository;
+    }
+
+    @GetMapping("/types")
+    public List<AlcoholType> getDefaultAlcoholTypes() {
+        return alcoholRepository.getAdminAlcoholTypes();
+    }
+
+    @GetMapping("/types/{alcoholTypeId}/subtypes")
+    public List<AlcoholSubtype> getDefaultSubtypesByAlcoholType(@PathVariable Integer alcoholTypeId) {
+        return alcoholRepository.getAdminSubtypesByAlcoholType(alcoholTypeId);
+    }
+
+    //TODO Volumes + PATCH/POST
+}

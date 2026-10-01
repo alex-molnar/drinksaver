@@ -3,9 +3,10 @@ package com.drinksaver.controller;
 import com.drinksaver.config.SecurityConfig;
 import com.drinksaver.controller.admin.AdminRecommendationsController;
 import com.drinksaver.model.db.admin.DefaultRecommendation;
-import com.drinksaver.model.dto.NewDefaultRecommendation;
-import com.drinksaver.model.dto.RecommendationUpdate;
+import com.drinksaver.model.dto.post.NewDefaultRecommendation;
+import com.drinksaver.model.dto.patch.RecommendationUpdate;
 import com.drinksaver.repository.AdminRecommendationsRepository;
+import com.drinksaver.service.RecommendationCacheService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -54,6 +55,9 @@ class AdminRecommendationsControllerTest {
 
     @MockitoBean
     private AdminRecommendationsRepository adminRecommendationsRepository;
+
+    @MockitoBean
+    private RecommendationCacheService recommendationCacheService;
 
     @Test
     void deletingAnExistingRecommendationReturnsOk() throws Exception {

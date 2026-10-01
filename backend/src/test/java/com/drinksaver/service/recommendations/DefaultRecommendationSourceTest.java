@@ -1,6 +1,5 @@
 package com.drinksaver.service.recommendations;
 
-import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.model.db.admin.DefaultRecommendation;
 import com.drinksaver.repository.schema.admin.DefaultRecommendationsTable;
@@ -17,30 +16,15 @@ import static org.mockito.Mockito.when;
 class DefaultRecommendationSourceTest {
 
     private static final UUID USER = UUID.randomUUID();
-    private static final UUID ADMIN_ONE = UUID.fromString("00000000-0000-0000-0000-000000000001");
-
-    private DefaultRecommendationSource sourceWith(List<UUID> admins, List<DefaultRecommendation> defaults) {
+    private DefaultRecommendationSource sourceWith(List<DefaultRecommendation> defaults) {
         DefaultRecommendationsTable table = mock(DefaultRecommendationsTable.class);
         when(table.findAllByOrderByOrderNumberAsc()).thenReturn(defaults);
-        RepositoryConfiguration config = new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres", "postgres",
-                admins, 4, 10, 0.97
-        );
-        return new DefaultRecommendationSource(table, config);
+        return new DefaultRecommendationSource(table);
     }
 
     @Test
-    void emptyAdminListProducesNoDefaultRecommendations() {
-        List<Recommendation> result = sourceWith(List.of(), List.of(defaultRecommendation("Beer", 2)))
-                .buildRecommendation(USER, Stream.empty())
-                .toList();
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    void nullAdminListProducesNoDefaultRecommendations() {
-        List<Recommendation> result = sourceWith(null, List.of(defaultRecommendation("Beer", 2)))
+    void emptyDefaultTableProducesNoDefaultRecommendations() {
+        List<Recommendation> result = sourceWith(List.of())
                 .buildRecommendation(USER, Stream.empty())
                 .toList();
 
@@ -51,7 +35,7 @@ class DefaultRecommendationSourceTest {
     void appendsDefaultRecommendationsAfterProcessedRecommendations() {
         Recommendation processed = recommendation("Personal", 1);
 
-        List<Recommendation> result = sourceWith(List.of(ADMIN_ONE), List.of(defaultRecommendation("Beer", 2)))
+        List<Recommendation> result = sourceWith(List.of(defaultRecommendation("Beer", 2)))
                 .buildRecommendation(USER, Stream.of(processed))
                 .toList();
 
@@ -60,7 +44,7 @@ class DefaultRecommendationSourceTest {
 
     @Test
     void keepsTheAdminOrderOfTheDefaultTable() {
-        List<Recommendation> result = sourceWith(List.of(ADMIN_ONE), List.of(
+        List<Recommendation> result = sourceWith(List.of(
                         defaultRecommendation("First", 5), defaultRecommendation("Second", 2)))
                 .buildRecommendation(USER, Stream.empty())
                 .toList();
@@ -78,7 +62,7 @@ class DefaultRecommendationSourceTest {
         source.setColorPaletteId(10);
         source.setGlasswareId(11);
 
-        Recommendation result = sourceWith(List.of(ADMIN_ONE), List.of(source))
+        Recommendation result = sourceWith(List.of(source))
                 .buildRecommendation(USER, Stream.empty())
                 .findFirst()
                 .orElseThrow();
@@ -98,7 +82,7 @@ class DefaultRecommendationSourceTest {
     void doesNotDuplicateAnAlreadyProcessedDrink() {
         Recommendation processed = recommendation("Beer", 1);
 
-        List<Recommendation> result = sourceWith(List.of(ADMIN_ONE), List.of(defaultRecommendation("Same drink", 1)))
+        List<Recommendation> result = sourceWith(List.of(defaultRecommendation("Same drink", 1)))
                 .buildRecommendation(USER, Stream.of(processed))
                 .toList();
 

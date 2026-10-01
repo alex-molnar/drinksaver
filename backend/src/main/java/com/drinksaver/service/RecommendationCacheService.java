@@ -1,7 +1,7 @@
 package com.drinksaver.service;
 
 import com.drinksaver.config.CacheConfig;
-import com.drinksaver.model.dto.Drink;
+import com.drinksaver.model.dto.post.Drink;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ public class RecommendationCacheService {
         }
 
         if (drink.shouldAddToRecommendations()) {
-            invalidateRecommendations(drink.userId());
+            invalidateRecommendationsForUser(drink.userId());
             return;
         }
 
@@ -58,17 +58,24 @@ public class RecommendationCacheService {
         // whose CAS fails leaves its increment in place for the next crossing to pick up
         // rather than discarding it.
         if (updated >= INVALIDATE_AFTER_SAVES && counter.compareAndSet(updated, 0)) {
-            invalidateRecommendations(drink.userId());
+            invalidateRecommendationsForUser(drink.userId());
         }
     }
 
     /**
      * Manually invalidate recommendations cache for a user.
      */
-    public void invalidateRecommendations(UUID userId) {
+    public void invalidateRecommendationsForUser(UUID userId) {
         Cache recommendationsCache = cacheManager.getCache(CacheConfig.RECOMMENDATIONS_CACHE);
         if (recommendationsCache != null) {
             recommendationsCache.evict(userId);
+        }
+    }
+
+    public void invalidateRecommendations() {
+        Cache recommendationsCache = cacheManager.getCache(CacheConfig.RECOMMENDATIONS_CACHE);
+        if (recommendationsCache != null) {
+            recommendationsCache.clear();
         }
     }
 }

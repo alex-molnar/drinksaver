@@ -15,20 +15,13 @@ import java.util.stream.Stream;
 public class DefaultRecommendationSource implements RecommendationSource {
 
     private final DefaultRecommendationsTable defaultRecommendationsTable;
-    private final RepositoryConfiguration repositoryConfiguration;
 
-    public DefaultRecommendationSource(DefaultRecommendationsTable defaultRecommendationsTable, RepositoryConfiguration repositoryConfiguration) {
+    public DefaultRecommendationSource(DefaultRecommendationsTable defaultRecommendationsTable) {
         this.defaultRecommendationsTable = defaultRecommendationsTable;
-        this.repositoryConfiguration = repositoryConfiguration;
     }
 
     @Override
-    public Stream<Recommendation> buildRecommendation(UUID userId, Stream<Recommendation> processed) { // TODO get admin recommendation from default table
-        List<UUID> adminUserIds = repositoryConfiguration.adminUserList();
-        if (adminUserIds == null || adminUserIds.isEmpty()) {
-            return Stream.empty();
-        }
-
+    public Stream<Recommendation> buildRecommendation(UUID userId, Stream<Recommendation> processed) {
         return Stream.concat(processed, defaultRecommendationsTable.findAllByOrderByOrderNumberAsc().stream().map(DefaultRecommendation::toRecommendation)).distinct();
     }
 

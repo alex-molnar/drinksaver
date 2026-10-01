@@ -1,7 +1,7 @@
 package com.drinksaver.model.db.admin;
 
 import com.drinksaver.model.db.Recommendation;
-import com.drinksaver.model.dto.NewDefaultRecommendation;
+import com.drinksaver.model.dto.post.NewDefaultRecommendation;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

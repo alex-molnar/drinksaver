@@ -2,7 +2,7 @@ package com.drinksaver.service;
 
 import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.model.db.SavedDrink;
-import com.drinksaver.model.dto.Drink;
+import com.drinksaver.model.dto.post.Drink;
 import com.drinksaver.repository.schema.RecommendationsTable;
 import com.drinksaver.repository.schema.SavedDrinksTable;
 import com.drinksaver.service.namecollector.DrinkNameCollector;

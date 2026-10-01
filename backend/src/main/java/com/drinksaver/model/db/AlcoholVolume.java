@@ -1,6 +1,6 @@
 package com.drinksaver.model.db;
 
-import com.drinksaver.model.dto.NewVolumeEntry;
+import com.drinksaver.model.dto.post.NewVolumeEntry;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

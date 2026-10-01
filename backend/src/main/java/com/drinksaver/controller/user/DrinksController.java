@@ -2,8 +2,8 @@ package com.drinksaver.controller.user;
 
 import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.db.SavedDrink;
-import com.drinksaver.model.dto.Drink;
-import com.drinksaver.model.dto.EditableDrink;
+import com.drinksaver.model.dto.post.Drink;
+import com.drinksaver.model.dto.response.EditableDrink;
 import com.drinksaver.security.AuthenticatedUser;
 import com.drinksaver.service.DrinksService;
 import com.drinksaver.service.RecommendationCacheService;

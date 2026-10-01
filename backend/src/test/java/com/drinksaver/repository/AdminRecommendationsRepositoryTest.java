@@ -1,8 +1,8 @@
 package com.drinksaver.repository;
 
 import com.drinksaver.model.db.admin.DefaultRecommendation;
-import com.drinksaver.model.dto.NewDefaultRecommendation;
-import com.drinksaver.model.dto.RecommendationUpdate;
+import com.drinksaver.model.dto.post.NewDefaultRecommendation;
+import com.drinksaver.model.dto.patch.RecommendationUpdate;
 import com.drinksaver.repository.schema.admin.DefaultRecommendationsTable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

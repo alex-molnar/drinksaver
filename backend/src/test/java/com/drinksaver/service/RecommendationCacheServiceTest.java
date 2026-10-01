@@ -1,6 +1,6 @@
 package com.drinksaver.service;
 
-import com.drinksaver.model.dto.Drink;
+import com.drinksaver.model.dto.post.Drink;
 import org.junit.jupiter.api.Test;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -91,7 +91,7 @@ class RecommendationCacheServiceTest {
 
         RecommendationCacheService service = new RecommendationCacheService(cacheManager);
 
-        service.invalidateRecommendations(USER);
+        service.invalidateRecommendationsForUser(USER);
 
         verify(cacheManager).getCache(RECOMMENDATIONS_CACHE);
     }
@@ -104,7 +104,7 @@ class RecommendationCacheServiceTest {
 
         RecommendationCacheService service = new RecommendationCacheService(cacheManager);
 
-        service.invalidateRecommendations(USER);
+        service.invalidateRecommendationsForUser(USER);
 
         verify(recCache).evict(USER);
     }

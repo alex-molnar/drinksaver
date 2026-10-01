@@ -1,4 +1,4 @@
-package com.drinksaver.model.dto;
+package com.drinksaver.model.dto.post;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;

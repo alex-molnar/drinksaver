@@ -3,6 +3,7 @@ package com.drinksaver.controller;
 import com.drinksaver.config.SecurityConfig;
 import com.drinksaver.controller.admin.AdminRecommendationsController;
 import com.drinksaver.repository.AdminRecommendationsRepository;
+import com.drinksaver.service.RecommendationCacheService;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,9 @@ class AdminAuthorizationTest {
 
     @MockitoBean
     private AdminRecommendationsRepository adminRecommendationsRepository;
+
+    @MockitoBean
+    private RecommendationCacheService recommendationCacheService;
 
     @ParameterizedTest
     @CsvSource({

@@ -4,9 +4,11 @@ import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.db.AlcoholSubtype;
 import com.drinksaver.model.db.AlcoholType;
 import com.drinksaver.model.db.AlcoholVolume;
-import com.drinksaver.model.dto.NewAlcoholEntry;
-import com.drinksaver.model.dto.NewAlcoholSubtype;
-import com.drinksaver.model.dto.NewVolumeEntry;
+import com.drinksaver.model.dto.patch.UpdateAlcoholSubtype;
+import com.drinksaver.model.dto.patch.UpdateAlcoholType;
+import com.drinksaver.model.dto.post.NewAlcoholEntry;
+import com.drinksaver.model.dto.post.NewAlcoholSubtype;
+import com.drinksaver.model.dto.post.NewVolumeEntry;
 import com.drinksaver.repository.AlcoholRepository;
 import com.drinksaver.repository.schema.AlcoholSubtypesTable;
 import com.drinksaver.repository.schema.AlcoholTypesTable;
@@ -30,13 +32,10 @@ class AlcoholRepositoryTest {
 
     private static final UUID USER = UUID.randomUUID();
     private static final UUID ADMIN = UUID.fromString("00000000-0000-0000-0000-000000000001");
-
-    private RepositoryConfiguration configWithAdmins(List<UUID> admins) {
-        return new RepositoryConfiguration(
-                "postgres", "postgres", "postgres", "postgres", "postgres",
-                admins, 4, 10, 0.97
-        );
-    }
+    private static final RepositoryConfiguration CONFIG = new RepositoryConfiguration(
+            "postgres", "postgres", "postgres", "postgres", "postgres",
+            ADMIN, 4, 10, 0.97
+    );
 
     @Test
     void getAlcoholTypesIncludesAdminAndCallerIds() {
@@ -47,7 +46,7 @@ class AlcoholRepositoryTest {
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 mock(AlcoholVolumeTable.class),
-                configWithAdmins(List.of(ADMIN))
+                CONFIG
         );
 
         repo.getAlcoholTypes(USER);
@@ -55,7 +54,7 @@ class AlcoholRepositoryTest {
         ArgumentCaptor<List<UUID>> captor = ArgumentCaptor.forClass(List.class);
         verify(typesTable).findAllByUserIdInOrderByNameAsc(captor.capture());
 
-        assertThat(captor.getValue()).containsExactly(ADMIN, USER);
+        assertThat(captor.getValue()).containsExactlyInAnyOrder(ADMIN, USER);
     }
 
     @Test
@@ -68,7 +67,7 @@ class AlcoholRepositoryTest {
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 mock(AlcoholVolumeTable.class),
-                configWithAdmins(List.of(ADMIN))
+                CONFIG
         );
 
         List<AlcoholType> result = repo.getAlcoholTypes(USER);
@@ -85,7 +84,7 @@ class AlcoholRepositoryTest {
                 mock(AlcoholTypesTable.class),
                 subtypesTable,
                 mock(AlcoholVolumeTable.class),
-                configWithAdmins(List.of(ADMIN))
+                CONFIG
         );
 
         repo.getSubtypesByAlcoholType(1, USER);
@@ -93,7 +92,7 @@ class AlcoholRepositoryTest {
         ArgumentCaptor<List<UUID>> captor = ArgumentCaptor.forClass(List.class);
         verify(subtypesTable).findAllByAlcoholTypeIdAndUserIdInOrderByNameAsc(anyInt(), captor.capture());
 
-        assertThat(captor.getValue()).containsExactly(ADMIN, USER);
+        assertThat(captor.getValue()).containsExactlyInAnyOrder(ADMIN, USER);
     }
 
     @Test
@@ -106,7 +105,7 @@ class AlcoholRepositoryTest {
                 mock(AlcoholTypesTable.class),
                 subtypesTable,
                 mock(AlcoholVolumeTable.class),
-                configWithAdmins(List.of())
+                CONFIG
         );
 
         AlcoholSubtype result = repo.saveSubtypeForAlcoholType(1, new NewAlcoholSubtype(1, USER, "Pale Ale", null, null));
@@ -128,7 +127,7 @@ class AlcoholRepositoryTest {
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 mock(AlcoholVolumeTable.class),
-                configWithAdmins(List.of())
+                CONFIG
         );
 
         List<AlcoholVolume> result = repo.getVolumesByAlcoholType(1);
@@ -150,7 +149,7 @@ class AlcoholRepositoryTest {
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 volumeTable,
-                configWithAdmins(List.of())
+                CONFIG
         );
 
         List<AlcoholVolume> result = repo.getVolumesByAlcoholType(1);
@@ -174,7 +173,7 @@ class AlcoholRepositoryTest {
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 volumeTable,
-                configWithAdmins(List.of())
+                CONFIG
         );
 
         Optional<AlcoholVolume> result = repo.saveVolumeForAlcoholType(99, new NewVolumeEntry("Shot", 0.05f));
@@ -198,7 +197,7 @@ class AlcoholRepositoryTest {
                 typesTable,
                 mock(AlcoholSubtypesTable.class),
                 volumeTable,
-                configWithAdmins(List.of())
+                CONFIG
         );
 
         Optional<AlcoholVolume> result = repo.saveVolumeForAlcoholType(1, new NewVolumeEntry("Shot", 0.05f));
@@ -222,12 +221,49 @@ class AlcoholRepositoryTest {
                 typesTable,
                 subtypesTable,
                 volumeTable,
-                configWithAdmins(List.of())
+                CONFIG
         );
 
         AlcoholType result = repo.createAlcoholType(new NewAlcoholEntry(USER, "Gin", null, null, null, null));
 
         assertThat(result).isEqualTo(saved);
         verifyNoInteractions(volumeTable, subtypesTable);
+    }
+
+    @Test
+    void editsAndPublishesAlcoholTypes() {
+        AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
+        AlcoholType existing = new AlcoholType(USER, "Old", List.of(1), 2, 3);
+        when(typesTable.findById(1)).thenReturn(Optional.of(existing));
+        when(typesTable.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        AlcoholRepository repo = new AlcoholRepository(typesTable, mock(AlcoholSubtypesTable.class), mock(AlcoholVolumeTable.class), CONFIG);
+
+        Optional<AlcoholType> edited = repo.editAlcoholType(1, new UpdateAlcoholType("New", List.of(4), 5, 6));
+        assertThat(edited).contains(existing);
+        assertThat(existing.getName()).isEqualTo("New");
+        assertThat(existing.getVolumeIds()).containsExactly(4);
+        assertThat(existing.getColorPaletteId()).isEqualTo(5);
+        assertThat(existing.getGlasswareId()).isEqualTo(6);
+
+        assertThat(repo.publishAlcoholType(1)).contains(existing);
+        assertThat(existing.getUserId()).isEqualTo(ADMIN);
+    }
+
+    @Test
+    void editsAndPublishesAlcoholSubtypes() {
+        AlcoholSubtypesTable subtypesTable = mock(AlcoholSubtypesTable.class);
+        AlcoholSubtype existing = new AlcoholSubtype(1, USER, "Old", 2, 3);
+        when(subtypesTable.findById(1)).thenReturn(Optional.of(existing));
+        when(subtypesTable.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        AlcoholRepository repo = new AlcoholRepository(mock(AlcoholTypesTable.class), subtypesTable, mock(AlcoholVolumeTable.class), CONFIG);
+
+        Optional<AlcoholSubtype> edited = repo.editAlcoholSubtype(1, new UpdateAlcoholSubtype("New", 5, 6));
+        assertThat(edited).contains(existing);
+        assertThat(existing.getName()).isEqualTo("New");
+        assertThat(existing.getColorPaletteId()).isEqualTo(5);
+        assertThat(existing.getGlasswareId()).isEqualTo(6);
+
+        assertThat(repo.publishAlcoholSubtype(1)).contains(existing);
+        assertThat(existing.getUserId()).isEqualTo(ADMIN);
     }
 }

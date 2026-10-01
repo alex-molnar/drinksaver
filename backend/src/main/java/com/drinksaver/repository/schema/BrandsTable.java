@@ -11,4 +11,6 @@ import java.util.UUID;
 @Repository
 public interface BrandsTable extends JpaRepository<Brand, Integer> {
     List<Brand> findAllByUserIdInOrderByName(Collection<UUID> userIds);
+    List<Brand> findAllByUserIdOrderByNameAsc(UUID userId);
+    List<Brand> findAllByUserIdNotOrderByNameAsc(UUID userId);
 }

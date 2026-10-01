@@ -163,7 +163,7 @@ A table of the current defaults with drag reordering, using `@dnd-kit` exactly a
 does, inline name editing, and delete. Creation opens a dialog composing the full
 recommendation: alcohol type, optional subtype, volume, optional brand, optional flavour,
 optional consumption type, and a required palette and glassware. The selects are
-populated from the admin catalogue endpoints and cascade, so choosing an alcohol type
+populated from the default admin catalogue endpoints and cascade, so choosing an alcohol type
 narrows the subtype and volume options.
 
 Reordering is optimistic, since latency is felt directly in a drag.
@@ -173,9 +173,9 @@ Reordering is optimistic, since latency is felt directly in a drag.
 The section where user-defined values are reviewed and published.
 
 Tabs for alcohol types, alcohol subtypes, volumes, brands, beer flavours and consumption
-types. Each tab is a table of every row across all users, with columns for name, owner,
-design assignment and shared state. The default filter is "user-defined only", because
-reviewing what users have created is the job; showing everything is the exception.
+types. Each tab selects either user-defined or default entries, with columns for name,
+owner, design assignment and shared state. User-defined is selected first because reviewing
+what users have created is the job. Consumption types have only a default collection.
 
 This is the one screen with no natural ceiling, since it holds every row every user has ever
 created, so it carries a name filter and shows how many rows the filters are hiding. The
@@ -191,9 +191,11 @@ unpublish coherent and gives the table an audit trail at no extra cost.
 
 ## 5. Backend contract
 
-The backend is being restructured so that authorization is fully Keycloak-backed and
-reference data is no longer keyed on an administrator's user id. The admin panel is written
-against the post-restructure contract described here.
+The backend is being restructured so that authorization is fully Keycloak-backed. Default
+reference data is owned by the configured admin UUID; user-defined data is owned by any
+other UUID. Publication changes `shared` without changing `userId`, so a published user
+entry remains in the user-defined collection. The admin panel is written against the
+post-restructure contract described here.
 
 Every path below is rejected with 403 for a caller outside the `admin` group.
 
@@ -229,18 +231,37 @@ app only ever creates a recommendation as a side effect of saving a drink
 
 ### Types
 
-Every existing type GET, prefixed with `admin`, plus a PATCH per entity. Admin GETs return
-rows for all users, each carrying its owner and its shared state. Without that the catalogue
-section has nothing to review, since the consumer GETs are scoped to the caller.
+Each collection has separate default and user-defined GET and PATCH paths. The prefix
+`/v1/admin` is followed by the source, then the resource path below. GET responses carry
+`userId` and `shared`; the two sources never return the same row. Consumption types are
+default-only and return `userId: null`, `shared: true` in the admin response.
+For example, alcohol types use `GET /v1/admin/default/alcohol/types` and
+`GET /v1/admin/user-defined/alcohol/types`.
 
-| Method | Path |
-| --- | --- |
-| GET, PATCH | `/v1/admin/alcohol/types`, `/v1/admin/alcohol/types/{id}` |
-| GET, PATCH | `/v1/admin/alcohol/types/{id}/subtypes`, `/v1/admin/alcohol/subtypes/{id}` |
-| GET, PATCH | `/v1/admin/alcohol/types/{id}/volumes`, `/v1/admin/alcohol/volumes/{id}` |
-| GET, PATCH | `/v1/admin/beer/brands`, `/v1/admin/beer/brands/{id}` |
-| GET, PATCH | `/v1/admin/beer/brands/{id}/flavours`, `/v1/admin/beer/flavours/{id}` |
-| GET, PATCH | `/v1/admin/beer/consumption-types`, `/v1/admin/beer/consumption-types/{id}` |
+| Resource | Default GET / PATCH | User-defined GET / PATCH |
+| --- | --- | --- |
+| Alcohol types | `/default/alcohol/types` · `/default/alcohol/types/{id}` | `/user-defined/alcohol/types` · `/user-defined/alcohol/types/{id}` |
+| Alcohol subtypes | `/default/alcohol/types/{id}/subtypes` · `/default/alcohol/subtypes/{id}` | `/user-defined/alcohol/types/{id}/subtypes` · `/user-defined/alcohol/subtypes/{id}` |
+| Alcohol volumes | `/default/alcohol/types/{id}/volumes` · `/default/alcohol/volumes/{id}` | `/user-defined/alcohol/types/{id}/volumes` · `/user-defined/alcohol/volumes/{id}` |
+| Beer brands | `/default/beer/brands` · `/default/beer/brands/{id}` | `/user-defined/beer/brands` · `/user-defined/beer/brands/{id}` |
+| Beer flavours | `/default/beer/brands/{id}/flavours` · `/default/beer/flavours/{id}` | `/user-defined/beer/brands/{id}/flavours` · `/user-defined/beer/flavours/{id}` |
+| Consumption types | `/default/beer/consumption-types` · `/default/beer/consumption-types/{id}` | None; this table has no owner |
+
+Subtypes and flavours are classified by their own `userId`, not by the parent: a user can
+add a subtype to a default alcohol type or a flavour to a default brand. A nested GET
+filters children by source and parent id, and returns 404 only when the parent does not
+exist. PATCH returns 404 when the target is not in the requested source, rather than
+updating a row through the wrong endpoint. The backend must preserve the original author
+and store publication separately before these paths can be implemented.
+
+Volumes also need their own owner. Add `userId` to `alcohol_volumes`; new volume creation
+sets it from the authenticated principal, never from the request body or parent type.
+Backfill existing volumes only where their owner can be established. A volume attached to
+both default and user-defined types, or otherwise lacking reliable provenance, needs
+explicit reconciliation before the split is enabled. GET filters volumes by their own
+owner and parent type id, so a user-added volume on a default type stays user-defined.
+Test both source lists and PATCH paths with a default parent containing user-owned children;
+test that a wrong-source PATCH returns 404 and a non-admin request returns 403.
 
 ### Publishing
 
@@ -248,12 +269,13 @@ Publication is a dedicated action rather than a field on the entity, so the clie
 constructs ownership or sharing state itself:
 
 ```
-POST /v1/admin/<entity path>/{id}/publish
-POST /v1/admin/<entity path>/{id}/unpublish
+POST /v1/admin/user-defined/<entity path>/{id}/publish
+POST /v1/admin/user-defined/<entity path>/{id}/unpublish
 ```
 
-The list GET returns the resulting state on each row so the table can render it. The client
-sends no user id anywhere, in keeping with the rule the consumer app already follows: the
+Only user-defined rows can be published or unpublished. The list GET returns the resulting
+state on each row so the table can render it. The client sends no user id anywhere, in
+keeping with the rule the consumer app already follows: the
 server derives identity from the JWT.
 
 ### Usage counts
@@ -266,7 +288,9 @@ a complete count, and the 409 remains the authority.
 ## 6. Data layer
 
 `admin/src/api/admin.ts` holds one function per endpoint, no generic resource abstraction.
-TanStack Query with keys shaped `['admin', <resource>]` and `['admin', <resource>, id]`.
+TanStack Query keeps default and user-defined catalogue lists under distinct keys shaped
+`['admin', 'catalogue', source, kind, parentId]`; design and recommendation keys remain
+`['admin', resource]`.
 
 Mutations invalidate their own list. Optimistic updates are used only for reordering
 recommendations and for publishing, the two places where the delay is felt as lag rather

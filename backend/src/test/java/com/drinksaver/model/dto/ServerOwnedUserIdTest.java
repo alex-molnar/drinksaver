@@ -1,5 +1,9 @@
 package com.drinksaver.model.dto;
 
+import com.drinksaver.model.dto.post.Drink;
+import com.drinksaver.model.dto.post.NewAlcoholEntry;
+import com.drinksaver.model.dto.post.NewAlcoholSubtype;
+import com.drinksaver.model.dto.post.NewBeerFlavour;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
