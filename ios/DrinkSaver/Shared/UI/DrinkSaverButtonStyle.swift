@@ -55,7 +55,7 @@ struct DrinkSaverButtonStyle: ButtonStyle {
 
     static func secondaryBorder(theme: DrinkSaverTheme, onPaper: Bool, enabled: Bool = true) -> ThemeColor {
         let ink = onPaper ? theme.ink.onPaper : theme.ink.secondary
-        return ThemeColor(hex: enabled ? ink.hex : theme.line.hairline.hex, opacity: onPaper ? 0.55 : 1)
+        return ThemeColor(hex: enabled ? ink.hex : theme.line.hairline.hex, opacity: onPaper ? 0.58 : 1)
     }
 
     static func foreground(_ theme: DrinkSaverTheme, kind: Kind, onPaper: Bool, enabled: Bool = true) -> ThemeColor {

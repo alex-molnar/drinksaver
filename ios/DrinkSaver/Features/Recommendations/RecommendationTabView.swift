@@ -118,6 +118,11 @@ struct RecommendationTabView: View {
         .onChange(of: store.draft.editingID, initial: true) { _, editingID in
             recommendationNameFocused = editingID != nil
         }
+        .onChange(of: store.state) { _, state in
+            if state == .ready, store.draft.editingID != nil {
+                recommendationNameFocused = true
+            }
+        }
         .sensoryFeedback(.selection, trigger: reorderHapticToken)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("recommendations.screen")
