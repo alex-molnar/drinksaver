@@ -78,6 +78,21 @@ class AlcoholRepositoryTransactionIntegrationTest {
     private RepositoryConfiguration repositoryConfiguration;
 
     @Test
+    void createAdminAlcoholTypeRollsBackVolumesAndTypeWhenSubtypesFail() {
+        UUID admin = UUID.fromString("00000000-0000-0000-0000-000000000044");
+        when(repositoryConfiguration.adminUserUUID()).thenReturn(admin);
+        when(alcoholSubtypesTable.saveAll(any())).thenThrow(new IllegalStateException("subtype write failed"));
+        long volumesBefore = alcoholVolumeTable.count();
+        NewAlcoholEntry entry = new NewAlcoholEntry(ROLLING_BACK_USER, "Rum",
+            List.of(new NewVolumeEntry("Shot", 0.05f)), List.of("Spiced"), null, null);
+
+        assertThatRuntimeException().isThrownBy(() -> repository.createAdminAlcoholType(entry));
+
+        assertThat(alcoholTypesTable.findAllByUserIdInOrderByNameAsc(List.of(admin))).isEmpty();
+        assertThat(alcoholVolumeTable.count()).isEqualTo(volumesBefore);
+    }
+
+    @Test
     void createAlcoholTypeCommitsTheTypeAndItsVolumesTogether() {
         NewAlcoholEntry entry = new NewAlcoholEntry(
             COMMITTING_USER, "Gin", List.of(new NewVolumeEntry("Shot", 0.05f)), List.of("London Dry"), null, null

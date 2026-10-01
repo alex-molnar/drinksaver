@@ -30,6 +30,54 @@ import static org.mockito.Mockito.when;
 
 class AlcoholRepositoryTest {
 
+    @Test
+    void createsDefaultAlcoholTypeAndNestedSubtypesWithConfiguredAdminOwnership() {
+        AlcoholTypesTable types = mock(AlcoholTypesTable.class);
+        AlcoholSubtypesTable subtypes = mock(AlcoholSubtypesTable.class);
+        AlcoholVolumeTable volumes = mock(AlcoholVolumeTable.class);
+        when(types.save(any())).thenAnswer(invocation -> {
+            AlcoholType type = invocation.getArgument(0);
+            type.setId(7);
+            return type;
+        });
+        AlcoholVolume volume = new AlcoholVolume(8, "Glass", 0.15f);
+        when(volumes.save(any())).thenReturn(volume);
+        AlcoholRepository repository = new AlcoholRepository(types, subtypes, volumes, CONFIG);
+
+        AlcoholType result = repository.createAdminAlcoholType(new NewAlcoholEntry(
+            USER, "Wine", List.of(new NewVolumeEntry("Glass", 0.15f)), List.of("Dry"), 2, 3));
+
+        assertThat(result.getUserId()).isEqualTo(ADMIN);
+        assertThat(result.getName()).isEqualTo("Wine");
+        assertThat(result.getVolumeIds()).containsExactly(8);
+        assertThat(result.getColorPaletteId()).isEqualTo(2);
+        assertThat(result.getGlasswareId()).isEqualTo(3);
+        ArgumentCaptor<Iterable<AlcoholSubtype>> captor = ArgumentCaptor.captor();
+        verify(subtypes).saveAll(captor.capture());
+        assertThat(captor.getValue()).singleElement().satisfies(subtype -> {
+            assertThat(subtype.getAlcoholTypeId()).isEqualTo(7);
+            assertThat(subtype.getUserId()).isEqualTo(ADMIN);
+            assertThat(subtype.getName()).isEqualTo("Dry");
+        });
+    }
+
+    @Test
+    void createsDefaultSubtypeWithConfiguredAdminOwnershipAndPathParent() {
+        AlcoholSubtypesTable subtypes = mock(AlcoholSubtypesTable.class);
+        when(subtypes.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        AlcoholRepository repository = new AlcoholRepository(mock(AlcoholTypesTable.class), subtypes,
+            mock(AlcoholVolumeTable.class), CONFIG);
+
+        AlcoholSubtype result = repository.saveAdminSubtypeForAlcoholType(7,
+            new NewAlcoholSubtype(99, USER, "Dry", 2, 3));
+
+        assertThat(result.getAlcoholTypeId()).isEqualTo(7);
+        assertThat(result.getUserId()).isEqualTo(ADMIN);
+        assertThat(result.getName()).isEqualTo("Dry");
+        assertThat(result.getColorPaletteId()).isEqualTo(2);
+        assertThat(result.getGlasswareId()).isEqualTo(3);
+    }
+
     private static final UUID USER = UUID.randomUUID();
     private static final UUID ADMIN = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final RepositoryConfiguration CONFIG = new RepositoryConfiguration(

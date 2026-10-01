@@ -7,6 +7,7 @@ import com.drinksaver.model.db.ConsumptionType;
 import com.drinksaver.model.dto.patch.UpdateBeerBrand;
 import com.drinksaver.model.dto.patch.UpdateBeerFlavour;
 import com.drinksaver.model.dto.patch.UpdateConsumptionType;
+import com.drinksaver.model.dto.post.NewConsumptionType;
 import com.drinksaver.repository.BeerRepository;
 import com.drinksaver.repository.schema.BeerFlavoursTable;
 import com.drinksaver.repository.schema.BrandsTable;
@@ -29,6 +30,59 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class BeerRepositoryTest {
+
+    @Test
+    void createsDefaultBrandAndNestedFlavoursWithConfiguredAdminOwnership() {
+        BrandsTable brands = mock(BrandsTable.class);
+        BeerFlavoursTable flavours = mock(BeerFlavoursTable.class);
+        when(brands.save(any())).thenAnswer(invocation -> {
+            Brand brand = invocation.getArgument(0);
+            brand.setId(7);
+            return brand;
+        });
+        BeerRepository repository = new BeerRepository(brands, mock(ConsumptionTypesTable.class), flavours, CONFIG);
+
+        Brand result = repository.saveAdminBrand("BrewCo", List.of("Amber", "Lager"), 2);
+
+        assertThat(result.getUserId()).isEqualTo(ADMIN);
+        assertThat(result.getName()).isEqualTo("BrewCo");
+        assertThat(result.getColorPaletteId()).isEqualTo(2);
+        ArgumentCaptor<Iterable<BeerFlavour>> captor = ArgumentCaptor.captor();
+        verify(flavours).saveAll(captor.capture());
+        assertThat(captor.getValue()).extracting(BeerFlavour::getName).containsExactly("Amber", "Lager");
+        assertThat(captor.getValue()).allSatisfy(flavour -> {
+            assertThat(flavour.getBrandId()).isEqualTo(7);
+            assertThat(flavour.getUserId()).isEqualTo(ADMIN);
+        });
+    }
+
+    @Test
+    void createsDefaultFlavourWithConfiguredAdminOwnershipAndPalette() {
+        BeerFlavoursTable flavours = mock(BeerFlavoursTable.class);
+        when(flavours.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        BeerRepository repository = new BeerRepository(mock(BrandsTable.class), mock(ConsumptionTypesTable.class), flavours, CONFIG);
+
+        BeerFlavour result = repository.saveAdminBeerFlavour(7, "Amber", 2);
+
+        assertThat(result.getBrandId()).isEqualTo(7);
+        assertThat(result.getUserId()).isEqualTo(ADMIN);
+        assertThat(result.getName()).isEqualTo("Amber");
+        assertThat(result.getColorPaletteId()).isEqualTo(2);
+    }
+
+    @Test
+    void createsConsumptionTypeWithNameAndGlassware() {
+        ConsumptionTypesTable types = mock(ConsumptionTypesTable.class);
+        when(types.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        BeerRepository repository = new BeerRepository(mock(BrandsTable.class), types, mock(BeerFlavoursTable.class), CONFIG);
+
+        ConsumptionType result = repository.saveAdminConsumptionType(
+            new NewConsumptionType("Bottle", 3));
+
+        assertThat(result.getName()).isEqualTo("Bottle");
+        assertThat(result.getGlasswareId()).isEqualTo(3);
+        verify(types).save(result);
+    }
 
     private static final UUID ADMIN = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID USER = UUID.fromString("00000000-0000-0000-0000-000000000002");
