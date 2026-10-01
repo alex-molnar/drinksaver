@@ -122,6 +122,7 @@ struct RecommendationRowView: View {
         .accessibilityAction(named: Text("Move down"), onMoveDown)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: exiting)
         .shadow(color: isDragging ? .black.opacity(0.2) : .clear, radius: 8, y: 3)
+        .onAppear { if editing { nameFocused = true } }
         .onChange(of: editing) { _, value in nameFocused = value }
         .disabled(isSaving)
     }

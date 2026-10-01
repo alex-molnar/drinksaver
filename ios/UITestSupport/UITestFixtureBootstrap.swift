@@ -77,17 +77,30 @@ private actor FixtureAPI: DrinkSaverAPI {
         self.fails = fails
         self.saveFails = saveFails
         self.referenceState = referenceState
-        recommendationRows = referenceState == nil ? [
-            Recommendation(id: nil, userId: "ui-fixture-user", name: "Golden lager", alcoholTypeId: 4,
-                           alcoholSubtypeId: nil, alcoholVolumeId: 6, brandId: nil, beerFlavourId: nil,
-                           consumptionTypeId: nil, endDate: nil, colorPaletteId: 101, glasswareId: 201, orderNumber: 0),
-            Recommendation(id: 9, userId: "ui-fixture-user", name: "House pilsner", alcoholTypeId: 3,
-                           alcoholSubtypeId: nil, alcoholVolumeId: 5, brandId: 7, beerFlavourId: nil,
-                           consumptionTypeId: nil, endDate: nil, colorPaletteId: 101, glasswareId: 201, orderNumber: 1),
-            Recommendation(id: 10, userId: "ui-fixture-user", name: "Amber ale", alcoholTypeId: 4,
-                           alcoholSubtypeId: nil, alcoholVolumeId: 6, brandId: nil, beerFlavourId: nil,
-                           consumptionTypeId: nil, endDate: nil, colorPaletteId: 101, glasswareId: 201, orderNumber: 2)
-        ] : referenceState == "recs-empty" ? [] : Self.referenceRecommendations
+        if referenceState == nil {
+            recommendationRows = [
+                Recommendation(id: nil, userId: "ui-fixture-user", name: "Golden lager", alcoholTypeId: 4,
+                               alcoholSubtypeId: nil, alcoholVolumeId: 6, brandId: nil, beerFlavourId: nil,
+                               consumptionTypeId: nil, endDate: nil, colorPaletteId: 101, glasswareId: 201, orderNumber: 0),
+                Recommendation(id: 9, userId: "ui-fixture-user", name: "House pilsner", alcoholTypeId: 3,
+                               alcoholSubtypeId: nil, alcoholVolumeId: 5, brandId: 7, beerFlavourId: nil,
+                               consumptionTypeId: nil, endDate: nil, colorPaletteId: 101, glasswareId: 201, orderNumber: 1),
+                Recommendation(id: 10, userId: "ui-fixture-user", name: "Amber ale", alcoholTypeId: 4,
+                               alcoholSubtypeId: nil, alcoholVolumeId: 6, brandId: nil, beerFlavourId: nil,
+                               consumptionTypeId: nil, endDate: nil, colorPaletteId: 101, glasswareId: 201, orderNumber: 2)
+            ]
+        } else if referenceState == "recs-empty" {
+            recommendationRows = []
+        } else if referenceState == "recs-long" {
+            recommendationRows = (1...20).map { index in
+                Recommendation(id: 100 + index, userId: "ui-fixture-user", name: "Fixture recommendation \(index)",
+                               alcoholTypeId: 4, alcoholSubtypeId: nil, alcoholVolumeId: 6, brandId: nil,
+                               beerFlavourId: nil, consumptionTypeId: nil, endDate: nil, colorPaletteId: 101,
+                               glasswareId: 201, orderNumber: index - 1)
+            }
+        } else {
+            recommendationRows = Self.referenceRecommendations
+        }
     }
 
     func palettes() async throws -> [Palette] {

@@ -104,6 +104,19 @@ final class RecommendationsUITests: XCTestCase {
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "rename should focus its field")
     }
 
+    func testStartingRenameOnBottomRowRaisesKeyboard() {
+        let app = openRecommendations(referenceState: "recs-long")
+        let rows = app.scrollViews["recommendations.rows"]
+        let rename = app.buttons["recommendations.rename-button.120"]
+        for _ in 0..<10 where !rename.isHittable { rows.swipeUp() }
+        XCTAssertTrue(rename.isHittable)
+        rename.tap()
+        let field = app.textFields["recommendations.rename.120"]
+        XCTAssertTrue(field.waitForExistence(timeout: 3))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "bottom-row rename should focus its field")
+        XCTAssertTrue(field.isHittable)
+    }
+
     func testCrossOffCanBeUndone() {
         let app = openRecommendations()
         let house = app.staticTexts["recommendations.row.name.9"]
@@ -123,7 +136,7 @@ final class RecommendationsUITests: XCTestCase {
         XCTAssertTrue(retry.waitForExistence(timeout: 3))
     }
 
-    private func openRecommendations(fixture: String = "signed-in") -> XCUIApplication {
+    private func openRecommendations(fixture: String = "signed-in", referenceState: String? = nil) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
             "-ui-fixture", fixture,
@@ -132,6 +145,7 @@ final class RecommendationsUITests: XCTestCase {
             "-ui-content-size", "large",
             "-ui-reduce-motion", "true"
         ]
+        if let referenceState { app.launchArguments += ["-ui-reference-state", referenceState] }
         app.launch()
         app.buttons["frame.menu"].tap()
         app.buttons["Recommendations"].tap()
