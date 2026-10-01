@@ -7,6 +7,8 @@ struct DrinkSaverFieldModifier: ViewModifier {
     /// The field's single focus binding. Pass the owner's `FocusState` to drive focus from outside,
     /// otherwise the modifier keeps its own. Never both: two bindings on one field fight each other.
     var external: FocusState<Bool>.Binding?
+    /// Field sits on the paper surface (light even in dark mode): use the on-paper ink and a fill tuned to it.
+    var onPaper = false
     @Environment(ThemeStore.self) private var themeStore
     @Environment(\.isEnabled) private var isEnabled
     @FocusState private var ownFocus: Bool
@@ -14,23 +16,47 @@ struct DrinkSaverFieldModifier: ViewModifier {
     func body(content: Content) -> some View {
         let theme = themeStore.theme
         let binding = external ?? $ownFocus
+        let ink = onPaper ? theme.ink.onPaper : theme.ink.primary
         content
             .font(theme.type.body.font)
-            .foregroundStyle(isEnabled ? theme.ink.primary.color : theme.ink.tertiary.color)
+            .foregroundStyle(isEnabled ? ink.color : DrinkSaverFieldTone.disabledInk(theme: theme, onPaper: onPaper).color)
             .tint(theme.accent.primary.color)
             .focused(binding)
             .padding(.horizontal, theme.space.md)
             .frame(minHeight: 52)
-            .background(theme.surface.recess.color, in: RoundedRectangle(cornerRadius: theme.radius.sm))
+            .background(DrinkSaverFieldTone.fill(theme: theme, onPaper: onPaper).color, in: RoundedRectangle(cornerRadius: theme.radius.sm))
             .overlay {
                 RoundedRectangle(cornerRadius: theme.radius.sm)
-                    .stroke(binding.wrappedValue ? theme.accent.primary.color : theme.ink.primary.color.opacity(0.52), lineWidth: 1.4)
+                    .stroke(binding.wrappedValue ? theme.accent.primary.color : ink.color.opacity(0.52), lineWidth: 1.4)
             }
     }
 }
 
+/// Field colours. On the paper surface (light even in dark mode) the fill, placeholder and disabled
+/// ink are derived from the on-paper ink, since the ground-relative tokens (cream in dark mode) would
+/// be near invisible on it.
+enum DrinkSaverFieldTone {
+    /// Light keeps the recess tone. On paper in dark mode, where recess is near black against the light
+    /// paper, a faint tint of the paper ink (about 9%) sits close to its surroundings.
+    static func fill(theme: DrinkSaverTheme, onPaper: Bool) -> ThemeColor {
+        guard onPaper, theme.mode == .dark else { return theme.surface.recess }
+        func mix(_ shift: UInt32) -> UInt32 {
+            let p = Double((theme.surface.paper.hex >> shift) & 0xFF), i = Double((theme.ink.onPaper.hex >> shift) & 0xFF)
+            return UInt32((p * 0.91 + i * 0.09).rounded())
+        }
+        return ThemeColor(hex: mix(16) << 16 | mix(8) << 8 | mix(0))
+    }
+
+    /// Placeholder text colour for a field on the paper.
+    static func paperPlaceholder(theme: DrinkSaverTheme) -> ThemeColor { ThemeColor(hex: theme.ink.onPaper.hex, opacity: 0.8) }
+
+    static func disabledInk(theme: DrinkSaverTheme, onPaper: Bool) -> ThemeColor {
+        onPaper ? paperPlaceholder(theme: theme) : theme.ink.tertiary
+    }
+}
+
 extension View {
-    func drinkSaverField(focus: FocusState<Bool>.Binding? = nil) -> some View { modifier(DrinkSaverFieldModifier(external: focus)) }
+    func drinkSaverField(focus: FocusState<Bool>.Binding? = nil, onPaper: Bool = false) -> some View { modifier(DrinkSaverFieldModifier(external: focus, onPaper: onPaper)) }
 }
 
 /// Square -/+ stepper control like the web quantity stepper: ink glyph, 52 pt box, 1.4 pt border, 5% ink

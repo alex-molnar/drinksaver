@@ -28,27 +28,48 @@ struct RecommendationRowView: View {
         .buttonStyle(.plain)
     }
 
+    private func actionButton(_ symbol: String, label: String, id: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(themeStore.theme.type.body.font.weight(.semibold))
+                .foregroundStyle(RecommendationRowStyle.editAction(theme: themeStore.theme).color)
+                .frame(minWidth: RecommendationRowStyle.hitSize, minHeight: RecommendationRowStyle.hitSize)
+                .contentShape(Rectangle())
+                .opacity(isSaving ? 0.4 : 1)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .accessibilityIdentifier(id)
+    }
+
+    /// Web's six dot grip: two columns by three rows.
+    private var grip: some View {
+        VStack(spacing: 4) {
+            ForEach(0..<3, id: \.self) { _ in
+                HStack(spacing: 3) { Circle().frame(width: 3.5, height: 3.5); Circle().frame(width: 3.5, height: 3.5) }
+            }
+        }
+        .foregroundStyle(RecommendationRowStyle.grip(theme: themeStore.theme).color)
+        .frame(width: 20, height: RecommendationRowStyle.hitSize)
+        // Decorative: drag is not reachable by VoiceOver, the row's Move up/Move down actions cover it.
+        .accessibilityHidden(true)
+    }
+
     var body: some View {
         HStack(spacing: 10) {
             if editing {
-                TextField("Recommendation name", text: $editValue)
-                    .drinkSaverField(focus: $nameFocused)
+                // Dimmed while editing, like web, so the field does not jump left.
+                grip.opacity(0.4)
+                TextField("Recommendation name", text: $editValue,
+                          prompt: Text("Recommendation name").foregroundStyle(DrinkSaverFieldTone.paperPlaceholder(theme: themeStore.theme).color))
+                    .drinkSaverField(focus: $nameFocused, onPaper: true)
                     .submitLabel(.done)
                     .onSubmit(onCommit)
                     .accessibilityIdentifier("recommendations.rename.\(row.id)")
-                Button("Done", action: onCommit).buttonStyle(.drinkSaver(.text, fillsWidth: false, onPaper: true)).accessibilityLabel("Save name")
-                Button("Cancel", action: onCancel).buttonStyle(.drinkSaver(.text, fillsWidth: false, onPaper: true)).accessibilityLabel("Cancel name")
+                actionButton(RecommendationRowStyle.commitSymbol, label: "Save name", id: "recommendations.rename-done.\(row.id)", action: onCommit)
+                actionButton(RecommendationRowStyle.cancelSymbol, label: "Cancel name", id: "recommendations.rename-cancel.\(row.id)", action: onCancel)
             } else {
-                // Web's six dot grip: two columns by three rows.
-                VStack(spacing: 4) {
-                    ForEach(0..<3, id: \.self) { _ in
-                        HStack(spacing: 3) { Circle().frame(width: 3.5, height: 3.5); Circle().frame(width: 3.5, height: 3.5) }
-                    }
-                }
-                    .foregroundStyle(RecommendationRowStyle.grip(theme: themeStore.theme).color)
-                    .frame(width: 20, height: RecommendationRowStyle.hitSize)
-                    // Decorative: drag is not reachable by VoiceOver, the row's Move up/Move down actions cover it.
-                    .accessibilityHidden(true)
+                grip
                 Text(row.name).font(themeStore.theme.type.body.font)
                     .foregroundStyle(themeStore.theme.ink.onPaper.color)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -97,4 +118,12 @@ enum RecommendationRowStyle {
     }
 
     static func grip(theme: DrinkSaverTheme) -> ThemeColor { icon(theme: theme) }
+}
+
+extension RecommendationRowStyle {
+    static let commitSymbol = "checkmark"
+    static let cancelSymbol = "xmark"
+
+    /// Check and x glyphs: full paper ink, not the 60% row icon tone, so they clear 4.5:1.
+    static func editAction(theme: DrinkSaverTheme) -> ThemeColor { theme.ink.onPaper }
 }

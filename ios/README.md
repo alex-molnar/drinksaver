@@ -75,6 +75,13 @@ a 44pt minimum hit area that grows with Dynamic Type. Icons use the paper ink at
 (`RecommendationRowStyle`), not the default blue tint, so they stay visible on the light paper in
 dark mode, and dim to 40% while a save is in flight, like web. The trash can is labelled
 "Delete NAME", as on web.
+While a name is being edited, the grip stays (dimmed to 40%, like web) so the field does not jump left,
+and the field sits on the paper, so in dark mode it uses a faint tint of the paper ink
+(`DrinkSaverFieldTone`, about 9%) instead of the near black recess, with on-paper text, an on-paper
+placeholder and on-paper disabled ink (80%, so the placeholder clears 4.5:1 on the light field);
+light mode keeps the recess tone. Done and Cancel are a checkmark and an xmark in the paper ink
+(`recommendations.rename-done.<id>`, `recommendations.rename-cancel.<id>`), each a 44pt target that
+keeps its VoiceOver labels "Save name" and "Cancel name".
 
 `SceneLifecycleHandler` commits Undo windows when the scene backgrounds, persists queued drink
 deletes before starting their background request, then sweeps expired entries and reconciles saved

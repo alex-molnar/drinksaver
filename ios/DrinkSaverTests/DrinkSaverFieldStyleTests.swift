@@ -72,4 +72,22 @@ final class DrinkSaverFieldStyleTests: XCTestCase {
         XCTAssertNil(draft.inheritedPaletteID(for: .brand), "brands only inherit from a beer type")
         XCTAssertNil(draft.inheritedPaletteID(for: .alcoholType))
     }
+
+    func testPaperFieldBlendsIntoPaperInDarkAndKeepsRecessElsewhere() {
+        let dark = DrinkSaverTheme.dark
+        let ratio = contrastRatio(DrinkSaverFieldTone.fill(theme: dark, onPaper: true), dark.surface.paper)
+        XCTAssertGreaterThan(ratio, 1.03, "still a little different from the paper")
+        XCTAssertLessThan(ratio, 1.4, "but close to the surrounding paper, not the near black recess")
+        XCTAssertEqual(DrinkSaverFieldTone.fill(theme: .light, onPaper: true), DrinkSaverTheme.light.surface.recess)
+        XCTAssertEqual(DrinkSaverFieldTone.fill(theme: dark, onPaper: false), dark.surface.recess)
+    }
+
+    func testPaperFieldTextPlaceholderAndDisabledInkAreReadableInBothThemes() {
+        for theme in [DrinkSaverTheme.dark, .light] {
+            let field = DrinkSaverFieldTone.fill(theme: theme, onPaper: true)
+            XCTAssertGreaterThanOrEqual(contrastRatio(theme.ink.onPaper, field), 4.5, "text")
+            XCTAssertGreaterThanOrEqual(contrastRatio(DrinkSaverFieldTone.paperPlaceholder(theme: theme), field), 4.5, "placeholder \(theme.mode)")
+            XCTAssertGreaterThanOrEqual(contrastRatio(DrinkSaverFieldTone.disabledInk(theme: theme, onPaper: true), field), 3, "disabled \(theme.mode)")
+        }
+    }
 }
