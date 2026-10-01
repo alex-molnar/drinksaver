@@ -162,7 +162,7 @@ struct HistoryView: View {
             )
             .frame(width: 22, height: 32).accessibilityHidden(true)
             Text(row.drink.name).font(theme.type.body.font).foregroundStyle(theme.ink.onPaper.color)
-                .strikethrough(row.exitingToken != nil).opacity(row.exitingToken == nil ? 1 : 0.35)
+                .opacity(row.exitingToken == nil ? 1 : 0.35)
                 .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true)
             Button { store.crossOff(ids: [row.id], reduceMotion: reduceMotion) } label: {
                 Image(systemName: "xmark").foregroundStyle(HistoryRowInk.crossOff(theme: theme).color).frame(width: 44, height: 44)
@@ -172,12 +172,26 @@ struct HistoryView: View {
         }
         // Whole row toggles selection like web; the checkbox and cross-off buttons keep their own taps.
         .contentShape(Rectangle())
+        .overlay {
+            GeometryReader { geometry in
+                Rectangle()
+                    .fill(HistoryRowInk.crossOffStrike(theme: theme).color)
+                    .frame(width: geometry.size.width, height: 2.5)
+                    .scaleEffect(x: row.exitingToken == nil ? 0 : 1, anchor: .leading)
+                    .rotationEffect(.degrees(-1.2))
+                    .opacity(row.exitingToken == nil ? 0 : 0.9)
+                    .frame(maxHeight: .infinity, alignment: .center)
+                    .accessibilityHidden(true)
+                    .accessibilityIdentifier("history.cross-off-strike.\(row.id)")
+            }
+            .allowsHitTesting(false)
+        }
         .onTapGesture { store.toggleSelection(id: row.id) }
         .listRowBackground(Color.clear)
         .listRowSeparatorTint(theme.ink.onPaper.color.opacity(0.12))
         .accessibilityIdentifier("history.row.\(row.id)")
         .transition(.opacity.combined(with: .move(edge: .trailing)))
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: row.exitingToken)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: row.exitingToken)
     }
 
 }
@@ -198,4 +212,6 @@ enum HistoryRowInk {
     static func crossOff(theme: DrinkSaverTheme) -> ThemeColor {
         ThemeColor(hex: theme.ink.onPaper.hex, opacity: 0.6)
     }
+
+    static func crossOffStrike(theme: DrinkSaverTheme) -> ThemeColor { theme.accent.danger }
 }
