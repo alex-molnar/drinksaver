@@ -83,8 +83,8 @@ alter table alcohol_subtypes
 
 -- Beer flavours
 alter table beer_flavours
-    add constraint beer_flavours_alcohol_type_id_fk
-        foreign key (alcohol_type_id) references alcohol_types
+    add constraint beer_flavours_brand_id_fk
+        foreign key (brand_id) references brands
             on delete restrict;
 
 COMMIT;
