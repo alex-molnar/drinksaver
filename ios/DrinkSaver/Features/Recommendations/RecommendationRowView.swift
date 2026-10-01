@@ -4,6 +4,7 @@ struct RecommendationRowView: View {
     let row: SavedRecommendation
     let editing: Bool
     let exiting: Bool
+    let isDragging: Bool
     let reduceMotion: Bool
     let isSaving: Bool
     @Binding var editValue: String
@@ -13,9 +14,13 @@ struct RecommendationRowView: View {
     let onDelete: () -> Void
     let onMoveUp: () -> Void
     let onMoveDown: () -> Void
+    let onReorderDragStart: () -> Void
+    let onReorderDragChange: (CGFloat) -> Void
+    let onReorderDragEnd: () -> Void
 
     @Environment(ThemeStore.self) private var themeStore
     @FocusState private var nameFocused: Bool
+    @GestureState private var reorderGestureActive = false
 
     private func iconButton(_ symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
@@ -51,8 +56,18 @@ struct RecommendationRowView: View {
         }
         .foregroundStyle(RecommendationRowStyle.grip(theme: themeStore.theme).color)
         .frame(width: 20, height: RecommendationRowStyle.hitSize)
+        .contentShape(Rectangle())
         // Decorative: drag is not reachable by VoiceOver, the row's Move up/Move down actions cover it.
         .accessibilityHidden(true)
+    }
+
+    private var reorderGesture: some Gesture {
+        DragGesture(minimumDistance: 4, coordinateSpace: .global)
+            .updating($reorderGestureActive) { _, active, _ in active = true }
+            .onChanged { value in
+                onReorderDragStart()
+                onReorderDragChange(value.translation.height)
+            }
     }
 
     var body: some View {
@@ -69,7 +84,7 @@ struct RecommendationRowView: View {
                 actionButton(RecommendationRowStyle.commitSymbol, label: "Save name", id: "recommendations.rename-done.\(row.id)", action: onCommit)
                 actionButton(RecommendationRowStyle.cancelSymbol, label: "Cancel name", id: "recommendations.rename-cancel.\(row.id)", action: onCancel)
             } else {
-                grip
+                grip.gesture(reorderGesture)
                 Text(row.name).font(themeStore.theme.type.body.font)
                     .foregroundStyle(themeStore.theme.ink.onPaper.color)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -100,9 +115,13 @@ struct RecommendationRowView: View {
         .strikethrough(exiting)
         .opacity(exiting ? 0.35 : 1)
         .accessibilityElement(children: .contain)
+        .onChange(of: reorderGestureActive) { wasActive, isActive in
+            if wasActive && !isActive { onReorderDragEnd() }
+        }
         .accessibilityAction(named: Text("Move up"), onMoveUp)
         .accessibilityAction(named: Text("Move down"), onMoveDown)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: exiting)
+        .shadow(color: isDragging ? .black.opacity(0.2) : .clear, radius: 8, y: 3)
         .onChange(of: editing) { _, value in nameFocused = value }
         .disabled(isSaving)
     }
