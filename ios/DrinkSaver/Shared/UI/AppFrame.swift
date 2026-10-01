@@ -95,14 +95,14 @@ struct AppFrame: View {
             Button {
                 menuIsOpen.toggle()
             } label: {
-                Image(systemName: "ellipsis")
+                Image(systemName: "line.3.horizontal")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(theme.ink.primary.color)
                     .frame(width: 44, height: 44)
                     .background(theme.surface.raised.color, in: RoundedRectangle(cornerRadius: theme.radius.md))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Menu")
+            .accessibilityLabel("Open menu")
             .accessibilityIdentifier("frame.menu")
         }
         .padding(.horizontal, 18)
@@ -193,15 +193,14 @@ struct AppFrame: View {
                 menuIsOpen = false
                 coordinator.presentAdd(startingAt: .create(.alcoholType))
             }
-            Rectangle().fill(theme.line.hairline.color).frame(height: 1).padding(.vertical, 5)
-            appearanceControl
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-            Rectangle().fill(theme.line.hairline.color).frame(height: 1).padding(.vertical, 5)
             menuAction("Logout", destructive: true) {
                 menuIsOpen = false
                 Task { await sessionStore.signOut() }
             }
+            Rectangle().fill(theme.line.hairline.color).frame(height: 1).padding(.vertical, 5)
+            appearanceControl
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
         }
         .padding(8)
         .background(theme.surface.panel.color, in: RoundedRectangle(cornerRadius: theme.radius.lg))

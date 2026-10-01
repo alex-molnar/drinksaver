@@ -45,7 +45,10 @@ final class AppFrameUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Recommendations"].exists)
         XCTAssertTrue(app.buttons["Add new type"].exists)
         XCTAssertTrue(app.buttons["Logout"].exists)
+        XCTAssertLessThan(app.buttons["Recommendations"].frame.midY, app.buttons["Add new type"].frame.midY)
+        XCTAssertLessThan(app.buttons["Add new type"].frame.midY, app.buttons["Logout"].frame.midY)
         let appearance = app.buttons["frame.theme.toggle"]
+        XCTAssertLessThan(app.buttons["Logout"].frame.midY, appearance.frame.midY)
         XCTAssertGreaterThanOrEqual(appearance.frame.height, 44)
         XCTAssertEqual(appearance.value as? String, "Dark")
         appearance.tap()
