@@ -1,4 +1,5 @@
 import XCTest
+import Vision
 
 @MainActor
 final class RecommendationsUITests: XCTestCase {
@@ -26,11 +27,13 @@ final class RecommendationsUITests: XCTestCase {
     }
 
     func testDraggingRecommendationReordersRowsVertically() {
-        let app = openRecommendations()
+        let app = openRecommendations(reduceMotion: false)
         let house = app.staticTexts["recommendations.row.name.9"]
         let amber = app.staticTexts["recommendations.row.name.10"]
         XCTAssertTrue(amber.waitForExistence(timeout: 5))
         XCTAssertLessThan(house.frame.minY, amber.frame.minY)
+        XCTAssertEqual(recognizedOccurrences(of: house.label, in: app), 1)
+        XCTAssertEqual(recognizedOccurrences(of: amber.label, in: app), 1)
 
         let grabX = house.frame.minX - 22
         let start = app.coordinate(withNormalizedOffset: CGVector(dx: grabX / app.frame.width, dy: house.frame.midY / app.frame.height))
@@ -41,8 +44,11 @@ final class RecommendationsUITests: XCTestCase {
         )
 
         XCTAssertGreaterThan(house.frame.minY, amber.frame.minY)
-        XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "recommendations.row.9").count, 1)
-        XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "recommendations.row.10").count, 1)
+        for _ in 0..<6 {
+            XCTAssertEqual(recognizedOccurrences(of: house.label, in: app), 1, "the dragged recommendation should appear once per captured frame")
+            XCTAssertEqual(recognizedOccurrences(of: amber.label, in: app), 1, "the target recommendation should appear once per captured frame")
+            Thread.sleep(forTimeInterval: 0.1)
+        }
         XCTAssertTrue(app.buttons["recommendations.save"].exists)
     }
 
@@ -212,5 +218,16 @@ final class RecommendationsUITests: XCTestCase {
         app.buttons["frame.menu"].tap()
         app.buttons["Recommendations"].tap()
         return app
+    }
+
+    private func recognizedOccurrences(of text: String, in app: XCUIApplication) -> Int {
+        guard let image = app.screenshot().image.cgImage else { return 0 }
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = false
+        try? VNImageRequestHandler(cgImage: image).perform([request])
+        return request.results?.filter {
+            $0.topCandidates(1).first?.string.localizedCaseInsensitiveCompare(text) == .orderedSame
+        }.count ?? 0
     }
 }
