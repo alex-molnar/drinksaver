@@ -103,6 +103,23 @@ final class SaveQueueReducerTests: XCTestCase {
         XCTAssertNotNil(state.entries.first(where: { $0.id == second.id }))
     }
 
+    func testConfirmedDeleteRetiresSameIDFromCommittedOptimisticSave() {
+        let save = saveEntry(sequence: 1)
+        var state = SaveQueueReducer.reduce(SaveQueueState(), .saveStarted(save))
+        state = SaveQueueReducer.reduce(state, .saveSucceeded(id: save.id, drinkIDs: [6], undoUntil: now))
+        state = SaveQueueReducer.reduce(state, .commit(id: save.id))
+
+        let delete = deleteEntry(sequence: 2, ids: [6], until: now)
+        state = SaveQueueReducer.reduce(state, .deleteStarted(delete))
+        state = SaveQueueReducer.reduce(state, .commit(id: delete.id))
+        XCTAssertEqual(SaveQueueReducer.merge([], with: state, date: "2026-01-02"), [])
+
+        state = SaveQueueReducer.reduce(state, .cleanupAcknowledged(date: "2026-01-02", serverIDs: []))
+
+        XCTAssertFalse(SaveQueueReducer.pendingInsertions(in: state, date: "2026-01-02").contains { $0.id == 6 })
+        XCTAssertEqual(SaveQueueReducer.merge([], with: state, date: "2026-01-02"), [])
+    }
+
     private func saveOperation() -> SaveOperation {
         SaveOperation(label: "Pint", date: "2026-01-02", alcoholTypeID: 3, payload: DrinkSaveRequest(alcoholTypeId: 3, alcoholVolumeId: 4), rowCountBaseline: 2)
     }

@@ -193,6 +193,7 @@ final class HistoryStore {
         do {
             let result = try await api.drinks(date: date)
             guard requests[date] == request, session.userID == userID else { return }
+            _ = queue.merge(result, for: date)
             serverRows[date] = result; days[date] = .ready
         } catch {
             guard requests[date] == request, session.userID == userID else { return }

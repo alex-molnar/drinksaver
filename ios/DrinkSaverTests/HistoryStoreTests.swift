@@ -118,6 +118,44 @@ final class HistoryStoreTests: XCTestCase {
         history.queueDidChange()
         XCTAssertEqual(history.visibleRows.map(\.drink), [drink])
     }
+
+    func testStartingAnotherDeleteDoesNotReshowPreviouslyDeletedCachedRows() async {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let clock = HistoryClock(now: calendar.date(from: DateComponents(year: 2026, month: 9, day: 25, hour: 18))!)
+        let first = EditableDrink(id: 41, name: "First drink", alcoholTypeId: 4)
+        let second = EditableDrink(id: 42, name: "Second drink", alcoholTypeId: 4)
+        let api = HistoryAPI(rows: ["2026-09-24": [first, second]])
+        let session = SessionStore(authorizationProvider: HistoryAuthorization())
+        await session.restore()
+        let queue = SaveQueueStore(api: api, sessionStore: session, configuration: nil, clock: clock, undoWindow: 0,
+                                   sleep: { _ in }, backgroundWork: { work in await work() })
+        let day = CurrentDrinkingDayStore(api: api, queueStore: queue, sessionStore: session, clock: clock, calendar: calendar)
+        let history = HistoryStore(api: api, queue: queue, drinkingDay: day, session: session, calendar: calendar)
+
+        await history.select(date: "2026-09-24")
+        history.crossOff(ids: [first.id], reduceMotion: true)
+        await waitForDelete(id: first.id, in: queue)
+        history.queueDidChange()
+        XCTAssertEqual(history.visibleRows.map(\.id), [second.id])
+
+        history.crossOff(ids: [second.id], reduceMotion: true)
+
+        XCTAssertTrue(history.visibleRows.isEmpty, "starting a second delete must not clear suppression for the first committed delete")
+        await history.loadStrip()
+        XCTAssertTrue(history.visibleRows.isEmpty)
+    }
+
+    private func waitForDelete(id: Int, in queue: SaveQueueStore) async {
+        for _ in 0..<100 {
+            if queue.state.entries.contains(where: { entry in
+                guard case .delete = entry.kind, entry.drinkIDs.contains(id), case .committed = entry.status else { return false }
+                return true
+            }) { return }
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+        XCTFail("Delete for drink \(id) did not commit")
+    }
 }
 
 private struct HistoryClock: Clock { let now: Date }
@@ -142,7 +180,13 @@ private actor HistoryAPI: DrinkSaverAPI {
     }
     func setRows(_ rows: [EditableDrink], for date: String) { rowsByDate[date] = rows }
     func fail(date: String) { failingDates.insert(date) }
-    func deleteDrinks(ids: [Int]) async throws -> Int { ids.count }
+    func deleteDrinks(ids: [Int]) async throws -> Int {
+        let deleted = Set(ids)
+        for date in Array(rowsByDate.keys) {
+            rowsByDate[date]?.removeAll { deleted.contains($0.id) }
+        }
+        return ids.count
+    }
     func saveDrink(_ request: DrinkSaveRequest) async throws -> [SavedDrink] { [] }
     func recommendations() async throws -> [Recommendation] { [] }
     func palettes() async throws -> [Palette] { [] }

@@ -71,7 +71,6 @@ enum SaveQueueReducer {
             return next
         case .deleteStarted(let entry):
             var next = state
-            next.entries.removeAll { if case .committed = $0.status { true } else { false } }
             next.entries.append(entry)
             next.entries = supersedeUndoables(in: next.entries, olderThan: entry.sequence, keeping: entry.id)
             return next
@@ -126,11 +125,22 @@ enum SaveQueueReducer {
             next.entries.removeAll { if case .committed = $0.status { true } else { false } }
             return next
         case .cleanupAcknowledged(let date, let serverIDs):
+            let confirmedDeletedIDs = state.entries.reduce(into: Set<Int>()) { ids, entry in
+                guard case .delete(let operation) = entry.kind, operation.date == date,
+                      case .committed = entry.status,
+                      operation.drinkIDs.allSatisfy({ !serverIDs.contains($0) }) else { return }
+                ids.formUnion(operation.drinkIDs)
+            }
             var next = state
+            for index in next.entries.indices {
+                guard case .save(let operation) = next.entries[index].kind, operation.date == date,
+                      case .committed = next.entries[index].status else { continue }
+                next.entries[index].drinkIDs.removeAll { confirmedDeletedIDs.contains($0) }
+            }
             next.entries.removeAll { entry in
                 guard entry.kind.date == date, case .committed = entry.status else { return false }
                 switch entry.kind {
-                case .save: return !entry.drinkIDs.isEmpty && Set(entry.drinkIDs).isSubset(of: serverIDs)
+                case .save: return entry.drinkIDs.isEmpty || Set(entry.drinkIDs).isSubset(of: serverIDs)
                 case .delete: return entry.drinkIDs.allSatisfy { !serverIDs.contains($0) }
                 }
             }
