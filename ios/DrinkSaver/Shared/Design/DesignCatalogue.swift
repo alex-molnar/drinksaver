@@ -37,6 +37,10 @@ struct DesignCatalogue: Equatable, Sendable {
             ?? Self.fallbackGlass
     }
 
+    func glass(named name: String?) -> Glassware {
+        glassware.first { $0.name.lowercased() == name?.lowercased() } ?? glass(id: nil)
+    }
+
     static let fallbackPalette = Palette(
         id: 0, name: "cream", field: "#DFD1B0", inkLight: nil, inkDark: "#2B1A14"
     )

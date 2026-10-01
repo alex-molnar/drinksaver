@@ -45,6 +45,7 @@ and pending queue inserts and deletions are reflected in the visible rows and co
 individual or selected bulk cross-off through `SaveQueueStore`; the row remains during the exit
 motion, and the screen exposes Undo or Retry feedback. Reduce Motion removes the row immediately
 while keeping the same queue and Undo behavior.
+Each row shows a small flat-ink glass silhouette before the name, chosen like web's `drinkIdentity` (known drink name, then alcohol type, then highball) by `DesignResolver.historyGlassware`.
 Row checkbox and cross-off icons use the paper ink (`HistoryRowInk`), so they stay visible on the light paper in dark mode.
 
 ## Recommendation editing state

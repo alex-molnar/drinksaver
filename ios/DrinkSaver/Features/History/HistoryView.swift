@@ -4,6 +4,7 @@ struct HistoryView: View {
     @Environment(HistoryStore.self) private var store
     @Environment(ThemeStore.self) private var themeStore
     @Environment(CurrentDrinkingDayStore.self) private var drinkingDay
+    @Environment(DesignCatalogueStore.self) private var designCatalogue
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.locale) private var locale
     @State private var presentsCalendar = false
@@ -150,6 +151,12 @@ struct HistoryView: View {
                     .frame(width: 40, height: 44).contentShape(Rectangle())
             }.buttonStyle(.plain).accessibilityLabel(row.isSelected ? "Deselect \(row.drink.name)" : "Select \(row.drink.name)")
                 .accessibilityValue(row.isSelected ? "Selected" : "Not selected")
+            let ink = theme.ink.onPaper.color
+            GlassArtwork(
+                glassware: DesignResolver.historyGlassware(name: row.drink.name, alcoholTypeId: row.drink.alcoholTypeId, in: designCatalogue.catalogue),
+                outline: ink.opacity(0.95), outlineWidth: 1.8, liquid: ink.opacity(0.92), foam: ink.opacity(0.45)
+            )
+            .frame(width: 22, height: 32).accessibilityHidden(true)
             Text(row.drink.name).font(theme.type.body.font).foregroundStyle(theme.ink.onPaper.color)
                 .strikethrough(row.exitingToken != nil).opacity(row.exitingToken == nil ? 1 : 0.35)
                 .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true)

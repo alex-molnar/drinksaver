@@ -26,6 +26,20 @@ final class DesignResolverTests: XCTestCase {
         XCTAssertEqual(DesignResolver.beerPaletteID(flavour: nil, brand: 3, alcoholType: 7), 3)
     }
 
+    func testHistoryGlassUsesNamedDrinkThenAlcoholTypeThenHighball() {
+        func glass(_ name: String, _ type: Int?) -> String {
+            DesignResolver.historyGlassware(name: name, alcoholTypeId: type, in: catalogue).name
+        }
+        XCTAssertEqual(glass("Guinness pint", nil), "pint")
+        XCTAssertEqual(glass("Duvel bottle", 4), "tulip")
+        XCTAssertEqual(glass("Heineken pint", 4), "palinka")
+        XCTAssertEqual(glass("Something", 4), "pint")
+        XCTAssertEqual(glass("Something", 13), "wine")
+        XCTAssertEqual(glass("Something", 6), "highball")
+        XCTAssertEqual(glass("Something", 999), "highball")
+        XCTAssertEqual(glass("Something", nil), "highball")
+    }
+
     func testEmptyCatalogueUsesFrozenFallbackDefinitions() {
         let empty = DesignCatalogue(palettes: [], glassware: [])
         XCTAssertEqual(empty.palette(id: nil), DesignCatalogue.fallbackPalette)
