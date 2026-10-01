@@ -7,6 +7,7 @@ import com.drinksaver.model.db.ConsumptionType;
 import com.drinksaver.model.dto.patch.UpdateBeerBrand;
 import com.drinksaver.model.dto.patch.UpdateBeerFlavour;
 import com.drinksaver.model.dto.patch.UpdateConsumptionType;
+import com.drinksaver.model.dto.post.NewConsumptionType;
 import com.drinksaver.repository.schema.BeerFlavoursTable;
 import com.drinksaver.repository.schema.BrandsTable;
 import com.drinksaver.repository.schema.ConsumptionTypesTable;
@@ -81,6 +82,10 @@ public class BeerRepository {
         return result;
     }
 
+    public Brand saveAdminBrand(String name, List<String> flavours, Integer colorPaletteId) {
+        return saveBrand(repositoryConfiguration.adminUserUUID(), name, flavours, colorPaletteId);
+    }
+
     public Optional<Brand> publishBrand(Integer id) {
         return brandsTable.findById(id).map(existing -> brandsTable.save(existing.withUserId(repositoryConfiguration.adminUserUUID())));
     }
@@ -103,6 +108,10 @@ public class BeerRepository {
 
     public BeerFlavour saveBeerFlavour(Integer brandId, UUID userId, String name, Integer colorPaletteId) {
         return beerFlavoursTable.save(new BeerFlavour(brandId, userId, name, colorPaletteId));
+    }
+
+    public BeerFlavour saveAdminBeerFlavour(Integer brandId, String name, Integer colorPaletteId) {
+        return saveBeerFlavour(brandId, repositoryConfiguration.adminUserUUID(), name, colorPaletteId);
     }
 
     public Optional<BeerFlavour> publishBeerFlavour(Integer id) {
@@ -128,6 +137,10 @@ public class BeerRepository {
 
     public Optional<ConsumptionType> editConsumptionType(Integer id, UpdateConsumptionType updateConsumptionType) {
         return consumptionTypesTable.findById(id).map(existing -> consumptionTypesTable.save(existing.withUpdate(updateConsumptionType)));
+    }
+
+    public ConsumptionType saveAdminConsumptionType(NewConsumptionType newConsumptionType) {
+        return consumptionTypesTable.save(new ConsumptionType(newConsumptionType.name(), newConsumptionType.glasswareId()));
     }
 
     public int deleteConsumptionTypeById(Integer id) {

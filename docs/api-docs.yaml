@@ -468,7 +468,7 @@ paths:
     get:
       tags:
       - admin-design-controller
-      operationId: getAvailableColorPalette
+      operationId: getAdminAvailableColorPalette
       description: Admin only. Lists all color palettes available to the design tools.
       responses:
         "200":
@@ -559,7 +559,7 @@ paths:
     get:
       tags:
       - admin-design-controller
-      operationId: getAvailableGlasswareIcons
+      operationId: getAdminAvailableGlasswareIcons
       description: Admin only. Lists all glassware icons available to the design tools.
       responses:
         "200":
@@ -999,6 +999,31 @@ paths:
         "404":
           description: no beer flavour with that id
   /v1/admin/default/alcohol/types:
+    post:
+      tags:
+      - admin-alcohol-default-controller
+      operationId: createDefaultAlcoholType
+      description: >-
+        Admin only. Creates a default alcohol type, optionally with volumes and subtypes. Ownership is set to the configured admin UUID, regardless of the caller or a submitted userId.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewAlcoholEntry"
+      responses:
+        "200":
+          description: Created entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlcoholType"
+        "400":
+          description: Invalid request body or parameters
+        "401":
+          description: Authentication required
+        "403":
+          description: caller is not in the /admin group
     get:
       tags:
       - admin-alcohol-default-controller
@@ -1016,6 +1041,38 @@ paths:
         "403":
           description: caller is not in the /admin group
   /v1/admin/default/alcohol/types/{alcoholTypeId}/subtypes:
+    post:
+      tags:
+      - admin-alcohol-default-controller
+      operationId: createDefaultAlcoholSubtype
+      description: >-
+        Admin only. Creates a default subtype owned by the configured admin UUID. The body must include alcoholTypeId, but the path alcoholTypeId determines the parent. A submitted userId has no effect.
+      parameters:
+      - name: alcoholTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewAlcoholSubtype"
+      responses:
+        "200":
+          description: Created entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlcoholSubtype"
+        "400":
+          description: Invalid request body or parameters
+        "401":
+          description: Authentication required
+        "403":
+          description: caller is not in the /admin group
     get:
       tags:
       - admin-alcohol-default-controller
@@ -1040,6 +1097,31 @@ paths:
         "403":
           description: caller is not in the /admin group
   /v1/admin/default/beer/brands:
+    post:
+      tags:
+      - admin-beer-default-controller
+      operationId: createDefaultBeerBrand
+      description: >-
+        Admin only. Creates a default beer brand and optional flavours owned by the configured admin UUID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewBeerBrand"
+      responses:
+        "200":
+          description: Created entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Brand"
+        "400":
+          description: Invalid request body or parameters
+        "401":
+          description: Authentication required
+        "403":
+          description: caller is not in the /admin group
     get:
       tags:
       - admin-beer-default-controller
@@ -1057,6 +1139,38 @@ paths:
         "403":
           description: caller is not in the /admin group
   /v1/admin/default/beer/brands/{brandId}/flavours:
+    post:
+      tags:
+      - admin-beer-default-controller
+      operationId: createDefaultBeerFlavour
+      description: >-
+        Admin only. Creates a default beer flavour for the path brandId, owned by the configured admin UUID.
+      parameters:
+      - name: brandId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewBeerFlavour"
+      responses:
+        "200":
+          description: Created entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BeerFlavour"
+        "400":
+          description: Invalid request body or parameters
+        "401":
+          description: Authentication required
+        "403":
+          description: caller is not in the /admin group
     get:
       tags:
       - admin-beer-default-controller
@@ -1081,6 +1195,31 @@ paths:
         "403":
           description: caller is not in the /admin group
   /v1/admin/default/beer/consumption-types:
+    post:
+      tags:
+      - admin-beer-default-controller
+      operationId: createDefaultConsumptionType
+      description: >-
+        Admin only. Creates a shared beer consumption type with a name and glassware ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewConsumptionType"
+      responses:
+        "200":
+          description: Created entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsumptionType"
+        "400":
+          description: Invalid request body or parameters
+        "401":
+          description: Authentication required
+        "403":
+          description: caller is not in the /admin group
     get:
       tags:
       - admin-beer-default-controller
@@ -1274,14 +1413,25 @@ components:
           type: string
     NewBeerBrand:
       type: object
+      required: [name, colorPaletteId]
       properties:
         name:
           type: string
+          maxLength: 100
         flavours:
           type: array
           items:
             type: string
         colorPaletteId:
+          type: integer
+          format: int32
+    NewConsumptionType:
+      type: object
+      required: [name, glasswareId]
+      properties:
+        name:
+          type: string
+        glasswareId:
           type: integer
           format: int32
     UpdateBeerBrand:
@@ -1309,9 +1459,11 @@ components:
           format: int32
     NewBeerFlavour:
       type: object
+      required: [name, colorPaletteId]
       properties:
         name:
           type: string
+          maxLength: 100
         colorPaletteId:
           type: integer
           format: int32
@@ -1343,16 +1495,19 @@ components:
           format: int32
     NewAlcoholEntry:
       type: object
+      required: [colorPaletteId, glasswareId]
       properties:
         userId:
           type: string
           format: uuid
           readOnly: true
           description: >-
-            Set by the server from the authenticated JWT subject. A value sent
+            Set by the server from the authenticated JWT subject for user endpoints,
+            or the configured admin UUID for default admin endpoints. A value sent
             by the client is not bound and has no effect.
         name:
           type: string
+          maxLength: 100
         volumes:
           type: array
           maxItems: 50
@@ -1434,6 +1589,7 @@ components:
           format: float
     NewAlcoholSubtype:
       type: object
+      required: [alcoholTypeId, name, colorPaletteId, glasswareId]
       properties:
         alcoholTypeId:
           type: integer
@@ -1443,7 +1599,8 @@ components:
           format: uuid
           readOnly: true
           description: >-
-            Set by the server from the authenticated JWT subject. A value sent
+            Set by the server from the authenticated JWT subject for user endpoints,
+            or the configured admin UUID for default admin endpoints. A value sent
             by the client is not bound and has no effect.
         name:
           type: string
