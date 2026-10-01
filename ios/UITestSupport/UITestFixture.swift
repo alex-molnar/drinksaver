@@ -43,7 +43,7 @@ struct UITestFixture: Sendable {
         let referenceState = arguments.contains("-ui-reference-state")
             ? try requiredValue(for: "-ui-reference-state", in: arguments) : nil
         if let referenceState,
-           !["quick-ready", "quick-loading", "quick-error", "history-populated", "history-empty", "history-error", "recs-ready", "recs-empty", "recs-error", "add-root"].contains(referenceState) {
+           !["quick-ready", "quick-loading", "quick-error", "history-populated", "history-empty", "history-error", "recs-ready", "recs-empty", "recs-error", "recs-long", "add-root"].contains(referenceState) {
             throw InvalidUITestFixtureArguments("Unknown reference state '\(referenceState)'.")
         }
 

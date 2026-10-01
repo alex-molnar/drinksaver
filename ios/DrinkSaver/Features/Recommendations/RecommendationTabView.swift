@@ -4,6 +4,7 @@ struct RecommendationTabView: View {
     @Environment(RecommendationsStore.self) private var store
     @Environment(ThemeStore.self) private var themeStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @FocusState private var recommendationNameFocused: Bool
     @State private var rowFrames: [Int: CGRect] = [:]
     @State private var activeReorder: ActiveReorder?
     @State private var reorderHapticToken = 0
@@ -49,7 +50,8 @@ struct RecommendationTabView: View {
                         .accessibilityIdentifier("recommendations.empty")
                 case .ready:
                     ScrollView {
-                        LazyVStack(spacing: 0) {
+                        // Keep the editing field alive when keyboard avoidance shrinks the viewport.
+                        VStack(spacing: 0) {
                             ForEach(store.displayedRows) { row in
                                 let isDragging = activeReorder?.id == row.id
                                 let dragOffset = activeReorder.map {
@@ -66,6 +68,7 @@ struct RecommendationTabView: View {
                                         reduceMotion: reduceMotion,
                                         isSaving: store.isSaving,
                                         editValue: Binding(get: { store.draft.editingValue }, set: { store.updateRename($0) }),
+                                        nameFocused: $recommendationNameFocused,
                                         onEdit: { store.beginRename(id: row.id) },
                                         onCommit: { store.commitRename() },
                                         onCancel: { store.cancelRename() },
@@ -113,6 +116,9 @@ struct RecommendationTabView: View {
         .background(themeStore.theme.surface.paper.color, in: RoundedRectangle(cornerRadius: themeStore.theme.radius.md))
         .padding(.horizontal, 10).padding(.top, 10).padding(.bottom, 8)
         .task { await store.load() }
+        .onChange(of: store.draft.editingID, initial: true) { _, editingID in
+            recommendationNameFocused = editingID != nil
+        }
         .sensoryFeedback(.selection, trigger: reorderHapticToken)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("recommendations.screen")
