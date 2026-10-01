@@ -36,7 +36,7 @@ final class SaveQueueStore {
         configuration: AppConfiguration?,
         pendingDeletes: PendingDeleteStore = PendingDeleteStore(),
         clock: any Clock = SystemClock(),
-        undoWindow: TimeInterval = 6.5,
+        undoWindow: TimeInterval = 1.5,
         sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
         backgroundWork: @escaping BackgroundWork = { work in
             let task = Task { await work() }

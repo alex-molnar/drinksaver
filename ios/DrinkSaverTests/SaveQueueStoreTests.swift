@@ -24,14 +24,14 @@ final class SaveQueueStoreTests: XCTestCase {
         let clock = AdjustableQueueClock(Date(timeIntervalSince1970: 100))
         let (store, _, _) = await makeStore(api: api, clock: clock)
         _ = store.delete(deleteOperation([5]))!
-        XCTAssertEqual(store.state.entries.first?.status, .undoable(until: Date(timeIntervalSince1970: 106.5)))
+        XCTAssertEqual(store.state.entries.first?.status, .undoable(until: Date(timeIntervalSince1970: 101.5)))
         store.undoCurrent()
         XCTAssertTrue(store.state.entries.isEmpty)
         let deletedIDs = await api.deletedIDs()
         XCTAssertEqual(deletedIDs, [])
 
         let second = store.delete(deleteOperation([6]))!
-        clock.now = Date(timeIntervalSince1970: 106.5)
+        clock.now = Date(timeIntervalSince1970: 101.5)
         store.expireDueEntries()
         await waitUntil { store.state.entries.first(where: { $0.id == second })?.status == .committed }
         let allDeleted = await api.deletedIDs()
@@ -52,13 +52,13 @@ final class SaveQueueStoreTests: XCTestCase {
         }
 
         store.setFeedbackInteractionActive(false)
-        clock.now = Date(timeIntervalSince1970: 126.49)
+        clock.now = Date(timeIntervalSince1970: 121.49)
         store.expireDueEntries()
         if case .undoable? = store.state.entries.first(where: { $0.id == id })?.status {} else {
             XCTFail("Resuming interaction should retain the remaining Undo time")
         }
 
-        clock.now = Date(timeIntervalSince1970: 126.5)
+        clock.now = Date(timeIntervalSince1970: 121.5)
         store.expireDueEntries()
         await waitUntil { store.state.entries.first(where: { $0.id == id })?.status == .committed }
         store.sessionDidSignOut()
