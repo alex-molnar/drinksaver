@@ -17,6 +17,17 @@ struct RecommendationRowView: View {
     @Environment(ThemeStore.self) private var themeStore
     @FocusState private var nameFocused: Bool
 
+    private func iconButton(_ symbol: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .foregroundStyle(RecommendationRowStyle.icon(theme: themeStore.theme).color)
+                .frame(minWidth: RecommendationRowStyle.hitSize, minHeight: RecommendationRowStyle.hitSize)
+                .contentShape(Rectangle())
+                .opacity(isSaving ? 0.4 : 1)
+        }
+        .buttonStyle(.plain)
+    }
+
     var body: some View {
         HStack(spacing: 10) {
             if editing {
@@ -28,6 +39,16 @@ struct RecommendationRowView: View {
                 Button("Done", action: onCommit).buttonStyle(.drinkSaver(.text, fillsWidth: false, onPaper: true)).accessibilityLabel("Save name")
                 Button("Cancel", action: onCancel).buttonStyle(.drinkSaver(.text, fillsWidth: false, onPaper: true)).accessibilityLabel("Cancel name")
             } else {
+                // Web's six dot grip: two columns by three rows.
+                VStack(spacing: 4) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        HStack(spacing: 3) { Circle().frame(width: 3.5, height: 3.5); Circle().frame(width: 3.5, height: 3.5) }
+                    }
+                }
+                    .foregroundStyle(RecommendationRowStyle.grip(theme: themeStore.theme).color)
+                    .frame(width: 20, height: RecommendationRowStyle.hitSize)
+                    // Decorative: drag is not reachable by VoiceOver, the row's Move up/Move down actions cover it.
+                    .accessibilityHidden(true)
                 Text(row.name).font(themeStore.theme.type.body.font)
                     .foregroundStyle(themeStore.theme.ink.onPaper.color)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -36,25 +57,20 @@ struct RecommendationRowView: View {
                     .contentShape(Rectangle())
                     .onTapGesture(perform: onEdit)
                     .accessibilityIdentifier("recommendations.row.name.\(row.id)")
-                Button("Rename", systemImage: "pencil", action: onEdit)
-                    .labelStyle(.iconOnly)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
-                    .accessibilityLabel("Rename \(row.name)")
-                    .accessibilityIdentifier("recommendations.rename-button.\(row.id)")
-                    Button { onDelete() } label: { Image(systemName: "xmark") }
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
-                    .buttonStyle(.plain).accessibilityLabel("Cross off \(row.name)")
-                    .accessibilityIdentifier("recommendations.delete.\(row.id)")
                 VStack(spacing: 0) {
-                    Button(action: onMoveUp) { Image(systemName: "arrow.up").frame(width: 44, height: 44) }
+                    iconButton("arrow.up", action: onMoveUp)
                         .accessibilityLabel("Move up \(row.name)")
                         .accessibilityIdentifier("recommendations.move-up.\(row.id)")
-                    Button(action: onMoveDown) { Image(systemName: "arrow.down").frame(width: 44, height: 44) }
+                    iconButton("arrow.down", action: onMoveDown)
                         .accessibilityLabel("Move down \(row.name)")
                         .accessibilityIdentifier("recommendations.move-down.\(row.id)")
                 }
+                iconButton("pencil", action: onEdit)
+                    .accessibilityLabel("Rename \(row.name)")
+                    .accessibilityIdentifier("recommendations.rename-button.\(row.id)")
+                iconButton("trash", action: onDelete)
+                    .accessibilityLabel("Delete \(row.name)")
+                    .accessibilityIdentifier("recommendations.delete.\(row.id)")
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 8)
@@ -69,4 +85,16 @@ struct RecommendationRowView: View {
         .onChange(of: editing) { _, value in nameFocused = value }
         .disabled(isSaving)
     }
+}
+
+/// Row controls sit on the paper surface, which stays light in dark mode, so they take
+/// `ink.onPaper` like web instead of the default blue tint.
+enum RecommendationRowStyle {
+    static let hitSize: CGFloat = 44
+
+    static func icon(theme: DrinkSaverTheme) -> ThemeColor {
+        ThemeColor(hex: theme.ink.onPaper.hex, opacity: 0.6)
+    }
+
+    static func grip(theme: DrinkSaverTheme) -> ThemeColor { icon(theme: theme) }
 }

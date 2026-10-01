@@ -25,6 +25,24 @@ final class RecommendationsUITests: XCTestCase {
         XCTAssertLessThan(house.frame.minY, amber.frame.minY)
     }
 
+    func testControlsOrderIsArrowsRenameDeleteAndGripShows() {
+        let app = openRecommendations()
+        let down = app.buttons["recommendations.move-down.9"]
+        let rename = app.buttons["recommendations.rename-button.9"]
+        let delete = app.buttons["recommendations.delete.9"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 5))
+        XCTAssertLessThan(down.frame.maxX, rename.frame.minX + 1)
+        XCTAssertLessThan(rename.frame.maxX, delete.frame.minX + 1)
+        XCTAssertGreaterThan(delete.frame.maxX, app.frame.maxX - 60)
+        // The grip is decorative (accessibility hidden), so check its gutter: the name starts to its right.
+        let name = app.staticTexts["recommendations.row.name.9"]
+        XCTAssertGreaterThanOrEqual(name.frame.minX, app.frame.minX + 14 + 20, "room left of the name for the grip")
+        for b in [down, rename, delete] {
+            XCTAssertGreaterThanOrEqual(b.frame.width, 43.9)
+            XCTAssertGreaterThanOrEqual(b.frame.height, 43.9)
+        }
+    }
+
     func testRenameSaveCommitsAndReturnsToQuick() {
         let app = openRecommendations()
         app.buttons["recommendations.rename-button.9"].tap()
