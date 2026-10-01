@@ -255,9 +255,15 @@ final class AddDrinkStore {
     /// Palette and glass a drink inherits from its choices, used both for the request and for the
     /// recommendation selector previews (web `selected ?? inherited`).
     static func inheritedDesignIDs(draft: AddDrinkDraft, type: AlcoholType?) -> (palette: Int?, glass: Int?) {
-        draft.isBeer
-            ? (draft.flavour?.colorPaletteId ?? draft.brand?.colorPaletteId ?? type?.colorPaletteId, draft.consumptionType?.glasswareId)
-            : (draft.subtype?.colorPaletteId ?? type?.colorPaletteId, draft.subtype?.glasswareId ?? type?.glasswareId)
+        if draft.isBeer {
+            let palette = draft.flavour?.colorPaletteId ?? draft.brand?.colorPaletteId ?? type?.colorPaletteId
+            let glass = draft.consumptionType?.glasswareId
+            return (palette, glass)
+        }
+
+        let palette = draft.subtype?.colorPaletteId ?? type?.colorPaletteId
+        let glass = draft.subtype?.glasswareId ?? type?.glasswareId
+        return (palette, glass)
     }
     static func volumeLabel(_ v: AlcoholVolume) -> String {
         v.volume.map { "\(v.name) (\($0)L)" } ?? v.name

@@ -231,7 +231,9 @@ final class AppFrameUITests: XCTestCase {
         let app = launchSignedIn()
         app.buttons["frame.tab.add"].tap()
         // Full height, so the measured frames are not scaled by the half detent presentation on newer OSes.
-        app.otherElements["frame.add-sheet"].swipeUp(velocity: .fast)
+        let sheet = app.otherElements["frame.add-sheet"]
+        XCTAssertTrue(sheet.waitForExistence(timeout: 5))
+        sheet.swipeUp(velocity: .fast)
         app.buttons["Drink, Choose"].tap()
         app.buttons["Wine"].tap()
         app.buttons["Size, Choose"].tap()
