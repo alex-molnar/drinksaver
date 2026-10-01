@@ -15,6 +15,7 @@ final class AccessibilityUITests: XCTestCase {
             XCTAssertFalse(control.label.isEmpty)
             assertMinimumTarget(control)
         }
+        XCTAssertEqual(menu.label, "Open menu")
         XCTAssertEqual(quick.value as? String, "Selected")
         XCTAssertEqual(history.value as? String, "Not selected")
         XCTAssertEqual(add.value as? String, "Opens Add")
