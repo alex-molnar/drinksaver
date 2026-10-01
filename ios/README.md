@@ -77,6 +77,8 @@ drinks Subtype, and Size once a drink is chosen, then When, Notes, Quantity, Rec
 Drink type, subtype, brand, and flavour rows show a small palette swatch resolved like web
 (own palette, then parent brand or type) through `DesignResolver` and the design catalogue.
 
+The Notes row stacks its label above the input, so the field spans the row at any text size instead of colliding with the label; text inputs carry 6 to 10 pt of vertical padding from their neighbours.
+
 The Add sheet retains one draft across its nested drink, size, subtype, serving, brand, and flavour
 panels. Its "When" row defaults to the current drinking day and reads Today, Yesterday, or the chosen date; it opens a "When was it?" panel with Today, Yesterday, and Another day (native calendar plus Set date, no future dates), mirroring the web app. Creating a catalogue entry selects it and
 returns to the prior panel; pending creation cannot be submitted twice, and a response is adopted

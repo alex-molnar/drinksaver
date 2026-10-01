@@ -265,11 +265,12 @@ struct AppFrame: View {
                         ForEach(AddDrinkStore.menuRows(hasType: addDrinkStore.draft.alcoholType != nil, isBeer: addDrinkStore.draft.isBeer, hasBrand: addDrinkStore.draft.brand != nil), id: \.self) { field in
                             addMenuRow(field)
                         }
-                        HStack(spacing: 12) {
-                            Text("Notes"); Spacer(minLength: 0)
+                        // Label above the field: a side by side label and field overstretch and collide at large text sizes.
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Notes")
                             TextField("Optional", text: Binding(get: { addDrinkStore.draft.notes }, set: { addDrinkStore.draft.notes = $0 }))
                                 .drinkSaverField().accessibilityLabel("Notes")
-                        }.padding(.horizontal, 20).frame(minHeight: 48)
+                        }.padding(.horizontal, 20).padding(.vertical, 10)
                         HStack {
                             Text("Quantity").accessibilityHidden(true); Spacer()
                             HStack(spacing: 8) {
@@ -295,7 +296,7 @@ struct AppFrame: View {
                         Toggle("Add to recommendations", isOn: Binding(get: { addDrinkStore.draft.recommend }, set: { addDrinkStore.setRecommend($0) })).padding(.horizontal, 20).frame(minHeight: 48)
                         if addDrinkStore.draft.recommend {
                             Toggle("Temporary recommendation", isOn: Binding(get: { addDrinkStore.draft.onlyTemporarily }, set: { addDrinkStore.draft.onlyTemporarily = $0 })).padding(.horizontal, 20)
-                            TextField("Recommendation name", text: Binding(get: { addDrinkStore.draft.recommendationName }, set: { addDrinkStore.draft.recommendationName = $0 })).drinkSaverField().padding(.horizontal, 20)
+                            TextField("Recommendation name", text: Binding(get: { addDrinkStore.draft.recommendationName }, set: { addDrinkStore.draft.recommendationName = $0 })).drinkSaverField().padding(.horizontal, 20).padding(.vertical, 6)
                             let inherited = AddDrinkStore.inheritedDesignIDs(draft: addDrinkStore.draft, type: addDrinkStore.draft.alcoholType)
                                 designRow("Recommendation color palette", glass: false, selection: Binding(get: { addDrinkStore.draft.recommendationColorPaletteId }, set: { addDrinkStore.setRecommendationDesign(colorPaletteId: $0, glasswareId: addDrinkStore.draft.recommendationGlasswareId) }), paletteSelection: addDrinkStore.draft.recommendationColorPaletteId, inheritedPalette: inherited.palette, inheritedGlass: inherited.glass)
                                 designRow("Recommendation glassware", glass: true, selection: Binding(get: { addDrinkStore.draft.recommendationGlasswareId }, set: { addDrinkStore.setRecommendationDesign(colorPaletteId: addDrinkStore.draft.recommendationColorPaletteId, glasswareId: $0) }), paletteSelection: addDrinkStore.draft.recommendationColorPaletteId, inheritedPalette: inherited.palette, inheritedGlass: inherited.glass)
