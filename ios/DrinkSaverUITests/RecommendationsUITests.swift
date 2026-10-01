@@ -25,6 +25,25 @@ final class RecommendationsUITests: XCTestCase {
         XCTAssertLessThan(house.frame.minY, amber.frame.minY)
     }
 
+    func testDraggingRecommendationReordersRowsVertically() {
+        let app = openRecommendations()
+        let house = app.staticTexts["recommendations.row.name.9"]
+        let amber = app.staticTexts["recommendations.row.name.10"]
+        XCTAssertTrue(amber.waitForExistence(timeout: 5))
+        XCTAssertLessThan(house.frame.minY, amber.frame.minY)
+
+        let grabX = house.frame.minX - 22
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: grabX / app.frame.width, dy: house.frame.midY / app.frame.height))
+        let finish = app.coordinate(withNormalizedOffset: CGVector(dx: grabX / app.frame.width, dy: amber.frame.maxY / app.frame.height))
+        start.press(
+            forDuration: 0.3,
+            thenDragTo: finish
+        )
+
+        XCTAssertGreaterThan(house.frame.minY, amber.frame.minY)
+        XCTAssertTrue(app.buttons["recommendations.save"].exists)
+    }
+
     func testControlsOrderIsRenameArrowsDeleteAndGripShows() {
         let app = openRecommendations()
         let rename = app.buttons["recommendations.rename-button.9"]
