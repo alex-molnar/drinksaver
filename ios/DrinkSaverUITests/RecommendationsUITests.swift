@@ -26,7 +26,7 @@ final class RecommendationsUITests: XCTestCase {
     }
 
     func testDraggingRecommendationReordersRowsVertically() {
-        let app = openRecommendations()
+        let app = openRecommendations(reduceMotion: false)
         let house = app.staticTexts["recommendations.row.name.9"]
         let amber = app.staticTexts["recommendations.row.name.10"]
         XCTAssertTrue(amber.waitForExistence(timeout: 5))
@@ -211,4 +211,5 @@ final class RecommendationsUITests: XCTestCase {
         app.buttons["Recommendations"].tap()
         return app
     }
+
 }

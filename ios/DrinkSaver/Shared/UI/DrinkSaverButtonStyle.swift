@@ -31,7 +31,7 @@ struct DrinkSaverButtonStyle: ButtonStyle {
             .overlay {
                 if kind == .secondary {
                     RoundedRectangle(cornerRadius: theme.radius.sm)
-                        .stroke(isEnabled ? theme.ink.secondary.color : theme.line.hairline.color, lineWidth: 1)
+                        .stroke(Self.secondaryBorder(theme: theme, onPaper: onPaper, enabled: isEnabled).color, lineWidth: 1)
                 }
             }
             .shadow(color: filled && isEnabled && size == .cta ? .black.opacity(0.25) : .clear, radius: 6, y: 3)
@@ -41,8 +41,21 @@ struct DrinkSaverButtonStyle: ButtonStyle {
     }
 
     private func fill(_ theme: DrinkSaverTheme) -> Color {
-        guard kind == .primary else { return .clear }
-        return isEnabled ? theme.accent.primary.color : theme.ink.primary.color.opacity(0.08)
+        switch kind {
+        case .primary: return isEnabled ? theme.accent.primary.color : theme.ink.primary.color.opacity(0.08)
+        case .secondary: return Self.secondaryFill(theme: theme, onPaper: onPaper, enabled: isEnabled).color
+        case .text: return .clear
+        }
+    }
+
+    static func secondaryFill(theme: DrinkSaverTheme, onPaper: Bool, enabled: Bool = true) -> ThemeColor {
+        let ink = onPaper ? theme.ink.onPaper : theme.ink.primary
+        return ThemeColor(hex: ink.hex, opacity: onPaper ? (enabled ? 0.08 : 0.04) : 0)
+    }
+
+    static func secondaryBorder(theme: DrinkSaverTheme, onPaper: Bool, enabled: Bool = true) -> ThemeColor {
+        let ink = onPaper ? theme.ink.onPaper : theme.ink.secondary
+        return ThemeColor(hex: enabled ? ink.hex : theme.line.hairline.hex, opacity: onPaper ? 0.55 : 1)
     }
 
     static func foreground(_ theme: DrinkSaverTheme, kind: Kind, onPaper: Bool, enabled: Bool = true) -> ThemeColor {

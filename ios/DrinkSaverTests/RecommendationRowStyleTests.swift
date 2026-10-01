@@ -21,6 +21,11 @@ final class RecommendationRowStyleTests: XCTestCase {
         for theme in [DrinkSaverTheme.dark, .light] {
             let foreground = DrinkSaverButtonStyle.foreground(theme, kind: .secondary, onPaper: true)
             XCTAssertGreaterThanOrEqual(contrastRatio(foreground, theme.surface.paper), 4.5)
+            XCTAssertGreaterThan(DrinkSaverButtonStyle.secondaryFill(theme: theme, onPaper: true).opacity, 0)
+            XCTAssertGreaterThanOrEqual(
+                contrastRatio(DrinkSaverButtonStyle.secondaryBorder(theme: theme, onPaper: true), theme.surface.paper),
+                3
+            )
         }
     }
 }

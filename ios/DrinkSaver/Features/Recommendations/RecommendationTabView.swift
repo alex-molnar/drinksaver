@@ -99,7 +99,6 @@ struct RecommendationTabView: View {
                     .coordinateSpace(name: "recommendationRows")
                     .onPreferenceChange(RecommendationRowFramesKey.self) { rowFrames = $0 }
                     .accessibilityIdentifier("recommendations.rows")
-                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: store.displayedRows)
                 }
             }
 
@@ -149,9 +148,9 @@ struct RecommendationTabView: View {
         nextOrder.insert(id, at: insertIndex)
         guard nextOrder != rows.map(\.id) else { return }
 
-        withAnimation(reduceMotion ? nil : .interactiveSpring(response: 0.25, dampingFraction: 0.88)) {
-            store.reorder(visibleIDs: nextOrder)
-        }
+        // The dragged row follows the finger via its offset. Animating ForEach identity
+        // movement at the same time briefly draws that row at both its old and new slots.
+        store.reorder(visibleIDs: nextOrder)
         drag.didReorder = true
         activeReorder = drag
     }
