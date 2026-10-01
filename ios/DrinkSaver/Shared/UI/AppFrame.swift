@@ -1,5 +1,15 @@
 import SwiftUI
 
+/// The two soft edges of the web frame (`AppFrame.tsx`): an ink wash fading down from the header and
+/// an upward ink fade above the nav. Opacities are the web's: header `linear-gradient(180deg, ink-primary 12%, transparent)`,
+/// nav `box-shadow: 0 -6px 18px ink 18%`.
+enum AppFrameEdges {
+    static let headerInkOpacity = 0.12
+    static let navShadowInkOpacity = 0.18
+    static let headerFadeHeight: CGFloat = 16
+    static let navFadeHeight: CGFloat = 18
+}
+
 struct AppFrame: View {
     @Environment(ThemeStore.self) private var themeStore
     @Environment(SessionStore.self) private var sessionStore
@@ -28,7 +38,7 @@ struct AppFrame: View {
     var body: some View {
         ZStack(alignment: .top) {
             VStack(spacing: 0) {
-                headerBar
+                headerBar.zIndex(1)
                 VStack(spacing: 0) {
                     content
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -39,7 +49,7 @@ struct AppFrame: View {
                             }
                         }
                 }
-                bottomNavigation
+                bottomNavigation.zIndex(1)
             }
 
             if menuIsOpen {
@@ -98,7 +108,18 @@ struct AppFrame: View {
         .padding(.horizontal, 18)
         .padding(.top, 8)
         .padding(.bottom, 12)
-        .background(theme.surface.raised.color)
+        .background(theme.surface.raised.color.ignoresSafeArea(edges: .top))
+        .overlay(alignment: .bottom) {
+            // The web's ink wash, drawn below the header so no text sits on a gradient (the Apple contrast audit cannot judge one).
+            LinearGradient(
+                colors: [theme.ink.primary.color.opacity(AppFrameEdges.headerInkOpacity), .clear],
+                startPoint: .top, endPoint: .bottom
+            )
+            .frame(height: AppFrameEdges.headerFadeHeight)
+            .offset(y: AppFrameEdges.headerFadeHeight)
+            .accessibilityHidden(true)
+            .allowsHitTesting(false)
+        }
         .overlay(alignment: .bottom) { Rectangle().fill(theme.line.hairline.color).frame(height: 1) }
     }
 
@@ -127,6 +148,17 @@ struct AppFrame: View {
         .padding(.top, 8)
         .padding(.bottom, 4)
         .background(theme.surface.raised.color.ignoresSafeArea(edges: .bottom))
+        .overlay(alignment: .top) {
+            // Web `box-shadow: 0 -6px 18px`, drawn as a fade above the nav so the labels keep a flat backing.
+            LinearGradient(
+                colors: [.clear, theme.ink.primary.color.opacity(AppFrameEdges.navShadowInkOpacity)],
+                startPoint: .top, endPoint: .bottom
+            )
+            .frame(height: AppFrameEdges.navFadeHeight)
+            .offset(y: -AppFrameEdges.navFadeHeight)
+            .accessibilityHidden(true)
+            .allowsHitTesting(false)
+        }
         .overlay(alignment: .top) { Rectangle().fill(theme.line.hairline.color).frame(height: 1) }
     }
 
