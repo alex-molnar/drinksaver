@@ -893,6 +893,187 @@ paths:
           description: caller is not in the /admin group
         "404":
           description: no beer flavour with that id
+  /v1/admin/default/alcohol/types:
+    get:
+      tags:
+      - admin-alcohol-default-controller
+      operationId: getDefaultAlcoholTypes
+      description: Admin only. Lists default alcohol types.
+      responses:
+        "200":
+          description: Default alcohol types
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlcoholType"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/default/alcohol/types/{alcoholTypeId}/subtypes:
+    get:
+      tags:
+      - admin-alcohol-default-controller
+      operationId: getDefaultSubtypesByAlcoholType
+      description: Admin only. Lists default subtypes for an alcohol type.
+      parameters:
+      - name: alcoholTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Default alcohol subtypes
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlcoholSubtype"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/default/beer/brands:
+    get:
+      tags:
+      - admin-beer-default-controller
+      operationId: getDefaultBeerBrands
+      description: Admin only. Lists default beer brands.
+      responses:
+        "200":
+          description: Default beer brands
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Brand"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/default/beer/brands/{brandId}/flavours:
+    get:
+      tags:
+      - admin-beer-default-controller
+      operationId: getDefaultBeerFlavours
+      description: Admin only. Lists default flavours for a beer brand.
+      parameters:
+      - name: brandId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Default beer flavours
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BeerFlavour"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/default/beer/consumption-types:
+    get:
+      tags:
+      - admin-beer-default-controller
+      operationId: getDefaultBeerConsumptionTypes
+      description: Admin only. Lists default beer consumption types.
+      responses:
+        "200":
+          description: Default beer consumption types
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConsumptionType"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/user-defined/alcohol/types:
+    get:
+      tags:
+      - admin-alcohol-user-controller
+      operationId: getUserDefinedAlcoholTypes
+      description: Admin only. Lists user-defined alcohol types awaiting moderation.
+      responses:
+        "200":
+          description: User-defined alcohol types
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlcoholType"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/user-defined/alcohol/types/{alcoholTypeId}/subtypes:
+    get:
+      tags:
+      - admin-alcohol-user-controller
+      operationId: getUserDefinedSubtypesByAlcoholType
+      description: Admin only. Lists user-defined subtypes for an alcohol type.
+      parameters:
+      - name: alcoholTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: User-defined alcohol subtypes
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlcoholSubtype"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/user-defined/beer/brands:
+    get:
+      tags:
+      - admin-beer-user-controller
+      operationId: getUserDefinedBeerBrands
+      description: Admin only. Lists user-defined beer brands awaiting moderation.
+      responses:
+        "200":
+          description: User-defined beer brands
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Brand"
+        "403":
+          description: caller is not in the /admin group
+  /v1/admin/user-defined/beer/brands/{brandId}/flavours:
+    get:
+      tags:
+      - admin-beer-user-controller
+      operationId: getUserDefinedBeerFlavours
+      description: Admin only. Lists user-defined flavours for a beer brand.
+      parameters:
+      - name: brandId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: User-defined beer flavours
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BeerFlavour"
+        "403":
+          description: caller is not in the /admin group
 components:
   schemas:
     Drink:
