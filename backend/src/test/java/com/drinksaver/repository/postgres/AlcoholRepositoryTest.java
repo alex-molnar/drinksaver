@@ -4,6 +4,8 @@ import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.db.AlcoholSubtype;
 import com.drinksaver.model.db.AlcoholType;
 import com.drinksaver.model.db.AlcoholVolume;
+import com.drinksaver.model.dto.patch.UpdateAlcoholSubtype;
+import com.drinksaver.model.dto.patch.UpdateAlcoholType;
 import com.drinksaver.model.dto.post.NewAlcoholEntry;
 import com.drinksaver.model.dto.post.NewAlcoholSubtype;
 import com.drinksaver.model.dto.post.NewVolumeEntry;
@@ -226,5 +228,42 @@ class AlcoholRepositoryTest {
 
         assertThat(result).isEqualTo(saved);
         verifyNoInteractions(volumeTable, subtypesTable);
+    }
+
+    @Test
+    void editsAndPublishesAlcoholTypes() {
+        AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
+        AlcoholType existing = new AlcoholType(USER, "Old", List.of(1), 2, 3);
+        when(typesTable.findById(1)).thenReturn(Optional.of(existing));
+        when(typesTable.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        AlcoholRepository repo = new AlcoholRepository(typesTable, mock(AlcoholSubtypesTable.class), mock(AlcoholVolumeTable.class), CONFIG);
+
+        Optional<AlcoholType> edited = repo.editAlcoholType(1, new UpdateAlcoholType("New", List.of(4), 5, 6));
+        assertThat(edited).contains(existing);
+        assertThat(existing.getName()).isEqualTo("New");
+        assertThat(existing.getVolumeIds()).containsExactly(4);
+        assertThat(existing.getColorPaletteId()).isEqualTo(5);
+        assertThat(existing.getGlasswareId()).isEqualTo(6);
+
+        assertThat(repo.publishAlcoholType(1)).contains(existing);
+        assertThat(existing.getUserId()).isEqualTo(ADMIN);
+    }
+
+    @Test
+    void editsAndPublishesAlcoholSubtypes() {
+        AlcoholSubtypesTable subtypesTable = mock(AlcoholSubtypesTable.class);
+        AlcoholSubtype existing = new AlcoholSubtype(1, USER, "Old", 2, 3);
+        when(subtypesTable.findById(1)).thenReturn(Optional.of(existing));
+        when(subtypesTable.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        AlcoholRepository repo = new AlcoholRepository(mock(AlcoholTypesTable.class), subtypesTable, mock(AlcoholVolumeTable.class), CONFIG);
+
+        Optional<AlcoholSubtype> edited = repo.editAlcoholSubtype(1, new UpdateAlcoholSubtype("New", 5, 6));
+        assertThat(edited).contains(existing);
+        assertThat(existing.getName()).isEqualTo("New");
+        assertThat(existing.getColorPaletteId()).isEqualTo(5);
+        assertThat(existing.getGlasswareId()).isEqualTo(6);
+
+        assertThat(repo.publishAlcoholSubtype(1)).contains(existing);
+        assertThat(existing.getUserId()).isEqualTo(ADMIN);
     }
 }
