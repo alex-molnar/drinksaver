@@ -26,6 +26,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -65,6 +66,10 @@ class AdminRecommendationsControllerTest {
 
         mockMvc.perform(delete("/v1/admin/recommendations/7").with(admin()))
             .andExpect(status().isOk());
+
+        var order = inOrder(adminRecommendationsRepository, recommendationCacheService);
+        order.verify(adminRecommendationsRepository).deleteRecommendation(7);
+        order.verify(recommendationCacheService).invalidateRecommendations();
     }
 
     @Test
@@ -110,6 +115,10 @@ class AdminRecommendationsControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(2))
             .andExpect(jsonPath("$[1].id").value(1));
+
+        var order = inOrder(adminRecommendationsRepository, recommendationCacheService);
+        order.verify(adminRecommendationsRepository).updateRecommendations(updates);
+        order.verify(recommendationCacheService).invalidateRecommendations();
     }
 
     @Test
@@ -122,6 +131,33 @@ class AdminRecommendationsControllerTest {
                 .content("{\"name\": \"Heineken\", \"alcoholTypeId\": 4, \"colorPaletteId\": 3, \"glasswareId\": 1}"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(7));
+    }
+
+    @Test
+    void successfulCreateInvalidatesOnlyAfterTheRecommendationIsSaved() throws Exception {
+        NewDefaultRecommendation request = new NewDefaultRecommendation("Heineken", 4, null, null, null, null, null, 3, 1);
+        when(adminRecommendationsRepository.addRecommendation(request)).thenReturn(recommendation(7, "Heineken"));
+
+        mockMvc.perform(post("/v1/admin/recommendations").with(admin())
+                .contentType(APPLICATION_JSON)
+                .content("{\"name\": \"Heineken\", \"alcoholTypeId\": 4, \"colorPaletteId\": 3, \"glasswareId\": 1}"))
+            .andExpect(status().isOk());
+
+        var order = inOrder(adminRecommendationsRepository, recommendationCacheService);
+        order.verify(adminRecommendationsRepository).addRecommendation(request);
+        order.verify(recommendationCacheService).invalidateRecommendations();
+    }
+
+    @Test
+    void failedCreateDoesNotInvalidateRecommendations() throws Exception {
+        when(adminRecommendationsRepository.addRecommendation(any())).thenThrow(new IllegalStateException("write failed"));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> mockMvc.perform(post("/v1/admin/recommendations").with(admin())
+                .contentType(APPLICATION_JSON)
+                .content("{\"name\": \"Heineken\", \"alcoholTypeId\": 4, \"colorPaletteId\": 3, \"glasswareId\": 1}")))
+            .hasRootCauseInstanceOf(IllegalStateException.class);
+
+        verify(recommendationCacheService, never()).invalidateRecommendations();
     }
 
     private static DefaultRecommendation recommendation(int id, String name) {

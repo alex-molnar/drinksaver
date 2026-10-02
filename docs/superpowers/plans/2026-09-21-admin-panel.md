@@ -147,12 +147,14 @@ integration-test classes ran against real Postgres.
 **Affected:** `AdminRecommendationsController.java`, `AdminRecommendationsRepository.java`,
 `RecommendationCacheService.java` only if needed, controller/cache integration tests.
 
-- [ ] Add a failing regression: warm a consumer recommendation cache, create a default,
+- [ ] Add a failing integration regression: warm a consumer recommendation cache, create a default,
   then read again; prove the committed catalogue change is reflected. Cover rename/order
   and delete through the same mechanism.
-- [ ] Create currently does not invalidate; edit/delete invalidate before writing.
+- [x] Create currently did not invalidate; edit/delete invalidated before writing.
   Place invalidation after successful committed changes. Trace existing transaction
   boundaries first; add the smallest shared mutation boundary necessary, no cache framework.
+- [x] Controller tests assert create/edit/delete invalidation occurs after repository success,
+  and failed create does not invalidate. Full warm-cache real-Postgres/HTTP proof remains open.
 - [ ] Test failed writes do not advertise success; exercise the eviction-before-write race
   with a controlled interleaving or an ordering assertion plus committed integration proof.
 - [ ] Run backend verification and commit. Inspect relevant publication/design/catalogue
