@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - 'admin/**'
-      - 'deploy/values/admin-test.yaml'
       - 'VERSION'
   workflow_dispatch:
 
