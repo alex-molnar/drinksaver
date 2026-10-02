@@ -16,6 +16,24 @@ The shell uses the consumer's copied umber tokens, Fraunces and Familjen Grotesk
 visible keyboard focus and reduced-motion settings. The current route placeholders are being
 replaced by the catalogue pages in the implementation plan.
 
+## Design maintenance
+
+`DesignPage` has Palettes, Glassware and Consumption types tabs. The selected tab is stored
+in `?tab=` so the glassware link from an empty consumption-type collection is directly
+navigable. The page has no public props; each section reads its collection through the
+shared query client and exposes loading, error, empty, edit, delete and conflict states.
+
+Palette editing pairs labelled hex text fields with native colour controls. Light and dark
+consumer-token previews update from the draft. Unsupported existing colour strings remain
+visible until corrected. On update, untouched optional inks are omitted and an explicit
+clear is sent as an empty string.
+
+Glassware editing previews draft SVG paths as SVG attributes. The selected preview palette
+is local to the editor and is not submitted. Clearing optional foam sends an empty string
+on update. Consumption types show their glassware preview and cannot be created until
+glassware is available; empty and failed glassware states offer a route or retry.
+Conflicting deletes keep confirmation open with the API error.
+
 ## Shared components
 
 ### `PageState`

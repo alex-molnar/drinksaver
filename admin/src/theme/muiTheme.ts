@@ -76,6 +76,7 @@ const makeMuiTheme = (mode: 'dark' | 'light', tokens: ThemeTokens) => createThem
       lineHeight: 1.12,
       letterSpacing: '-.02em',
     },
+    h2: { fontFamily: tokens.type.displayM.fontFamily, fontSize: 'clamp(28px, 3vw, 34px)', fontWeight: 700 },
     h5: { fontFamily: tokens.type.displayM.fontFamily, fontWeight: 700 },
     button: {
       textTransform: 'none',

@@ -418,22 +418,30 @@ because the available browser control cannot emulate those viewports.
 **Create:** `sections/design/` files in section 5 and tests.
 **Depends:** P1–P2; B1 before acceptance.
 
-- [ ] Write failing tests for three tabs, create/edit/delete, nullable-field clearing,
+- [x] Write failing tests for three tabs, create/edit/delete, nullable-field clearing,
   missing dependencies, preview draft updates and conflict preservation.
-- [ ] Palette editor: name and field colour, optional light/dark ink; pair labelled hex
+- [x] Palette editor: name and field colour, optional light/dark ink; pair labelled hex
   and native colour controls for colour fields. Validate supported hex input in UI.
   Existing unsupported values stay visible for correction; do not silently alter them.
-- [ ] For nullable ink update, untouched means omitted; explicit clear serializes `''`.
+- [x] For nullable ink update, untouched means omitted; explicit clear serializes `''`.
   Creation uses nullable/omitted values. Test both ink fields independently.
-- [ ] Glassware editor: name, outline `g`, liquid `l`, optional foam `f`; preview palette
+- [x] Glassware editor: name, outline `g`, liquid `l`, optional foam `f`; preview palette
   selection is local only. Explicit foam clear PATCHes `''`. Render paths as attributes,
   not markup. Test geometry visually in a real browser; do not claim jsdom or Path2D
   exceptions provide a complete SVG-path validator.
-- [ ] Consumption-type editor: name/glassware; full list, preview and conflict handling.
+- [x] Consumption-type editor: name/glassware; full list, preview and conflict handling.
   Disable submission with actionable message if required glassware is unavailable.
-- [ ] Name/colour/shape semantics stay accessible; swatches are supplemental. No invented
+- [x] Name/colour/shape semantics stay accessible; swatches are supplemental. No invented
   complete usage counts, cascade action or volume tab.
-- [ ] Run checks and real browser light/dark preview comparisons; commit.
+- [ ] Run real browser light/dark preview comparisons; the available CUA browser exposes
+  the rendered accessibility tree but no screenshot action, so visual comparison is pending.
+- [x] Run `npm run test -- --run` (56 passed), `npm run lint`, `npm run build` and
+  `git diff --check`; commit this concern.
+
+**Execution record (2026-10-02):** P4 is implemented and documented. Browser inspection
+confirmed the three tabs and collection content render with accessible names, but the
+available browser interface could not capture a visual comparison; that acceptance item
+remains open.
 
 ### P5 — Recommendations
 
