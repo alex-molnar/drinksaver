@@ -346,24 +346,31 @@ previous documented `/types/subtypes` error.
 **Reuse:** `web/src/theme/{primitives,tokens,cssVars}.ts`, `fonts.css`,
 `web/src/assets/fonts/`, `web/src/drink/glassware.tsx`.
 
-- [ ] Write failing tests for gated shell, routes/back/deep links, active navigation,
+- [x] Write failing tests for shell routes/deep links, active navigation,
   loading/error/empty distinction, retry, dialog focus/labels and unknown route.
-- [ ] Build selected Workspace: dark umber top navigation, five primary links,
+- [x] Build selected Workspace: dark umber top navigation, five primary links,
   centred 1260px content, 40px desktop inset, 46px Fraunces headings, 18px card gaps,
   two columns to one at narrow widths. Below 900px expose compact labelled navigation.
-- [ ] Derive MUI theme from copied tokens; use CSS variables in section/component code.
+- [x] Derive MUI theme from copied tokens; use CSS variables in section/component code.
   Existing hairline tokens are insufficient as form-control boundaries: use a stronger
   existing ink token and verify 3:1 non-text contrast.
-- [ ] Copy minimum SVG rendering using React `d` attributes, never raw HTML injection.
+- [x] Copy minimum SVG rendering using React `d` attributes, never raw HTML injection.
   Preview uses consumer light/dark materials, labelled adjacent text and decorative SVG.
   Missing assignments get readable fallback, not a crash.
-- [ ] Common confirmation props: `open, title, description, pending, error, onConfirm, onClose`.
+- [x] Common confirmation props: `open, title, description, pending, error, onConfirm, onClose`.
   Page-state props distinguish loading/error/empty with retry/empty action.
   Document these states/props in `docs/admin-panel.md` as components land.
-- [ ] Use MUI's existing dialog semantics; preserve focus, cancellation and draft on failure.
+- [x] Use MUI's existing dialog semantics; preserve focus, cancellation and draft on failure.
   Respect reduced motion. Add a route error boundary using the existing consumer pattern
   where lazy loading is actually used; do not add lazy infrastructure just for this task.
 - [ ] Run admin suite/lint/build and browser-check shell at desktop, 390px and 200% zoom; commit.
+
+**Execution record (2026-10-02):** Wired KeycloakProvider → AdminGate → query/theme/router;
+added the Workspace navigation, common page/dialog/preview components, routes and
+`docs/admin-panel.md`. The full admin suite (26 tests), lint and build passed. A live
+desktop screenshot confirmed the heading, typography, palette and selected navigation.
+This browser tool does not expose viewport emulation, so 390px and 200% layout checks
+remain unverified; jsdom checks do not substitute for them.
 
 ### P3 — Default types, brands and child subpages
 
