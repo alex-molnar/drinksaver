@@ -55,7 +55,8 @@ the corresponding children collection; the page has no global child query. Searc
 names. Inspect opens a read-only record view, and Publish requires confirmation that the
 entry moves into defaults without undo while existing children stay user-defined. Successful
 publication invalidates both the source and default queries. The DOM exposes no edit, delete
-or unpublish actions.
+or unpublish actions. The backend subtype ID contract is int64; this browser client rejects
+IDs above JavaScript's safe integer limit instead of issuing requests with rounded IDs.
 
 ## Shared components
 

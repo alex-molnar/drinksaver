@@ -19,6 +19,7 @@ import static com.drinksaver.config.CacheConfig.RECOMMENDATIONS_CACHE;
 import static com.drinksaver.config.CacheConfig.SAVE_COUNTER_CACHE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -53,10 +54,11 @@ class RecommendationCacheServiceTest {
 
         RecommendationCacheService service = new RecommendationCacheService(cacheManager);
         Drink drink = new Drink(USER, "2026-09-08", 1, 2L, 3, null, null, null, null, null, null, null, true, null, null);
+        String cacheKey = service.cacheKey(USER);
 
         service.onDrinkSaved(drink);
 
-        verify(recCache).evict(USER);
+        verify(recCache).evict(cacheKey);
     }
 
     /**
@@ -81,7 +83,7 @@ class RecommendationCacheServiceTest {
 
         assertThat(loaded.get()).isNotNull();
         assertThat(loaded.get().get()).isEqualTo(1);
-        verify(recCache, never()).evict(USER);
+        verify(recCache, never()).evict(anyString());
     }
 
     @Test
@@ -103,10 +105,26 @@ class RecommendationCacheServiceTest {
         when(cacheManager.getCache(RECOMMENDATIONS_CACHE)).thenReturn(recCache);
 
         RecommendationCacheService service = new RecommendationCacheService(cacheManager);
+        String cacheKey = service.cacheKey(USER);
 
         service.invalidateRecommendationsForUser(USER);
 
-        verify(recCache).evict(USER);
+        assertThat(service.cacheKey(USER)).isNotEqualTo(cacheKey);
+        verify(recCache).evict(cacheKey);
+    }
+
+    @Test
+    void catalogueInvalidationMakesAnInFlightOldCacheKeyUnreachable() {
+        Cache recCache = mock(Cache.class);
+        CacheManager cacheManager = mock(CacheManager.class);
+        when(cacheManager.getCache(RECOMMENDATIONS_CACHE)).thenReturn(recCache);
+        RecommendationCacheService service = new RecommendationCacheService(cacheManager);
+        String inFlightKey = service.cacheKey(USER);
+
+        service.invalidateRecommendations();
+
+        assertThat(service.cacheKey(USER)).isNotEqualTo(inFlightKey);
+        verify(recCache).clear();
     }
 
     @Test
@@ -125,7 +143,7 @@ class RecommendationCacheServiceTest {
         service.onDrinkSaved(drink);
 
         assertThat(counter.get()).isEqualTo(3);
-        verify(recCache, never()).evict(USER);
+        verify(recCache, never()).evict(anyString());
     }
 
     @Test
@@ -143,7 +161,7 @@ class RecommendationCacheServiceTest {
 
         service.onDrinkSaved(drink);
 
-        verify(recCache, never()).evict(USER);
+        verify(recCache, never()).evict(anyString());
     }
 
     @SuppressWarnings("unchecked")
@@ -213,7 +231,7 @@ class RecommendationCacheServiceTest {
         doAnswer(invocation -> {
             evictions.increment();
             return null;
-        }).when(recCache).evict(USER);
+        }).when(recCache).evict(anyString());
 
         CacheManager cacheManager = mock(CacheManager.class);
         when(cacheManager.getCache(SAVE_COUNTER_CACHE)).thenReturn(counterCache);

@@ -46,4 +46,13 @@ describe('admin endpoint adapters', () => {
     expect(JSON.parse(calls[2].data as string)).not.toHaveProperty('userId');
     expect(JSON.parse(calls[2].data as string)).not.toHaveProperty('volumeIds');
   });
+
+  it('rejects subtype identifiers that JSON cannot represent exactly', async () => {
+    apiClient.defaults.adapter = async (config) => ({
+      data: [{ id: Number.MAX_SAFE_INTEGER + 1, alcoholTypeId: 3, name: 'Large ID', colorPaletteId: null, glasswareId: null }],
+      status: 200, statusText: 'OK', headers: {}, config,
+    });
+
+    await expect(admin.getUserSubtypes(3)).rejects.toThrow("exceeds JavaScript's safe integer range");
+  });
 });

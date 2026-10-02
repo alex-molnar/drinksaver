@@ -22,7 +22,22 @@ import type {
   UpdateGlassware,
 } from '../types/api';
 
-const data = async <T>(request: Promise<{ data: T }>): Promise<T> => (await request).data;
+const assertSafeIdentifiers = (value: unknown): void => {
+  if (Array.isArray(value)) return value.forEach(assertSafeIdentifiers);
+  if (value === null || typeof value !== 'object') return;
+  for (const [key, field] of Object.entries(value)) {
+    if ((key === 'id' || key === 'alcoholSubtypeId') && typeof field === 'number' && !Number.isSafeInteger(field)) {
+      throw new RangeError(`API ${key} exceeds JavaScript's safe integer range`);
+    }
+    assertSafeIdentifiers(field);
+  }
+};
+
+const data = async <T>(request: Promise<{ data: T }>): Promise<T> => {
+  const result = (await request).data;
+  assertSafeIdentifiers(result);
+  return result;
+};
 
 export const getDefaultTypes = () => data<AlcoholType[]>(apiClient.get('/v1/admin/default/alcohol/types'));
 export const getDefaultSubtypes = (typeId: number) => data<AlcoholSubtype[]>(apiClient.get(`/v1/admin/default/alcohol/types/${typeId}/subtypes`));

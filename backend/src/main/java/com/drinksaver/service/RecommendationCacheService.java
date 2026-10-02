@@ -7,6 +7,8 @@ import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -15,9 +17,16 @@ public class RecommendationCacheService {
     private static final int INVALIDATE_AFTER_SAVES = 5; // TODO: this can also be configured on user level
 
     private final CacheManager cacheManager;
+    private final AtomicLong catalogueVersion = new AtomicLong();
+    private final ConcurrentHashMap<UUID, AtomicLong> userVersions = new ConcurrentHashMap<>();
 
     public RecommendationCacheService(CacheManager cacheManager) {
         this.cacheManager = cacheManager;
+    }
+
+    public String cacheKey(UUID userId) {
+        long userVersion = userVersions.computeIfAbsent(userId, ignored -> new AtomicLong()).get();
+        return catalogueVersion.get() + ":" + userVersion + ":" + userId;
     }
 
     /**
@@ -68,15 +77,17 @@ public class RecommendationCacheService {
     public void invalidateRecommendationsForUser(UUID userId) {
         Cache recommendationsCache = cacheManager.getCache(CacheConfig.RECOMMENDATIONS_CACHE);
         if (recommendationsCache != null) {
-            recommendationsCache.evict(userId);
+            String oldKey = cacheKey(userId);
+            userVersions.get(userId).incrementAndGet();
+            recommendationsCache.evict(oldKey);
         }
     }
 
     public void invalidateRecommendations() {
+        catalogueVersion.incrementAndGet();
         Cache recommendationsCache = cacheManager.getCache(CacheConfig.RECOMMENDATIONS_CACHE);
         if (recommendationsCache != null) {
             recommendationsCache.clear();
         }
     }
 }
-
