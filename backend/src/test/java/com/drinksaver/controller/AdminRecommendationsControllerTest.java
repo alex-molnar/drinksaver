@@ -78,6 +78,8 @@ class AdminRecommendationsControllerTest {
 
         mockMvc.perform(delete("/v1/admin/recommendations/7").with(admin()))
             .andExpect(status().isNotFound());
+
+        verify(recommendationCacheService, never()).invalidateRecommendations();
     }
 
     @ParameterizedTest
@@ -119,6 +121,17 @@ class AdminRecommendationsControllerTest {
         var order = inOrder(adminRecommendationsRepository, recommendationCacheService);
         order.verify(adminRecommendationsRepository).updateRecommendations(updates);
         order.verify(recommendationCacheService).invalidateRecommendations();
+    }
+
+    @Test
+    void failedEditDoesNotInvalidateRecommendations() {
+        when(adminRecommendationsRepository.updateRecommendations(any())).thenThrow(new IllegalStateException("write failed"));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> mockMvc.perform(patch("/v1/admin/recommendations/edit").with(admin())
+                .contentType(APPLICATION_JSON).content("[{\"id\":7,\"name\":\"New name\"}]")))
+            .hasRootCauseInstanceOf(IllegalStateException.class);
+
+        verify(recommendationCacheService, never()).invalidateRecommendations();
     }
 
     @Test
