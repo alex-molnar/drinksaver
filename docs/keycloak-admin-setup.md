@@ -9,7 +9,8 @@ Written against Keycloak 26.0, which is what `compose.yaml` runs and what the cl
 ## What you are building, and why
 
 The panel decides whether to render by reading a `groups` claim out of the access token and
-looking for `admin`. The backend rejects `/v1/admin/**` for anyone whose token does not carry it.
+looking for the exact path `/admin`. The backend rejects `/v1/admin/**` for anyone whose token
+does not carry that same path.
 So three things have to exist in each realm:
 
 | Thing | Purpose |
@@ -44,9 +45,9 @@ Groups are per realm, so do this once in `test-drinksaver` and once in `drinksav
 2. Name: `admin`. Nothing else to set. No attributes, no role mappings, no sub-groups.
 3. **Create**.
 
-The panel accepts both `admin` and `/admin`, so it does not matter whether you later turn on full
-group paths. It matches the last path segment, so a nested group like `/drinksaver/admin` also
-works, and `/administrators` correctly does not.
+Enable **Full group path** on the mapper. Only the top-level group emits `/admin`; bare `admin`,
+nested `/drinksaver/admin`, and similarly named groups do not grant access. This matches both the
+panel gate and backend authority check.
 
 ## Step 2: Add your administrators to the group
 
@@ -76,7 +77,7 @@ immediately, have them sign out and back in.
 | Client authentication | **Off** | This is a browser app. It cannot hold a secret, so it is a public client, exactly like `drinksaver-frontend` |
 | Authorization | Off | Not used |
 | Standard flow | **On** | Authorization code flow, which is what `keycloak-js` performs |
-| Direct access grants | On | Matches the existing web client. Only needed if you ever script a login |
+| Direct access grants | **Off** | The admin panel uses browser PKCE and has no password-grant flow |
 | Implicit flow | **Off** | Deprecated, and unnecessary with PKCE |
 | Service accounts roles | Off | No machine-to-machine calls |
 
@@ -168,70 +169,15 @@ credential until it expires.
 
 ## Local development
 
-The local stack imports `deploy/local/keycloak-realm.json` on first start, so local setup is a
-file edit rather than console clicking. That realm currently has one client, one user and no
-groups at all, which is why the admin panel cannot be used locally yet.
+The local realm import already defines the `/admin` group, public `drinksaver-admin` PKCE client,
+and dedicated `admin` user (`admin` / `admin`). The ordinary `dev` user remains outside the group
+for authorization-denial checks. Compose sets `ADMIN_USER_UUID` to the admin user's ID so seeded
+default catalogue rows are owned by the configured catalogue owner; that UUID does not grant
+login or API access. Both the container and Vite dev server use `http://localhost:3001`.
 
-Add a `groups` array at the top level of the realm:
-
-```json
-"groups": [
-  { "name": "admin" }
-]
-```
-
-Add a second client alongside the existing `drinksaver-frontend`, keeping that one as it is:
-
-```json
-{
-  "clientId": "drinksaver-admin",
-  "name": "DrinkSaver admin (local)",
-  "enabled": true,
-  "publicClient": true,
-  "standardFlowEnabled": true,
-  "directAccessGrantsEnabled": true,
-  "serviceAccountsEnabled": false,
-  "rootUrl": "http://localhost:3001",
-  "baseUrl": "http://localhost:3001",
-  "redirectUris": ["http://localhost:3001/*", "http://localhost:5174/*"],
-  "webOrigins": ["http://localhost:3001", "http://localhost:5174"],
-  "attributes": {
-    "post.logout.redirect.uris": "http://localhost:3001/*",
-    "pkce.code.challenge.method": "S256"
-  },
-  "protocolMappers": [
-    {
-      "name": "groups",
-      "protocol": "openid-connect",
-      "protocolMapper": "oidc-group-membership-mapper",
-      "config": {
-        "claim.name": "groups",
-        "full.path": "true",
-        "access.token.claim": "true",
-        "id.token.claim": "true",
-        "userinfo.token.claim": "true"
-      }
-    }
-  ]
-}
-```
-
-Then put the seeded `dev` user in the group by adding to that user's object:
-
-```json
-"groups": ["/admin"]
-```
-
-Two ports appear above because the panel runs two ways locally: `3001` if you add it to
-`compose.yaml` as a container next to `web` on `3000`, and `5174` for `npm run dev`, which needs
-an explicit port because the web app's Vite server already takes the default.
-
-Note that `dev` is also the UUID in `ADMIN_USER_LIST` in `compose.yaml`, which is what currently
-makes that user's rows appear as shared reference data. Group membership and that list are
-separate mechanisms today. The backend restructure removes the list, at which point the group is
-the only thing that matters.
-
-The realm import only runs against an empty database. To pick up realm changes:
+The realm import only runs against an empty database. To pick up realm changes, recreate the
+Keycloak database volume. If you also use `-v`, the separate drinksaver database is deleted and
+its seeded drink history is rebuilt:
 
 ```sh
 docker compose down -v && docker compose up -d
@@ -244,12 +190,12 @@ anything saved locally is gone. That is the intended cost of a realm edit, not a
 
 | Symptom | Almost always |
 | --- | --- |
-| Every administrator sees "Not authorised" | The mapper exists but **Add to access token** is off |
+| Every administrator sees "Not authorised" | The mapper lacks **Add to access token** or **Full group path**, or the group is not top-level `/admin` |
 | One person sees "Not authorised" | They are not in the group, or their token predates being added. Sign out and back in |
 | Redirected to Keycloak and straight back, forever | Redirect URI does not match the panel's origin. Check for a missing `/*`, or `http` against `https` |
 | "Invalid parameter: redirect_uri" | Same cause, stated plainly by Keycloak |
 | CORS error against the auth host | Web origins does not list the panel's origin, or lists it with a trailing slash |
-| Panel loads, every admin request 403s | The token carries the group but the backend does not accept it. That is a backend problem, not Keycloak: check it reads the same claim name |
+| Panel loads, every admin request 403s | The token must carry exactly `/admin`; a bare or nested path fails the backend authorization rule |
 | "The iss claim is not valid" | The Keycloak hostname is not what the backend expects. The `KC_HOSTNAME` comment in `compose.yaml` documents this exact trap for the local stack |
 | Works in test, not production | Different realm, so every step here has to have been done twice, and the client ID differs between them |
 

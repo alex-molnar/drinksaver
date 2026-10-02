@@ -1,0 +1,22 @@
+# drinksaver-admin, test environment (namespace drinksaver-test).
+
+config:
+  apiUrl: "https://test.api.drinksaver.kak.im"
+  keycloakUrl: "https://auth.drinksaver.kak.im/auth"
+  keycloakRealm: test-drinksaver
+  keycloakClientId: test-drinksaver-admin
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: test.admin.drinksaver.kak.im
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: drinksaver-admin-tls
+      hosts:
+        - test.admin.drinksaver.kak.im
