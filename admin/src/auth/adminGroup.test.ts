@@ -2,19 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { isAdmin } from './adminGroup';
 
 describe('isAdmin', () => {
-  it('accepts a bare group name', () => {
-    expect(isAdmin(['admin'])).toBe(true);
-  });
-
-  it('accepts a full path, which is what the mapper emits by default', () => {
+  it('accepts exactly the full admin path', () => {
     expect(isAdmin(['/admin'])).toBe(true);
   });
 
-  it('accepts a nested path whose last segment is admin', () => {
-    expect(isAdmin(['/drinksaver/admin'])).toBe(true);
-  });
-
-  it('rejects a group that merely contains admin', () => {
+  it('rejects bare, nested and similarly named groups', () => {
+    expect(isAdmin(['admin'])).toBe(false);
+    expect(isAdmin(['/drinksaver/admin'])).toBe(false);
     expect(isAdmin(['/administrators'])).toBe(false);
     expect(isAdmin(['not-admin'])).toBe(false);
   });

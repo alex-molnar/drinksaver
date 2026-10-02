@@ -301,16 +301,22 @@ the documented route groups, including subtype publish at
 **Create:** `types/api.ts`, `api/client.ts`, `api/admin.ts`, `api/queries.ts` and tests.
 **Reuse:** `web/src/api/client.ts` and its tests; DTO/OpenAPI fields.
 
-- [ ] Write failing group tests: accept exactly `/admin`; reject bare `admin`,
+- [x] Write failing group tests: accept exactly `/admin`; reject bare `admin`,
   `/drinksaver/admin`, absent/non-array claims, and malformed members.
-- [ ] Implement exact membership; retain existing provider and gate.
-- [ ] Port axios bearer/single-401-retry behaviour using admin config/keycloak imports.
+- [x] Implement exact membership; retain existing provider and gate.
+- [x] Port axios bearer/single-401-retry behaviour using admin config/keycloak imports.
   Test refreshed header, refresh failure, second 401, ordinary errors and no 403 retry.
-- [ ] Add named typed adapters for every endpoint in section 3. Test method, full path,
+- [x] Add named typed adapters for every endpoint in section 3. Test method, full path,
   parent/body agreement, body omission for publish/delete, data unwrapping and failures.
-- [ ] Add query keys and parent enabling rules. Test isolated parent caches and
+- [x] Add query keys and parent enabling rules. Test isolated parent caches and
   late responses after changing selection. Keep no mixed default/user endpoint fallback.
-- [ ] Run targeted tests, then full admin tests/lint/build; commit.
+- [x] Run targeted tests, then full admin tests/lint/build; commit.
+
+**Execution record (2026-10-02):** `admin/src/auth/adminGroup.ts` now accepts exactly
+`/admin`. `admin/src/api/` contains the bearer/401 client, typed endpoint adapters and
+query keys with positive safe-integer parent validation. Tests assert all 40 admin
+method/path pairs plus the read-only volume route and auth refresh/403 behavior. Targeted
+tests passed; full admin tests, lint and build are run again after P2/P3.
 
 Representative adapter contract (response type is copied from the existing entity):
 
