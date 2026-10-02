@@ -36,8 +36,12 @@
       "serviceAccountsEnabled": false,
       "rootUrl": "http://localhost:3001",
       "baseUrl": "http://localhost:3001",
-      "redirectUris": ["http://localhost:3001/*"],
-      "webOrigins": ["http://localhost:3001"],
+      "redirectUris": [
+        "http://localhost:3001/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3001"
+      ],
       "attributes": {
         "post.logout.redirect.uris": "http://localhost:3001/*",
         "pkce.code.challenge.method": "S256"
@@ -56,9 +60,32 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "drinksaver-ios-local",
+      "name": "DrinkSaver iOS (local)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "im.kak.drinksaver:/oauth2redirect"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "im.kak.drinksaver:/oauth2redirect",
+        "pkce.code.challenge.method": "S256"
+      },
+      "optionalClientScopes": [
+        "offline_access"
+      ]
     }
   ],
-  "groups": [{ "name": "admin" }],
+  "groups": [
+    {
+      "name": "admin"
+    }
+  ],
   "users": [
     {
       "id": "423c91e4-491f-4f82-aba6-3c982857e0e4",
@@ -84,7 +111,9 @@
       "firstName": "Local",
       "lastName": "Admin",
       "email": "admin@example.invalid",
-      "groups": ["/admin"],
+      "groups": [
+        "/admin"
+      ],
       "credentials": [
         {
           "type": "password",
