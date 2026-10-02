@@ -67,8 +67,8 @@ export const AlcoholSubtypesPage = () => {
         const glasswareId = subtype.glasswareId ?? parent.glasswareId;
         const palette = paletteId === null ? undefined : paletteById.get(paletteId);
         const glass = glasswareId === null ? undefined : glassById.get(glasswareId);
-        const paletteName = subtype.colorPaletteId === null ? `Inherited from ${parent.name}${palette ? ` (${palette.name})` : ''}` : palette?.name ?? 'Not assigned';
-        const glassName = subtype.glasswareId === null ? `Inherited from ${parent.name}${glass ? ` (${glass.name})` : ''}` : glass?.name ?? 'Not assigned';
+        const paletteName = subtype.colorPaletteId === null && parent.colorPaletteId !== null ? `Inherited from ${parent.name}${palette ? ` (${palette.name})` : ''}` : palette?.name ?? 'Not assigned';
+        const glassName = subtype.glasswareId === null && parent.glasswareId !== null ? `Inherited from ${parent.name}${glass ? ` (${glass.name})` : ''}` : glass?.name ?? 'Not assigned';
         return <CatalogCard key={subtype.id} name={subtype.name} onEdit={() => { saveMutation.reset(); setEditor(subtype); }} onDelete={() => { deleteMutation.reset(); setDeleting(subtype); }} preview={<DrinkPreview label={subtype.name} glassware={glass} palette={palette} />} details={<Typography className="catalog-detail">Palette: {paletteName} · Glassware: {glassName}</Typography>} />;
       })}</div>
     </PageState>

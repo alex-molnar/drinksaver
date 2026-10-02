@@ -50,6 +50,13 @@ describe('AlcoholSubtypesPage', () => {
     expect(document.querySelector('.catalog-card svg path')).toHaveAttribute('d', 'M2 2');
   });
 
+  it('shows unassigned when both subtype and parent design IDs are null', async () => {
+    api.getDefaultTypes.mockResolvedValue([{ id: 3, name: 'Wine', colorPaletteId: null, glasswareId: null }]);
+    api.getDefaultSubtypes.mockResolvedValue([{ id: 7, alcoholTypeId: 3, name: 'Red', colorPaletteId: null, glasswareId: null }]);
+    renderAdminPage(<AlcoholSubtypesPage />, '/alcohol-types/3/subtypes', '/alcohol-types/:typeId/subtypes');
+    expect(await screen.findByText(/Palette: Not assigned.*Glassware: Not assigned/)).toBeInTheDocument();
+  });
+
   it('creates a subtype using the parent in the route', async () => {
     const user = userEvent.setup();
     renderAdminPage(<AlcoholSubtypesPage />, '/alcohol-types/3/subtypes', '/alcohol-types/:typeId/subtypes');

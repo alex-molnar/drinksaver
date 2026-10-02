@@ -33,6 +33,13 @@ describe('BeerFlavoursPage', () => {
     expect(document.querySelector('.catalog-card .drink-preview-art')).toHaveStyle({ color: '#123456' });
   });
 
+  it('shows unassigned when both flavour and parent palette IDs are null', async () => {
+    api.getDefaultBrands.mockResolvedValue([{ id: 8, name: 'North Star', colorPaletteId: null }]);
+    api.getDefaultFlavours.mockResolvedValue([{ id: 9, brandId: 8, name: 'Citrus', colorPaletteId: null }]);
+    renderAdminPage(<BeerFlavoursPage />, '/beer-brands/8/flavours', '/beer-brands/:brandId/flavours');
+    expect(await screen.findByText('Palette: Not assigned')).toBeInTheDocument();
+  });
+
   it('does not fetch children for a missing default brand', async () => {
     api.getDefaultBrands.mockResolvedValue([]);
     renderAdminPage(<BeerFlavoursPage />, '/beer-brands/80/flavours', '/beer-brands/:brandId/flavours');

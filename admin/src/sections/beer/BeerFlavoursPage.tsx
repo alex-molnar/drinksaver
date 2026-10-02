@@ -63,7 +63,7 @@ export const BeerFlavoursPage = () => {
       <div className="catalog-grid">{rows.map((flavour) => {
         const paletteId = flavour.colorPaletteId ?? parent.colorPaletteId;
         const palette = paletteId === null ? undefined : paletteById.get(paletteId);
-        const paletteName = flavour.colorPaletteId === null ? `Inherited from ${parent.name}${palette ? ` (${palette.name})` : ''}` : palette?.name ?? 'Not assigned';
+        const paletteName = flavour.colorPaletteId === null && parent.colorPaletteId !== null ? `Inherited from ${parent.name}${palette ? ` (${palette.name})` : ''}` : palette?.name ?? 'Not assigned';
         return <CatalogCard key={flavour.id} name={flavour.name} onEdit={() => { saveMutation.reset(); setEditor(flavour); }} onDelete={() => { deleteMutation.reset(); setDeleting(flavour); }} preview={<DrinkPreview label={flavour.name} palette={palette} />} details={<Typography className="catalog-detail">Palette: {paletteName}</Typography>} />;
       })}</div>
     </PageState>
