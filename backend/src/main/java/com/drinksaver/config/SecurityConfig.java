@@ -4,6 +4,8 @@ import com.drinksaver.security.RejectMultipartRequestsFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.config.Customizer;
@@ -34,11 +36,23 @@ public class SecurityConfig {
                 // Custom paths (configured in application.yaml)
                 .requestMatchers("/api-docs/**").permitAll()
                 .requestMatchers("/api-docs.yaml").permitAll()
+                // Keycloak's group mapper emits full paths, so only the top-level admin group matches
+                .requestMatchers("/v1/admin/**").hasAuthority("GROUP_/admin")
                 .anyRequest().authenticated()
             )
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(Customizer.withDefaults())
+            .oauth2ResourceServer(oauth2 ->
+                oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
             );
         return http.build();
+    }
+
+    private JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter groups = new JwtGrantedAuthoritiesConverter();
+        groups.setAuthoritiesClaimName("groups");
+        groups.setAuthorityPrefix("GROUP_");
+
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(groups);
+        return converter;
     }
 }

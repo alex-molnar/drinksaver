@@ -3,9 +3,9 @@ package com.drinksaver.service.namecollector;
 import com.drinksaver.model.db.AlcoholSubtype;
 import com.drinksaver.model.db.AlcoholType;
 import com.drinksaver.model.db.AlcoholVolume;
-import com.drinksaver.repository.postgres.schema.AlcoholSubtypesTable;
-import com.drinksaver.repository.postgres.schema.AlcoholTypesTable;
-import com.drinksaver.repository.postgres.schema.AlcoholVolumeTable;
+import com.drinksaver.repository.schema.AlcoholSubtypesTable;
+import com.drinksaver.repository.schema.AlcoholTypesTable;
+import com.drinksaver.repository.schema.AlcoholVolumeTable;
 import com.drinksaver.service.model.DrinkKey;
 import org.junit.jupiter.api.Test;
 
@@ -52,7 +52,7 @@ class AlcoholNameCollectorTest {
         AlcoholVolume volume = new AlcoholVolume(1, "Shot", 0.05f);
 
         AlcoholSubtypesTable subtypesTable = mock(AlcoholSubtypesTable.class);
-        when(subtypesTable.findById(3)).thenReturn(Optional.of(subtype));
+        when(subtypesTable.findById(3L)).thenReturn(Optional.of(subtype));
 
         AlcoholVolumeTable volumeTable = mock(AlcoholVolumeTable.class);
         when(volumeTable.findById(2)).thenReturn(Optional.of(volume));
@@ -63,7 +63,7 @@ class AlcoholNameCollectorTest {
                 subtypesTable
         );
 
-        DrinkKey key = new DrinkKey(1, 3, 2, null, null, null, null, null, Optional.empty());
+        DrinkKey key = new DrinkKey(1, 3L, 2, null, null, null, null, null, Optional.empty());
         DrinkKey result = collector.collectAlcoholName(key);
 
         assertThat(result.name()).isPresent();
@@ -79,7 +79,7 @@ class AlcoholNameCollectorTest {
         when(typesTable.findById(1)).thenReturn(Optional.of(type));
 
         AlcoholSubtypesTable subtypesTable = mock(AlcoholSubtypesTable.class);
-        when(subtypesTable.findById(3)).thenReturn(Optional.empty());
+        when(subtypesTable.findById(3L)).thenReturn(Optional.empty());
 
         AlcoholVolumeTable volumeTable = mock(AlcoholVolumeTable.class);
         when(volumeTable.findById(2)).thenReturn(Optional.of(volume));
@@ -90,7 +90,7 @@ class AlcoholNameCollectorTest {
                 subtypesTable
         );
 
-        DrinkKey key = new DrinkKey(1, 3, 2, null, null, null, null, null, Optional.empty());
+        DrinkKey key = new DrinkKey(1, 3L, 2, null, null, null, null, null, Optional.empty());
         DrinkKey result = collector.collectAlcoholName(key);
 
         assertThat(result.name()).isPresent();

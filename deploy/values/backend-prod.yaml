@@ -10,10 +10,11 @@ datasource:
   passwordSecretName: "secret-postgres-basic-auth"
 
 repository:
-  adminUserList: "392d2b7b-9eda-423f-8fe5-e395da35f708"
+  adminUserUUID: "392d2b7b-9eda-423f-8fe5-e395da35f708"
 
 cors:
-  allowedOrigins: "https://app.drinksaver.kak.im"
+  allowedOrigins: "https://app.drinksaver.kak.im,https://admin.drinksaver.kak.im"
+  allowedMethods: "GET,POST,PATCH,PUT,DELETE,OPTIONS"
 
 jwt:
   issuerUri: "https://auth.drinksaver.kak.im/auth/realms/drinksaver"

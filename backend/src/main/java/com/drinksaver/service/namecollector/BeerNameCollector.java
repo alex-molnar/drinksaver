@@ -1,10 +1,10 @@
 package com.drinksaver.service.namecollector;
 
 import com.drinksaver.model.db.Recommendation;
-import com.drinksaver.repository.postgres.schema.AlcoholVolumeTable;
-import com.drinksaver.repository.postgres.schema.BeerFlavoursTable;
-import com.drinksaver.repository.postgres.schema.BrandsTable;
-import com.drinksaver.repository.postgres.schema.ConsumptionTypesTable;
+import com.drinksaver.repository.schema.AlcoholVolumeTable;
+import com.drinksaver.repository.schema.BeerFlavoursTable;
+import com.drinksaver.repository.schema.BrandsTable;
+import com.drinksaver.repository.schema.ConsumptionTypesTable;
 import com.drinksaver.service.model.DrinkKey;
 import org.springframework.stereotype.Service;
 

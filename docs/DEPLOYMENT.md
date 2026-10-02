@@ -4,14 +4,15 @@ How DrinkSaver is built, published, and deployed.
 
 ## Overview
 
-Both applications live in one namespace per environment and share a single
-version. Images and Helm charts are published to GitHub Container Registry by
-GitHub Actions. Nothing is built or pushed from a laptop.
+The backend, consumer web app and admin panel share one version and live in one
+namespace per environment. Workflows publish all three applications, deploy
+test builds from non-main branches and keep production deployment manual.
+Nothing is published from a laptop.
 
 | Environment | Namespace | Releases | URLs |
 |---|---|---|---|
-| Test | `drinksaver-test` | `drinksaver-backend`, `drinksaver-web` | `test.api.drinksaver.kak.im`, `test.app.drinksaver.kak.im` |
-| Production | `drinksaver` | `drinksaver-backend`, `drinksaver-web` | `api.drinksaver.kak.im`, `app.drinksaver.kak.im` |
+| Test | `drinksaver-test` | `drinksaver-backend`, `drinksaver-web`, `drinksaver-admin` | `test.api.drinksaver.kak.im`, `test.app.drinksaver.kak.im`, `test.admin.drinksaver.kak.im` |
+| Production | `drinksaver` | `drinksaver-backend`, `drinksaver-web`, `drinksaver-admin` | `api.drinksaver.kak.im`, `app.drinksaver.kak.im`, `admin.drinksaver.kak.im` |
 
 ## Versioning
 
@@ -19,8 +20,9 @@ GitHub Actions. Nothing is built or pushed from a laptop.
 `4.3.0`.
 
 One computed version string is applied to the Maven project version, the web
-`package.json`, the Docker image tag, and both the Helm chart `version` and
-`appVersion`. Nothing carries a version of its own.
+package, Docker image tags and published Helm charts' `version` and
+`appVersion`. The admin package and chart match root `VERSION` in the main
+publication workflow.
 
 | Workflow | Version produced |
 |---|---|
@@ -35,7 +37,7 @@ One nuance worth knowing: the two test workflows are triggered independently by
 path, so if you change only the backend, only the backend gets a new timestamped
 version and web stays on whatever it last deployed. The strict "everything on
 one version" guarantee is what the build workflow provides, because it publishes
-both applications at `VERSION` in a single run. Production deploys from those
+both currently published apps at `VERSION` in a single run. Production deploys from those
 artifacts, so production is always internally consistent.
 
 To release a new version, edit `VERSION` and merge to `main`.
@@ -100,8 +102,10 @@ two-test smoke plan.
 ```
 ghcr.io/alex-molnar/drinksaver-backend:<version>
 ghcr.io/alex-molnar/drinksaver-web:<version>
+ghcr.io/alex-molnar/drinksaver-admin:<version>
 ghcr.io/alex-molnar/charts/drinksaver-backend:<version>
 ghcr.io/alex-molnar/charts/drinksaver-web:<version>
+ghcr.io/alex-molnar/charts/drinksaver-admin:<version>
 ```
 
 The repository is public, so GHCR storage and data transfer are free and
@@ -117,7 +121,7 @@ helm pull oci://ghcr.io/alex-molnar/charts/drinksaver-backend --version 3.0.0
 
 ## Workflows
 
-Only two workflows react to `main`, and neither of them touches the test
+Only two workflows react to `main`; build and publish does not touch the test
 environment.
 
 | Workflow | Fires on push to `main`? | Otherwise triggered by |
@@ -126,8 +130,10 @@ environment.
 | Deploy to production | no | manual only |
 | Deploy backend to test | no | push to any other branch, `backend/**` |
 | Deploy web to test | no | push to any other branch, `web/**` |
+| Deploy admin to test | no | push to any other branch, `admin/**` or `VERSION` |
 | Apply backend test values | no | push to any other branch, `deploy/values/backend-test.yaml` |
 | Apply web test values | no | push to any other branch, `deploy/values/web-test.yaml` |
+| Apply admin test values | no | push to any other branch, `deploy/values/admin-test.yaml` |
 
 Every workflow can also be dispatched manually, including against `main`.
 
@@ -151,13 +157,13 @@ a build from a feature branch, which is what makes it useful for pre-merge
 validation. To put a `main` build into test, run the workflow manually against
 `main`.
 
-### Apply backend test values / Apply web test values
+### Apply backend test values / Apply web test values / Apply admin test values
 
 Trigger: a push to any branch **except `main`** touching
-`deploy/values/backend-test.yaml` or `deploy/values/web-test.yaml`
-respectively. Also runnable manually.
+`deploy/values/backend-test.yaml`, `deploy/values/web-test.yaml` or
+`deploy/values/admin-test.yaml` respectively. Also runnable manually.
 
-Reapplies the values file to the chart version already released in
+Reapplies the corresponding values file to the chart version already released in
 `drinksaver-test`. Nothing is compiled and nothing is published, so this is the
 fast path for a configuration-only change: a new hostname, a CORS origin, a
 different Keycloak realm.
@@ -176,20 +182,22 @@ both mutate the same release and must never overlap.
 Trigger: any push to `main`, which includes a merged pull request. Also runnable
 manually.
 
-Builds both applications, pushes both images and both charts at `VERSION`, and
-deploys nothing. The run summary lists the four published references.
+Builds all three applications, pushes their images and charts at `VERSION`, and
+deploys nothing. The run summary lists the six published references.
 
 ### Deploy to production
 
 Trigger: manual only. This is the production cutover and never fires on a push.
 
-Pulls the already published charts by version and deploys them into
-`drinksaver`. Nothing is compiled or rebuilt.
+Pulls the already published charts by version and deploys selected releases into
+`drinksaver`. Nothing is compiled or rebuilt. Admin deployment is opt-in and
+defaults off.
 
 | Input | Type | Default | Meaning |
 |---|---|---|---|
 | `deploy-backend` | boolean | `true` | Deploy the `drinksaver-backend` chart |
 | `deploy-web` | boolean | `true` | Deploy the `drinksaver-web` chart |
+| `deploy-admin` | boolean | `false` | Deploy the `drinksaver-admin` chart |
 | `version` | string | empty | Version to pull. Empty means read `VERSION` |
 
 Each workflow has a `concurrency` group, so two runs can never perform
@@ -197,12 +205,21 @@ overlapping `helm upgrade` calls on the same release.
 
 ## Testing
 
-Both applications have a suite, and both gate CI.
+Backend, consumer web and admin lint, test/coverage and build checks gate their
+image publication workflows. Admin browser journeys run with the main E2E gate.
 
 | Application | Stack | Command |
 |---|---|---|
 | Backend | JUnit 5, Mockito, AssertJ, Testcontainers | `cd backend && mvn test` |
 | Web | Vitest 5, jsdom, React Testing Library | `cd web && npm run test` |
+| Admin | Vitest 5, jsdom, React Testing Library | `cd admin && npm run test` |
+
+Admin coverage runs with `cd admin && npm run test:coverage`. Its measured floors
+are 75% statements, 69% branches, 66% functions and 85% lines from the
+2026-10-02 full-suite run. The separate browser suite is
+`cd web && npm run e2e:admin`; it uses the local admin app at port 3001 and a
+real Keycloak login.
+The consumer suite remains `cd web && npm run e2e`.
 
 Backend tests run automatically wherever `mvn package` runs, which covers both
 "Build and publish" and "Deploy backend to test". The web workflows run
@@ -246,9 +263,14 @@ docker-compose up --build     # start everything
 docker-compose down -v        # stop and discard all data
 ```
 
+The admin browser suite creates uniquely named records and deletes them after
+each journey. It does not remove Compose volumes; only disposable CI Compose
+stacks are torn down with their volumes.
+
 | Service | URL | Notes |
 |---|---|---|
 | Web | http://localhost:3000 | Log in as `dev` / `dev` |
+| Admin | http://localhost:3001 | Log in as `admin` / `admin`; `dev` is not in `/admin` |
 | Backend | http://localhost:8080 | Swagger UI at `/swagger-ui.html` |
 | Keycloak | http://localhost:8081/auth | Admin console `admin` / `admin` |
 | Postgres | localhost:5432 | `drinksaver` / `drinksaver` |
@@ -262,8 +284,9 @@ Every credential there is a local throwaway.
 needed on the host is Docker.
 
 `deploy/local/keycloak-realm.json` is imported on first start. It creates the `drinksaver`
-realm, the public `drinksaver-frontend` client, and one user with the fixed id
-`423c91e4-491f-4f82-aba6-3c982857e0e4`.
+realm, public `drinksaver-frontend` and `drinksaver-admin` clients, the ordinary consumer
+user `423c91e4-491f-4f82-aba6-3c982857e0e4`, and a separate admin user
+`d4ad9e6f-33bb-4e84-86e4-5880f9af0021` in the exact `/admin` group.
 
 The same import also creates the public `drinksaver-ios-local` client for the native app. It uses
 Authorization Code with S256 PKCE, permits only `im.kak.drinksaver:/oauth2redirect`, and has no
@@ -300,8 +323,10 @@ the backend to report healthy, because Hibernate creates the schema on startup
 resets the identity sequences afterwards, so the application cannot collide with the seeded
 ids.
 
-The seeded user is also the `ADMIN_USER_LIST` entry, which is what makes its rows serve as
-the shared default recommendations rather than one user's private entries.
+The admin user's ID is `ADMIN_USER_UUID`, the backend's default-catalogue owner. Seeded
+catalogue and recommendation rows use that owner; saved drinks belong to the ordinary `dev`
+user. Catalogue ownership does not grant API access; authorization comes from `/admin` in
+the access token.
 
 ### The local realm is deliberately not production shaped
 
@@ -309,6 +334,21 @@ the shared default recommendations rather than one user's private entries.
 DEVELOPMENT ONLY"` because a realm export is the kind of file that gets copied.
 It sets `sslRequired: none`, which is fine over loopback and unacceptable
 anywhere else.
+
+### Admin container and chart
+
+`admin/Dockerfile` builds the SPA and serves it through nginx. At container start,
+`admin/docker-entrypoint.sh` writes `/config.js` from `API_URL`, `KEYCLOAK_URL`,
+`KEYCLOAK_REALM` and `KEYCLOAK_CLIENT_ID`; environment-specific values are not compiled into
+the bundle. Nginx handles history routes with the SPA fallback, disables caching for
+`config.js` and `index.html`, and emits the admin security headers on normal and error
+responses.
+
+The `admin/helm/drinksaver-admin` chart uses `deploy/values/admin-test.yaml` and
+`admin-prod.yaml`. Backend test/prod CORS values include the matching admin origin and
+allow `PATCH`. Validate the package with `cd admin && npm run test:package`; it checks runtime
+substitution, fallback/cache/header configuration, Helm lint/render for both environments,
+and `docker compose config`. These checks do not publish artifacts or change a cluster.
 
 It keeps `directAccessGrantsEnabled: true` on purpose. That enables the password
 grant, which is what lets a script obtain a token without driving a browser:
@@ -497,6 +537,16 @@ Test and production use different database users, so these are not copies of
 each other. The databases (`drinksaver` and `test-drinksaver`) and the Keycloak
 realms (`drinksaver` and `test-drinksaver`) already exist.
 
+`backend/sql/foreign_keys.sql` is a one-time manual migration for each database.
+Hibernate's `ddl-auto=update` does not run it. Check for existing design IDs that
+have no matching palette or glassware row, subtype `alcohol_type_id` values without
+an alcohol type, and beer flavour `brand_id` values without a brand before applying
+it, and record which databases have received it; the script is not idempotent.
+Apply it before deploying a backend that relies on the constraints, and verify
+that all 15 named foreign keys
+exist in `pg_constraint` in each database. The admin design DELETE endpoints rely on
+these constraints to return 409 for designs still in use.
+
 ## Rollback
 
 ```bash
@@ -533,8 +583,8 @@ chart's `config.*` values are wrong for that environment.
 
 ## Follow-ups not done here
 
-Both items that used to live here are closed. Tests exist for both applications, and the
-web bundle is code split: the largest chunk is 209 kB where it was a single 660 kB one.
+Both items that used to live here are closed. The web bundle is code split: the largest chunk
+is 209 kB where it was a single 660 kB one.
 See `docs/fixes-2026-09-08.md`.
 
 What is left, including the four leftover namespaces that need production cutover first,

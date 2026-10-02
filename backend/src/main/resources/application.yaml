@@ -4,14 +4,14 @@ repository:
   drink: "${DRINK_REPOSITORY:hardcoded}"
   recommendation: "${RECOMMENDATION_REPOSITORY:hardcoded}"
   design: "${DESIGN_REPOSITORY:hardcoded}"
-  admin-user-list: "${ADMIN_USER_LIST:00000000-0000-0000-0000-000000000000}"
+  admin-user-uuid: "${ADMIN_USER_UUID:00000000-0000-0000-0000-000000000000}"
   beer-id: "${BEER_ID:4}"
   max-personal-recommendations: "${MAX_PERSONAL_RECOMMENDATIONS:15}" # TODO make it user configurable
   decay-factor: "${DECAY_FACTOR:0.97}" # TODO make it user configurable
 
 cors:
   allowed-origins: "${CORS_ALLOWED_ORIGINS:http://localhost:3000}"
-  allowed-methods: "${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS}"
+  allowed-methods: "${CORS_ALLOWED_METHODS:GET,POST,PATCH,PUT,DELETE,OPTIONS}"
   allowed-headers: "${CORS_ALLOWED_HEADERS:*}"
   allow-credentials: "${CORS_ALLOW_CREDENTIALS:true}"
   max-age: "${CORS_MAX_AGE:3600}"

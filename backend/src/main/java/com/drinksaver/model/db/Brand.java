@@ -1,5 +1,6 @@
 package com.drinksaver.model.db;
 
+import com.drinksaver.model.dto.patch.UpdateBeerBrand;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,5 +28,20 @@ public class Brand {
         this.userId = userId;
         this.name = name;
         this.colorPaletteId = colorPaletteId;
+    }
+
+    public Brand withUpdate(UpdateBeerBrand updateBeerBrand) {
+        if (updateBeerBrand.name() != null) {
+            this.name = updateBeerBrand.name();
+        }
+        if (updateBeerBrand.colorPaletteId() != null) {
+            this.colorPaletteId = updateBeerBrand.colorPaletteId();
+        }
+        return this;
+    }
+
+    public Brand withUserId(UUID userId) {
+        this.userId = userId;
+        return this;
     }
 }

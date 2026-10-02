@@ -10,6 +10,7 @@ name: drinksaver
 #   docker-compose down -v         stop and discard all data
 #
 # Web        http://localhost:3000        log in as dev / dev
+# Admin      http://localhost:3001        log in as admin / admin
 # Backend    http://localhost:8080
 # Keycloak   http://localhost:8081/auth   admin console: admin / admin
 #
@@ -94,10 +95,10 @@ services:
       POSTGRES_DATASOURCE_URL: jdbc:postgresql://postgres:5432/drinksaver
       POSTGRES_USERNAME: drinksaver
       POSTGRES_PASSWORD: drinksaver
-      # Matches the seeded user in deploy/local/keycloak-realm.json, so the rows
-      # seeded for that id show up as the default recommendations.
-      ADMIN_USER_LIST: 423c91e4-491f-4f82-aba6-3c982857e0e4
-      CORS_ALLOWED_ORIGINS: http://localhost:3000
+      # Matches the dedicated local admin user and default catalogue owner.
+      ADMIN_USER_UUID: d4ad9e6f-33bb-4e84-86e4-5880f9af0021
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001
+      CORS_ALLOWED_METHODS: GET,POST,PATCH,PUT,DELETE,OPTIONS
       # On here and off everywhere else: this stack only ever holds the seeded demo
       # data, and seeing the generated SQL is most of the value of running it locally.
       JPA_SHOW_SQL: "true"
@@ -154,6 +155,20 @@ services:
       KEYCLOAK_CLIENT_ID: drinksaver-frontend
     ports:
       - "127.0.0.1:3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  admin:
+    build:
+      context: ./admin
+    environment:
+      API_URL: http://localhost:8080
+      KEYCLOAK_URL: http://localhost:8081/auth
+      KEYCLOAK_REALM: drinksaver
+      KEYCLOAK_CLIENT_ID: drinksaver-admin
+    ports:
+      - "127.0.0.1:3001:80"
     depends_on:
       backend:
         condition: service_healthy

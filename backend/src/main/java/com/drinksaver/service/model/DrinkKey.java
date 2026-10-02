@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public record DrinkKey(
         Integer alcoholTypeId,
-        Integer alcoholSubtypeId,
+        Long alcoholSubtypeId,
         Integer alcoholVolumeId,
         Integer brandId,
         Integer beerFlavourId,

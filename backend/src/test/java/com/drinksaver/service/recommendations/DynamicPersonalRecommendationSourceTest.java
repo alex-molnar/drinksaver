@@ -3,7 +3,7 @@ package com.drinksaver.service.recommendations;
 import com.drinksaver.config.RepositoryConfiguration;
 import com.drinksaver.model.db.Recommendation;
 import com.drinksaver.model.db.SavedDrink;
-import com.drinksaver.repository.postgres.schema.SavedDrinksTable;
+import com.drinksaver.repository.schema.SavedDrinksTable;
 import com.drinksaver.service.model.DrinkKey;
 import com.drinksaver.service.namecollector.DrinkNameCollector;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ class DynamicPersonalRecommendationSourceTest {
     private DynamicPersonalRecommendationSource sourceWith(double decayFactor, SavedDrinksTable table) {
         RepositoryConfiguration configuration = new RepositoryConfiguration(
                 "postgres", "postgres", "postgres", "postgres", "postgres",
-                List.of(), 4, 10, decayFactor
+                UUID.randomUUID(), 4, 10, decayFactor
         );
         DrinkNameCollector drinkNames = mock(DrinkNameCollector.class);
         when(drinkNames.withName(any(DrinkKey.class)))

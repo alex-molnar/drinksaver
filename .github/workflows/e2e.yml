@@ -51,6 +51,8 @@ jobs:
           for i in $(seq 1 60); do
             if docker compose exec -T backend curl -fsS http://localhost:8081/actuator/health >/dev/null 2>&1 \
                && curl -fsS http://localhost:3000/ >/dev/null 2>&1 \
+               && curl -fsS http://localhost:3001/ >/dev/null 2>&1 \
+               && curl -fsS http://localhost:3001/config.js >/dev/null 2>&1 \
                && curl -fsS http://localhost:8081/auth/realms/drinksaver >/dev/null 2>&1; then
               echo "stack is up"; exit 0
             fi
@@ -64,8 +66,8 @@ jobs:
       - name: Wait for the seed data
         run: |
           set -euo pipefail
-          # The journeys assert against seeded recommendations, so a green run
-          # before seeding would be meaningless.
+          # The journeys assert against seeded catalogue options and create
+          # unique recommendations, so a green run before seeding is meaningless.
           for i in $(seq 1 30); do
             state=$(docker compose ps -a --format '{{.Service}} {{.State}} {{.ExitCode}}' | awk '/^seed/ {print $2" "$3}')
             case "$state" in
@@ -75,6 +77,13 @@ jobs:
             sleep 5
           done
           echo "::error::seed did not finish"; docker compose logs seed; exit 1
+
+      - name: Apply development database integrity constraints
+        run: |
+          set -euo pipefail
+          docker compose exec -T -e PGPASSWORD=drinksaver postgres \
+            psql --username=drinksaver --dbname=drinksaver --set=ON_ERROR_STOP=1 \
+            < backend/sql/foreign_keys.sql
 
       - name: Install dependencies
         working-directory: web
@@ -86,7 +95,9 @@ jobs:
 
       - name: Run the journeys
         working-directory: web
-        run: npm run e2e
+        run: |
+          npm run e2e
+          npm run e2e:admin
 
       - name: Upload the report
         if: failure()

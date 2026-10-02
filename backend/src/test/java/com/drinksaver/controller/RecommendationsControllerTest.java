@@ -1,8 +1,9 @@
 package com.drinksaver.controller;
 
 import com.drinksaver.config.SecurityConfig;
+import com.drinksaver.controller.user.RecommendationsController;
 import com.drinksaver.model.db.Recommendation;
-import com.drinksaver.model.dto.RecommendationUpdate;
+import com.drinksaver.model.dto.patch.RecommendationUpdate;
 import com.drinksaver.service.RecommendationCacheService;
 import com.drinksaver.service.RecommendationService;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 

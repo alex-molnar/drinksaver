@@ -1,5 +1,6 @@
 package com.drinksaver.model.db;
 
+import com.drinksaver.model.dto.patch.UpdateBeerFlavour;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,5 +36,20 @@ public class BeerFlavour {
         this.userId = userId;
         this.name = name;
         this.colorPaletteId = colorPaletteId;
+    }
+
+    public BeerFlavour withUpdate(UpdateBeerFlavour updateBeerFlavour) {
+        if (updateBeerFlavour.name() != null) {
+            this.name = updateBeerFlavour.name();
+        }
+        if (updateBeerFlavour.colorPaletteId() != null) {
+            this.colorPaletteId = updateBeerFlavour.colorPaletteId();
+        }
+        return this;
+    }
+
+    public BeerFlavour withUserId(UUID userId) {
+        this.userId = userId;
+        return this;
     }
 }

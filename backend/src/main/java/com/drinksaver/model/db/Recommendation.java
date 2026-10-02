@@ -1,6 +1,6 @@
 package com.drinksaver.model.db;
 
-import com.drinksaver.model.dto.Drink;
+import com.drinksaver.model.dto.post.Drink;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,7 +23,7 @@ public class Recommendation {
     private UUID userId;
     private String name;
     private Integer alcoholTypeId;
-    private Integer alcoholSubtypeId;
+    private Long alcoholSubtypeId;
     private Integer alcoholVolumeId;
     private Integer brandId;
     private Integer beerFlavourId;

@@ -1,0 +1,22 @@
+# drinksaver-admin, production environment (namespace drinksaver).
+
+config:
+  apiUrl: "https://api.drinksaver.kak.im"
+  keycloakUrl: "https://auth.drinksaver.kak.im/auth"
+  keycloakRealm: drinksaver
+  keycloakClientId: drinksaver-admin
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: admin.drinksaver.kak.im
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: drinksaver-admin-tls
+      hosts:
+        - admin.drinksaver.kak.im
