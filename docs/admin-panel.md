@@ -8,13 +8,14 @@ remains the authority for every admin operation.
 
 `Workspace` wraps routed pages with the five primary links: Recommendations, Alcohol types,
 Beer brands, User-defined and Design. The active link exposes `aria-current="page"`. Content
-is centred at 1260px with 40px desktop insets; below 900px the navigation becomes a compact
-horizontal control and content insets shrink to 20px. Direct links and browser history work
+is centred at 1260px with 40px desktop insets; below 900px the navigation becomes compact
+and wraps links, and content insets shrink to 20px. Up to 360px, title size and insets
+shrink further for reflow. Direct links and browser history work
 for parent and child routes. Unknown paths show a named not-found page.
 
 The shell uses the consumer's copied umber tokens, Fraunces and Familjen Grotesk fonts,
-visible keyboard focus and reduced-motion settings. The current route placeholders are being
-replaced by the catalogue pages in the implementation plan.
+visible keyboard focus and reduced-motion settings. The catalogue routes are implemented
+as described below.
 
 ## Design maintenance
 
@@ -44,6 +45,8 @@ down buttons provide a direct alternative. A rename sends every `{id, name}` in 
 collection order; the returned full collection replaces cached state. Create offers optional
 subtype, volume, brand, flavour and consumption type fields. Changing type clears subtype and
 volume; changing brand clears flavour. Volumes are displayed in litres and are never edited.
+Required fields use browser validation and keep the dialog open until name, type, palette and
+glassware are provided.
 Delete requires confirmation. The server uses last-write-wins because the API has no revision
 token.
 
@@ -95,6 +98,21 @@ HTML is inserted. The adjacent text remains the accessible name for the decorati
 
 The approved page scope and endpoint contract are in the [implementation plan](superpowers/plans/2026-09-21-admin-panel.md)
 and [Workspace specification](superpowers/specs/2026-10-02-admin-panel-visual-directions.md).
+
+## Browser acceptance
+
+Admin journeys use `web/e2e/admin.playwright.config.ts` and run with
+`cd web && npm run e2e:admin`. The separate suite logs into the local Keycloak
+realm as `admin`, runs one worker against the shared seeded database, and stores
+its auth state, report and results separately from consumer journeys. It covers
+catalogue CRUD, publication, recommendation editing/order, design previews,
+read-only volumes and denied consumer access. Records use unique names and are
+removed after each journey. The normal consumer command remains `npm run e2e`.
+
+Loading, desktop, narrow, error, empty and form screenshots are captured by the
+accessibility journey. It checks keyboard dialog behaviour, status/error
+announcements, reduced motion, reflow and target size; assistive technology is
+not driven by Playwright.
 
 ## Default types, brands and children
 
