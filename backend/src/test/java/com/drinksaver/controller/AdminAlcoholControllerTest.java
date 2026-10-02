@@ -139,8 +139,8 @@ class AdminAlcoholControllerTest {
     @Test
     void patchesAlcoholSubtypeOrReturnsNotFound() throws Exception {
         UpdateAlcoholSubtype update = new UpdateAlcoholSubtype("Dry", null, null);
-        when(alcoholRepository.editAlcoholSubtype(4, update)).thenReturn(Optional.of(new AlcoholSubtype(2, UUID.randomUUID(), "Dry")));
-        when(alcoholRepository.editAlcoholSubtype(9, update)).thenReturn(Optional.empty());
+        when(alcoholRepository.editAlcoholSubtype(4L, update)).thenReturn(Optional.of(new AlcoholSubtype(2, UUID.randomUUID(), "Dry")));
+        when(alcoholRepository.editAlcoholSubtype(9L, update)).thenReturn(Optional.empty());
 
         mockMvc.perform(patch("/v1/admin/alcohol/subtypes/4").with(admin())
                 .contentType(APPLICATION_JSON).content("{\"name\":\"Dry\"}"))
@@ -149,22 +149,22 @@ class AdminAlcoholControllerTest {
         mockMvc.perform(patch("/v1/admin/alcohol/subtypes/9").with(admin())
                 .contentType(APPLICATION_JSON).content("{\"name\":\"Dry\"}"))
             .andExpect(status().isNotFound());
-        verify(alcoholRepository).editAlcoholSubtype(4, update);
-        verify(alcoholRepository).editAlcoholSubtype(9, update);
+        verify(alcoholRepository).editAlcoholSubtype(4L, update);
+        verify(alcoholRepository).editAlcoholSubtype(9L, update);
     }
 
     @Test
     void deletesAlcoholTypesAndSubtypes() throws Exception {
         when(alcoholRepository.deleteAlcoholType(3)).thenReturn(204);
         when(alcoholRepository.deleteAlcoholType(9)).thenReturn(404);
-        when(alcoholRepository.deleteAlcoholSubType(4)).thenReturn(409);
+        when(alcoholRepository.deleteAlcoholSubType(4L)).thenReturn(409);
 
         mockMvc.perform(delete("/v1/admin/alcohol/types/3").with(admin())).andExpect(status().isNoContent());
         mockMvc.perform(delete("/v1/admin/alcohol/types/9").with(admin())).andExpect(status().isNotFound());
         mockMvc.perform(delete("/v1/admin/alcohol/subtypes/4").with(admin())).andExpect(status().isConflict());
         verify(alcoholRepository).deleteAlcoholType(3);
         verify(alcoholRepository).deleteAlcoholType(9);
-        verify(alcoholRepository).deleteAlcoholSubType(4);
+        verify(alcoholRepository).deleteAlcoholSubType(4L);
     }
 
     @Test
@@ -173,8 +173,8 @@ class AdminAlcoholControllerTest {
         AlcoholSubtype subtype = new AlcoholSubtype(2, UUID.randomUUID(), "Clear");
         when(alcoholRepository.publishAlcoholType(3)).thenReturn(Optional.of(type));
         when(alcoholRepository.publishAlcoholType(9)).thenReturn(Optional.empty());
-        when(alcoholRepository.publishAlcoholSubtype(4)).thenReturn(Optional.of(subtype));
-        when(alcoholRepository.publishAlcoholSubtype(9)).thenReturn(Optional.empty());
+        when(alcoholRepository.publishAlcoholSubtype(4L)).thenReturn(Optional.of(subtype));
+        when(alcoholRepository.publishAlcoholSubtype(9L)).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/v1/admin/user-defined/alcohol/types/3/publish").with(admin()))
             .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Vodka"));

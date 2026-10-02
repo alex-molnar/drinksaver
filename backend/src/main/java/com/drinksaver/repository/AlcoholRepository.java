@@ -89,15 +89,15 @@ public class AlcoholRepository {
         return saveSubtypeForAlcoholType(alcoholTypeId, newAlcoholSubtype.withUserId(repositoryConfiguration.adminUserUUID()));
     }
 
-    public Optional<AlcoholSubtype> editAlcoholSubtype(Integer alcoholSubtypeId, UpdateAlcoholSubtype updateAlcoholSubtype) {
+    public Optional<AlcoholSubtype> editAlcoholSubtype(Long alcoholSubtypeId, UpdateAlcoholSubtype updateAlcoholSubtype) {
         return alcoholSubtypesTable.findById(alcoholSubtypeId).map(existing -> alcoholSubtypesTable.save(existing.withUpdate(updateAlcoholSubtype)));
     }
 
-    public Optional<AlcoholSubtype> publishAlcoholSubtype(Integer id) {
+    public Optional<AlcoholSubtype> publishAlcoholSubtype(Long id) {
         return alcoholSubtypesTable.findById(id).map(existing -> alcoholSubtypesTable.save(existing.withUserId(repositoryConfiguration.adminUserUUID())));
     }
 
-    public int deleteAlcoholSubType(Integer id) {
+    public int deleteAlcoholSubType(Long id) {
         if (alcoholSubtypesTable.existsById(id)) {
             try {
                 alcoholSubtypesTable.deleteById(id);

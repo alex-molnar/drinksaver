@@ -21,7 +21,7 @@ public record Drink(
         @JsonProperty(access = JsonProperty.Access.READ_ONLY) UUID userId,
         @NotNull String date,
         @NotNull Integer alcoholTypeId,
-        Integer alcoholSubtypeId,
+        Long alcoholSubtypeId,
         Integer alcoholVolumeId,
         Integer brandId,
         Integer beerFlavourId,

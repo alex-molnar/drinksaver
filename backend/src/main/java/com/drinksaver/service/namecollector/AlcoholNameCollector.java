@@ -39,7 +39,7 @@ public class AlcoholNameCollector {
         ));
     }
 
-    private String getAlcoholName(Integer alcoholTypeId, Integer alcoholSubtypeId) {
+    private String getAlcoholName(Integer alcoholTypeId, Long alcoholSubtypeId) {
         return alcoholSubtypeId != null
                 ? alcoholSubtypesTable
                     .findById(alcoholSubtypeId)

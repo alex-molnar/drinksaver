@@ -19,7 +19,7 @@ public class DefaultRecommendation {
 
     private String name;
     private Integer alcoholTypeId;
-    private Integer alcoholSubtypeId;
+    private Long alcoholSubtypeId;
     private Integer alcoholVolumeId;
     private Integer brandId;
     private Integer beerFlavourId;
