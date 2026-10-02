@@ -192,9 +192,74 @@ jobs:
             --destination dist
           helm push "dist/drinksaver-web-${VERSION}.tgz" "oci://ghcr.io/${OWNER}/charts"
 
+  admin:
+    name: Admin image and chart
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Stamp version into package.json
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          jq --arg v "$VERSION" '.version = $v' admin/package.json > admin/package.json.tmp
+          mv admin/package.json.tmp admin/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: admin/package-lock.json
+
+      - name: Test, lint and build admin panel
+        working-directory: admin
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run lint
+          npm run test:coverage
+          npm run build
+          helm lint helm/drinksaver-admin --values ../deploy/values/admin-test.yaml
+          helm lint helm/drinksaver-admin --values ../deploy/values/admin-prod.yaml
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v7
+        with:
+          context: admin
+          push: true
+          tags: ghcr.io/${{ needs.version.outputs.owner }}/drinksaver-admin:${{ needs.version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Package and push Helm chart
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          OWNER: ${{ needs.version.outputs.owner }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          helm registry login ghcr.io --username "$GH_ACTOR" --password "$GH_TOKEN"
+          helm package admin/helm/drinksaver-admin \
+            --version "$VERSION" --app-version "$VERSION" \
+            --destination dist
+          helm push "dist/drinksaver-admin-${VERSION}.tgz" "oci://ghcr.io/${OWNER}/charts"
+
   summary:
     name: Summary
-    needs: [version, backend, web]
+    needs: [version, backend, web, admin]
     runs-on: ubuntu-latest
     steps:
       - env:
@@ -208,8 +273,10 @@ jobs:
             echo '```'
             echo "ghcr.io/${OWNER}/drinksaver-backend:${VERSION}"
             echo "ghcr.io/${OWNER}/drinksaver-web:${VERSION}"
+            echo "ghcr.io/${OWNER}/drinksaver-admin:${VERSION}"
             echo "ghcr.io/${OWNER}/charts/drinksaver-backend:${VERSION}"
             echo "ghcr.io/${OWNER}/charts/drinksaver-web:${VERSION}"
+            echo "ghcr.io/${OWNER}/charts/drinksaver-admin:${VERSION}"
             echo '```'
             echo
             echo "Nothing was deployed. Run **Deploy to production** with version \`${VERSION}\` when ready."

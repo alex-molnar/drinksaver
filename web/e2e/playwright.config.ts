@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * End-to-end tests against the local compose stack, not a mock.
+ * Consumer E2E tests against the local compose stack, not a mock. Admin
+ * journeys live beside `tests/` and run only through admin.playwright.config.ts.
  *
  * `docker-compose up -d --build` from the repository root must be running, with
  * the web app on :3000, the backend on :8080 and Keycloak on :8081/auth.

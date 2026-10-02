@@ -5,17 +5,14 @@ How DrinkSaver is built, published, and deployed.
 ## Overview
 
 The backend, consumer web app and admin panel share one version and live in one
-namespace per environment. Existing workflows publish and deploy the backend
-and consumer app. Admin packaging is added here; CI publication and environment
-deployment are P8 work. Nothing is published from a laptop.
+namespace per environment. Workflows publish all three applications, deploy
+test builds from non-main branches and keep production deployment manual.
+Nothing is published from a laptop.
 
 | Environment | Namespace | Releases | URLs |
 |---|---|---|---|
-| Test | `drinksaver-test` | `drinksaver-backend`, `drinksaver-web` | `test.api.drinksaver.kak.im`, `test.app.drinksaver.kak.im` |
-| Production | `drinksaver` | `drinksaver-backend`, `drinksaver-web` | `api.drinksaver.kak.im`, `app.drinksaver.kak.im` |
-
-The admin chart targets `test.admin.drinksaver.kak.im` and
-`admin.drinksaver.kak.im`; current workflows do not publish or deploy it.
+| Test | `drinksaver-test` | `drinksaver-backend`, `drinksaver-web`, `drinksaver-admin` | `test.api.drinksaver.kak.im`, `test.app.drinksaver.kak.im`, `test.admin.drinksaver.kak.im` |
+| Production | `drinksaver` | `drinksaver-backend`, `drinksaver-web`, `drinksaver-admin` | `api.drinksaver.kak.im`, `app.drinksaver.kak.im`, `admin.drinksaver.kak.im` |
 
 ## Versioning
 
@@ -24,8 +21,8 @@ The admin chart targets `test.admin.drinksaver.kak.im` and
 
 One computed version string is applied to the Maven project version, the web
 package, Docker image tags and published Helm charts' `version` and
-`appVersion`. The admin package and chart currently match root `VERSION`; P8
-will add them to the publication workflow.
+`appVersion`. The admin package and chart match root `VERSION` in the main
+publication workflow.
 
 | Workflow | Version produced |
 |---|---|
@@ -50,10 +47,10 @@ To release a new version, edit `VERSION` and merge to `main`.
 ```
 ghcr.io/alex-molnar/drinksaver-backend:<version>
 ghcr.io/alex-molnar/drinksaver-web:<version>
-ghcr.io/alex-molnar/drinksaver-admin:<version> (after P8 publication is added)
+ghcr.io/alex-molnar/drinksaver-admin:<version>
 ghcr.io/alex-molnar/charts/drinksaver-backend:<version>
 ghcr.io/alex-molnar/charts/drinksaver-web:<version>
-ghcr.io/alex-molnar/charts/drinksaver-admin:<version> (after P8 publication is added)
+ghcr.io/alex-molnar/charts/drinksaver-admin:<version>
 ```
 
 The repository is public, so GHCR storage and data transfer are free and
@@ -69,7 +66,7 @@ helm pull oci://ghcr.io/alex-molnar/charts/drinksaver-backend --version 3.0.0
 
 ## Workflows
 
-Only two workflows react to `main`, and neither of them touches the test
+Only two workflows react to `main`; build and publish does not touch the test
 environment.
 
 | Workflow | Fires on push to `main`? | Otherwise triggered by |
@@ -78,8 +75,10 @@ environment.
 | Deploy to production | no | manual only |
 | Deploy backend to test | no | push to any other branch, `backend/**` |
 | Deploy web to test | no | push to any other branch, `web/**` |
+| Deploy admin to test | no | push to any other branch, `admin/**`, admin test values or `VERSION` |
 | Apply backend test values | no | push to any other branch, `deploy/values/backend-test.yaml` |
 | Apply web test values | no | push to any other branch, `deploy/values/web-test.yaml` |
+| Apply admin test values | no | push to any other branch, `deploy/values/admin-test.yaml` |
 
 Every workflow can also be dispatched manually, including against `main`.
 
@@ -103,13 +102,13 @@ a build from a feature branch, which is what makes it useful for pre-merge
 validation. To put a `main` build into test, run the workflow manually against
 `main`.
 
-### Apply backend test values / Apply web test values
+### Apply backend test values / Apply web test values / Apply admin test values
 
 Trigger: a push to any branch **except `main`** touching
-`deploy/values/backend-test.yaml` or `deploy/values/web-test.yaml`
-respectively. Also runnable manually.
+`deploy/values/backend-test.yaml`, `deploy/values/web-test.yaml` or
+`deploy/values/admin-test.yaml` respectively. Also runnable manually.
 
-Reapplies the values file to the chart version already released in
+Reapplies the corresponding values file to the chart version already released in
 `drinksaver-test`. Nothing is compiled and nothing is published, so this is the
 fast path for a configuration-only change: a new hostname, a CORS origin, a
 different Keycloak realm.
@@ -128,20 +127,22 @@ both mutate the same release and must never overlap.
 Trigger: any push to `main`, which includes a merged pull request. Also runnable
 manually.
 
-Builds both applications, pushes both images and both charts at `VERSION`, and
-deploys nothing. The run summary lists the four published references.
+Builds all three applications, pushes their images and charts at `VERSION`, and
+deploys nothing. The run summary lists the six published references.
 
 ### Deploy to production
 
 Trigger: manual only. This is the production cutover and never fires on a push.
 
-Pulls the already published charts by version and deploys them into
-`drinksaver`. Nothing is compiled or rebuilt.
+Pulls the already published charts by version and deploys selected releases into
+`drinksaver`. Nothing is compiled or rebuilt. Admin deployment is opt-in and
+defaults off.
 
 | Input | Type | Default | Meaning |
 |---|---|---|---|
 | `deploy-backend` | boolean | `true` | Deploy the `drinksaver-backend` chart |
 | `deploy-web` | boolean | `true` | Deploy the `drinksaver-web` chart |
+| `deploy-admin` | boolean | `false` | Deploy the `drinksaver-admin` chart |
 | `version` | string | empty | Version to pull. Empty means read `VERSION` |
 
 Each workflow has a `concurrency` group, so two runs can never perform
@@ -149,14 +150,21 @@ overlapping `helm upgrade` calls on the same release.
 
 ## Testing
 
-The backend and consumer web suites gate their existing CI workflows. The admin unit suite
-and packaging checks exist; admin CI gates are P8 work.
+Backend, consumer web and admin lint, test/coverage and build checks gate their
+image publication workflows. Admin browser journeys run with the main E2E gate.
 
 | Application | Stack | Command |
 |---|---|---|
 | Backend | JUnit 5, Mockito, AssertJ, Testcontainers | `cd backend && mvn test` |
 | Web | Vitest 5, jsdom, React Testing Library | `cd web && npm run test` |
 | Admin | Vitest 5, jsdom, React Testing Library | `cd admin && npm run test` |
+
+Admin coverage runs with `cd admin && npm run test:coverage`. Its measured floors
+are 75% statements, 69% branches, 66% functions and 85% lines from the
+2026-10-02 full-suite run. The separate browser suite is
+`cd web && npm run e2e:admin`; it uses the local admin app at port 3001 and a
+real Keycloak login.
+The consumer suite remains `cd web && npm run e2e`.
 
 Backend tests run automatically wherever `mvn package` runs, which covers both
 "Build and publish" and "Deploy backend to test". The web workflows run
@@ -199,6 +207,10 @@ it.
 docker-compose up --build     # start everything
 docker-compose down -v        # stop and discard all data
 ```
+
+The admin browser suite creates uniquely named records and deletes them after
+each journey. It does not remove Compose volumes; only disposable CI Compose
+stacks are torn down with their volumes.
 
 | Service | URL | Notes |
 |---|---|---|

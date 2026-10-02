@@ -17,9 +17,9 @@ export default defineConfig({
       reporter: ['text-summary', 'lcov'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/**/*.test.{ts,tsx}', 'src/test/**', 'src/vite-env.d.ts', 'src/main.tsx'],
-      // Placeholder floors. Task 14 replaces these with the measured values,
-      // the date, and the ratchet comment this repository uses everywhere else.
-      thresholds: { statements: 0, branches: 0, functions: 0, lines: 0 },
+      // Ratchet from the first full-suite measurement on 2026-10-02:
+      // 75.72 / 69.61 / 66.82 / 85.47 (statements / branches / functions / lines).
+      thresholds: { statements: 75, branches: 69, functions: 66, lines: 85 },
     },
   },
 })

@@ -115,13 +115,14 @@ const RecommendationEditor = ({ initial, types, brands, palettes, glassware, con
   const clearType = (value: number | '') => { setTypeId(value); setSubtypeId(''); setVolumeId(''); };
   const clearBrand = (value: number | '') => { setBrandId(value); setFlavourId(''); };
   const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (initial) { onSubmit(event, name.trim()); return; }
     if (!name.trim() || typeId === '' || paletteId === '' || glassId === '') return;
     onSubmit(event, { name: name.trim(), alcoholTypeId: typeId, colorPaletteId: paletteId, glasswareId: glassId, ...(subtypeId === '' ? {} : { alcoholSubtypeId: subtypeId }), ...(volumeId === '' ? {} : { alcoholVolumeId: volumeId }), ...(brandId === '' ? {} : { brandId }), ...(flavourId === '' ? {} : { beerFlavourId: flavourId }), ...(consumptionId === '' ? {} : { consumptionTypeId: consumptionId }) });
   };
-  return <EditorDialog open title={initial ? `Rename ${initial.name}` : 'Create recommendation'} submitLabel={initial ? 'Save name' : 'Create recommendation'} pending={pending} error={error} noValidate onClose={onClose} onSubmit={submit}>
+  return <EditorDialog open title={initial ? `Rename ${initial.name}` : 'Create recommendation'} submitLabel={initial ? 'Save name' : 'Create recommendation'} pending={pending} error={error} onClose={onClose} onSubmit={submit}>
     <Stack spacing={2} sx={{ pt: 1 }}>
-      <TextField required label="Name" value={name} onChange={(event) => setName(event.target.value)} />
+      <TextField required label="Name" slotProps={{ htmlInput: { pattern: '.*\\S.*', title: 'Enter at least one non-space character.' } }} value={name} onChange={(event) => setName(event.target.value)} />
       {initial ? <Typography>To change a recommendation's composition or design, create a new recommendation and delete this one.</Typography> : <>
         <DesignSelect label="Alcohol type" value={typeId} rows={types} required onChange={clearType} />
         <DesignSelect label="Alcohol subtype (optional)" value={subtypeId} rows={subtypes.data ?? []} required={false} onChange={setSubtypeId} />
