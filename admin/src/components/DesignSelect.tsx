@@ -14,6 +14,7 @@ export const DesignSelect = ({ label, value, rows, required, helperText, onChang
   return <FormControl required={required} fullWidth>
     <InputLabel id={`${id}-label`}>{label}</InputLabel>
     <Select<number | ''> labelId={`${id}-label`} id={id} label={label} value={value} required={required} onChange={(event) => onChange(event.target.value === '' ? '' : Number(event.target.value))}>
+      {!required && <MenuItem value="">None</MenuItem>}
       {rows.map((row) => <MenuItem key={row.id} value={row.id}>{row.name}</MenuItem>)}
     </Select>
     {helperText && <FormHelperText>{helperText}</FormHelperText>}

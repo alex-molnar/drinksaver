@@ -34,6 +34,29 @@ on update. Consumption types show their glassware preview and cannot be created 
 glassware is available; empty and failed glassware states offer a route or retry.
 Conflicting deletes keep confirmation open with the API error.
 
+## Recommendations
+
+`RecommendationsPage` has no props. It loads the ordered defaults and resolves type, subtype,
+brand, flavour, palette, glassware and consumption labels from default collections. Missing
+references stay visible as IDs. Search filters names; ordering is disabled while filtered or
+while a write/refetch is pending. Drag sorting supports keyboard input and the Move up/Move
+down buttons provide a direct alternative. A rename sends every `{id, name}` in the visible
+collection order; the returned full collection replaces cached state. Create offers optional
+subtype, volume, brand, flavour and consumption type fields. Changing type clears subtype and
+volume; changing brand clears flavour. Volumes are displayed in litres and are never edited.
+Delete requires confirmation. The server uses last-write-wins because the API has no revision
+token.
+
+## User-defined catalogue
+
+`UserDefinedPage` has no props. Its Types, Subtypes, Brands and Flavours tabs read only the
+user-defined collections. Child tabs require selecting a default parent before requesting
+the corresponding children collection; the page has no global child query. Search filters
+names. Inspect opens a read-only record view, and Publish requires confirmation that the
+entry moves into defaults without undo while existing children stay user-defined. Successful
+publication invalidates both the source and default queries. The DOM exposes no edit, delete
+or unpublish actions.
+
 ## Shared components
 
 ### `PageState`

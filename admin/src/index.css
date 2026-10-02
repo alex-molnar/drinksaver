@@ -49,6 +49,11 @@ button, input, textarea, select { font: inherit; }
 .catalog-name { color: var(--ds-ink-primary); font-family: 'Fraunces Display M', Georgia, serif !important; }
 .catalog-detail { margin-top: 8px !important; color: var(--ds-ink-secondary); font-size: 14px !important; }
 .catalog-actions { flex-wrap: wrap; padding: 0 16px 12px !important; }
+.recommendation-list { display: grid; gap: 14px; }
+.recommendation-card { padding: 18px; border: 1px solid #695045; border-radius: 10px; background: var(--ds-surface-panel); }
+.recommendation-summary h2 { margin: 0; color: var(--ds-ink-primary); font: 1.45rem 'Fraunces Display M', Georgia, serif; }
+.recommendation-order { color: var(--ds-accent-primary); }
+.recommendation-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 12px; }
 .editor-fields { padding-top: 8px !important; }
 .initial-children { display: grid; gap: 12px; }
 .repeatable-field { display: flex; align-items: center; gap: 8px; }
