@@ -1224,7 +1224,7 @@ paths:
       tags:
       - admin-beer-default-controller
       operationId: getDefaultBeerConsumptionTypes
-      description: Admin only. Lists default beer consumption types.
+      description: Admin only. Lists all default beer consumption types in name order.
       responses:
         "200":
           description: Default beer consumption types

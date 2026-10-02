@@ -124,12 +124,21 @@ not a request to invent a different API.
 `repository/schema/ConsumptionTypesTable.java`, relevant controller/repository tests,
 `docs/api-docs.yaml`.
 
-- [ ] Add a failing real-Postgres test with at least eleven consumption types; assert all
+- [x] Add a failing real-Postgres test with at least eleven consumption types; assert all
   are returned by the admin collection. Existing controller calls `getConsumptionTypes(10)`.
-- [ ] Use an unbounded repository read for this admin maintenance collection; retain the
+- [x] Use an unbounded repository read for this admin maintenance collection; retain the
   consumer's existing amount parameter. Do not replace ten with another hidden fixed limit.
-- [ ] Run targeted tests and backend `mvn verify`; assert integration tests ran.
-- [ ] Document full-list semantics, then commit this concern.
+- [x] Run targeted tests and backend `mvn verify`; assert integration tests ran.
+- [x] Document full-list semantics.
+- [x] Run `mvn verify` and assert all integration tests ran; commit this concern.
+
+**Execution record (2026-10-02):** `AdminConsumptionTypesIntegrationTest` first failed
+against the 10-row admin query with eleven real PostgreSQL rows. The admin endpoint now
+uses a separate unbounded, name-ordered query; the consumer's configurable limit is
+unchanged. The canonical OpenAPI description now states the full-list and ordering
+semantics. The targeted integration test and backend `mvn verify` pass with Colima; all
+237 backend tests passed, and `assert-integration-tests-ran.sh` confirmed that all 11
+integration-test classes ran against real Postgres.
 
 **Accept:** An admin can find/edit/delete the eleventh record and select it for creation.
 
