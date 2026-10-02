@@ -2,12 +2,13 @@ package com.drinksaver.service;
 
 import com.drinksaver.config.CacheConfig;
 import com.drinksaver.model.dto.post.Drink;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,15 +19,18 @@ public class RecommendationCacheService {
 
     private final CacheManager cacheManager;
     private final AtomicLong catalogueVersion = new AtomicLong();
-    private final ConcurrentHashMap<UUID, AtomicLong> userVersions = new ConcurrentHashMap<>();
+    private final com.github.benmanes.caffeine.cache.Cache<UUID, UUID> userVersions = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(24, TimeUnit.HOURS)
+        .build();
 
     public RecommendationCacheService(CacheManager cacheManager) {
         this.cacheManager = cacheManager;
     }
 
     public String cacheKey(UUID userId) {
-        long userVersion = userVersions.computeIfAbsent(userId, ignored -> new AtomicLong()).get();
-        return catalogueVersion.get() + ":" + userVersion + ":" + userId;
+        UUID userVersion = userVersions.get(userId, ignored -> UUID.randomUUID());
+        return catalogueVersion.get() + ":" + userId + ":" + userVersion;
     }
 
     /**
@@ -78,7 +82,7 @@ public class RecommendationCacheService {
         Cache recommendationsCache = cacheManager.getCache(CacheConfig.RECOMMENDATIONS_CACHE);
         if (recommendationsCache != null) {
             String oldKey = cacheKey(userId);
-            userVersions.get(userId).incrementAndGet();
+            userVersions.put(userId, UUID.randomUUID());
             recommendationsCache.evict(oldKey);
         }
     }
