@@ -36,7 +36,7 @@ public class AdminBeerDefaultController {
 
     @GetMapping("/consumption-types")
     public List<ConsumptionType> getDefaultBeerConsumptionTypes() {
-        return beerRepository.getConsumptionTypes(10);
+        return beerRepository.getAllConsumptionTypes();
     }
 
 

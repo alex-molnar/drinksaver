@@ -21,7 +21,7 @@ public class SavedDrink {
     private UUID userId;
     private String date;
     private Integer alcoholTypeId;
-    private Integer alcoholSubtypeId;
+    private Long alcoholSubtypeId;
     private Integer alcoholVolumeId;
     private Integer brandId;
     private Integer beerFlavourId;
@@ -30,7 +30,7 @@ public class SavedDrink {
     private Integer glasswareId;
     private String comments;
 
-    public SavedDrink(UUID userId, String date, Integer alcoholTypeId, Integer alcoholSubtypeId, Integer alcoholVolumeId, Integer brandId, Integer beerFlavourId, Integer consumptionTypeId, Integer colorPaletteId, Integer glasswareId, String comments) {
+    public SavedDrink(UUID userId, String date, Integer alcoholTypeId, Long alcoholSubtypeId, Integer alcoholVolumeId, Integer brandId, Integer beerFlavourId, Integer consumptionTypeId, Integer colorPaletteId, Integer glasswareId, String comments) {
         this.userId = userId;
         this.date = date;
         this.alcoholTypeId = alcoholTypeId;

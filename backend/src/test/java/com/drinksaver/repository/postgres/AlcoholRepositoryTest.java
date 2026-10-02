@@ -301,17 +301,17 @@ class AlcoholRepositoryTest {
     void editsAndPublishesAlcoholSubtypes() {
         AlcoholSubtypesTable subtypesTable = mock(AlcoholSubtypesTable.class);
         AlcoholSubtype existing = new AlcoholSubtype(1, USER, "Old", 2, 3);
-        when(subtypesTable.findById(1)).thenReturn(Optional.of(existing));
+        when(subtypesTable.findById(1L)).thenReturn(Optional.of(existing));
         when(subtypesTable.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         AlcoholRepository repo = new AlcoholRepository(mock(AlcoholTypesTable.class), subtypesTable, mock(AlcoholVolumeTable.class), CONFIG);
 
-        Optional<AlcoholSubtype> edited = repo.editAlcoholSubtype(1, new UpdateAlcoholSubtype("New", 5, 6));
+        Optional<AlcoholSubtype> edited = repo.editAlcoholSubtype(1L, new UpdateAlcoholSubtype("New", 5, 6));
         assertThat(edited).contains(existing);
         assertThat(existing.getName()).isEqualTo("New");
         assertThat(existing.getColorPaletteId()).isEqualTo(5);
         assertThat(existing.getGlasswareId()).isEqualTo(6);
 
-        assertThat(repo.publishAlcoholSubtype(1)).contains(existing);
+        assertThat(repo.publishAlcoholSubtype(1L)).contains(existing);
         assertThat(existing.getUserId()).isEqualTo(ADMIN);
     }
 }

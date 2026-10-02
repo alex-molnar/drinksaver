@@ -35,7 +35,7 @@ public class AdminAlcoholUserController {
     }
 
     @PostMapping("/subtypes/{alcoholSubTypeId}/publish")
-    public ResponseEntity<AlcoholSubtype> publishAlcoholSubtype(@PathVariable Integer alcoholSubTypeId) {
+    public ResponseEntity<AlcoholSubtype> publishAlcoholSubtype(@PathVariable Long alcoholSubTypeId) {
         return alcoholRepository.publishAlcoholSubtype(alcoholSubTypeId)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());

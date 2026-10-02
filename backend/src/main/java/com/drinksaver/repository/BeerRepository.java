@@ -14,6 +14,7 @@ import com.drinksaver.repository.schema.ConsumptionTypesTable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -133,6 +134,10 @@ public class BeerRepository {
 
     public List<ConsumptionType> getConsumptionTypes(Integer maxAmount) {
         return consumptionTypesTable.findAll(Pageable.ofSize(maxAmount)).toList();
+    }
+
+    public List<ConsumptionType> getAllConsumptionTypes() {
+        return consumptionTypesTable.findAll(Sort.by(Sort.Direction.ASC, "name"));
     }
 
     public Optional<ConsumptionType> editConsumptionType(Integer id, UpdateConsumptionType updateConsumptionType) {

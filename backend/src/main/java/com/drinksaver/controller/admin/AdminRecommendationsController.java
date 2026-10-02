@@ -32,21 +32,24 @@ public class AdminRecommendationsController {
 
     @PatchMapping("/edit")
     public List<DefaultRecommendation> reorderRecommendations(@Valid @RequestBody List<RecommendationUpdate> recommendationUpdates) {
+        List<DefaultRecommendation> updated = adminRecommendationsRepository.updateRecommendations(recommendationUpdates);
         recommendationCacheService.invalidateRecommendations();
-        return adminRecommendationsRepository.updateRecommendations(recommendationUpdates);
+        return updated;
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRecommendation(@PathVariable Integer id) {
+        if (!adminRecommendationsRepository.deleteRecommendation(id)) {
+            return ResponseEntity.notFound().build();
+        }
         recommendationCacheService.invalidateRecommendations();
-        return adminRecommendationsRepository.deleteRecommendation(id)
-                ? ResponseEntity.ok().build()
-                : ResponseEntity.notFound().build();
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping
     public DefaultRecommendation createDefaultRecommendation(@Valid @RequestBody NewDefaultRecommendation newDefaultRecommendation) {
-        return adminRecommendationsRepository.addRecommendation(newDefaultRecommendation);
+        DefaultRecommendation created = adminRecommendationsRepository.addRecommendation(newDefaultRecommendation);
+        recommendationCacheService.invalidateRecommendations();
+        return created;
     }
 }
-

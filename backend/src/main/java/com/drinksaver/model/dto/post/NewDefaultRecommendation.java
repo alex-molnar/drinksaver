@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 public record NewDefaultRecommendation (
     @NotNull String name,
     @NotNull Integer alcoholTypeId,
-    Integer alcoholSubtypeId,
+    Long alcoholSubtypeId,
     Integer alcoholVolumeId,
     Integer brandId,
     Integer beerFlavourId,

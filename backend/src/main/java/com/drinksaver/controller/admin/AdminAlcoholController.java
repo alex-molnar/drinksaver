@@ -27,7 +27,7 @@ public class AdminAlcoholController {
     }
 
     @PatchMapping("/subtypes/{id}")
-    public ResponseEntity<AlcoholSubtype> patchAlcoholSubtypeType(@PathVariable Integer id, @Valid @RequestBody UpdateAlcoholSubtype updateAlcoholSubtype) {
+    public ResponseEntity<AlcoholSubtype> patchAlcoholSubtypeType(@PathVariable Long id, @Valid @RequestBody UpdateAlcoholSubtype updateAlcoholSubtype) {
         return alcoholRepository.editAlcoholSubtype(id, updateAlcoholSubtype)
                 .map(response -> ResponseEntity.ok().body(response))
                 .orElse(ResponseEntity.notFound().build());
@@ -39,7 +39,7 @@ public class AdminAlcoholController {
     }
 
     @DeleteMapping("/subtypes/{id}")
-    public ResponseEntity<Void> deleteAlcoholSubtypeType(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteAlcoholSubtypeType(@PathVariable Long id) {
         return ResponseEntity.status(alcoholRepository.deleteAlcoholSubType(id)).build();
     }
 }

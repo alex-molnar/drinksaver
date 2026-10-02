@@ -7,14 +7,15 @@ export interface EditorDialogProps {
   submitLabel: string;
   pending: boolean;
   error?: string;
+  noValidate?: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onClose: () => void;
   children: ReactNode;
 }
 
-export const EditorDialog = ({ open, title, submitLabel, pending, error, onSubmit, onClose, children }: EditorDialogProps) => (
+export const EditorDialog = ({ open, title, submitLabel, pending, error, noValidate, onSubmit, onClose, children }: EditorDialogProps) => (
   <Dialog open={open} onClose={() => !pending && onClose()} fullWidth maxWidth="sm" aria-labelledby="editor-title">
-    <form onSubmit={onSubmit}>
+    <form onSubmit={onSubmit} noValidate={noValidate}>
       <DialogTitle id="editor-title">{title}</DialogTitle>
       <DialogContent className="editor-fields">
         {children}

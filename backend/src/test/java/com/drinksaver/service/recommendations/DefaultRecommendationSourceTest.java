@@ -55,7 +55,7 @@ class DefaultRecommendationSourceTest {
     @Test
     void copiesEveryDrinkAndDesignFieldFromTheDefault() {
         DefaultRecommendation source = defaultRecommendation("Heineken", 4);
-        source.setAlcoholSubtypeId(6);
+        source.setAlcoholSubtypeId(6L);
         source.setBrandId(7);
         source.setBeerFlavourId(8);
         source.setConsumptionTypeId(9);

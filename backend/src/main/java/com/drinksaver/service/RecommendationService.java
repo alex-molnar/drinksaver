@@ -29,7 +29,7 @@ public class RecommendationService {
         this.recommendationsTable = recommendationsTable;
     }
 
-    @Cacheable(value = "recommendations", key = "#userId")
+    @Cacheable(value = "recommendations", key = "@recommendationCacheService.cacheKey(#userId)")
     public List<Recommendation> getRecommendations(UUID userId) {
         List<Recommendation> collected = Collections.emptyList();
         for (RecommendationSource source : recommendationSources) {

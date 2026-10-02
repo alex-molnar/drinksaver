@@ -64,7 +64,7 @@ class DrinkKeyTest {
 
     @Test
     void genuinelyDifferentDrinksStayDistinct() {
-        DrinkKey gin = new DrinkKey(1, 1, 2, null, null, null, null, null, Optional.empty());
+        DrinkKey gin = new DrinkKey(1, 1L, 2, null, null, null, null, null, Optional.empty());
 
         assertThat(gin).isNotEqualTo(namelessBeer());
         Map<DrinkKey, Double> scores = new HashMap<>();
