@@ -926,7 +926,7 @@ paths:
           description: caller is not in the /admin group
         "404":
           description: no alcohol type with that id
-  /v1/admin/user-defined/alcohol/types/subtypes/{alcoholSubTypeId}/publish:
+  /v1/admin/user-defined/alcohol/subtypes/{alcoholSubTypeId}/publish:
     post:
       tags:
       - admin-alcohol-user-controller
@@ -1529,6 +1529,9 @@ components:
           format: int32
     NewVolumeEntry:
       type: object
+      required:
+      - name
+      - volume
       properties:
         name:
           type: string
@@ -1685,6 +1688,9 @@ components:
           format: int32
     RecommendationUpdate:
       type: object
+      required:
+      - id
+      - name
       properties:
         id:
           type: integer
