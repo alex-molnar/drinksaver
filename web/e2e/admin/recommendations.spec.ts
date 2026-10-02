@@ -5,6 +5,7 @@ test('uses read-only volumes and persists recommendation order and name-only edi
   const api = await adminApi(page);
   const name = uniqueName('E2E recommendation');
   const editedName = `${name} renamed`;
+  const companionName = uniqueName('E2E companion');
   let recommendationId: number | undefined;
   let companionId: number | undefined;
 
@@ -53,25 +54,28 @@ test('uses read-only volumes and persists recommendation order and name-only edi
     await expect(page.locator('.recommendation-card').filter({ hasText: editedName })).toBeVisible();
 
     const companion = await api.post('/v1/admin/recommendations', {
-      data: { name: uniqueName('E2E companion'), alcoholTypeId: 4, colorPaletteId: 2, glasswareId: 1 },
+      data: { name: companionName, alcoholTypeId: 4, colorPaletteId: 2, glasswareId: 1 },
     });
     expect(companion.ok()).toBeTruthy();
     companionId = (await companion.json()).id as number;
     await page.reload();
-    await expect(page.locator('.recommendation-card')).toHaveCount(2);
+    await expect(page.locator('.recommendation-card').filter({ hasText: editedName })).toBeVisible();
+    await expect(page.locator('.recommendation-card').filter({ hasText: companionName })).toBeVisible();
 
     const beforeMove = await page.locator('.recommendation-card h2').allTextContents();
-    const currentIndex = beforeMove.map((heading) => heading.replace(/^\s*\d+\.\s*/, '').trim()).indexOf(editedName);
+    const nameFromHeading = (heading: string) => heading.replace(/^\s*\d+\.\s*/, '').trim();
+    const beforeNames = beforeMove.map(nameFromHeading);
+    const currentIndex = beforeNames.indexOf(editedName);
     const moveDirection = currentIndex === 0 ? 'down' : 'up';
+    const expectedIndex = currentIndex + (moveDirection === 'down' ? 1 : -1);
     const moveResponse = page.waitForResponse((response) => response.url().endsWith('/v1/admin/recommendations/edit') && response.request().method() === 'PATCH');
     await page.locator('.recommendation-card').filter({ hasText: editedName }).getByRole('button', { name: `Move ${moveDirection}` }).click();
     const moved = await moveResponse;
     expect(moved.ok()).toBeTruthy();
-    const afterMove = await page.locator('.recommendation-card h2').allTextContents();
-    const nameFromHeading = (heading: string) => heading.replace(/^\s*\d+\.\s*/, '').trim();
-    const beforeNames = beforeMove.map(nameFromHeading);
-    const afterNames = afterMove.map(nameFromHeading);
-    expect(afterNames.indexOf(editedName)).toBe(beforeNames.indexOf(editedName) + (moveDirection === 'down' ? 1 : -1));
+    await expect.poll(async () => {
+      const headings = await page.locator('.recommendation-card h2').allTextContents();
+      return headings.map(nameFromHeading).indexOf(editedName);
+    }).toBe(expectedIndex);
 
     await page.locator('.recommendation-card').filter({ hasText: editedName }).getByRole('button', { name: `Delete ${editedName}` }).click();
     await page.getByRole('dialog', { name: `Delete ${editedName}?` }).getByRole('button', { name: 'Confirm' }).click();

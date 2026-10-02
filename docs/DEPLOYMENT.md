@@ -75,7 +75,7 @@ environment.
 | Deploy to production | no | manual only |
 | Deploy backend to test | no | push to any other branch, `backend/**` |
 | Deploy web to test | no | push to any other branch, `web/**` |
-| Deploy admin to test | no | push to any other branch, `admin/**`, admin test values or `VERSION` |
+| Deploy admin to test | no | push to any other branch, `admin/**` or `VERSION` |
 | Apply backend test values | no | push to any other branch, `deploy/values/backend-test.yaml` |
 | Apply web test values | no | push to any other branch, `deploy/values/web-test.yaml` |
 | Apply admin test values | no | push to any other branch, `deploy/values/admin-test.yaml` |
