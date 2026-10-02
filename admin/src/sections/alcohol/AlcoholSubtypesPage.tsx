@@ -63,9 +63,13 @@ export const AlcoholSubtypesPage = () => {
     <TextField fullWidth label="Search subtypes" value={search} onChange={(event) => setSearch(event.target.value)} sx={{ mb: 3 }} />
     <PageState loading={subtypes.isPending || palettes.isPending || glassware.isPending} error={subtypes.error ? apiErrorMessage(subtypes.error, 'load') : undefined} onRetry={() => void subtypes.refetch()} empty={subtypes.isSuccess && rows.length === 0} filteredEmpty={search.trim().length > 0} emptyAction={<Button variant="outlined" disabled={!palettes.data?.length || !glassware.data?.length} onClick={() => setEditor(null)}>Add subtype</Button>}>
       <div className="catalog-grid">{rows.map((subtype) => {
-        const palette = subtype.colorPaletteId === null ? undefined : paletteById.get(subtype.colorPaletteId);
-        const glass = subtype.glasswareId === null ? undefined : glassById.get(subtype.glasswareId);
-        return <CatalogCard key={subtype.id} name={subtype.name} onEdit={() => { saveMutation.reset(); setEditor(subtype); }} onDelete={() => { deleteMutation.reset(); setDeleting(subtype); }} preview={<DrinkPreview label={subtype.name} glassware={glass} palette={palette} />} details={<Typography className="catalog-detail">Palette: {palette?.name ?? 'Not assigned'} · Glassware: {glass?.name ?? 'Not assigned'}</Typography>} />;
+        const paletteId = subtype.colorPaletteId ?? parent.colorPaletteId;
+        const glasswareId = subtype.glasswareId ?? parent.glasswareId;
+        const palette = paletteId === null ? undefined : paletteById.get(paletteId);
+        const glass = glasswareId === null ? undefined : glassById.get(glasswareId);
+        const paletteName = subtype.colorPaletteId === null ? `Inherited from ${parent.name}${palette ? ` (${palette.name})` : ''}` : palette?.name ?? 'Not assigned';
+        const glassName = subtype.glasswareId === null ? `Inherited from ${parent.name}${glass ? ` (${glass.name})` : ''}` : glass?.name ?? 'Not assigned';
+        return <CatalogCard key={subtype.id} name={subtype.name} onEdit={() => { saveMutation.reset(); setEditor(subtype); }} onDelete={() => { deleteMutation.reset(); setDeleting(subtype); }} preview={<DrinkPreview label={subtype.name} glassware={glass} palette={palette} />} details={<Typography className="catalog-detail">Palette: {paletteName} · Glassware: {glassName}</Typography>} />;
       })}</div>
     </PageState>
     {(palettes.isError || glassware.isError) && <Alert severity="error" role="alert" action={<Button color="inherit" onClick={() => { void palettes.refetch(); void glassware.refetch(); }}>Retry</Button>}>Design options could not be loaded. Retry before adding a subtype.</Alert>}

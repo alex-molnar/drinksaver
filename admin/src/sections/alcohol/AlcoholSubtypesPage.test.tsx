@@ -43,6 +43,13 @@ describe('AlcoholSubtypesPage', () => {
     expect(api.getDefaultSubtypes).not.toHaveBeenCalled();
   });
 
+  it('shows inherited design when a bundled subtype has null overrides', async () => {
+    api.getDefaultSubtypes.mockResolvedValue([{ id: 7, alcoholTypeId: 3, name: 'Red', colorPaletteId: null, glasswareId: null }]);
+    renderAdminPage(<AlcoholSubtypesPage />, '/alcohol-types/3/subtypes', '/alcohol-types/:typeId/subtypes');
+    expect(await screen.findByText(/Palette: Inherited from Wine \(Amber\).*Glassware: Inherited from Wine \(Tumbler\)/)).toBeInTheDocument();
+    expect(document.querySelector('.catalog-card svg path')).toHaveAttribute('d', 'M2 2');
+  });
+
   it('creates a subtype using the parent in the route', async () => {
     const user = userEvent.setup();
     renderAdminPage(<AlcoholSubtypesPage />, '/alcohol-types/3/subtypes', '/alcohol-types/:typeId/subtypes');

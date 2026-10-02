@@ -61,8 +61,10 @@ export const BeerFlavoursPage = () => {
     <TextField fullWidth label="Search flavours" value={search} onChange={(event) => setSearch(event.target.value)} sx={{ mb: 3 }} />
     <PageState loading={flavours.isPending || palettes.isPending} error={flavours.error ? apiErrorMessage(flavours.error, 'load') : undefined} onRetry={() => void flavours.refetch()} empty={flavours.isSuccess && rows.length === 0} filteredEmpty={search.trim().length > 0} emptyAction={<Button variant="outlined" disabled={!palettes.data?.length} onClick={() => setEditor(null)}>Add flavour</Button>}>
       <div className="catalog-grid">{rows.map((flavour) => {
-        const palette = flavour.colorPaletteId === null ? undefined : paletteById.get(flavour.colorPaletteId);
-        return <CatalogCard key={flavour.id} name={flavour.name} onEdit={() => { saveMutation.reset(); setEditor(flavour); }} onDelete={() => { deleteMutation.reset(); setDeleting(flavour); }} preview={<DrinkPreview label={flavour.name} palette={palette} />} details={<Typography className="catalog-detail">Palette: {palette?.name ?? 'Not assigned'}</Typography>} />;
+        const paletteId = flavour.colorPaletteId ?? parent.colorPaletteId;
+        const palette = paletteId === null ? undefined : paletteById.get(paletteId);
+        const paletteName = flavour.colorPaletteId === null ? `Inherited from ${parent.name}${palette ? ` (${palette.name})` : ''}` : palette?.name ?? 'Not assigned';
+        return <CatalogCard key={flavour.id} name={flavour.name} onEdit={() => { saveMutation.reset(); setEditor(flavour); }} onDelete={() => { deleteMutation.reset(); setDeleting(flavour); }} preview={<DrinkPreview label={flavour.name} palette={palette} />} details={<Typography className="catalog-detail">Palette: {paletteName}</Typography>} />;
       })}</div>
     </PageState>
     {palettes.isError && <Alert severity="error" role="alert" action={<Button color="inherit" onClick={() => void palettes.refetch()}>Retry</Button>}>{apiErrorMessage(palettes.error, 'load')}</Alert>}

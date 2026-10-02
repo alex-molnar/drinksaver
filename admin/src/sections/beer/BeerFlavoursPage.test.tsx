@@ -25,6 +25,14 @@ describe('BeerFlavoursPage', () => {
     expect(api.getDefaultFlavours).toHaveBeenCalledWith(8);
   });
 
+  it('shows the parent palette when a bundled flavour has a null override', async () => {
+    api.getDefaultFlavours.mockResolvedValue([{ id: 9, brandId: 8, name: 'Citrus', colorPaletteId: null }]);
+    api.getPalettes.mockResolvedValue([{ id: 4, name: 'Amber', field: '#d58c29', inkLight: null, inkDark: '#123456' }]);
+    renderAdminPage(<BeerFlavoursPage />, '/beer-brands/8/flavours', '/beer-brands/:brandId/flavours');
+    expect(await screen.findByText(/Palette: Inherited from North Star \(Amber\)/)).toBeInTheDocument();
+    expect(document.querySelector('.catalog-card .drink-preview-art')).toHaveStyle({ color: '#123456' });
+  });
+
   it('does not fetch children for a missing default brand', async () => {
     api.getDefaultBrands.mockResolvedValue([]);
     renderAdminPage(<BeerFlavoursPage />, '/beer-brands/80/flavours', '/beer-brands/:brandId/flavours');

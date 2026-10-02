@@ -64,7 +64,8 @@ before submission. Type requests omit volumes and client-supplied owner IDs.
 
 Child routes validate a positive integer parent ID against the default parent collection
 before requesting children. A missing or non-default parent shows a back link and offers no
-child actions. Child forms keep the parent from the route. Edit payloads omit unchanged
+child actions. Child forms keep the parent from the route. Cards resolve null design
+overrides from the parent and label them as inherited. Edit payloads omit unchanged
 nullable design IDs; an omitted ID preserves the existing assignment. Names and design
 options are labelled; parent/child and flavour limits follow the actual DTO/OpenAPI
 contract.

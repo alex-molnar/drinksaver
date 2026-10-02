@@ -154,7 +154,7 @@ export const darkTokens: ThemeTokens = {
     secondary: ink.secondary,
     tertiary: ink.tertiary,
     onPaper: ink.onPaper,
-    onAccent: ink.primary,
+    onAccent: '#FFF7E7',
   },
   line: {
     hairline,
