@@ -1,0 +1,192 @@
+/**
+ * Self-hosted, not the Google Fonts CDN: a CDN would send every visitor's IP address to Google
+ * on every page load, a new third party data flow into a product with seven open GDPR tasks and
+ * no privacy notice (PRIV-2). Self-hosting means these files live in `src/assets/fonts/` and are
+ * imported by URL below, so Vite fingerprints them into the build; `web/nginx.conf` sets
+ * `expires 1y` and `Cache-Control: immutable` on every `.woff2`, so an unfingerprinted path
+ * (for instance one served from `public/`) would stay cache poisoned for a year on the next font
+ * change.
+ *
+ * Both faces are Open Font License 1.1, at version 5.3.0 of their `@fontsource-variable`
+ * packages, matching `web/package.json`.
+ *
+ * Each face is split by `unicode-range` into `latin` and `latin-ext`, so a session that never
+ * renders a Hungarian-specific character never downloads the `latin-ext` file. The split is not
+ * optional: the catalogue already contains `fröccs`, `rosé fröccs` and `pálinka`.
+ *
+ * --- Why Fraunces ships as four static instances instead of one variable font ---
+ *
+ * The design doc calls for Fraunces varying across four axes (`opsz`, `wght`, `SOFT`, `WONK`).
+ * Shipped as one live variable font, the `latin` + `latin-ext` pair alone is about 226 KB,
+ * against a roughly 120 KB budget for both faces together, and the design doc's own fallback
+ * ("pin `opsz` to two shared instances") was measured and rejected: it still lands near 216 KB,
+ * and because the four type roles need four different `opsz` values (28, 30, 60, 90) while only
+ * two pinned instances are available, one role (`display-l`) is forced onto the wrong optical
+ * size - a real, visible difference once a later PR actually renders it.
+ *
+ * A fully static instance per role - `opsz`, `wght`, `SOFT` and `WONK` all pinned to that role's
+ * exact values - measures smaller still (about 145 KB across all four roles, both charsets) and
+ * is exact for every role, because `WONK` is `1` everywhere the design doc asks for it (which is
+ * every role, and already the font's own default) and, within the pair sharing the higher `opsz`
+ * register, `wght` is `700` for both roles too, so pinning those two costs nothing. Only `SOFT`
+ * ever needs to keep varying within a shared instance, and no instance here shares one, so nothing
+ * is pinned at a cost. `latin-ext` is dropped from `numeral` alone: it renders digits only, which
+ * never carry a Hungarian diacritic.
+ *
+ * The consequence: nothing here sets `font-variation-settings`. Each instance already bakes in
+ * its own axis values, so selecting the right static `font-family` for a type role *is* selecting
+ * its variation. See the comment on `fraunces` in `tokens.ts` for where that family name is
+ * chosen per role.
+ */
+
+/* ---------- Fraunces: display-l (opsz 60, wght 700, SOFT 85, WONK 1) ---------- */
+
+@font-face {
+  font-family: 'Fraunces Display L';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('../assets/fonts/fraunces-display-l-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Fraunces Display L';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('../assets/fonts/fraunces-display-l-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ---------- Fraunces: display-m (opsz 30, wght 700, SOFT 85, WONK 1) ---------- */
+
+@font-face {
+  font-family: 'Fraunces Display M';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('../assets/fonts/fraunces-display-m-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Fraunces Display M';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('../assets/fonts/fraunces-display-m-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ---------- Fraunces: display-s (opsz 28, wght 600, SOFT 70, WONK 1) ---------- */
+
+@font-face {
+  font-family: 'Fraunces Display S';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url('../assets/fonts/fraunces-display-s-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Fraunces Display S';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url('../assets/fonts/fraunces-display-s-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/**
+ * ---------- Fraunces: numeral (opsz 90, wght 700, SOFT 90, WONK 1) ----------
+ * `latin` only: this role sets tabular digits, and no digit ever carries a Hungarian diacritic.
+ */
+
+@font-face {
+  font-family: 'Fraunces Numeral';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('../assets/fonts/fraunces-numeral-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ---------- Familjen Grotesk: body and caption (wght 400-700, genuinely variable) ---------- */
+
+@font-face {
+  font-family: 'Familjen Grotesk Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 700;
+  src: url('../assets/fonts/familjen-grotesk-latin.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Familjen Grotesk Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 700;
+  src: url('../assets/fonts/familjen-grotesk-latin-ext.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/**
+ * ---------- Metric-matched fallbacks ----------
+ *
+ * A `font-display: swap` load is invisible until the moment it isn't: the instant the real face
+ * arrives, anything set in a system font reflows to Fraunces' or Familjen Grotesk's own line
+ * height, shifting whatever the reader's eye was on. These two faces exist only to absorb that
+ * shift. Each is a real, commonly installed system font (so there is something to render
+ * immediately) with its vertical metrics overridden to match the real face's, computed from the
+ * real face's own `hhea`/`OS/2` tables so the swap changes glyph shapes, not line-box height:
+ *
+ *   size-adjust    = (ascent + descent) of the real face, as a fraction of its own em
+ *   ascent-override, descent-override = the real face's ascent/descent, re-expressed as a
+ *                     fraction of the *already scaled* em above, so together they reproduce its
+ *                     exact ascent:descent split
+ *
+ * Fraunces (`unitsPerEm` 2000, `hhea` ascent 1956 / descent 510 / lineGap 0 - identical across
+ * all four static instances, since none of the pinned axes touch vertical metrics):
+ *   size-adjust: 123.3%, ascent-override: 79.32%, descent-override: 20.68%, line-gap-override: 0%
+ *
+ * Familjen Grotesk (`unitsPerEm` 1200, `hhea` ascent 1230 / descent 270 / lineGap 0):
+ *   size-adjust: 125%, ascent-override: 82%, descent-override: 18%, line-gap-override: 0%
+ *
+ * One fallback per face, not one per role, because all four Fraunces instances share identical
+ * vertical metrics; `tokens.ts` lists this fallback second in every Fraunces role's font stack.
+ */
+
+@font-face {
+  font-family: 'Fraunces Fallback';
+  src:
+    local('Georgia'),
+    local('Times New Roman');
+  ascent-override: 79.32%;
+  descent-override: 20.68%;
+  line-gap-override: 0%;
+  size-adjust: 123.3%;
+}
+
+@font-face {
+  font-family: 'Familjen Grotesk Fallback';
+  src:
+    local('Arial'),
+    local('Helvetica'),
+    local('Liberation Sans');
+  ascent-override: 82%;
+  descent-override: 18%;
+  line-gap-override: 0%;
+  size-adjust: 125%;
+}

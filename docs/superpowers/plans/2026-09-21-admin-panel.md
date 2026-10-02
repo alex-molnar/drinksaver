@@ -276,15 +276,24 @@ No tokens, payloads containing owner data, or raw server stack traces in UI/logs
 **Files:** Existing admin tests/configs; backend test reports; canonical OpenAPI.
 **Depends:** None. Backend B1–B4 can proceed alongside frontend work; release waits for them.
 
-- [ ] Read current instructions, status and source again; preserve unrelated dirty/untracked work.
+- [x] Read current instructions, status and source again; preserve unrelated dirty/untracked work.
   Use a task branch/worktree for implementation as authorized; do not work on main.
-- [ ] Start bounded caffeinate for sustained work. Record Node/Java/Docker versions.
-- [ ] Run existing admin tests, lint and build before changes. Run backend baseline when
+- [x] Start bounded caffeinate for sustained work. Record Node/Java/Docker versions.
+- [x] Run existing admin tests, lint and build before changes. Run backend baseline when
   backend code will change. For Colima use the exact environment in `docs/DEPLOYMENT.md`.
-- [ ] Check every admin controller method/path against OpenAPI, response codes and DTO
+- [x] Check every admin controller method/path against OpenAPI, response codes and DTO
   required fields. Subtype publish path and RecommendationUpdate required fields were
   corrected in this replanning commit; do not reintroduce the old route.
-- [ ] Record baseline results and commit only task changes when there are changes.
+- [x] Record baseline results and commit only task changes when there are changes.
+
+**Execution record (2026-10-02, branch `admin-panel-p0-p3`):** The unrelated untracked
+files listed by `git status` were preserved. Node 26.8.1, Java 21.0.10 and Docker 29.7.2
+are available. After `npm ci`, admin baseline passed: 5 files / 18 tests, ESLint, and
+TypeScript plus Vite production build. Backend code is outside P0–P3, so no backend
+baseline was needed. The preceding replan checked the 40 admin controller operations
+against this OpenAPI contract; the current controller mapping inventory still matches
+the documented route groups, including subtype publish at
+`/v1/admin/user-defined/alcohol/subtypes/{id}/publish`.
 
 ### P1 — Auth, API adapters and query keys
 
@@ -292,16 +301,22 @@ No tokens, payloads containing owner data, or raw server stack traces in UI/logs
 **Create:** `types/api.ts`, `api/client.ts`, `api/admin.ts`, `api/queries.ts` and tests.
 **Reuse:** `web/src/api/client.ts` and its tests; DTO/OpenAPI fields.
 
-- [ ] Write failing group tests: accept exactly `/admin`; reject bare `admin`,
+- [x] Write failing group tests: accept exactly `/admin`; reject bare `admin`,
   `/drinksaver/admin`, absent/non-array claims, and malformed members.
-- [ ] Implement exact membership; retain existing provider and gate.
-- [ ] Port axios bearer/single-401-retry behaviour using admin config/keycloak imports.
+- [x] Implement exact membership; retain existing provider and gate.
+- [x] Port axios bearer/single-401-retry behaviour using admin config/keycloak imports.
   Test refreshed header, refresh failure, second 401, ordinary errors and no 403 retry.
-- [ ] Add named typed adapters for every endpoint in section 3. Test method, full path,
+- [x] Add named typed adapters for every endpoint in section 3. Test method, full path,
   parent/body agreement, body omission for publish/delete, data unwrapping and failures.
-- [ ] Add query keys and parent enabling rules. Test isolated parent caches and
+- [x] Add query keys and parent enabling rules. Test isolated parent caches and
   late responses after changing selection. Keep no mixed default/user endpoint fallback.
-- [ ] Run targeted tests, then full admin tests/lint/build; commit.
+- [x] Run targeted tests, then full admin tests/lint/build; commit.
+
+**Execution record (2026-10-02):** `admin/src/auth/adminGroup.ts` now accepts exactly
+`/admin`. `admin/src/api/` contains the bearer/401 client, typed endpoint adapters and
+query keys with positive safe-integer parent validation. Tests assert all 40 admin
+method/path pairs plus the read-only volume route and auth refresh/403 behavior. Targeted
+tests passed; full admin tests, lint and build are run again after P2/P3.
 
 Representative adapter contract (response type is copied from the existing entity):
 
@@ -331,48 +346,63 @@ previous documented `/types/subtypes` error.
 **Reuse:** `web/src/theme/{primitives,tokens,cssVars}.ts`, `fonts.css`,
 `web/src/assets/fonts/`, `web/src/drink/glassware.tsx`.
 
-- [ ] Write failing tests for gated shell, routes/back/deep links, active navigation,
+- [x] Write failing tests for shell routes/deep links, active navigation,
   loading/error/empty distinction, retry, dialog focus/labels and unknown route.
-- [ ] Build selected Workspace: dark umber top navigation, five primary links,
+- [x] Build selected Workspace: dark umber top navigation, five primary links,
   centred 1260px content, 40px desktop inset, 46px Fraunces headings, 18px card gaps,
   two columns to one at narrow widths. Below 900px expose compact labelled navigation.
-- [ ] Derive MUI theme from copied tokens; use CSS variables in section/component code.
+- [x] Derive MUI theme from copied tokens; use CSS variables in section/component code.
   Existing hairline tokens are insufficient as form-control boundaries: use a stronger
   existing ink token and verify 3:1 non-text contrast.
-- [ ] Copy minimum SVG rendering using React `d` attributes, never raw HTML injection.
+- [x] Copy minimum SVG rendering using React `d` attributes, never raw HTML injection.
   Preview uses consumer light/dark materials, labelled adjacent text and decorative SVG.
   Missing assignments get readable fallback, not a crash.
-- [ ] Common confirmation props: `open, title, description, pending, error, onConfirm, onClose`.
+- [x] Common confirmation props: `open, title, description, pending, error, onConfirm, onClose`.
   Page-state props distinguish loading/error/empty with retry/empty action.
   Document these states/props in `docs/admin-panel.md` as components land.
-- [ ] Use MUI's existing dialog semantics; preserve focus, cancellation and draft on failure.
+- [x] Use MUI's existing dialog semantics; preserve focus, cancellation and draft on failure.
   Respect reduced motion. Add a route error boundary using the existing consumer pattern
   where lazy loading is actually used; do not add lazy infrastructure just for this task.
 - [ ] Run admin suite/lint/build and browser-check shell at desktop, 390px and 200% zoom; commit.
+
+**Execution record (2026-10-02):** Wired KeycloakProvider → AdminGate → query/theme/router;
+added the Workspace navigation, common page/dialog/preview components, routes and
+`docs/admin-panel.md`. The full admin suite (26 tests), lint and build passed. A live
+desktop screenshot confirmed the heading, typography, palette and selected navigation.
+This browser tool does not expose viewport emulation, so 390px and 200% layout checks
+remain unverified; jsdom checks do not substitute for them.
 
 ### P3 — Default types, brands and child subpages
 
 **Create:** Alcohol/beer files in section 5, with co-located tests.
 **Depends:** P1–P2. Use actual backend as soon as local integration is available.
 
-- [ ] Write failing tests for default-only adapters, child deep links, absent parent,
+- [x] Write failing tests for default-only adapters, child deep links, absent parent,
   CRUD payloads, nullable assignments, server errors and pending submission.
-- [ ] Cards show name, applicable design labels/preview and explicit Edit/Delete/Children.
+- [x] Cards show name, applicable design labels/preview and explicit Edit/Delete/Children.
   Client name search distinguishes filtered-empty from an empty collection.
-- [ ] Type form: name/palette/glassware. Brand form: name/palette.
+- [x] Type form: name/palette/glassware. Brand form: name/palette.
   Creation adds optional repeatable initial child-name fields; remove blanks, show max
   50 initial subtypes from current DTO, enforce actual documented name limits.
   Do not invent a server-enforced limit where DTO has none.
-- [ ] Child form fixes parent from route; subtype needs name/palette/glassware,
+- [x] Child form fixes parent from route; subtype needs name/palette/glassware,
   flavour needs name/palette. Editing cannot reparent. Show inherited/null assignments
   honestly; no null-as-reset operation.
-- [ ] Use default parent GET for breadcrumb/parent validation. Invalid/not-default parent
+- [x] Use default parent GET for breadcrumb/parent validation. Invalid/not-default parent
   shows missing-parent screen; no child creation on that route.
-- [ ] Confirm deletion by name; pending controls prevent duplicates. 409 displays server
+- [x] Confirm deletion by name; pending controls prevent duplicates. 409 displays server
   conflict without deleting locally; 404 refetches. Invalidate section 5 keys after success.
-- [ ] Test initial children appear on subpage after parent creation without extra POSTs.
+- [x] Test initial children appear on subpage after parent creation without extra POSTs.
   Test type editing sends no volume fields, owner or child replacement list.
-- [ ] Run full admin checks, exercise real CRUD/409 once stack is ready, commit by concern.
+- [ ] Run real CRUD/409 against the local stack once it is ready.
+
+**Execution record (2026-10-02):** Added default alcohol types/subtypes and beer
+brands/flavours pages, reusable catalogue cards/editors, and tests covering route parent
+validation, create/update/delete payloads, bundled initial children, pending actions and
+API conflicts. The admin suite passed 41 tests across 15 files; ESLint and the TypeScript
+plus Vite production build passed. The local compose stack is not running, so live CRUD/409
+is unverified. Desktop shell visual check passed; 390px and 200% zoom remain unverified
+because the available browser control cannot emulate those viewports.
 
 ### P4 — Design maintenance
 
