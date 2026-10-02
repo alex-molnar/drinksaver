@@ -15,3 +15,9 @@ export const keys = {
 };
 
 export const hasValidParentId = (id: number): boolean => Number.isSafeInteger(id) && id > 0;
+
+export const parsePositiveId = (value: string | undefined): number | undefined => {
+  if (!value || !/^[1-9]\d*$/.test(value)) return undefined;
+  const id = Number(value);
+  return hasValidParentId(id) ? id : undefined;
+};

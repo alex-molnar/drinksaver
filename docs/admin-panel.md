@@ -53,3 +53,24 @@ HTML is inserted. The adjacent text remains the accessible name for the decorati
 
 The approved page scope and endpoint contract are in the [implementation plan](superpowers/plans/2026-09-21-admin-panel.md)
 and [Workspace specification](superpowers/specs/2026-10-02-admin-panel-visual-directions.md).
+
+## Default types, brands and children
+
+Alcohol types and beer brands query only their default collections. Search filters the
+loaded rows and shows a separate filtered-empty message. Parent cards show palette and
+glassware names when available, a preview, and Edit/Delete/Children actions. Type and brand
+creation accepts repeatable initial subtype/flavour names; blank child names are removed
+before submission. Type requests omit volumes and client-supplied owner IDs.
+
+Child routes validate a positive integer parent ID against the default parent collection
+before requesting children. A missing or non-default parent shows a back link and offers no
+child actions. Child forms keep the parent from the route. Edit payloads omit unchanged
+nullable design IDs; an omitted ID preserves the existing assignment. Names and design
+options are labelled; parent/child and flavour limits follow the actual DTO/OpenAPI
+contract.
+
+Editor props: `open`, `title`, `submitLabel`, `pending`, optional `error`, `onSubmit`,
+`onClose`, and `children`. A pending submission disables Save and Cancel. A failed save
+keeps the form open with its draft and an alert. Delete uses `ConfirmDialog`; HTTP 409 keeps
+the confirmation open with the conflict message, while HTTP 404 refreshes the affected
+collection. A 403 appears as an authorization error rather than an empty result.

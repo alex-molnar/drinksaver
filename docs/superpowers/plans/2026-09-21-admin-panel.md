@@ -377,24 +377,32 @@ remain unverified; jsdom checks do not substitute for them.
 **Create:** Alcohol/beer files in section 5, with co-located tests.
 **Depends:** P1–P2. Use actual backend as soon as local integration is available.
 
-- [ ] Write failing tests for default-only adapters, child deep links, absent parent,
+- [x] Write failing tests for default-only adapters, child deep links, absent parent,
   CRUD payloads, nullable assignments, server errors and pending submission.
-- [ ] Cards show name, applicable design labels/preview and explicit Edit/Delete/Children.
+- [x] Cards show name, applicable design labels/preview and explicit Edit/Delete/Children.
   Client name search distinguishes filtered-empty from an empty collection.
-- [ ] Type form: name/palette/glassware. Brand form: name/palette.
+- [x] Type form: name/palette/glassware. Brand form: name/palette.
   Creation adds optional repeatable initial child-name fields; remove blanks, show max
   50 initial subtypes from current DTO, enforce actual documented name limits.
   Do not invent a server-enforced limit where DTO has none.
-- [ ] Child form fixes parent from route; subtype needs name/palette/glassware,
+- [x] Child form fixes parent from route; subtype needs name/palette/glassware,
   flavour needs name/palette. Editing cannot reparent. Show inherited/null assignments
   honestly; no null-as-reset operation.
-- [ ] Use default parent GET for breadcrumb/parent validation. Invalid/not-default parent
+- [x] Use default parent GET for breadcrumb/parent validation. Invalid/not-default parent
   shows missing-parent screen; no child creation on that route.
-- [ ] Confirm deletion by name; pending controls prevent duplicates. 409 displays server
+- [x] Confirm deletion by name; pending controls prevent duplicates. 409 displays server
   conflict without deleting locally; 404 refetches. Invalidate section 5 keys after success.
-- [ ] Test initial children appear on subpage after parent creation without extra POSTs.
+- [x] Test initial children appear on subpage after parent creation without extra POSTs.
   Test type editing sends no volume fields, owner or child replacement list.
-- [ ] Run full admin checks, exercise real CRUD/409 once stack is ready, commit by concern.
+- [ ] Run real CRUD/409 against the local stack once it is ready.
+
+**Execution record (2026-10-02):** Added default alcohol types/subtypes and beer
+brands/flavours pages, reusable catalogue cards/editors, and tests covering route parent
+validation, create/update/delete payloads, bundled initial children, pending actions and
+API conflicts. The admin suite passed 41 tests across 15 files; ESLint and the TypeScript
+plus Vite production build passed. The local compose stack is not running, so live CRUD/409
+is unverified. Desktop shell visual check passed; 390px and 200% zoom remain unverified
+because the available browser control cannot emulate those viewports.
 
 ### P4 — Design maintenance
 

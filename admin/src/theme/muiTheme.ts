@@ -76,6 +76,7 @@ const makeMuiTheme = (mode: 'dark' | 'light', tokens: ThemeTokens) => createThem
       lineHeight: 1.12,
       letterSpacing: '-.02em',
     },
+    h5: { fontFamily: tokens.type.displayM.fontFamily, fontWeight: 700 },
     button: {
       textTransform: 'none',
     },
@@ -113,14 +114,24 @@ const makeMuiTheme = (mode: 'dark' | 'light', tokens: ThemeTokens) => createThem
     },
     MuiTextField: {
       styleOverrides: {
-        root: {
-          '& .MuiInputBase-root': {
-            minHeight: 52,
-            borderRadius: v('radius-md'),
-          },
+      root: {
+        '& .MuiInputBase-root': {
+          minHeight: 52,
+          borderRadius: v('radius-md'),
+        },
+        '& .MuiOutlinedInput-notchedOutline': {
+          borderColor: v('ink-secondary'),
+        },
           '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': {
             borderColor: v('accent-primary'),
           },
+        },
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        notchedOutline: {
+          borderColor: v('ink-secondary'),
         },
       },
     },
