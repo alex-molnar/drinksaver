@@ -276,15 +276,24 @@ No tokens, payloads containing owner data, or raw server stack traces in UI/logs
 **Files:** Existing admin tests/configs; backend test reports; canonical OpenAPI.
 **Depends:** None. Backend B1–B4 can proceed alongside frontend work; release waits for them.
 
-- [ ] Read current instructions, status and source again; preserve unrelated dirty/untracked work.
+- [x] Read current instructions, status and source again; preserve unrelated dirty/untracked work.
   Use a task branch/worktree for implementation as authorized; do not work on main.
-- [ ] Start bounded caffeinate for sustained work. Record Node/Java/Docker versions.
-- [ ] Run existing admin tests, lint and build before changes. Run backend baseline when
+- [x] Start bounded caffeinate for sustained work. Record Node/Java/Docker versions.
+- [x] Run existing admin tests, lint and build before changes. Run backend baseline when
   backend code will change. For Colima use the exact environment in `docs/DEPLOYMENT.md`.
-- [ ] Check every admin controller method/path against OpenAPI, response codes and DTO
+- [x] Check every admin controller method/path against OpenAPI, response codes and DTO
   required fields. Subtype publish path and RecommendationUpdate required fields were
   corrected in this replanning commit; do not reintroduce the old route.
-- [ ] Record baseline results and commit only task changes when there are changes.
+- [x] Record baseline results and commit only task changes when there are changes.
+
+**Execution record (2026-10-02, branch `admin-panel-p0-p3`):** The unrelated untracked
+files listed by `git status` were preserved. Node 26.8.1, Java 21.0.10 and Docker 29.7.2
+are available. After `npm ci`, admin baseline passed: 5 files / 18 tests, ESLint, and
+TypeScript plus Vite production build. Backend code is outside P0–P3, so no backend
+baseline was needed. The preceding replan checked the 40 admin controller operations
+against this OpenAPI contract; the current controller mapping inventory still matches
+the documented route groups, including subtype publish at
+`/v1/admin/user-defined/alcohol/subtypes/{id}/publish`.
 
 ### P1 — Auth, API adapters and query keys
 
