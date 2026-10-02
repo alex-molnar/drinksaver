@@ -1,0 +1,71 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/alex-molnar
+  name: drinksaver-admin
+  pullPolicy: IfNotPresent
+  tag: ""
+
+config:
+  apiUrl: "https://api.drinksaver.kak.im"
+  keycloakUrl: "https://auth.drinksaver.kak.im/auth"
+  keycloakRealm: drinksaver
+  keycloakClientId: drinksaver-admin
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: admin.drinksaver.kak.im
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: drinksaver-admin-tls
+      hosts:
+        - admin.drinksaver.kak.im
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5

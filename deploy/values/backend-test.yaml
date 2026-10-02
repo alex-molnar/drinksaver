@@ -12,7 +12,8 @@ repository:
   adminUserUUID: "c28618df-031e-483b-b33a-dd33c7c4bc92"
 
 cors:
-  allowedOrigins: "https://test.app.drinksaver.kak.im"
+  allowedOrigins: "https://test.app.drinksaver.kak.im,https://test.admin.drinksaver.kak.im"
+  allowedMethods: "GET,POST,PATCH,PUT,DELETE,OPTIONS"
 
 jwt:
   issuerUri: "https://auth.drinksaver.kak.im/auth/realms/test-drinksaver"

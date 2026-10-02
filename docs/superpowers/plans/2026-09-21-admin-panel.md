@@ -535,30 +535,32 @@ PostgreSQL HTTP integration test publishes a parent and confirms its child stays
 `docs/DEPLOYMENT.md`, `docs/admin-panel.md`.
 **Read first:** Current deployment guide, consumer Docker/entrypoint/chart and realm files.
 
-- [ ] Add regression checks for runtime substitution, deep-link nginx fallback, config.js
+- [x] Add regression checks for runtime substitution, deep-link nginx fallback, config.js
   caching and rendered chart values/probes. Copy existing consumer container pattern.
-- [ ] Use localhost:3001 consistently for local admin container and Vite dev server
+- [x] Use localhost:3001 consistently for local admin container and Vite dev server
   (strict port). Keep consumer localhost:3000.
-- [ ] Replace obsolete local `ADMIN_USER_LIST` with `ADMIN_USER_UUID` matching seeded
+- [x] Replace obsolete local `ADMIN_USER_LIST` with `ADMIN_USER_UUID` matching seeded
   default ownership. Add admin local origin and PATCH to CORS; retain consumer origins.
   Add test/prod admin origins in backend environment values.
-- [ ] Import local public admin client with localhost:3001 redirects/web origin, PKCE,
+- [x] Import local public admin client with localhost:3001 redirects/web origin, PKCE,
   exact full-path groups mapper and dedicated admin test user in `/admin`.
   Keep an ordinary consumer test user for denial tests. Do not broaden backend authority.
-- [ ] Fix Keycloak guide's conflicting bare/nested-group acceptance statements and obsolete
+- [x] Fix Keycloak guide's conflicting bare/nested-group acceptance statements and obsolete
   environment name. Distinguish catalogue owner UUID from login authorization.
-- [ ] Chart/image name `drinksaver-admin`; test host `test.admin.drinksaver.kak.im`,
+- [x] Chart/image name `drinksaver-admin`; test host `test.admin.drinksaver.kak.im`,
   prod host `admin.drinksaver.kak.im`; namespaces `drinksaver-test` / `drinksaver`.
   Test realm/client: `test-drinksaver` / `test-drinksaver-admin`; production:
   `drinksaver` / `drinksaver-admin`. Values supply actual API/Keycloak runtime configuration.
   No client secret for public SPA.
-- [ ] Retain the original security decisions: public ingress with group-protected API,
+- [x] Retain the original security decisions: public ingress with group-protected API,
   `Content-Security-Policy: frame-ancestors 'none'`, `X-Frame-Options: DENY`,
   `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer` and
   `X-Robots-Tag: noindex, nofollow`. Check headers on deep links and error responses.
 - [ ] Keep root VERSION stamping; no environment baked into bundle. Add chart lint/template
   checks and runtime smoke with login, direct child URL reload and API preflight/PATCH.
-- [ ] Record packaging evidence and docs; commit. Local validation is not authorization
+  Verified the preflight, direct route, first admin login, and ordinary consumer 403; the
+  authenticated stateful PATCH check could not be completed on the restarted stack.
+- [x] Record packaging evidence and docs; commit. Local validation is not authorization
   to publish images/charts or change cluster/Keycloak state.
 
 ### P8 — Real journeys, CI and final acceptance

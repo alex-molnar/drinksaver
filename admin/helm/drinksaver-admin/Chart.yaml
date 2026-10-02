@@ -1,0 +1,12 @@
+apiVersion: v2
+name: drinksaver-admin
+description: DrinkSaver administrator panel
+type: application
+version: 3.0.0
+appVersion: "3.0.0"
+maintainers:
+  - name: DrinkSaver Team
+keywords:
+  - drinksaver
+  - admin
+  - react

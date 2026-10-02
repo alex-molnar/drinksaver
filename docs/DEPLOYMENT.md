@@ -4,14 +4,18 @@ How DrinkSaver is built, published, and deployed.
 
 ## Overview
 
-Both applications live in one namespace per environment and share a single
-version. Images and Helm charts are published to GitHub Container Registry by
-GitHub Actions. Nothing is built or pushed from a laptop.
+The backend, consumer web app and admin panel share one version and live in one
+namespace per environment. Existing workflows publish and deploy the backend
+and consumer app. Admin packaging is added here; CI publication and environment
+deployment are P8 work. Nothing is published from a laptop.
 
 | Environment | Namespace | Releases | URLs |
 |---|---|---|---|
 | Test | `drinksaver-test` | `drinksaver-backend`, `drinksaver-web` | `test.api.drinksaver.kak.im`, `test.app.drinksaver.kak.im` |
 | Production | `drinksaver` | `drinksaver-backend`, `drinksaver-web` | `api.drinksaver.kak.im`, `app.drinksaver.kak.im` |
+
+The admin chart targets `test.admin.drinksaver.kak.im` and
+`admin.drinksaver.kak.im`; current workflows do not publish or deploy it.
 
 ## Versioning
 
@@ -19,8 +23,9 @@ GitHub Actions. Nothing is built or pushed from a laptop.
 `3.0.0`.
 
 One computed version string is applied to the Maven project version, the web
-`package.json`, the Docker image tag, and both the Helm chart `version` and
-`appVersion`. Nothing carries a version of its own.
+package, Docker image tags and published Helm charts' `version` and
+`appVersion`. The admin package and chart currently match root `VERSION`; P8
+will add them to the publication workflow.
 
 | Workflow | Version produced |
 |---|---|
@@ -35,7 +40,7 @@ One nuance worth knowing: the two test workflows are triggered independently by
 path, so if you change only the backend, only the backend gets a new timestamped
 version and web stays on whatever it last deployed. The strict "everything on
 one version" guarantee is what the build workflow provides, because it publishes
-both applications at `VERSION` in a single run. Production deploys from those
+both currently published apps at `VERSION` in a single run. Production deploys from those
 artifacts, so production is always internally consistent.
 
 To release a new version, edit `VERSION` and merge to `main`.
@@ -45,8 +50,10 @@ To release a new version, edit `VERSION` and merge to `main`.
 ```
 ghcr.io/alex-molnar/drinksaver-backend:<version>
 ghcr.io/alex-molnar/drinksaver-web:<version>
+ghcr.io/alex-molnar/drinksaver-admin:<version> (after P8 publication is added)
 ghcr.io/alex-molnar/charts/drinksaver-backend:<version>
 ghcr.io/alex-molnar/charts/drinksaver-web:<version>
+ghcr.io/alex-molnar/charts/drinksaver-admin:<version> (after P8 publication is added)
 ```
 
 The repository is public, so GHCR storage and data transfer are free and
@@ -142,12 +149,14 @@ overlapping `helm upgrade` calls on the same release.
 
 ## Testing
 
-Both applications have a suite, and both gate CI.
+The backend and consumer web suites gate their existing CI workflows. The admin unit suite
+and packaging checks exist; admin CI gates are P8 work.
 
 | Application | Stack | Command |
 |---|---|---|
 | Backend | JUnit 5, Mockito, AssertJ, Testcontainers | `cd backend && mvn test` |
 | Web | Vitest 5, jsdom, React Testing Library | `cd web && npm run test` |
+| Admin | Vitest 5, jsdom, React Testing Library | `cd admin && npm run test` |
 
 Backend tests run automatically wherever `mvn package` runs, which covers both
 "Build and publish" and "Deploy backend to test". The web workflows run
@@ -194,6 +203,7 @@ docker-compose down -v        # stop and discard all data
 | Service | URL | Notes |
 |---|---|---|
 | Web | http://localhost:3000 | Log in as `dev` / `dev` |
+| Admin | http://localhost:3001 | Log in as `admin` / `admin`; `dev` is not in `/admin` |
 | Backend | http://localhost:8080 | Swagger UI at `/swagger-ui.html` |
 | Keycloak | http://localhost:8081/auth | Admin console `admin` / `admin` |
 | Postgres | localhost:5432 | `drinksaver` / `drinksaver` |
@@ -207,8 +217,9 @@ Every credential there is a local throwaway.
 needed on the host is Docker.
 
 `deploy/local/keycloak-realm.json` is imported on first start. It creates the `drinksaver`
-realm, the public `drinksaver-frontend` client, and one user with the fixed id
-`423c91e4-491f-4f82-aba6-3c982857e0e4`.
+realm, public `drinksaver-frontend` and `drinksaver-admin` clients, the ordinary consumer
+user `423c91e4-491f-4f82-aba6-3c982857e0e4`, and a separate admin user
+`d4ad9e6f-33bb-4e84-86e4-5880f9af0021` in the exact `/admin` group.
 
 `deploy/local/seed.sql` loads demo data. It runs as its own one-shot service that waits for
 the backend to report healthy, because Hibernate creates the schema on startup
@@ -216,8 +227,10 @@ the backend to report healthy, because Hibernate creates the schema on startup
 resets the identity sequences afterwards, so the application cannot collide with the seeded
 ids.
 
-The seeded user is also the `ADMIN_USER_LIST` entry, which is what makes its rows serve as
-the shared default recommendations rather than one user's private entries.
+The admin user's ID is `ADMIN_USER_UUID`, the backend's default-catalogue owner. Seeded
+catalogue and recommendation rows use that owner; saved drinks belong to the ordinary `dev`
+user. Catalogue ownership does not grant API access; authorization comes from `/admin` in
+the access token.
 
 ### The local realm is deliberately not production shaped
 
@@ -225,6 +238,21 @@ the shared default recommendations rather than one user's private entries.
 DEVELOPMENT ONLY"` because a realm export is the kind of file that gets copied.
 It sets `sslRequired: none`, which is fine over loopback and unacceptable
 anywhere else.
+
+### Admin container and chart
+
+`admin/Dockerfile` builds the SPA and serves it through nginx. At container start,
+`admin/docker-entrypoint.sh` writes `/config.js` from `API_URL`, `KEYCLOAK_URL`,
+`KEYCLOAK_REALM` and `KEYCLOAK_CLIENT_ID`; environment-specific values are not compiled into
+the bundle. Nginx handles history routes with the SPA fallback, disables caching for
+`config.js` and `index.html`, and emits the admin security headers on normal and error
+responses.
+
+The `admin/helm/drinksaver-admin` chart uses `deploy/values/admin-test.yaml` and
+`admin-prod.yaml`. Backend test/prod CORS values include the matching admin origin and
+allow `PATCH`. Validate the package with `cd admin && npm run test:package`; it checks runtime
+substitution, fallback/cache/header configuration, Helm lint/render for both environments,
+and `docker compose config`. These checks do not publish artifacts or change a cluster.
 
 It keeps `directAccessGrantsEnabled: true` on purpose. That enables the password
 grant, which is what lets a script obtain a token without driving a browser:
@@ -459,8 +487,8 @@ chart's `config.*` values are wrong for that environment.
 
 ## Follow-ups not done here
 
-Both items that used to live here are closed. Tests exist for both applications, and the
-web bundle is code split: the largest chunk is 209 kB where it was a single 660 kB one.
+Both items that used to live here are closed. The web bundle is code split: the largest chunk
+is 209 kB where it was a single 660 kB one.
 See `docs/fixes-2026-09-08.md`.
 
 What is left, including the four leftover namespaces that need production cutover first,
