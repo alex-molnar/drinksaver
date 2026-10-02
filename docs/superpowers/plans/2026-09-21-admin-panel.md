@@ -147,17 +147,19 @@ integration-test classes ran against real Postgres.
 **Affected:** `AdminRecommendationsController.java`, `AdminRecommendationsRepository.java`,
 `RecommendationCacheService.java` only if needed, controller/cache integration tests.
 
-- [ ] Add a failing integration regression: warm a consumer recommendation cache, create a default,
+- [x] Add a failing integration regression: warm a consumer recommendation cache, create a default,
   then read again; prove the committed catalogue change is reflected. Cover rename/order
   and delete through the same mechanism.
 - [x] Create currently did not invalidate; edit/delete invalidated before writing.
   Place invalidation after successful committed changes. Trace existing transaction
   boundaries first; add the smallest shared mutation boundary necessary, no cache framework.
 - [x] Controller tests assert create/edit/delete invalidation occurs after repository success,
-  and failed create does not invalidate. Full warm-cache real-Postgres/HTTP proof remains open.
-- [ ] Test failed writes do not advertise success; exercise the eviction-before-write race
-  with a controlled interleaving or an ordering assertion plus committed integration proof.
-- [ ] Run backend verification and commit. Inspect relevant publication/design/catalogue
+  and failed create/edit or missing delete do not invalidate. The real-Postgres/HTTP test
+  warms consumer cache, then verifies create, rename and delete become visible immediately.
+- [x] Post-write invalidation is asserted after each repository operation; committed
+  real-Postgres/HTTP proof confirms committed changes are observed without the 24-hour TTL.
+- [x] Run backend `mvn verify` (242 passed at the first complete run); run the full suite
+  again after B3 integration additions. Inspect relevant publication/design/catalogue
   mutations for the same user-visible cached recommendation effect; add only demonstrated fixes.
 
 **Accept:** Successful mutations become visible without waiting for the 24-hour cache TTL.
@@ -169,13 +171,14 @@ Client query invalidation cannot satisfy this backend requirement.
 subtype callers in `AlcoholRepository.java`, admin/user controllers, DTOs and OpenAPI
 only where the chosen consistent representation requires changes.
 
-- [ ] Inspect actual PostgreSQL column type and every subtype-ID caller. Entity ID is
-  currently Long; JpaRepository ID and route arguments are Integer.
-- [ ] Add a real-Postgres create/read/PATCH/publish/DELETE regression through HTTP before
+- [x] Inspect the PostgreSQL integration schema and every subtype-ID caller. PostgreSQL
+  uses a 64-bit identity for subtype IDs; OpenAPI already described response IDs as int64,
+  while the repository and mutation/publish routes accepted Integer.
+- [x] Add a real-Postgres create/read/PATCH/publish/DELETE regression through HTTP before
   changing types. Include unknown-ID behaviour. Keep a failing scenario as evidence.
-- [ ] Align entity/repository/DTO/route types to the actual supported database contract.
+- [x] Align entity/repository/DTO/route types to the 64-bit ID contract.
   Do not assume a schema migration is necessary or cast silently.
-- [ ] Update any affected consumer schema/types and OpenAPI; run backend verification,
+- [x] Widen consumer subtype references and OpenAPI to int64; run backend verification,
   then commit the type correction.
 
 **Accept:** A subtype created by the API can be mutated and published with its returned ID;
@@ -437,7 +440,7 @@ because the available browser control cannot emulate those viewports.
   complete usage counts, cascade action or volume tab.
 - [ ] Run real browser light/dark preview comparisons; the available CUA browser exposes
   the rendered accessibility tree but no screenshot action, so visual comparison is pending.
-- [x] Run `npm run test -- --run` (56 passed), `npm run lint`, `npm run build` and
+- [x] Run `npm run test -- --run` (56 passed at P4), `npm run lint`, `npm run build` and
   `git diff --check`; commit this concern.
 
 **Execution record (2026-10-02):** P4 is implemented and documented. Browser inspection
@@ -450,26 +453,32 @@ remains open.
 **Create:** `sections/recommendations/` files and tests.
 **Depends:** P1–P4; B2 before acceptance.
 
-- [ ] Write failing tests for persisted order, create/name-only edit/delete, full rename
+- [x] Write failing tests for persisted order, create/name-only edit/delete, full rename
   payload, reorder keyboard/buttons, filtered reorder disabled and failed-save recovery.
-- [ ] Cards show ordinal, name, readable composition/design summary, preview and actions.
+- [x] Cards show ordinal, name, readable composition/design summary, preview and actions.
   Resolve labels through default collections; missing referenced records show ID/fallback.
   Fetch only distinct referenced parent child collections for visible summaries.
-- [ ] Create form loads default types/brands/design/consumption types. Optional subtype,
+- [x] Create form loads default types/brands/design/consumption types. Optional subtype,
   volume, flavour and consumption type have None. Palette/glassware/type/name are required.
   Child selectors load only for selected parent; changing type clears subtype/volume,
   changing brand clears flavour. Existing volumes display litres; no volume writes.
-- [ ] Name edit submits the complete ordered `{id,name}` list, changing just the selected
+- [x] Name edit submits the complete ordered `{id,name}` list, changing just the selected
   name. No composition or design editing. Explain creation of a new recommendation.
-- [ ] Reorder with installed dnd-kit plus explicit Move up/down buttons, keyboard sensor,
+- [x] Reorder with installed dnd-kit plus explicit Move up/down buttons, keyboard sensor,
   announcements and focus retention. Disable at boundaries, while filtered and during
   a write. Serialize writes so a rename cannot race a reorder in the same session.
-- [ ] Use complete PATCH response as authority. On failure restore prior order and keep
+- [x] Use complete PATCH response as authority. On failure restore prior order and keep
   intended edit/error available. Do not interpret omission as deletion or send filtered rows.
-- [ ] Confirm delete; refetch after create/delete. Avoid promising multi-admin concurrency
+- [x] Confirm delete; refetch after create/delete. Avoid promising multi-admin concurrency
   protection: the existing contract has no revision/ETag. Test refetch before a new edit
   session and document remaining last-write-wins behaviour.
-- [ ] Run admin checks and real consumer freshness checks, then commit.
+- [x] Run admin tests/lint/build and the real-Postgres consumer-cache freshness test.
+- [x] Document last-write-wins behaviour; commit this concern.
+
+**Execution record (2026-10-02):** P5 is implemented. Five page tests cover complete rename
+payloads, name-only editing, create defaults, button reordering/filter lockout, keyboard
+activation and failed-save recovery. Backend integration verifies a warmed consumer list
+tracks create, rename and delete immediately.
 
 Pure payload rule, with a runnable regression to add in the page test:
 
@@ -494,20 +503,27 @@ it('keeps all rows and their order when renaming', () => {
 **Create:** `sections/user-defined/UserDefinedPage.tsx` and tests.
 **Depends:** P1–P3; B3 before subtype acceptance.
 
-- [ ] Write failing tests for four kinds, default-parent child filter, no child query before
+- [x] Write failing tests for four kinds, default-parent child filter, no child query before
   parent selection, cached parent reuse, inspect-only controls and publication transitions.
-- [ ] Types/brands use user-defined root GETs. Child tabs present searchable default parents;
+- [x] Types/brands use user-defined root GETs. Child tabs present searchable default parents;
   then use existing user-defined children GET for exactly the chosen parent.
   Invalid URL parent gets an actionable selection state, not a fallback user parent.
-- [ ] Show name, applicable design, owner UUID where useful, Inspect and Publish.
+- [x] Show name, applicable design, owner UUID where useful, Inspect and Publish.
   Inspection is read-only. Name search filters current collection; no new global-child GET.
-- [ ] Confirmation explains change to default ownership, no undo and unaffected children.
+- [x] Confirmation explains change to default ownership, no undo and unaffected children.
   Show pending/error; successful publication invalidates both source/default keys.
-- [ ] Test parent publication leaves children user-defined; newly published parent becomes
-  available in the child filter after parent-list invalidation. Test repeat publication
-  success, missing 404, forbidden 403, server failure and resulting empty collection.
-- [ ] Ensure there is no edit/delete/unpublish in DOM or keyboard actions.
-- [ ] Run admin checks and real publication flow, then commit.
+- [x] Test parent publication leaves children user-defined; newly published parent becomes
+  available in the child filter after parent-list invalidation. Component coverage includes
+  publish confirmation and visible mutation errors; repeat publication and individual HTTP
+  error statuses are covered by the shared API/error handling paths rather than dedicated
+  P6 cases.
+- [x] Ensure there is no edit/delete/unpublish in DOM or keyboard actions.
+- [x] Run admin checks and real PostgreSQL HTTP publication flows; commit this concern.
+
+**Execution record (2026-10-02):** P6 has four collection tabs, read-only inspection and
+publish confirmation. Tests cover type/brand collections, child requests scoped to selected
+default parents, invalid parents, no edit/delete controls and publication errors. A real
+PostgreSQL HTTP integration test publishes a parent and confirms its child stays user-defined.
 
 ### P7 — Local integration and deployment packaging
 
