@@ -31,7 +31,6 @@ describe('save/started', () => {
       {
         id: 's1',
         kind: 'save',
-        idempotencyKey: '00000000-0000-4000-8000-000000000001',
         status: 'saving',
         label: 'Duvel bottle',
         date: '2026-09-10',
