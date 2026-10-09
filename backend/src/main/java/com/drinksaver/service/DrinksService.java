@@ -35,14 +35,13 @@ public class DrinksService {
         DrinkNameCollector drinkNameCollector,
         SavedDrinksTable savedDrinksTable,
         RecommendationsTable recommendationsTable,
-        DrinkIdempotencyKeysTable idempotencyKeysTable,
-        ObjectMapper objectMapper
+        DrinkIdempotencyKeysTable idempotencyKeysTable
     ) {
         this.drinkNameCollector = drinkNameCollector;
         this.savedDrinksTable = savedDrinksTable;
         this.recommendationsTable = recommendationsTable;
         this.idempotencyKeysTable = idempotencyKeysTable;
-        this.objectMapper = objectMapper;
+        this.objectMapper = new ObjectMapper();
     }
 
     DrinksService(
@@ -50,7 +49,7 @@ public class DrinksService {
         SavedDrinksTable savedDrinksTable,
         RecommendationsTable recommendationsTable
     ) {
-        this(drinkNameCollector, savedDrinksTable, recommendationsTable, null, new ObjectMapper());
+        this(drinkNameCollector, savedDrinksTable, recommendationsTable, null);
     }
 
     public boolean is(String repositoryType) {
