@@ -31,6 +31,7 @@ describe('save/started', () => {
       {
         id: 's1',
         kind: 'save',
+        idempotencyKey: '00000000-0000-4000-8000-000000000001',
         status: 'saving',
         label: 'Duvel bottle',
         date: '2026-09-10',
@@ -160,6 +161,7 @@ describe('undo-window/extended', () => {
       {
         id: 's1',
         kind: 'save',
+        idempotencyKey: '00000000-0000-4000-8000-000000000001',
         status: 'undoable',
         label: 'Duvel bottle',
         date: '2026-09-10',
@@ -193,6 +195,7 @@ describe('undo-window/started', () => {
       {
         id: 's1',
         kind: 'save',
+        idempotencyKey: '00000000-0000-4000-8000-000000000001',
         status: 'saved',
         label: 'Duvel bottle',
         date: '2026-09-10',
@@ -300,6 +303,7 @@ describe('delete/started', () => {
         {
           id: 'a',
           kind: 'save',
+          idempotencyKey: '00000000-0000-4000-8000-000000000001',
           status: 'undoable',
           label: 'Duvel bottle',
           date: '2026-09-10',
@@ -385,6 +389,7 @@ describe('undo/succeeded and undo/failed', () => {
       {
         id: 's1',
         kind: 'save',
+        idempotencyKey: '00000000-0000-4000-8000-000000000001',
         status: 'undoing',
         label: 'Duvel bottle',
         date: '2026-09-10',
@@ -433,6 +438,7 @@ describe('retry/requested', () => {
         {
           id: 's1',
           kind: 'save',
+          idempotencyKey: '00000000-0000-4000-8000-000000000001',
           status: 'failed',
           label: 'Duvel bottle',
           date: '2026-09-10',
@@ -457,6 +463,7 @@ describe('retry/requested', () => {
         {
           id: 's1',
           kind: 'save',
+          idempotencyKey: '00000000-0000-4000-8000-000000000001',
           status: 'saving',
           label: 'Duvel bottle',
           date: '2026-09-10',
@@ -543,6 +550,7 @@ describe('sweep', () => {
         {
           id: 's1',
           kind: 'save',
+          idempotencyKey: '00000000-0000-4000-8000-000000000001',
           status: 'undoable',
           label: 'Duvel bottle',
           date: '2026-09-10',
@@ -605,6 +613,7 @@ describe('sweep', () => {
         {
           id: 's1',
           kind: 'save',
+          idempotencyKey: '00000000-0000-4000-8000-000000000001',
           status: 'saved',
           label: 'Duvel bottle',
           date: '2026-09-10',
@@ -633,6 +642,7 @@ describe('currentStripEntry', () => {
         {
           id: 's1',
           kind: 'save',
+          idempotencyKey: '00000000-0000-4000-8000-000000000001',
           status: 'committed',
           label: 'Duvel bottle',
           date: '2026-09-10',
@@ -653,6 +663,7 @@ describe('currentStripEntry', () => {
     const older: SaveQueueEntry = {
       id: 'a',
       kind: 'save',
+      idempotencyKey: '00000000-0000-4000-8000-000000000001',
       status: 'undoable',
       label: 'Duvel bottle',
       date: '2026-09-10',
@@ -675,6 +686,7 @@ describe('pendingInsertsForDate', () => {
   const base: SaveQueueEntry = {
     id: 's1',
     kind: 'save',
+    idempotencyKey: '00000000-0000-4000-8000-000000000001',
     status: 'undoable',
     label: 'Duvel bottle',
     date: '2026-09-10',
@@ -803,6 +815,7 @@ describe('suppressedIdsForDate', () => {
     const save: SaveQueueEntry = {
       id: 's1',
       kind: 'save',
+      idempotencyKey: '00000000-0000-4000-8000-000000000001',
       status: 'undoable',
       label: 'Duvel bottle',
       date: '2026-09-10',

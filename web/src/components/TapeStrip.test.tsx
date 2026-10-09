@@ -27,6 +27,7 @@ const renderStrip = (entry: SaveQueueEntry | null, overrides: Partial<Parameters
 const saveEntry: SaveQueueEntry = {
   id: 's1',
   kind: 'save',
+  idempotencyKey: '00000000-0000-4000-8000-000000000001',
   status: 'undoable',
   label: 'Duvel bottle',
   date: '2026-09-10',
