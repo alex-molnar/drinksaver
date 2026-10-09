@@ -182,10 +182,11 @@ class AlcoholControllerTest {
      */
     @Test
     void saveVolumeForAnUnknownAlcoholTypeReturnsNotFound() throws Exception {
-        when(alcoholRepository.saveVolumeForAlcoholType(eq(99), any())).thenReturn(Optional.empty());
+        UUID userId = UUID.randomUUID();
+        when(alcoholRepository.saveVolumeForAlcoholType(eq(99), eq(userId), any())).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 99)
-                .with(jwt())
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Shot\",\"volume\":0.05}"))
             .andExpect(status().isNotFound());
@@ -193,12 +194,13 @@ class AlcoholControllerTest {
 
     @Test
     void saveVolumeForAKnownAlcoholTypeReturnsTheSavedVolume() throws Exception {
+        UUID userId = UUID.randomUUID();
         AlcoholVolume saved = new AlcoholVolume(1, "Shot", 0.05f);
         saved.setId(8);
-        when(alcoholRepository.saveVolumeForAlcoholType(eq(1), any())).thenReturn(Optional.of(saved));
+        when(alcoholRepository.saveVolumeForAlcoholType(eq(1), eq(userId), any())).thenReturn(Optional.of(saved));
 
         mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)
-                .with(jwt())
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Shot\",\"volume\":0.05}"))
             .andExpect(status().isOk())
@@ -207,22 +209,22 @@ class AlcoholControllerTest {
     }
 
     @Test
-    void saveVolumeRejectsAnOverlongNameAndOutOfRangeVolume() throws Exception {
+    void saveVolumeRejectsOutOfRangeValuesAndOverlongNames() throws Exception {
         UUID userId = UUID.randomUUID();
-        var jwt = jwt().jwt(token -> token.subject(userId.toString()));
+        var token = jwt().jwt(jwt -> jwt.subject(userId.toString()));
 
         mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)
-                .with(jwt)
+                .with(token)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"" + "v".repeat(256) + "\",\"volume\":0.05}"))
+                .content("{\"name\":\"" + "n".repeat(256) + "\",\"volume\":0.05}"))
             .andExpect(status().isBadRequest());
         mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)
-                .with(jwt)
+                .with(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Shot\",\"volume\":2.0}"))
             .andExpect(status().isBadRequest());
         mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)
-                .with(jwt)
+                .with(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Shot\",\"volume\":0.0}"))
             .andExpect(status().isBadRequest());
@@ -231,9 +233,22 @@ class AlcoholControllerTest {
     }
 
     @Test
+    void saveVolumeForAnotherUsersAlcoholTypeReturnsNotFound() throws Exception {
+        UUID authenticatedUserId = UUID.randomUUID();
+        when(alcoholRepository.saveVolumeForAlcoholType(eq(1), eq(authenticatedUserId), any()))
+            .thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)
+                .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Shot\",\"volume\":0.05}"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
     void saveVolumeReturnsConflictWhenAnotherAppendWins() throws Exception {
         UUID userId = UUID.randomUUID();
-        when(alcoholRepository.saveVolumeForAlcoholType(eq(1), any()))
+        when(alcoholRepository.saveVolumeForAlcoholType(eq(1), eq(userId), any()))
             .thenThrow(new OptimisticLockingFailureException("stale alcohol type"));
 
         mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)

@@ -5,8 +5,7 @@
 # than it used to. Those jobs check out with persist-credentials: false so a
 # compromised dev dependency cannot read the workflow token from .git/config.
 #
-# Actions are covered here by major tag, not by commit SHA. See SEC-2 in
-# docs/remaining-work.md for the pinning decision that is still open.
+# GitHub Actions updates are proposed here; workflow references stay pinned to reviewed SHAs.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -46,7 +45,7 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
 
-  # The workflows pin action majors, so this is what surfaces a moved tag.
+  # SHA-pinned actions are updated here, with the reviewed commit changes in a PR.
   - package-ecosystem: github-actions
     directory: /
     schedule:

@@ -51,16 +51,18 @@ public class AlcoholController {
 
     @GetMapping("/types/{alcoholTypeId}/volumes")
     public List<AlcoholVolume> getVolumesByAlcoholType(@PathVariable Integer alcoholTypeId) {
+        // Alcohol types and their volume vocabulary are readable throughout the shared catalogue.
         return alcoholRepository.getVolumesByAlcoholType(alcoholTypeId);
     }
 
     @PostMapping("/types/{alcoholTypeId}/volumes")
     public ResponseEntity<AlcoholVolume> saveVolumeForAlcoholType(
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable Integer alcoholTypeId,
             @Valid @RequestBody NewVolumeEntry volumeDescription) {
         try {
             return alcoholRepository
-                    .saveVolumeForAlcoholType(alcoholTypeId, volumeDescription)
+                    .saveVolumeForAlcoholType(alcoholTypeId, AuthenticatedUser.id(jwt), volumeDescription)
                     .map(ResponseEntity::ok)
                     .orElseGet(() -> ResponseEntity.notFound().build());
         } catch (OptimisticLockingFailureException exception) {

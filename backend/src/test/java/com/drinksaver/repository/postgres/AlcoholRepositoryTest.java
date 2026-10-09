@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -224,7 +225,7 @@ class AlcoholRepositoryTest {
                 CONFIG
         );
 
-        Optional<AlcoholVolume> result = repo.saveVolumeForAlcoholType(99, new NewVolumeEntry("Shot", 0.05f));
+        Optional<AlcoholVolume> result = repo.saveVolumeForAlcoholType(99, USER, new NewVolumeEntry("Shot", 0.05f));
 
         assertThat(result).isEmpty();
         verifyNoInteractions(volumeTable);
@@ -232,7 +233,7 @@ class AlcoholRepositoryTest {
 
     @Test
     void saveVolumeForAlcoholTypeAttachesTheNewVolumeToTheType() {
-        AlcoholType type = new AlcoholType(ADMIN, "Vodka", new java.util.ArrayList<>(List.of(7)), null, null);
+        AlcoholType type = new AlcoholType(USER, "Vodka", new java.util.ArrayList<>(List.of(7)), null, null);
         AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
         when(typesTable.findById(1)).thenReturn(Optional.of(type));
 
@@ -248,12 +249,32 @@ class AlcoholRepositoryTest {
                 CONFIG
         );
 
-        Optional<AlcoholVolume> result = repo.saveVolumeForAlcoholType(1, new NewVolumeEntry("Shot", 0.05f));
+        Optional<AlcoholVolume> result = repo.saveVolumeForAlcoholType(1, USER, new NewVolumeEntry("Shot", 0.05f));
 
         assertThat(result).contains(saved);
         ArgumentCaptor<AlcoholType> captor = ArgumentCaptor.forClass(AlcoholType.class);
         verify(typesTable).save(captor.capture());
         assertThat(captor.getValue().getVolumeIds()).containsExactly(7, 8);
+    }
+
+    @Test
+    void saveVolumeForAlcoholTypeReturnsEmptyWhenTypeBelongsToAnotherUser() {
+        AlcoholType type = new AlcoholType(ADMIN, "Vodka", new java.util.ArrayList<>(List.of(7)), null, null);
+        AlcoholTypesTable typesTable = mock(AlcoholTypesTable.class);
+        when(typesTable.findById(1)).thenReturn(Optional.of(type));
+        AlcoholVolumeTable volumeTable = mock(AlcoholVolumeTable.class);
+        AlcoholRepository repo = new AlcoholRepository(
+                typesTable,
+                mock(AlcoholSubtypesTable.class),
+                volumeTable,
+                CONFIG
+        );
+
+        Optional<AlcoholVolume> result = repo.saveVolumeForAlcoholType(1, USER, new NewVolumeEntry("Shot", 0.05f));
+
+        assertThat(result).isEmpty();
+        verifyNoInteractions(volumeTable);
+        verify(typesTable, never()).save(any());
     }
 
     @Test

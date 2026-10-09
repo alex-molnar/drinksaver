@@ -41,7 +41,7 @@ jobs:
       version: ${{ steps.v.outputs.version }}
       owner: ${{ steps.v.outputs.owner }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: v
         env:
           INPUT_VERSION: ${{ inputs.version }}
@@ -69,7 +69,7 @@ jobs:
     if: ${{ inputs.deploy-backend }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Configure kubectl
         env:
@@ -110,7 +110,7 @@ jobs:
     if: ${{ inputs.deploy-web }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Configure kubectl
         env:
@@ -149,7 +149,7 @@ jobs:
     if: ${{ inputs.deploy-admin }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Configure kubectl
         env:
