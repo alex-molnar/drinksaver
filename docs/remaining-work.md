@@ -59,7 +59,6 @@ first. Across groups, the lowest-numbered open security task is the one to pick 
 | **PRIV-5** | Export my data, delete my account | large | PRIV-1 for retention wording |
 | **PRIV-6** | Retention period and purge job | medium | PRIV-1 |
 | **PRIV-7** | Organizational records (RoPA, DPAs, DPIA) | outside this repo | PRIV-1 |
-| **OPS-1** | Make Prometheus scraping actually work | medium | a decision on scraper auth |
 | **OPS-2** | Remove the four leftover namespaces | small | production cutover |
 | **OPS-3** | Theme the Keycloak login page | medium | it follows the UI redesign |
 | **HK-2** | Add a BRANCH coverage gate | small | none |
@@ -373,54 +372,17 @@ FIX-3 remains unused. There is no FIX-6; its explanation and historical referenc
 
 Things that are wired up incompletely, or waiting on the cluster.
 
-## OPS-1. Make Prometheus scraping actually work
+## Completed: OPS-1
 
-**Effort:** medium.
-**Blocked by:** a decision about how the scraper authenticates. That is the whole task; the
-dependency is trivial.
+The backend includes the Prometheus registry and exposes `/actuator/prometheus` on the
+management port. The backend chart emits a configurable Prometheus Operator `ServiceMonitor`;
+test and production values enable it. The monitor is same-namespace by default and scrapes the
+management Service every 30 seconds. Set `serviceMonitor.labels` to the labels selected by the
+cluster's Prometheus resource, and install the Prometheus Operator `ServiceMonitor` CRD before
+deploying the enabled chart.
 
-### Why it was left
-
-`management.endpoints.web.exposure.include=health,prometheus` looks complete and is not.
-There is no `micrometer-registry-prometheus` on the classpath, so `prometheus` in that list is
-a no-op: the startup log says `Exposing 1 endpoint beneath base path '/actuator'`, health only.
-
-Worse, adding the dependency alone does not finish it. The app defines its own
-`SecurityFilterChain`, which Spring Boot reuses for the management port, so `/actuator/prometheus`
-would require a bearer token. A Prometheus scraper does not have one. So the config reads as
-wired up, and there are two independent reasons it is not.
-
-**The decision is a security one, which is why it was not made unilaterally.** The management
-port has no Ingress and its Service is ClusterIP-only, so it is unreachable from outside the
-cluster network either way.
-
-### Where
-
-- `backend/pom.xml`
-- `backend/src/main/resources/application.properties`, the exposure list
-- `backend/src/main/java/com/drinksaver/config/SecurityConfig.java`, and read its comment first
-- `backend/drinksaver-backend/templates/service-management.yaml`
-
-### Do
-
-Pick one:
-
-- **A.** Add `micrometer-registry-prometheus`, and permit `/actuator/prometheus` unauthenticated
-  **scoped to that exact path**, relying on the ClusterIP-only Service plus a NetworkPolicy for
-  containment. Simplest, and the containment is real, but it does mean an unauthenticated metrics
-  endpoint inside the cluster.
-- **B.** Add the dependency and give the scraper a service-account JWT. Correct, and more moving
-  parts: a Keycloak client, credentials in the Prometheus config, and rotation.
-- **C.** Not needed yet. Then **drop `prometheus` from the exposure list**, so nobody else has to
-  rediscover that it was never wired up.
-
-C is a legitimate answer and takes five minutes. Do not leave the list as it is.
-
-### Done when
-
-Either a scrape against `/actuator/prometheus` returns metrics from inside the cluster and the
-security decision is recorded in `SecurityConfig`'s comment, or `prometheus` is gone from the
-exposure list.
+The scrape endpoint is unauthenticated, limited to GET on `/actuator/prometheus`, and served
+only through the management ClusterIP Service. Health probes are also permitted on that port.
 
 ## OPS-2. Remove the four leftover namespaces
 

@@ -1,0 +1,29 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "drinksaver-backend.fullname" . }}
+  labels:
+    {{- include "drinksaver-backend.labels" . | nindent 4 }}
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  namespaceSelector:
+    {{- if .Values.serviceMonitor.namespaceSelector.any }}
+    any: true
+    {{- else if .Values.serviceMonitor.namespaceSelector.matchNames }}
+    matchNames:
+      {{- toYaml .Values.serviceMonitor.namespaceSelector.matchNames | nindent 6 }}
+    {{- else }}
+    {}
+    {{- end }}
+  selector:
+    matchLabels:
+      {{- include "drinksaver-backend.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: management
+      path: {{ .Values.serviceMonitor.path | quote }}
+      interval: {{ .Values.serviceMonitor.interval | quote }}
+      scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout | quote }}
+{{- end }}

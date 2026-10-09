@@ -54,6 +54,18 @@ datasource:
 management:
   port: 8081
 
+# Prometheus Operator ServiceMonitor for the management Service. Add the labels expected by
+# the Prometheus resource's serviceMonitorSelector in each environment's values file.
+serviceMonitor:
+  enabled: false
+  labels: {}
+  namespaceSelector:
+    any: false
+    matchNames: []
+  path: /actuator/prometheus
+  interval: 30s
+  scrapeTimeout: 10s
+
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 # This is to override the chart name.
