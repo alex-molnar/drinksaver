@@ -8,6 +8,8 @@ on:
       - 'VERSION'
       - '.github/workflows/ios.yml'
   push:
+    branches:
+      - main
     paths:
       - 'ios/**'
       - 'docs/api-docs.yaml'

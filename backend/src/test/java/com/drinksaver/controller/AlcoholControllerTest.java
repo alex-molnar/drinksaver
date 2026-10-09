@@ -181,10 +181,11 @@ class AlcoholControllerTest {
      */
     @Test
     void saveVolumeForAnUnknownAlcoholTypeReturnsNotFound() throws Exception {
-        when(alcoholRepository.saveVolumeForAlcoholType(eq(99), any())).thenReturn(Optional.empty());
+        UUID userId = UUID.randomUUID();
+        when(alcoholRepository.saveVolumeForAlcoholType(eq(99), eq(userId), any())).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 99)
-                .with(jwt())
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Shot\",\"volume\":0.05}"))
             .andExpect(status().isNotFound());
@@ -192,17 +193,50 @@ class AlcoholControllerTest {
 
     @Test
     void saveVolumeForAKnownAlcoholTypeReturnsTheSavedVolume() throws Exception {
+        UUID userId = UUID.randomUUID();
         AlcoholVolume saved = new AlcoholVolume(1, "Shot", 0.05f);
         saved.setId(8);
-        when(alcoholRepository.saveVolumeForAlcoholType(eq(1), any())).thenReturn(Optional.of(saved));
+        when(alcoholRepository.saveVolumeForAlcoholType(eq(1), eq(userId), any())).thenReturn(Optional.of(saved));
 
         mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)
-                .with(jwt())
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Shot\",\"volume\":0.05}"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(8))
             .andExpect(jsonPath("$.name").value("Shot"));
+    }
+
+    @Test
+    void saveVolumeForAnotherUsersAlcoholTypeReturnsNotFound() throws Exception {
+        UUID authenticatedUserId = UUID.randomUUID();
+        when(alcoholRepository.saveVolumeForAlcoholType(eq(1), eq(authenticatedUserId), any()))
+            .thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)
+                .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Shot\",\"volume\":0.05}"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void saveVolumeRejectsOutOfRangeValuesAndOverlongNames() throws Exception {
+        UUID userId = UUID.randomUUID();
+        var token = jwt().jwt(jwt -> jwt.subject(userId.toString()));
+
+        mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)
+                .with(token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"" + "n".repeat(256) + "\",\"volume\":0.05}"))
+            .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)
+                .with(token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Shot\",\"volume\":2.0}"))
+            .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(alcoholRepository);
     }
 
     /**
