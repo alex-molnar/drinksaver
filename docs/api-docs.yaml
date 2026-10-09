@@ -11,6 +11,14 @@ paths:
       tags:
       - drinks-controller
       operationId: saveDrink
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        description: UUID deduplicated per user for one hour; retries return the original response.
+        schema:
+          type: string
+          format: uuid
       requestBody:
         content:
           application/json:
@@ -30,7 +38,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/SavedDrink"
         "400":
-          description: quantity is outside 1 to 100
+          description: request contains invalid values or a malformed Idempotency-Key
   /v1/beer/brands:
     get:
       tags:
@@ -62,6 +70,8 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/Brand"
+        "400":
+          description: Invalid brand, flavour list, or flavour name length
   /v1/beer/brands/{brandId}/flavours:
     get:
       tags:
@@ -107,6 +117,8 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/BeerFlavour"
+        "400":
+          description: Beer flavour name exceeds 100 characters
   /v1/alcohol/types:
     get:
       tags:
@@ -139,7 +151,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/AlcoholType"
         "400":
-          description: name, volumes or alcoholSubtypes is over its limit
+          description: A type, nested volume, or subtype name or list exceeds its limit
   /v1/alcohol/types/{alcoholTypeId}/volumes:
     get:
       tags:
@@ -187,6 +199,10 @@ paths:
                 $ref: "#/components/schemas/AlcoholVolume"
         "404":
           description: no alcohol type with that id
+        "409":
+          description: concurrent volume append lost the optimistic lock race
+        "400":
+          description: volume name exceeds 255 characters or value is outside 0.01 to 1.99
   /v1/alcohol/types/{alcoholTypeId}/subtypes:
     get:
       tags:
@@ -232,6 +248,8 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/AlcoholSubtype"
+        "400":
+          description: Alcohol subtype name exceeds 255 characters
   /v1/recommendations/list:
     get:
       tags:
@@ -1422,6 +1440,7 @@ components:
           type: array
           items:
             type: string
+            maxLength: 255
         colorPaletteId:
           type: integer
           format: int32
@@ -1521,6 +1540,7 @@ components:
           maxItems: 50
           items:
             type: string
+            maxLength: 255
         colorPaletteId:
           type: integer
           format: int32
@@ -1535,9 +1555,12 @@ components:
       properties:
         name:
           type: string
+          maxLength: 255
         volume:
           type: number
           format: float
+          minimum: 0.01
+          maximum: 1.99
     AlcoholType:
       type: object
       properties:
@@ -1607,6 +1630,7 @@ components:
             by the client is not bound and has no effect.
         name:
           type: string
+          maxLength: 255
         colorPaletteId:
           type: integer
           format: int32

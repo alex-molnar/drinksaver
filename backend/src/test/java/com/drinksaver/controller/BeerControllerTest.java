@@ -107,6 +107,29 @@ class BeerControllerTest {
     }
 
     @Test
+    void saveBrandRejectsAnOverlongFlavourNameBeforeCallingRepository() throws Exception {
+        UUID userId = UUID.randomUUID();
+        String longFlavour = "f".repeat(256);
+        mockMvc.perform(post("/v1/beer/brands")
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Beer\",\"flavours\":[\"" + longFlavour + "\"],\"colorPaletteId\":3}"))
+            .andExpect(status().isBadRequest());
+        org.mockito.Mockito.verifyNoInteractions(beerRepository);
+    }
+
+    @Test
+    void saveBeerFlavourRejectsANameOverItsColumnLimit() throws Exception {
+        UUID userId = UUID.randomUUID();
+        mockMvc.perform(post("/v1/beer/brands/{brandId}/flavours", 7)
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"" + "f".repeat(101) + "\",\"colorPaletteId\":3}"))
+            .andExpect(status().isBadRequest());
+        org.mockito.Mockito.verifyNoInteractions(beerRepository);
+    }
+
+    @Test
     void getBrandNamesUsesJwtSubjectNotClientSuppliedUserIdParam() throws Exception {
         UUID authenticatedUserId = UUID.randomUUID();
         UUID spoofedUserId = UUID.randomUUID();

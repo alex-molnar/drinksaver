@@ -43,12 +43,16 @@ export type SaveDrinkRequest = Omit<Drink, 'userId' | 'date' | 'colorPaletteId' 
   glasswareId: number;
 };
 
-export const saveDrink = async (drink: SaveDrinkRequest): Promise<SavedDrink[]> => {
+export const saveDrink = async (drink: SaveDrinkRequest, idempotencyKey?: string): Promise<SavedDrink[]> => {
   const payload: Omit<Drink, 'userId'> = {
     ...drink,
     date: drink.date || drinkingDay(new Date()),
   };
-  const response = await apiClient.post<SavedDrink | SavedDrink[]>('/v1/drinks/new', payload);
+  const response = idempotencyKey
+    ? await apiClient.post<SavedDrink | SavedDrink[]>('/v1/drinks/new', payload, {
+        headers: { 'Idempotency-Key': idempotencyKey },
+      })
+    : await apiClient.post<SavedDrink | SavedDrink[]>('/v1/drinks/new', payload);
   return Array.isArray(response.data) ? response.data : [response.data];
 };
 

@@ -111,7 +111,7 @@ Refer to them by id, never by position. The short version:
 | --- | --- |
 | `SEC` | The alcohol volume endpoints take no authenticated principal, so any user can write to any user's type (SEC-1, needs a decision). Actions and base images are on moving tags (SEC-2, SEC-3, a tradeoff left to Alex). The CI ServiceAccount can read every secret in both namespaces (SEC-4, accepted). |
 | `PRIV` | Everything from the GDPR review except SQL logging. All seven gate on a special-category determination that is not an engineer's to make. |
-| `FIX` | Unbounded volume payload, a lost update on `volumeIds`, no error boundary for a lazy chunk that 404s after a deploy. |
+| `FIX` | Defined payload, locking, cache, idempotency, and zoom fixes are complete. The error boundary for a lazy chunk that 404s after a deploy remains open. |
 | `OPS` | Prometheus is configured but not wired up. Four namespaces await production cutover. |
 | `HK` | `web/coverage` still tracked, no BRANCH coverage gate, one dead DTO field, one lint warning. |
 

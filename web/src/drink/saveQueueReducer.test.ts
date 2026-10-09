@@ -23,6 +23,7 @@ describe('save/started', () => {
       label: 'Duvel bottle',
       date: '2026-09-10',
       alcoholTypeId: 4,
+      idempotencyKey: 'key-1',
       payload: PAYLOAD,
     });
 
@@ -35,6 +36,7 @@ describe('save/started', () => {
         date: '2026-09-10',
         drinkIds: [],
         alcoholTypeId: 4,
+        idempotencyKey: 'key-1',
         payload: PAYLOAD,
         undoUntil: null,
         error: null,
@@ -55,6 +57,7 @@ describe('save/started', () => {
         label: 'Duvel bottle',
         date: '2026-09-10',
         alcoholTypeId: 4,
+        idempotencyKey: 'key-1',
         payload: PAYLOAD,
       })
     ).not.toThrow();
@@ -70,6 +73,7 @@ describe('save/succeeded', () => {
     label: 'Duvel bottle',
     date: '2026-09-10',
     alcoholTypeId: 4,
+    idempotencyKey: 'key-1',
     payload: PAYLOAD,
   });
 
@@ -106,6 +110,7 @@ describe('op/failed', () => {
       label: 'Duvel bottle',
       date: '2026-09-10',
       alcoholTypeId: 4,
+      idempotencyKey: 'key-1',
       payload: PAYLOAD,
     });
 

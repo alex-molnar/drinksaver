@@ -77,6 +77,22 @@ describe('api/endpoints', () => {
       expect(result).toEqual([expect.objectContaining({ id: 1 })]);
     });
 
+    it('sends the stable idempotency key as a request header', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [{ id: 1 }] });
+      await endpoints.saveDrink({
+        alcoholTypeId: 1,
+        alcoholVolumeId: 10,
+        colorPaletteId: 6,
+        glasswareId: 3,
+      }, '550e8400-e29b-41d4-a716-446655440000');
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        '/v1/drinks/new',
+        expect.objectContaining({ alcoholTypeId: 1 }),
+        { headers: { 'Idempotency-Key': '550e8400-e29b-41d4-a716-446655440000' } }
+      );
+    });
+
     it('returns every id when several drinks were saved at once', async () => {
       mockApiClient.post.mockResolvedValue({
         data: [{ id: 1 }, { id: 2 }, { id: 3 }],

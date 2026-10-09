@@ -140,7 +140,7 @@ describe('SaveQueueProvider', () => {
 
     await userEvent.click(screen.getByText('trigger-save-duvel'));
 
-    expect(mockSaveDrink).toHaveBeenCalledWith({ ...DUVEL, date: '2026-09-10' });
+    expect(mockSaveDrink).toHaveBeenCalledWith({ ...DUVEL, date: '2026-09-10' }, expect.any(String));
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/duvel bottle/i));
   });
 
@@ -314,38 +314,20 @@ describe('SaveQueueProvider', () => {
   });
 
   describe('retrying a failed save', () => {
-    it('for a timeout, refetches the day first and skips the re-POST if the row count already rose', async () => {
-      mockSaveDrink.mockRejectedValueOnce({ isAxiosError: true, code: 'ECONNABORTED' });
-      const { client } = renderProvider();
-      client.setQueryData(['drinks', '2026-09-10'], []);
-
-      await userEvent.click(screen.getByText('trigger-save-duvel'));
-      await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
-
-      mockGetSavedDrinksByDate.mockResolvedValue([{ id: 99, name: 'Duvel (Bottle - 0.33l)', alcoholTypeId: 4 }]);
-
-      await userEvent.click(screen.getByRole('button', { name: /retry/i }));
-
-      await waitFor(() => expect(mockGetSavedDrinksByDate).toHaveBeenCalledWith('2026-09-10'));
-      await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
-      expect(mockSaveDrink).toHaveBeenCalledTimes(1);
-    });
-
-    it('for a timeout, re-POSTs when the row count did not rise', async () => {
+    it('re-POSTs a timeout with the same idempotency key and without a verification read', async () => {
       mockSaveDrink
         .mockRejectedValueOnce({ isAxiosError: true, code: 'ECONNABORTED' })
         .mockResolvedValueOnce([{ id: 5, userId: 'u', date: '2026-09-10', alcoholTypeId: 4, alcoholVolumeId: 10 }]);
-      const { client } = renderProvider();
-      client.setQueryData(['drinks', '2026-09-10'], []);
+      renderProvider();
 
       await userEvent.click(screen.getByText('trigger-save-duvel'));
       await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
-
-      mockGetSavedDrinksByDate.mockResolvedValue([]);
 
       await userEvent.click(screen.getByRole('button', { name: /retry/i }));
 
       await waitFor(() => expect(mockSaveDrink).toHaveBeenCalledTimes(2));
+      expect(mockSaveDrink.mock.calls[1][1]).toBe(mockSaveDrink.mock.calls[0][1]);
+      expect(mockGetSavedDrinksByDate).not.toHaveBeenCalled();
       await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/duvel bottle/i));
     });
 
@@ -364,21 +346,19 @@ describe('SaveQueueProvider', () => {
       await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/duvel bottle/i));
     });
 
-    it('for a timeout, falls back to a normal retry if the verifying refetch itself fails', async () => {
+    it('retries a server failure directly with the same key', async () => {
       mockSaveDrink
-        .mockRejectedValueOnce({ isAxiosError: true, code: 'ECONNABORTED' })
+        .mockRejectedValueOnce({ isAxiosError: true, response: { status: 500 } })
         .mockResolvedValueOnce([{ id: 9, userId: 'u', date: '2026-09-10', alcoholTypeId: 4, alcoholVolumeId: 10 }]);
-      const { client } = renderProvider();
-      client.setQueryData(['drinks', '2026-09-10'], []);
+      renderProvider();
 
       await userEvent.click(screen.getByText('trigger-save-duvel'));
       await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
 
-      mockGetSavedDrinksByDate.mockRejectedValue(new Error('network down'));
-
       await userEvent.click(screen.getByRole('button', { name: /retry/i }));
 
       await waitFor(() => expect(mockSaveDrink).toHaveBeenCalledTimes(2));
+      expect(mockSaveDrink.mock.calls[1][1]).toBe(mockSaveDrink.mock.calls[0][1]);
       await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/duvel bottle/i));
     });
 

@@ -44,10 +44,6 @@ export interface SaveQueueError {
    *  depend on that one; the provider is what ties classification to queue state. */
   readonly kind: string;
   readonly message: string;
-  /** Only set for a 'timeout' failure: the day's row count at the moment it failed, so a retry
-   *  can refetch and compare rather than blindly re-POSTing a request that may already have
-   *  landed. See the provider's retry handler. */
-  readonly rowCountBaseline?: number;
 }
 
 interface BaseEntry {
@@ -72,6 +68,8 @@ interface BaseEntry {
 
 export interface SaveEntry extends BaseEntry {
   readonly kind: 'save';
+  /** Stable across retries; the backend deduplicates this key for one hour. */
+  readonly idempotencyKey: string;
   /** The second rung of `drinkIdentity`'s lookup, needed to render a provisional history row. */
   readonly alcoholTypeId: number;
   /** Kept so a retry can re-issue the exact same POST. */
@@ -99,6 +97,7 @@ export type SaveQueueAction =
       label: string;
       date: string;
       alcoholTypeId: number;
+      idempotencyKey: string;
       payload: SaveDrinkPayload;
     }
   | { type: 'save/succeeded'; id: string; now: number; drinkIds: number[] }
@@ -154,6 +153,7 @@ export const reduce = (state: SaveQueueState, action: SaveQueueAction): SaveQueu
           {
             id: action.id,
             kind: 'save',
+            idempotencyKey: action.idempotencyKey,
             status: 'saving',
             label: action.label,
             date: action.date,
