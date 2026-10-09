@@ -46,13 +46,11 @@ Add a task by appending to its section with the next free id in that prefix.
 ## Index
 
 Ids are assigned in priority order within each group, so the lower number is the one to do
-first. Across groups, `SEC-1` is the item I would pick up before anything else here.
+first. Across groups, the lowest-numbered open security task is the one to pick up first.
 
 | Id | Task | Effort | Blocked by |
 |---|---|---|---|
-| **SEC-1** | Scope the alcohol volume endpoints, or decide they are global | medium | a decision: is the catalogue global? |
-| **SEC-2** | Pin GitHub Actions to commit SHAs | medium | a decision |
-| **SEC-3** | Pin base images to digests | small | the same decision as SEC-2 |
+| **SEC-3** | Pin base images to digests | small | none; independent follow-up to SEC-2 |
 | **SEC-4** | CI ServiceAccount can read every secret | accepted risk | revisit if collaborators grow |
 | **PRIV-1** | Special-category data determination | small, but not yours | a DPO or lawyer |
 | **PRIV-2** | Privacy notice | medium | PRIV-1 for wording |
@@ -61,7 +59,6 @@ first. Across groups, `SEC-1` is the item I would pick up before anything else h
 | **PRIV-5** | Export my data, delete my account | large | PRIV-1 for retention wording |
 | **PRIV-6** | Retention period and purge job | medium | PRIV-1 |
 | **PRIV-7** | Organizational records (RoPA, DPAs, DPIA) | outside this repo | PRIV-1 |
-| **FIX-1** | Bound the volume entry payload | trivial | none |
 | **FIX-2** | Optimistic locking on `AlcoholType.volumeIds` | small | none |
 | **FIX-4** | Deleting a drink leaves the recommendation cache stale | small | none |
 | **FIX-5** | Saving a drink is not idempotent, so a timeout can double log | medium | none |
@@ -76,134 +73,24 @@ first. Across groups, `SEC-1` is the item I would pick up before anything else h
 
 # Security
 
-These are the ones that change what someone else can do to the system. SEC-1 is the only open
-item that is an authorization gap rather than a hardening tradeoff.
+These are the remaining items that change what someone else can do to the system.
 
-## SEC-1. Scope the alcohol volume endpoints to a user, or decide they are global
+## Completed: SEC-1, SEC-2, and FIX-1
 
-**Effort:** medium.
-**Blocked by:** a decision, and it is a design decision rather than a security one.
-
-### Why this is here and not already fixed
-
-`eb07bde` made every endpoint derive its user from the JWT. **These two did not get the
-sweep**, and they are two lines below one that did:
-
-```java
-@GetMapping("/types/{alcoholTypeId}/volumes")
-public List<AlcoholVolume> getVolumesByAlcoholType(@PathVariable Integer alcoholTypeId)
-
-@PostMapping("/types/{alcoholTypeId}/volumes")
-public ResponseEntity<AlcoholVolume> saveVolumeForAlcoholType(
-        @PathVariable Integer alcoholTypeId, @RequestBody NewVolumeEntry volumeDescription)
-```
-
-Neither takes an `@AuthenticationPrincipal`, and `PostgresAlcoholRepository.saveVolumeForAlcoholType`
-filters on `alcoholTypeId` alone. So any authenticated user can attach a volume row to **any**
-user's alcohol type, including the admin-owned types that `getAlcoholTypes` returns to
-everyone via `repository.admin-user-uuid`. That row then appears in every user's volume list
-and is rendered into their drink names by `AlcoholNameCollector`, which does no ownership
-check either.
-
-There is no XSS: React escapes, and there is no `dangerouslySetInnerHTML` anywhere. So this
-is cross-tenant **integrity**, not disclosure.
-
-### Why it was still not fixed on 2026-09-08
-
-The 2026-09-08 differential review noted these endpoints as out of scope, calling the model
-"shared/global by design", and that reading is plausible: volumes are things like "Pint" and
-"Shot", which genuinely are shared vocabulary. Making them user-scoped changes behaviour for
-every existing user and may not be wanted.
-
-**It should have been carried into this document when the review was deleted, and was not.
-That was a miss.** Recording it now rather than quietly fixing it, because the fix depends on
-an answer only the owner has.
-
-Severity depends on that answer and on the realm: `registrationAllowed: false` in production
-means an attacker must already hold an account. In a realm with open registration this is
-worse than medium.
-
-### Where
-
-- `backend/src/main/java/com/drinksaver/controller/AlcoholController.java`, the two methods above
-- `backend/src/main/java/com/drinksaver/repository/postgres/PostgresAlcoholRepository.java`
-- `backend/src/main/java/com/drinksaver/service/namecollector/AlcoholNameCollector.java`
-- `backend/src/test/java/com/drinksaver/controller/AlcoholControllerTest.java`, whose volume
-  tests authenticate with a bare `jwt()` and assert only 404 versus 200
-
-### Also unvalidated, on the same two methods
-
-`NewVolumeEntry` is `record NewVolumeEntry(String name, Float volume)` with no constraints,
-and `saveVolumeForAlcoholType` has no `@Valid`. So today the endpoint accepts a 256-character
-name (a 500, since `AlcoholVolume.name` is a `varchar(255)` column) and any `Float` at all for
-the volume, including negative, zero and `Infinity`. `NewVolumePage` restricts it to 0.01 to
-1.99, but that is client-side only.
-
-That matters more here than it would elsewhere, because the row lands in a catalogue other
-users see and `AlcoholNameCollector` renders the volume into their drink names. It is tracked
-separately as **FIX-1**, since bounds do not depend on the authorization decision, but whoever
-does this task is editing the same signature and should take both.
-
-### Do
-
-Decide first:
-
-- **A. The catalogue is global.** Then say so in a comment on both methods and on
-  `AlcoholVolume`, and restrict `POST` to the configured admin UUID so ordinary users cannot write
-  to shared vocabulary. `getVolumesByAlcoholType` can stay open.
-- **B. Volumes belong to the type's owner.** Then add `@AuthenticationPrincipal`, check
-  ownership of the `alcoholTypeId` before writing, and return 404 rather than 403 so the
-  endpoint does not become an existence oracle for other users' types.
-
-Either way add a test that authenticates as one user and is denied against another user's
-type. There is no such test today, which is why nothing caught this.
-
-### Done when
-
-A cross-user write is denied by a test, and whichever model was chosen is stated in the code
-rather than inferred from it.
-
-## SEC-2. Pin GitHub Actions to commit SHAs
-
-**Effort:** medium, mechanical.
-**Blocked by:** a decision. The 2026-09-07 review explicitly left this to the repository owner
-rather than applying it, and that call still stands until someone makes it.
-
-### Why it matters here specifically
-
-`actions/checkout@v5`, `actions/setup-java@v6`, `actions/setup-node@v7`,
-`docker/login-action@v3`, `docker/setup-buildx-action@v4` and `docker/build-push-action@v7` all
-resolve through a moving tag. Those tags run in jobs that hold `KUBE_CONFIG` and
-`packages: write`. If any were repointed at malicious code, it would execute with cluster
-credentials and registry write in scope.
-
-### The tradeoff
-
-SHA pins mean Dependabot raises a PR per action per update instead of the tag silently moving.
-That is more PRs and more review, in exchange for a supply-chain compromise no longer being
-automatic. Dependabot does understand SHA pins and will keep the trailing version comment
-current.
-
-### Where
-
-All seven files in `.github/workflows/`. There are 21 `uses:` lines.
-
-### Do
-
-1. For each, resolve the tag to a full 40-character commit SHA and pin it with the version in a
-   trailing comment: `uses: actions/checkout@<sha> # v5.0.1`.
-2. Do all of them or none. Pinning some and not others is worse than either, because a reader
-   cannot tell which state is intended.
-3. Confirm `.github/dependabot.yml` covers `github-actions`.
-
-### Done when
-
-No `uses:` line in `.github/workflows/` references a tag, and a full pipeline run is green.
+- **SEC-1:** Alcohol volumes follow their alcohol type's owner. The POST endpoint derives the
+  owner from the JWT, returns 404 for missing and foreign types, and leaves authenticated reads
+  available for the shared catalogue. The decision is recorded in
+  `docs/superpowers/specs/2026-10-09-sec-1-alcohol-volume-ownership.md`.
+- **FIX-1:** Volume names are limited to 255 characters and volumes to 0.01 through 1.99; the
+  OpenAPI schema documents those bounds.
+- **SEC-2:** All 43 action references across `.github/workflows/` are pinned to verified full
+  commit SHAs with release version comments. Dependabot continues to track GitHub Actions.
 
 ## SEC-3. Pin base images to digests
 
 **Effort:** small.
-**Blocked by:** the same decision as SEC-2. Do them together or not at all.
+**Blocked by:** none. SEC-2 established the pinning policy; base image pins remain a separate
+follow-up.
 
 ### Why
 
@@ -475,50 +362,6 @@ Listed here so the compliance work has a checklist:
 # Correctness
 
 Known defects with known fixes. None is blocked on anything.
-
-## FIX-1. Bound the volume entry payload
-
-**Effort:** trivial.
-**Blocked by:** nothing. Independent of the authorization decision in SEC-1.
-
-### Why
-
-`NewVolumeEntry` carries no constraints and `saveVolumeForAlcoholType` has no `@Valid`:
-
-```java
-public record NewVolumeEntry(String name, Float volume) {}
-```
-
-`AlcoholVolume.name` maps to a `varchar(255)` column under `ddl-auto`, so a 256-character name
-is a `DataIntegrityViolationException` and a 500. `volume` accepts any `Float`, including
-negative, zero and `Infinity`, which then renders into other users' drink names through
-`AlcoholNameCollector`. `NewVolumePage` restricts the value to 0.01 to 1.99, but only in the
-browser.
-
-This is the same defect class as `Drink.comments`, fixed on 2026-09-08, and the same class as
-`quantity` before it. It is written down here rather than fixed quietly because it is a third
-instance of one pattern, and the pattern is the finding: **`docs/fixes-2026-09-08.md` says in
-so many words that fixing a defect without looking for its siblings leaves the same bug in the
-next file, and then this sibling was left.** Worth remembering the next time a validation bound
-goes in.
-
-### Where
-
-- `backend/src/main/java/com/drinksaver/model/dto/NewVolumeEntry.java`
-- `backend/src/main/java/com/drinksaver/controller/AlcoholController.java`, the POST volumes method
-- `docs/api-docs.yaml`, the `NewVolumeEntry` schema
-
-### Do
-
-`@Size(max = 255)` on `name`, `@DecimalMin`/`@DecimalMax` on `volume` matching the 0.01 to 1.99
-the UI already enforces, and `@Valid` on the request body. Then sweep the remaining DTOs for
-unbounded `String` fields against their columns rather than fixing this one and stopping:
-`NewBeerBrand`, `NewBeerFlavour` and `NewAlcoholSubtype` are the ones left.
-
-### Done when
-
-A 256-character name and an out-of-range volume both return 400 with the repository untouched,
-and `docs/api-docs.yaml` states the bounds.
 
 ## FIX-2. Add optimistic locking to `AlcoholType.volumeIds`
 

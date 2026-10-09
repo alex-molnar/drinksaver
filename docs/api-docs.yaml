@@ -186,7 +186,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/AlcoholVolume"
         "404":
-          description: no alcohol type with that id
+          description: no alcohol type with that id, or it belongs to another user
+        "400":
+          description: volume name exceeds 255 characters or volume is outside 0.01 to 1.99
   /v1/alcohol/types/{alcoholTypeId}/subtypes:
     get:
       tags:
@@ -1535,9 +1537,12 @@ components:
       properties:
         name:
           type: string
+          maxLength: 255
         volume:
           type: number
           format: float
+          minimum: 0.01
+          maximum: 1.99
     AlcoholType:
       type: object
       properties:

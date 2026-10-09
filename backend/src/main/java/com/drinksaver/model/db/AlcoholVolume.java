@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/** A volume's visibility follows its owning AlcoholType; it has no independent tenant owner. */
 @Entity
 @Table(name = "alcohol_volumes")
 @NoArgsConstructor
