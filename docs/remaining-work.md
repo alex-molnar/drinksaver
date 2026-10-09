@@ -59,10 +59,6 @@ first. Across groups, the lowest-numbered open security task is the one to pick 
 | **PRIV-5** | Export my data, delete my account | large | PRIV-1 for retention wording |
 | **PRIV-6** | Retention period and purge job | medium | PRIV-1 |
 | **PRIV-7** | Organizational records (RoPA, DPAs, DPIA) | outside this repo | PRIV-1 |
-| **FIX-2** | Optimistic locking on `AlcoholType.volumeIds` | small | none |
-| **FIX-4** | Deleting a drink leaves the recommendation cache stale | small | none |
-| **FIX-5** | Saving a drink is not idempotent, so a timeout can double log | medium | none |
-| **FIX-7** | The web app blocks pinch zoom, failing WCAG 2.2 SC 1.4.4 | trivial | none |
 | **OPS-1** | Make Prometheus scraping actually work | medium | a decision on scraper auth |
 | **OPS-2** | Remove the four leftover namespaces | small | production cutover |
 | **OPS-3** | Theme the Keycloak login page | medium | it follows the UI redesign |
@@ -361,158 +357,15 @@ Listed here so the compliance work has a checklist:
 
 # Correctness
 
-Known defects with known fixes. None is blocked on anything.
+The defined FIX items are implemented:
 
-## FIX-2. Add optimistic locking to `AlcoholType.volumeIds`
+- **FIX-1:** Validate volume bounds and sweep DTO string limits against database columns.
+- **FIX-2:** Optimistically lock `AlcoholType.volumeIds`; stale writers receive 409.
+- **FIX-4:** Invalidate recommendation results after deletion and reconcile the per-user save counter.
+- **FIX-5:** Idempotency keys protect drink saves for one hour; retries return the original response.
+- **FIX-7:** Allow browser pinch zoom while retaining the input font-size safeguard for iOS.
 
-**Effort:** small, but it is a schema change.
-**Blocked by:** nothing.
-
-### Why
-
-`saveVolumeForAlcoholType` is `@Transactional` as of 2026-09-08, which closes the failure
-case: a crash between the two writes no longer leaves an orphaned volume row.
-
-**It does not close the concurrent case, and the comment there now says so.** `AlcoholType`
-has no `@Version` and the transaction runs at READ COMMITTED, so two concurrent posts to the
-same type both read `volumeIds`, both append, and the second write wins. The first volume row
-is orphaned exactly as it was before.
-
-### Where
-
-`backend/src/main/java/com/drinksaver/model/db/AlcoholType.java`, and the comment on
-`PostgresAlcoholRepository.saveVolumeForAlcoholType`.
-
-### Do
-
-Add `@Version` and handle `OptimisticLockingFailureException` at the controller, either by
-retrying or by returning 409.
-
-**Check the migration before deploying, not after.** `ddl-auto=update` adds the column as
-nullable and does not backfill it, and Hibernate reads a null version as "this entity is
-transient", which makes an update of an existing row behave as an insert. Either backfill
-`version = 0` for every existing `alcohol_types` row in the same change, or give the field a
-primitive `int` with a default. This is the part that turns a one-annotation change into
-something that needs a real migration step.
-
-### Done when
-
-A Testcontainers test drives two concurrent appends to one type and both volumes end up
-referenced, or the loser gets a 409. Assert the row count, not just the absence of an
-exception.
-
-
-## FIX-4. Deleting a drink leaves the recommendation cache stale
-
-**Effort:** small for the shallow fix, medium for the correct one.
-**Blocked by:** nothing, but read the concurrency comments in `RecommendationCacheService`
-before touching it.
-
-### Why
-
-`DrinksController.saveDrink` calls `recommendationCacheService.onDrinkSaved`, which bumps a
-per-user counter and evicts the cached recommendations once it crosses a threshold.
-`DrinksController.deleteSavedDrink` calls nothing at all. So a delete never invalidates the
-server-side cache and never decrements the counter.
-
-`HistoryPage.tsx` already invalidates `['recommendations']` on the client after a delete, which
-looks like it covers this and does not: the client refetches and the server hands back the same
-cached list. A drink you deleted keeps shaping your recommendations until some unrelated save
-happens to push the counter over the line.
-
-**This is pre-existing, not introduced by the 2026-09-09 redesign.** It is recorded here because
-that redesign adds undo, which makes it far easier to hit: save three, undo, and the ranking
-still counts three.
-
-### Where
-
-- `backend/src/main/java/com/drinksaver/controller/DrinksController.java`, `deleteSavedDrink`
-- `backend/src/main/java/com/drinksaver/service/RecommendationCacheService.java`
-- The History screen, which already invalidates client-side and is not the problem
-
-### Do
-
-Pick one, because they are not the same size:
-
-- **A.** Invalidate on delete. Two lines in `deleteSavedDrink`. Deletes become visible
-  immediately. The counter still drifts upward, so evictions stay permanently a little early.
-- **B.** An `onDrinkDeleted` that decrements by the number of rows actually deleted and then
-  invalidates. Correct, and it touches the `compareAndSet` logic whose comment records a measured
-  reason for its present shape. Do not rewrite that without re-measuring.
-
-Either way, add a test that saves, deletes, and asserts the next recommendations read no longer
-reflects the deleted drink. There is no such test today, which is why nothing caught this.
-
-### Done when
-
-A delete is reflected in the next recommendations response without waiting for an unrelated save.
-
-## FIX-5. Saving a drink is not idempotent, so a timeout can double log it
-
-**Effort:** medium.
-**Blocked by:** nothing.
-
-### Why
-
-`web/src/api/client.ts` sets a 10 second timeout. When it fires, axios raises `ECONNABORTED` and
-the client has no way to know whether the server completed the insert or not. A naive retry
-therefore logs the drink twice, and the situation that produces the timeout, a phone on bad bar
-wifi, is exactly the situation the app is used in.
-
-The 2026-09-09 redesign works around this client side: its retry policy refetches the day and
-re-POSTs only if the row count did not rise. That closes the realistic case and is not a fix. It
-is racy under concurrency, and it does nothing for a client that is not this one.
-
-### Where
-
-- `backend/src/main/java/com/drinksaver/controller/DrinksController.java`, `saveDrink`
-- `backend/src/main/java/com/drinksaver/model/dto/Drink.java`
-- A new column or table for seen keys, plus its expiry
-- `docs/api-docs.yaml`
-- `web/src/api/endpoints.ts` and the save queue's retry policy, which can then retry directly
-
-### Do
-
-1. Accept a client generated key on `POST /v1/drinks/new`, as a header or a body field.
-2. Record it with the resulting drink ids and return the original result on a repeat, rather than
-   inserting again. Decide the retention window; an hour is generous for a retry.
-3. Once it exists, simplify the client retry policy back to a direct re-POST and delete the
-   verify-before-retry branch, naming this task in the commit so the two stay connected.
-
-### Done when
-
-The same request sent twice with the same key produces one set of rows and two identical
-responses, proven by a test.
-
-## FIX-7. The web app blocks pinch zoom
-
-**Effort:** trivial.
-**Blocked by:** nothing.
-
-### Why
-
-`web/index.html:6` sets `maximum-scale=1.0, user-scalable=no`. That fails WCAG 2.2 SC 1.4.4
-(Resize Text), which requires text to scale to 200% without loss of content or function. It is one
-of the few accessibility failures that cannot be worked around by the user, which is the point of
-the criterion.
-
-The reason it is usually added is iOS zooming a page when a small font input is focused.
-`web/src/index.css:20` already fixes that properly, with a `font-size: 16px !important` rule on
-inputs under 768px. So the workaround is present twice and only one of them is harmful.
-
-### Where
-
-`web/index.html`, the viewport meta tag.
-
-### Do
-
-Drop `maximum-scale=1.0, user-scalable=no`, leaving
-`width=device-width, initial-scale=1.0`. Then check on a real iOS device that focusing an input
-still does not zoom, since that is the behaviour the removed attributes were guarding.
-
-### Done when
-
-The page can be pinch zoomed to 200% and focusing an input does not zoom the layout.
+FIX-3 remains unused. There is no FIX-6; its explanation and historical reference are above.
 
 ---
 

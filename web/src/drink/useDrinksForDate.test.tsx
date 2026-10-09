@@ -87,6 +87,7 @@ describe('useDrinksForDate', () => {
     const saveEntry: SaveQueueEntry = {
       id: 's1',
       kind: 'save',
+      idempotencyKey: '00000000-0000-4000-8000-000000000001',
       status: 'undoable',
       label: 'Duvel bottle',
       date: '2026-09-10',
@@ -114,6 +115,7 @@ describe('useDrinksForDate', () => {
     const saveEntry: SaveQueueEntry = {
       id: 's1',
       kind: 'save',
+      idempotencyKey: '00000000-0000-4000-8000-000000000001',
       status: 'undoable',
       label: 'Heineken (Draft/Tap - 0.50l)',
       date: '2026-09-10',
@@ -136,6 +138,7 @@ describe('useDrinksForDate', () => {
     const saveEntry: SaveQueueEntry = {
       id: 's1',
       kind: 'save',
+      idempotencyKey: '00000000-0000-4000-8000-000000000001',
       status: 'committed',
       label: 'Old optimistic Heineken name',
       date: '2026-09-10',
@@ -174,6 +177,7 @@ describe('useDrinksForDate', () => {
     const saveEntry: SaveQueueEntry = {
       id: 's1',
       kind: 'save',
+      idempotencyKey: '00000000-0000-4000-8000-000000000001',
       status: 'undoable',
       label: 'Duvel bottle',
       date: '2026-09-09',

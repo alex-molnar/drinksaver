@@ -16,6 +16,7 @@ import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilte
 import org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -208,19 +209,6 @@ class AlcoholControllerTest {
     }
 
     @Test
-    void saveVolumeForAnotherUsersAlcoholTypeReturnsNotFound() throws Exception {
-        UUID authenticatedUserId = UUID.randomUUID();
-        when(alcoholRepository.saveVolumeForAlcoholType(eq(1), eq(authenticatedUserId), any()))
-            .thenReturn(Optional.empty());
-
-        mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)
-                .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"Shot\",\"volume\":0.05}"))
-            .andExpect(status().isNotFound());
-    }
-
-    @Test
     void saveVolumeRejectsOutOfRangeValuesAndOverlongNames() throws Exception {
         UUID userId = UUID.randomUUID();
         var token = jwt().jwt(jwt -> jwt.subject(userId.toString()));
@@ -235,8 +223,39 @@ class AlcoholControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Shot\",\"volume\":2.0}"))
             .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)
+                .with(token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Shot\",\"volume\":0.0}"))
+            .andExpect(status().isBadRequest());
 
         verifyNoInteractions(alcoholRepository);
+    }
+
+    @Test
+    void saveVolumeForAnotherUsersAlcoholTypeReturnsNotFound() throws Exception {
+        UUID authenticatedUserId = UUID.randomUUID();
+        when(alcoholRepository.saveVolumeForAlcoholType(eq(1), eq(authenticatedUserId), any()))
+            .thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)
+                .with(jwt().jwt(token -> token.subject(authenticatedUserId.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Shot\",\"volume\":0.05}"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void saveVolumeReturnsConflictWhenAnotherAppendWins() throws Exception {
+        UUID userId = UUID.randomUUID();
+        when(alcoholRepository.saveVolumeForAlcoholType(eq(1), eq(userId), any()))
+            .thenThrow(new OptimisticLockingFailureException("stale alcohol type"));
+
+        mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/volumes", 1)
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Shot\",\"volume\":0.05}"))
+            .andExpect(status().isConflict());
     }
 
     /**
@@ -270,6 +289,39 @@ class AlcoholControllerTest {
                 .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Gin\",\"volumes\":[],\"alcoholSubtypes\":[" + subtypes + "],\"colorPaletteId\":3,\"glasswareId\":4}"))
+            .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(alcoholRepository);
+    }
+
+    @Test
+    void createAlcoholSubtypeRejectsAnOverlongName() throws Exception {
+        mockMvc.perform(post("/v1/alcohol/types/{alcoholTypeId}/subtypes", 4)
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"" + "s".repeat(256) + "\",\"colorPaletteId\":3,\"glasswareId\":4}"))
+            .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(alcoholRepository);
+    }
+
+    @Test
+    void createAlcoholTypeRejectsAnOverlongSubtypeNameInTheNestedList() throws Exception {
+        mockMvc.perform(post("/v1/alcohol/types")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Gin\",\"volumes\":[],\"alcoholSubtypes\":[\"" + "s".repeat(256) + "\"],\"colorPaletteId\":3,\"glasswareId\":4}"))
+            .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(alcoholRepository);
+    }
+
+    @Test
+    void createAlcoholTypeValidatesNestedVolumeEntries() throws Exception {
+        mockMvc.perform(post("/v1/alcohol/types")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Gin\",\"volumes\":[{\"name\":\"Shot\",\"volume\":2.0}],\"alcoholSubtypes\":[],\"colorPaletteId\":3,\"glasswareId\":4}"))
             .andExpect(status().isBadRequest());
 
         verifyNoInteractions(alcoholRepository);

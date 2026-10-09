@@ -75,6 +75,21 @@ public class RecommendationCacheService {
         }
     }
 
+    /** Decrement only the rows actually deleted, then invalidate this user's recommendations. */
+    public void onDrinksDeleted(UUID userId, int deletedCount) {
+        if (deletedCount <= 0) {
+            return;
+        }
+        Cache counterCache = cacheManager.getCache(CacheConfig.SAVE_COUNTER_CACHE);
+        if (counterCache != null) {
+            AtomicInteger counter = counterCache.get(userId, AtomicInteger.class);
+            if (counter != null) {
+                counter.updateAndGet(current -> Math.max(0, current - deletedCount));
+            }
+        }
+        invalidateRecommendationsForUser(userId);
+    }
+
     /**
      * Manually invalidate recommendations cache for a user.
      */

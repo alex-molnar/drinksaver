@@ -6,6 +6,7 @@ import com.drinksaver.controller.user.DrinksController;
 import com.drinksaver.model.db.SavedDrink;
 import com.drinksaver.model.dto.post.Drink;
 import com.drinksaver.service.DrinksService;
+import com.drinksaver.service.IdempotentDrinkSave;
 import com.drinksaver.service.RecommendationCacheService;
 import com.drinksaver.service.model.DrinkKey;
 import com.drinksaver.service.namecollector.AlcoholNameCollector;
@@ -257,6 +258,33 @@ class DrinksControllerTest {
         inOrder.verify(recommendationCacheService, times(1)).onDrinkSaved(any());
     }
 
+    @Test
+    void saveDrinkPassesIdempotencyKeyAndOnlyInvalidatesCacheForTheFirstRequest() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID requestKey = UUID.randomUUID();
+        SavedDrink saved = savedDrink(9, userId, BEER_ID);
+        when(drinksService.saveDrink(any(Drink.class), org.mockito.ArgumentMatchers.eq(requestKey)))
+            .thenReturn(new IdempotentDrinkSave(List.of(saved), true))
+            .thenReturn(new IdempotentDrinkSave(List.of(saved), false));
+        String body = drinkBody(userId, "1");
+
+        mockMvc.perform(post("/v1/drinks/new")
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
+                .header("Idempotency-Key", requestKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isOk());
+        mockMvc.perform(post("/v1/drinks/new")
+                .with(jwt().jwt(token -> token.subject(userId.toString())))
+                .header("Idempotency-Key", requestKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isOk());
+
+        verify(drinksService, times(2)).saveDrink(any(Drink.class), org.mockito.ArgumentMatchers.eq(requestKey));
+        verify(recommendationCacheService, times(1)).onDrinkSaved(any(Drink.class));
+    }
+
     /**
      * `quantity` is the number of rows to write, so anything below 1 is meaningless.
      * It used to reach `DrinksService.saveDrink`, where an empty
@@ -378,5 +406,6 @@ class DrinksControllerTest {
             .andExpect(content().string("1"));
 
         verify(drinksService).deleteSavedDrink(List.of(1));
+        verify(recommendationCacheService).onDrinksDeleted(authenticatedUserId, 1);
     }
 }

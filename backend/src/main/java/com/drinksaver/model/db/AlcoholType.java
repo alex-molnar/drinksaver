@@ -1,5 +1,6 @@
 package com.drinksaver.model.db;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.drinksaver.model.dto.patch.UpdateAlcoholType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -21,6 +22,12 @@ public class AlcoholType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
+
+    /** Non-null and defaulted in DDL so existing rows get version zero during schema update. */
+    @JsonIgnore
+    @Version
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private int version;
 
     private UUID userId;
     private String name;

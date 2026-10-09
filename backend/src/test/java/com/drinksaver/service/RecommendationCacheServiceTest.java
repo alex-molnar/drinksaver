@@ -4,6 +4,7 @@ import com.drinksaver.model.dto.post.Drink;
 import org.junit.jupiter.api.Test;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -111,6 +112,41 @@ class RecommendationCacheServiceTest {
 
         assertThat(service.cacheKey(USER)).isNotEqualTo(cacheKey);
         verify(recCache).evict(cacheKey);
+    }
+
+    @Test
+    void deletingDrinksDecrementsByActualCountAndInvalidatesTheCachedRecommendations() {
+        AtomicInteger counter = new AtomicInteger(4);
+        Cache counterCache = cacheHolding(counter);
+        when(counterCache.get(USER, AtomicInteger.class)).thenReturn(counter);
+        Cache recCache = mock(Cache.class);
+        CacheManager cacheManager = mock(CacheManager.class);
+        when(cacheManager.getCache(SAVE_COUNTER_CACHE)).thenReturn(counterCache);
+        when(cacheManager.getCache(RECOMMENDATIONS_CACHE)).thenReturn(recCache);
+        RecommendationCacheService service = new RecommendationCacheService(cacheManager);
+        String oldKey = service.cacheKey(USER);
+
+        service.onDrinksDeleted(USER, 2);
+
+        assertThat(counter.get()).isEqualTo(2);
+        assertThat(service.cacheKey(USER)).isNotEqualTo(oldKey);
+        verify(recCache).evict(oldKey);
+    }
+
+    @Test
+    void saveThenDeleteMakesTheNextRecommendationsLookupMissTheStaleResult() {
+        CacheManager cacheManager = new ConcurrentMapCacheManager(RECOMMENDATIONS_CACHE, SAVE_COUNTER_CACHE);
+        RecommendationCacheService service = new RecommendationCacheService(cacheManager);
+        Cache recommendations = cacheManager.getCache(RECOMMENDATIONS_CACHE);
+        String staleKey = service.cacheKey(USER);
+        recommendations.put(staleKey, java.util.List.of("saved drink recommendation"));
+        Drink drink = new Drink(USER, "2026-10-09", 1, null, 2, null, null, null, null, null,
+            null, 1, false, null, null);
+
+        service.onDrinkSaved(drink);
+        service.onDrinksDeleted(USER, 1);
+
+        assertThat(recommendations.get(service.cacheKey(USER))).isNull();
     }
 
     @Test

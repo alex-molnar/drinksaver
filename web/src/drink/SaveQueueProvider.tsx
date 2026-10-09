@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { saveDrink, deleteDrinksByIds, getSavedDrinksByDate } from '../api/endpoints';
+import { saveDrink, deleteDrinksByIds } from '../api/endpoints';
 import { API_BASE_URL } from '../api/client';
 import keycloak from '../auth/keycloak';
 import { classify } from './retryPolicy';
@@ -19,7 +19,6 @@ import {
   type SaveDrinkPayload,
   type DeleteEntry,
 } from './saveQueueReducer';
-import type { EditableDrink } from '../types/api';
 
 interface SaveQueueProviderProps {
   children: React.ReactNode;
@@ -37,6 +36,13 @@ interface SaveQueueProviderProps {
 }
 
 const PENDING_DELETES_KEY = 'drinksaver:pending-deletes';
+
+const newIdempotencyKey = (): string =>
+  globalThis.crypto?.randomUUID?.() ??
+  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+    const nibble = Math.floor(Math.random() * 16);
+    return (character === 'x' ? nibble : (nibble & 0x3) | 0x8).toString(16);
+  });
 
 /** The minimal shape needed to re-fire a delete after a reload or bfcache restore reconciles it
  *  on `pageshow`. Deliberately smaller than a full `DeleteEntry`: this is all a fresh page load
@@ -117,9 +123,9 @@ export const SaveQueueProvider: React.FC<SaveQueueProviderProps> = ({ children, 
   const runSweep = useCallback((now: number) => setQueue((q) => sweep(q, now)), []);
 
   const performSave = useCallback(
-    async (id: string, date: string, payload: SaveDrinkPayload) => {
+    async (id: string, date: string, idempotencyKey: string, payload: SaveDrinkPayload) => {
       try {
-        const saved = await saveDrink(payload);
+        const saved = await saveDrink(payload, idempotencyKey);
         const drinkIds = saved.map((row) => row.id);
         const now = Date.now();
         dispatch({ type: 'save/succeeded', id, now, drinkIds });
@@ -134,18 +140,11 @@ export const SaveQueueProvider: React.FC<SaveQueueProviderProps> = ({ children, 
         recommendationsDirtyRef.current = true;
       } catch (error) {
         const kind = classify(error);
-        let rowCountBaseline: number | undefined;
-        if (kind === 'timeout') {
-          // A timed-out POST may have completed on the server anyway. Recording the row count
-          // now is what lets a later retry tell the two cases apart instead of guessing.
-          const cached = queryClient.getQueryData<EditableDrink[]>(['drinks', date]);
-          rowCountBaseline = cached?.length ?? 0;
-        }
         dispatch({
           type: 'op/failed',
           id,
           now: Date.now(),
-          error: { kind, message: 'Could not save.', rowCountBaseline },
+          error: { kind, message: 'Could not save.' },
         });
       }
     },
@@ -216,11 +215,12 @@ export const SaveQueueProvider: React.FC<SaveQueueProviderProps> = ({ children, 
       seqRef.current += 1;
       const seq = seqRef.current;
       const id = `save-${seq}`;
+      const idempotencyKey = newIdempotencyKey();
       const now = Date.now();
       const fullPayload: SaveDrinkPayload = { ...payload, date };
 
-      dispatch({ type: 'save/started', id, seq, now, label, date, alcoholTypeId, payload: fullPayload });
-      performSave(id, date, fullPayload);
+      dispatch({ type: 'save/started', id, seq, now, label, date, alcoholTypeId, idempotencyKey, payload: fullPayload });
+      performSave(id, date, idempotencyKey, fullPayload);
       return id;
     },
     [dispatch, performSave]
@@ -282,31 +282,8 @@ export const SaveQueueProvider: React.FC<SaveQueueProviderProps> = ({ children, 
       return;
     }
 
-    const baseline = entry.error?.kind === 'timeout' ? entry.error.rowCountBaseline : undefined;
-    if (baseline === undefined) {
-      performSave(entry.id, entry.date, entry.payload);
-      return;
-    }
-
-    // A timed-out POST may have already landed. Verify before re-sending it: refetching and
-    // comparing costs one GET, and a naive retry on the connection that just timed out is
-    // exactly how a drink gets logged twice on bar wifi.
-    queryClient
-      .fetchQuery({ queryKey: ['drinks', entry.date], queryFn: () => getSavedDrinksByDate(entry.date) })
-      .then((rows) => {
-        if (rows.length > baseline) {
-          dispatch({ type: 'commit', id: entry.id, now: Date.now() });
-          queryClient.invalidateQueries({ queryKey: ['drinks', entry.date], refetchType: 'active' });
-          return;
-        }
-        performSave(entry.id, entry.date, entry.payload);
-      })
-      .catch(() => {
-        // The verifying refetch itself failed; falling back to a normal retry is safer than
-        // leaving the entry stuck in 'saving' forever.
-        performSave(entry.id, entry.date, entry.payload);
-      });
-  }, [dispatch, performSave, queryClient]);
+    performSave(entry.id, entry.date, entry.idempotencyKey, entry.payload);
+  }, [dispatch, performSave]);
 
   // Rule 3: a deferred delete must survive the tab dying. `beforeunload` is not used - it does
   // not fire reliably on mobile Safari, which is exactly the device this app is for. `pagehide`

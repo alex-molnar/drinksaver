@@ -10,6 +10,7 @@ import com.drinksaver.repository.AlcoholRepository;
 import com.drinksaver.security.AuthenticatedUser;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -59,10 +60,14 @@ public class AlcoholController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable Integer alcoholTypeId,
             @Valid @RequestBody NewVolumeEntry volumeDescription) {
-        return alcoholRepository
-                .saveVolumeForAlcoholType(alcoholTypeId, AuthenticatedUser.id(jwt), volumeDescription)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        try {
+            return alcoholRepository
+                    .saveVolumeForAlcoholType(alcoholTypeId, AuthenticatedUser.id(jwt), volumeDescription)
+                    .map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (OptimisticLockingFailureException exception) {
+            return ResponseEntity.status(409).build();
+        }
     }
 
     @PostMapping("/types")

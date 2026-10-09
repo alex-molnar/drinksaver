@@ -2,6 +2,7 @@ package com.drinksaver.model.dto.post;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.util.UUID;
 
@@ -15,7 +16,7 @@ import java.util.UUID;
 public record NewAlcoholSubtype(
         @NotNull Integer alcoholTypeId,
         @JsonProperty(access = JsonProperty.Access.READ_ONLY) UUID userId,
-        @NotNull String name,
+        @NotNull @Size(max = 255) String name,
         @NotNull Integer colorPaletteId,
         @NotNull Integer glasswareId
 ) {

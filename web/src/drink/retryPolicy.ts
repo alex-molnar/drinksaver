@@ -5,8 +5,8 @@
  * The axios client already has a 10s timeout (`api/client.ts`), and a timed-out POST may have
  * completed on the server anyway: an `ECONNABORTED` is exactly the case a naive retry would
  * double-log a drink, on bar wifi, which is exactly where it happens. That is why `timeout` is
- * its own classification rather than falling into `offline`: the provider's retry handler treats
- * it differently, refetching the day first and re-POSTing only if the row count did not rise.
+ * its own classification rather than falling into `offline`, so the queue can give the user a
+ * useful message. Retries now safely re-POST with the same server-enforced idempotency key.
  *
  * A 401 is not classified specially here: `api/client.ts`'s response interceptor already retries
  * it once after a token refresh, or logs the user out if that fails, so by the time an error

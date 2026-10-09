@@ -6,6 +6,7 @@ import com.drinksaver.model.dto.post.Drink;
 import com.drinksaver.model.dto.response.EditableDrink;
 import com.drinksaver.security.AuthenticatedUser;
 import com.drinksaver.service.DrinksService;
+import com.drinksaver.service.IdempotentDrinkSave;
 import com.drinksaver.service.RecommendationCacheService;
 import com.drinksaver.service.model.DrinkKey;
 import com.drinksaver.service.namecollector.AlcoholNameCollector;
@@ -50,11 +51,21 @@ public class DrinksController {
      * would mean two client paths and a bug that only appears above quantity 1.
      */
     @PostMapping("/new")
-    public List<SavedDrink> saveDrink(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody Drink drink) {
+    public List<SavedDrink> saveDrink(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestHeader(name = "Idempotency-Key", required = false) UUID idempotencyKey,
+            @Valid @RequestBody Drink drink) {
         Drink ownedDrink = drink.withUserId(AuthenticatedUser.id(jwt));
-        List<SavedDrink> saved = drinksService.saveDrink(ownedDrink);
-        recommendationCacheService.onDrinkSaved(ownedDrink);
-        return saved;
+        if (idempotencyKey == null) {
+            List<SavedDrink> saved = drinksService.saveDrink(ownedDrink);
+            recommendationCacheService.onDrinkSaved(ownedDrink);
+            return saved;
+        }
+        IdempotentDrinkSave result = drinksService.saveDrink(ownedDrink, idempotencyKey);
+        if (result.created()) {
+            recommendationCacheService.onDrinkSaved(ownedDrink);
+        }
+        return result.drinks();
     }
 
     @GetMapping("/date/{date}")
@@ -78,7 +89,9 @@ public class DrinksController {
     public int deleteSavedDrink(@AuthenticationPrincipal Jwt jwt, @RequestParam List<Integer> drinkIds) {
         UUID userId = AuthenticatedUser.id(jwt);
         List<Integer> ownedIds = drinksService.ownedDrinkIds(drinkIds, userId);
-        return drinksService.deleteSavedDrink(ownedIds);
+        int deletedCount = drinksService.deleteSavedDrink(ownedIds);
+        recommendationCacheService.onDrinksDeleted(userId, deletedCount);
+        return deletedCount;
     }
 }
 
