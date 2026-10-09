@@ -473,6 +473,11 @@ Verified denied: secrets in `kube-system` and `postgres`, anything in
 The `KUBE_CONFIG` repository secret holds a base64-encoded kubeconfig for that
 ServiceAccount.
 
+When the charts add a new Kubernetes resource kind, update this RBAC manifest and
+have a cluster administrator apply it before the next CI deployment. OPS-1 adds
+`ServiceMonitor` access in these two namespaces; CI cannot grant that permission
+to itself.
+
 ### Accepted risk
 
 The Role grants `list` on secrets in those two namespaces. Helm's default
