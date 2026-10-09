@@ -394,6 +394,15 @@ deploy/values/web-test.yaml
 deploy/values/web-prod.yaml
 ```
 
+The backend chart's `serviceMonitor.enabled` is on in the test and production values. It
+creates a Prometheus Operator `ServiceMonitor` for the management Service at
+`/actuator/prometheus` on port 8081. The cluster must have the
+`monitoring.coreos.com/v1` ServiceMonitor CRD installed. Set `serviceMonitor.labels` to match
+the Prometheus resource's `serviceMonitorSelector`, and configure that resource's
+`serviceMonitorNamespaceSelector` to include the backend namespace. The monitor selects the
+backend Service in its own namespace by default; the scrape endpoint is unauthenticated and
+reachable through the ClusterIP-only management Service.
+
 Values are stated explicitly rather than inherited from chart defaults, so
 changing a default cannot silently alter production.
 
@@ -463,6 +472,11 @@ Verified denied: secrets in `kube-system` and `postgres`, anything in
 
 The `KUBE_CONFIG` repository secret holds a base64-encoded kubeconfig for that
 ServiceAccount.
+
+When the charts add a new Kubernetes resource kind, update this RBAC manifest and
+have a cluster administrator apply it before the next CI deployment. OPS-1 adds
+`ServiceMonitor` access in these two namespaces; CI cannot grant that permission
+to itself.
 
 ### Accepted risk
 

@@ -19,6 +19,9 @@ jwt:
   issuerUri: "https://auth.drinksaver.kak.im/auth/realms/test-drinksaver"
   jwkSetUri: "https://auth.drinksaver.kak.im/auth/realms/test-drinksaver/protocol/openid-connect/certs"
 
+serviceMonitor:
+  enabled: true
+
 ingress:
   enabled: true
   className: "traefik"
