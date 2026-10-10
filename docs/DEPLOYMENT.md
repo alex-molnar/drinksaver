@@ -403,6 +403,12 @@ the Prometheus resource's `serviceMonitorSelector`, and configure that resource'
 backend Service in its own namespace by default; the scrape endpoint is unauthenticated and
 reachable through the ClusterIP-only management Service.
 
+`deploy/grafana/drinksaver-backend.json` is an example Grafana dashboard for these metrics
+(import it via Dashboards > New > Import). It has `datasource`, `namespace` and `job`
+variables and covers HTTP rate, errors and latency, JVM, and the HikariCP pool. It uses only
+the default Spring Boot and Micrometer metrics, and the backend publishes no latency
+histogram, so latency panels show averages and the decaying max, not percentiles.
+
 Values are stated explicitly rather than inherited from chart defaults, so
 changing a default cannot silently alter production.
 
