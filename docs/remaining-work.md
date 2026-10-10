@@ -59,8 +59,12 @@ first. Across groups, the lowest-numbered open security task is the one to pick 
 | **PRIV-5** | Export my data, delete my account | large | PRIV-1 for retention wording |
 | **PRIV-6** | Retention period and purge job | medium | PRIV-1 |
 | **PRIV-7** | Organizational records (RoPA, DPAs, DPIA) | outside this repo | PRIV-1 |
+| **PRIV-8** | Age gate at registration | small | none |
+| **PRIV-9** | Scope and log admin access to user-created data | small | none |
 | **OPS-2** | Remove the four leftover namespaces | small | production cutover |
 | **OPS-3** | Theme the Keycloak login page | medium | it follows the UI redesign |
+| **OPS-4** | Document encryption at rest and backup expiry | small to medium | cluster owner |
+| **OPS-5** | Breach response runbook and breach log | small | none |
 | **HK-2** | Add a BRANCH coverage gate | small | none |
 | **HK-3** | Drop `NewAlcoholSubtype.alcoholTypeId` | trivial | none |
 
@@ -286,7 +290,8 @@ reach it to act on it.
 - `backend/src/main/java/com/drinksaver/controller/DrinksController.java` for the pattern
 - `backend/src/main/java/com/drinksaver/repository/postgres/PostgresDrinksRepository.java`
 - Every table carrying a `user_id`: `saved_drinks`, `recommendations`, `alcohol_types`,
-  `alcohol_subtypes`, `brands`, `beer_flavours`. Check for new ones before you start; a
+  `alcohol_subtypes`, `brands`, `beer_flavours`, `drink_idempotency_keys`. The last one expires
+  its own rows after an hour, but an account deletion should not wait for that. Check for new ones before you start; a
   `grep -rn "userId" backend/src/main/java/com/drinksaver/model/db/` is the quick way.
 
 ### Do
@@ -351,6 +356,64 @@ Listed here so the compliance work has a checklist:
 - **The DPIA** (Art. 35), if PRIV-1 resolves to special category. The current architecture is
   special-category data plus systematic profiling, which is the combination that makes a DPIA
   mandatory rather than advisable.
+- **The native iOS app** (`docs/superpowers/specs/2026-09-20-native-ios-design.md`), before it
+  ships: Apple becomes a recipient through App Store distribution (the spec rules out third-party
+  analytics and crash SDKs, but App Store Connect still collects opt-in diagnostics), and the
+  App Store privacy label has to match the notice from PRIV-2.
+
+## PRIV-8. Add an age gate at registration
+
+**Effort:** small.
+**Blocked by:** nothing.
+
+### Why
+
+An alcohol tracker with no age check. Under Art. 8, consent from a child below the national
+digital-consent age (16 in the Netherlands, 13 to 16 elsewhere in the EU) is only valid with
+parental authorization, so if PRIV-1 lands on consent as the basis, a minor's account has no
+lawful basis at all. Separately, the recommendations suggest alcoholic drinks, which national
+alcohol-marketing rules restrict towards minors.
+
+### Do
+
+1. Add a self-declared date of birth or an "I am 18 or older" confirmation to the Keycloak
+   registration form. A declaration is the usual proportionate minimum; verified age checks
+   are not expected for this kind of app.
+2. Store only the outcome (confirmed, and when), not the date of birth, unless a decision says
+   otherwise. A birth date is more personal data for PRIV-5 and PRIV-6 to handle.
+3. State the minimum age in the notice from PRIV-2.
+
+### Done when
+
+A new account cannot be created without the confirmation, and the notice states the age.
+
+## PRIV-9. Scope and log admin access to user-created data
+
+**Effort:** small.
+**Blocked by:** nothing.
+
+### Why
+
+The admin panel's User-defined catalogue (`AdminAlcoholUserController`,
+`AdminBeerUserController`, see `docs/admin-panel.md`) shows admins the alcohol types, brands
+and flavours that users created, and lets them promote entries into the defaults. Those names
+are free text written by users, so they can contain anything. Art. 5(1)(b) and (c) require that
+access has a stated purpose and is no wider than it needs to be, and Art. 32 expects you to be
+able to show who accessed what.
+
+Drink history itself is not exposed to admins; this is about the catalogue only.
+
+### Do
+
+1. Write down the purpose (curating defaults) in the RoPA from PRIV-7.
+2. Check whether the responses include owner ids. If curation does not need them, drop them.
+3. Log admin reads and promotions with the admin's subject and the entry id, never the entry
+   content.
+
+### Done when
+
+The purpose is recorded, admin responses carry no owner id unless needed, and an admin action
+produces a log line asserted in a test.
 
 ---
 
@@ -451,6 +514,58 @@ operational gap. Move it if a better group appears.
 
 `docker-compose up` shows a login page that belongs to the same app as the screen behind it, and
 the same is true in `drinksaver-test`.
+
+## OPS-4. Document encryption at rest and backup expiry
+
+**Effort:** small to medium, mostly finding out.
+**Blocked by:** the cluster owner, since Postgres is provided by the cluster.
+
+### Why
+
+Nothing in this repo or `docs/DEPLOYMENT.md` says whether the Postgres volume is encrypted at
+rest, whether it is backed up, or how long backups are kept. Art. 32 asks for appropriate
+security measures, and you need to be able to show them. Backups also decide whether PRIV-5's
+deletion is actually complete: data deleted from the live database still exists in every
+backup taken before, until those backups expire.
+
+### Do
+
+1. Find out and write down: volume encryption, backup schedule, backup location (EU or not),
+   and retention.
+2. Make sure backup retention is finite, and state it in the notice from PRIV-2 next to the
+   deletion promise ("removed from backups within N days").
+3. Do a restore once, so the backup is known to work.
+
+### Done when
+
+`docs/DEPLOYMENT.md` has a section stating each of the four facts, and the notice reflects the
+backup retention.
+
+## OPS-5. Write a breach response runbook and keep a breach log
+
+**Effort:** small.
+**Blocked by:** nothing.
+
+### Why
+
+Art. 33 requires notifying the supervisory authority (in the Netherlands, the Autoriteit
+Persoonsgegevens) within 72 hours of becoming aware of a personal-data breach, and keeping a
+record of every breach, including ones that did not need notifying. Art. 34 adds notifying
+users when the risk to them is high, which is likely for consumption history. There is no
+procedure for either.
+
+### Do
+
+1. A one-page runbook in `docs/`: how to contain (rotate the Keycloak client secret and the
+   database credentials, revoke sessions), who decides whether to notify, and the authority's
+   reporting route.
+2. A breach log, kept outside the repo if it would contain details, with date, what happened,
+   data affected, and the decision on notification with its reason.
+
+### Done when
+
+The runbook exists and is linked from `docs/DEPLOYMENT.md`'s troubleshooting section, and the
+log has a known location.
 
 ---
 

@@ -110,9 +110,9 @@ Refer to them by id, never by position. The short version:
 | Group | What is open |
 | --- | --- |
 | `SEC` | Actions are pinned to commit SHAs (SEC-2 complete). Alcohol volumes belong to their type owner, and writes enforce that (SEC-1 complete). Base images are on moving tags (SEC-3, a tradeoff left to Alex). The CI ServiceAccount can read every secret in both namespaces (SEC-4, accepted). |
-| `PRIV` | Everything from the GDPR review except SQL logging. All seven gate on a special-category determination that is not an engineer's to make. |
+| `PRIV` | Everything from the GDPR review except SQL logging. PRIV-1 to PRIV-7 gate on a special-category determination that is not an engineer's to make; the age gate and admin-access scoping (PRIV-8, PRIV-9) do not. |
 | `FIX` | Defined payload, locking, cache, idempotency, and zoom fixes are complete. The error boundary for a lazy chunk that 404s after a deploy remains open. |
-| `OPS` | Prometheus metrics are exposed and scraped through a ServiceMonitor. Four namespaces await production cutover. |
+| `OPS` | Prometheus metrics are exposed and scraped through a ServiceMonitor. Four namespaces await production cutover. Encryption at rest, backup expiry and a breach runbook are undocumented (OPS-4, OPS-5). |
 | `HK` | `web/coverage` still tracked, no BRANCH coverage gate, one dead DTO field, one lint warning. |
 
 Do not re-add to this section. Add to `docs/remaining-work.md` instead, appending to the
